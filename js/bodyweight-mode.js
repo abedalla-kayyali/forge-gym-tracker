@@ -189,6 +189,8 @@ function addBwSet(val, effort) {
   container.appendChild(row);
   const inp = row.querySelector('.bw-val-input');
   if (!('ontouchstart' in window)) inp.focus();
+  if (typeof sndSetLog === 'function') sndSetLog();
+  if (typeof hapSetLog === 'function') hapSetLog();
 }
 
 function removeBwSet(id) {

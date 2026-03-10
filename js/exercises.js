@@ -295,6 +295,8 @@ function addSet() {
     _applyGhostToRow(row, setCount - 1);
   }
   if (!('ontouchstart' in window)) row.querySelector('.set-reps').focus();
+  if (typeof sndSetLog === 'function') sndSetLog();
+  if (typeof hapSetLog === 'function') hapSetLog();
   updateRepeatBtn();
 }
 

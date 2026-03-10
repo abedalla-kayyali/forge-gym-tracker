@@ -6545,6 +6545,8 @@ function _cnAddMeal() {
   });
   _saveMealToLibrary({ name, qty, kcal, p, c, f, ts });
   save();
+  if (typeof sndSetLog === 'function') sndSetLog();
+  if (typeof hapSetLog === 'function') hapSetLog();
   if (typeof showToast === 'function') showToast(`Meal added to ${k}`, 'success');
 
   nameEl.value = '';
