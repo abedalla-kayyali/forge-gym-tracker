@@ -466,24 +466,40 @@ function _wpInstallCapture() {
     if (!overlay || !overlay.classList.contains('open')) return;
     const touch = e.touches[0];
     if (!touch) return;
-    // Find the real element under the finger using coordinates
-    const el = document.elementFromPoint(touch.clientX, touch.clientY);
-    const sheet = document.getElementById('wheel-picker-sheet');
-    if (sheet && el && sheet.contains(el)) {
-      // Finger is inside the sheet — check if it's a numpad key
-      const btn = el.closest('[data-key]');
-      if (btn) {
-        e.preventDefault();
-        e.stopPropagation();
-        wpKey(btn.dataset.key);
-        btn.classList.add('wp-active');
-        setTimeout(() => btn.classList.remove('wp-active'), 120);
+    const tx = touch.clientX, ty = touch.clientY;
+
+    // 1. Check if touch lands on a numpad key using exact bounding rects.
+    //    getBoundingClientRect is reliable; elementFromPoint can miss due to
+    //    z-index or stacking context ambiguity.
+    const numpad = document.getElementById('wp-numpad');
+    if (numpad) {
+      const buttons = numpad.querySelectorAll('[data-key]');
+      for (const btn of buttons) {
+        const r = btn.getBoundingClientRect();
+        if (tx >= r.left && tx <= r.right && ty >= r.top && ty <= r.bottom) {
+          e.preventDefault();
+          e.stopPropagation();
+          wpKey(btn.dataset.key);
+          btn.classList.add('wp-active');
+          setTimeout(() => btn.classList.remove('wp-active'), 120);
+          return;
+        }
       }
-      // Other sheet controls (cancel, done, presets) handled normally — don't block
-      return;
     }
-    // Finger is on overlay background — block completely (no accidental dismissal,
-    // no touch leaking to elements behind the overlay)
+
+    // 2. Check if touch is anywhere inside the sheet (cancel, done, presets, etc.)
+    //    — let those through to their own onclick handlers.
+    const sheet = document.getElementById('wheel-picker-sheet');
+    if (sheet) {
+      const r = sheet.getBoundingClientRect();
+      if (tx >= r.left && tx <= r.right && ty >= r.top && ty <= r.bottom) {
+        return; // inside sheet, not a numpad key — handle normally
+      }
+    }
+
+    // 3. Tap landed on the overlay background — block it completely.
+    //    Prevents accidental picker dismissal and stops touch leaking to
+    //    elements behind the overlay (rest timer, etc.).
     e.preventDefault();
     e.stopPropagation();
   };
