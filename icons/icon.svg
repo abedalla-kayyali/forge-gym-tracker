@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a1a2e"/>
+  <polygon points="256,80 180,200 220,200 160,420 340,220 290,220 360,80" fill="#e94560"/>
+  <text x="256" y="470" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="72" font-weight="900" fill="#e94560">FORGE</text>
+</svg>

@@ -1,0 +1,4 @@
+node_modules/
+.playwright-cli/
+*.log
+check_output.txt

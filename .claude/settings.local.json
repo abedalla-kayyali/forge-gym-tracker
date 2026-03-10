@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Desktop_Commander__list_directory",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(awk 'NR>=12895 && NR<=12955' \"C:/Users/USER/Desktop/Claude/Forg-Cali-os-18-main/index.html\")",
+      "mcp__Desktop_Commander__read_file",
+      "mcp__Desktop_Commander__edit_block",
+      "Bash(python3 -c \":*)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

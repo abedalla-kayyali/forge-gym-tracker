@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head><title>FORGE Icon Generator</title>
+<style>body{background:#111;color:#fff;font-family:Arial;padding:20px;text-align:center;}</style>
+</head>
+<body>
+<h2 style="color:#2ecc71;">FORGE Icon Generator</h2>
+<p>Click each button to download the icon at that size.</p>
+<canvas id="c" style="display:none;"></canvas>
+<br>
+<button onclick="gen(192)" style="background:#2ecc71;border:none;padding:12px 24px;border-radius:8px;font-size:16px;cursor:pointer;margin:8px;">Download icon-192.png</button>
+<button onclick="gen(512)" style="background:#2ecc71;border:none;padding:12px 24px;border-radius:8px;font-size:16px;cursor:pointer;margin:8px;">Download icon-512.png</button>
+<p style="color:#666;margin-top:20px;">Save both files into the <b>icons/</b> folder inside your gym app folder.</p>
+
+<script>
+function gen(size) {
+  const c = document.getElementById('c');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  const r = size * 0.1875; // corner radius ~96/512 * size
+
+  // Rounded background
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(size - r, 0);
+  ctx.quadraticCurveTo(size, 0, size, r);
+  ctx.lineTo(size, size - r);
+  ctx.quadraticCurveTo(size, size, size - r, size);
+  ctx.lineTo(r, size);
+  ctx.quadraticCurveTo(0, size, 0, size - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fillStyle = '#080c09';
+  ctx.fill();
+
+  // Grid lines
+  ctx.strokeStyle = '#1e2e1f';
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.4;
+  for (let i = 1; i < 4; i++) {
+    ctx.beginPath(); ctx.moveTo(0, size/4*i); ctx.lineTo(size, size/4*i); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(size/4*i, 0); ctx.lineTo(size/4*i, size); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  const s = size / 512;
+
+  // Dumbbell
+  function rRect(x,y,w,h,rx,color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.roundRect(x*s, y*s, w*s, h*s, rx*s);
+    ctx.fill();
+  }
+
+  rRect(56, 192, 36, 128, 14, '#2ecc71');
+  rRect(92, 216, 22, 80,  8,  '#27ae60');
+  rRect(114,236, 284,40,  8,  '#1a7a3f');
+  rRect(398,216, 22, 80,  8,  '#27ae60');
+  rRect(420,192, 36, 128, 14, '#2ecc71');
+
+  // Glow strokes
+  ctx.strokeStyle = '#39ff8f';
+  ctx.lineWidth = 2 * s;
+  ctx.globalAlpha = 0.6;
+  function rStroke(x,y,w,h,rx) {
+    ctx.beginPath(); ctx.roundRect(x*s,y*s,w*s,h*s,rx*s); ctx.stroke();
+  }
+  rStroke(56,192,36,128,14);
+  rStroke(420,192,36,128,14);
+  ctx.globalAlpha = 1;
+
+  // FORGE text
+  const fs = Math.round(72 * s);
+  ctx.font = `900 ${fs}px "Arial Black", Arial`;
+  ctx.fillStyle = '#39ff8f';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = Math.round(12 * s) + 'px';
+  ctx.fillText('FORGE', size/2, size * 0.84);
+
+  // Download
+  const a = document.createElement('a');
+  a.download = 'icon-' + size + '.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+</script>
+</body>
+</html>

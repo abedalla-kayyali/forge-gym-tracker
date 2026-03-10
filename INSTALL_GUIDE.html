@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE — Install Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#080c09; --green:#2ecc71; --accent:#39ff8f; --text:#c8dcc9; --text2:#7a9e7e; --text3:#4a6a4e; --panel:#131c14; --border:#253527; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Barlow',sans-serif; font-weight:300; min-height:100vh; }
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image: linear-gradient(#1e2e1f 1px,transparent 1px), linear-gradient(90deg,#1e2e1f 1px,transparent 1px);
+    background-size:48px 48px; opacity:.25; pointer-events:none; z-index:0;
+  }
+  .wrap { position:relative; z-index:1; max-width:700px; margin:0 auto; padding:40px 24px 80px; }
+  h1 { font-family:'Bebas Neue',sans-serif; font-size:52px; letter-spacing:6px; color:var(--accent); text-shadow:0 0 30px rgba(46,204,113,.3); margin-bottom:4px; }
+  .subtitle { font-family:'Barlow Condensed',sans-serif; font-size:14px; letter-spacing:2px; color:var(--text3); text-transform:uppercase; margin-bottom:40px; }
+  .step-card { background:var(--panel); border:1px solid var(--border); border-radius:14px; margin-bottom:20px; overflow:hidden; }
+  .step-header { display:flex; align-items:center; gap:16px; padding:18px 20px; background:rgba(46,204,113,.05); border-bottom:1px solid var(--border); }
+  .step-num { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--green); line-height:1; width:36px; flex-shrink:0; }
+  .step-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--text); }
+  .step-body { padding:18px 20px; }
+  .step-body p { font-size:14px; color:var(--text2); line-height:1.7; margin-bottom:10px; }
+  .step-body p:last-child { margin-bottom:0; }
+  .step-body b { color:var(--accent); font-weight:500; }
+  .step-body a { color:var(--green); }
+  .note { background:rgba(46,204,113,.07); border:1px solid rgba(46,204,113,.2); border-radius:8px; padding:12px 14px; margin-top:12px; font-size:13px; color:var(--text2); }
+  .note strong { color:var(--green); }
+  .badge { display:inline-block; background:rgba(46,204,113,.15); border:1px solid var(--border); border-radius:20px; padding:3px 12px; font-size:12px; letter-spacing:1px; color:var(--green); font-family:'Barlow Condensed',sans-serif; font-weight:600; text-transform:uppercase; margin-bottom:16px; }
+  .icon-row { display:flex; gap:8px; align-items:center; margin:8px 0; font-size:22px; }
+  .platform-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; }
+  .platform-card { background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .platform-card .p-title { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; letter-spacing:1px; color:var(--text); margin-bottom:8px; }
+  .platform-card .p-step { font-size:13px; color:var(--text2); line-height:1.8; }
+  .divider { height:1px; background:var(--border); margin:32px 0; }
+  .features-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+  .feature { background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; gap:10px; }
+  .feature-icon { font-size:20px; flex-shrink:0; }
+  .feature-title { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:1px; color:var(--accent); margin-bottom:2px; }
+  .feature-text { font-size:12px; color:var(--text3); line-height:1.4; }
+  .cta { background:var(--green); color:var(--bg); padding:14px 28px; border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; letter-spacing:2px; text-transform:uppercase; text-decoration:none; display:inline-block; margin-top:16px; box-shadow:0 0 20px rgba(46,204,113,.4); }
+  @media(max-width:520px) { .platform-grid,.features-grid { grid-template-columns:1fr; } h1{font-size:38px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>FORGE</h1>
+  <div class="subtitle">// Installation &amp; Setup Guide</div>
+
+  <!-- WHAT'S NEW -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">★</div>
+      <div class="step-title">What's in FORGE v2</div>
+    </div>
+    <div class="step-body">
+      <div class="features-grid">
+        <div class="feature"><div class="feature-icon">⏱️</div><div><div class="feature-title">Rest Timer</div><div class="feature-text">Built-in countdown with sound & vibration alerts</div></div></div>
+        <div class="feature"><div class="feature-icon">📋</div><div><div class="feature-title">Quick Templates</div><div class="feature-text">Pre-load Push/Pull/Leg day with one tap</div></div></div>
+        <div class="feature"><div class="feature-icon">💡</div><div><div class="feature-title">Last Session Hint</div><div class="feature-text">Shows your previous sets when entering an exercise</div></div></div>
+        <div class="feature"><div class="feature-icon">⚖️</div><div><div class="feature-title">Body Weight Log</div><div class="feature-text">Track weight over time with trend chart</div></div></div>
+        <div class="feature"><div class="feature-icon">💧</div><div><div class="feature-title">Hydration Tracker</div><div class="feature-text">8-cup daily water intake goal tracker</div></div></div>
+        <div class="feature"><div class="feature-icon">🏆</div><div><div class="feature-title">PR Detection</div><div class="feature-text">Automatically flags personal records with a badge</div></div></div>
+        <div class="feature"><div class="feature-icon">📤</div><div><div class="feature-title">CSV &amp; JSON Export</div><div class="feature-text">Export workouts or full backup at any time</div></div></div>
+        <div class="feature"><div class="feature-icon">⚙️</div><div><div class="feature-title">Settings</div><div class="feature-text">Default units, sound toggle, hint preferences</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: RUN LOCALLY -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">Run on Your Computer (Right Now)</div>
+    </div>
+    <div class="step-body">
+      <p>Open the file <b>index.html</b> in any web browser (Chrome, Firefox, Edge, Safari). Double-click it or drag it into your browser.</p>
+      <p>All your data is saved automatically in the browser's local storage — it will still be there next time you open it.</p>
+      <div class="note"><strong>Note:</strong> The service worker and PWA install won't work when opening from a local file. You need to host it online (Step 3) for the full mobile experience.</div>
+      <a href="index.html" class="cta">Open FORGE Now →</a>
+    </div>
+  </div>
+
+  <!-- STEP 2: ICONS -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Generate App Icons</div>
+    </div>
+    <div class="step-body">
+      <p>Icons are needed for the app to look correct when installed on a phone. Open the icon generator and download both sizes:</p>
+      <p>1. Open the file <b>icons/generate_icons.html</b> in your browser<br>
+         2. Click <b>"Download icon-192.png"</b> — save it to the <b>icons/</b> folder<br>
+         3. Click <b>"Download icon-512.png"</b> — save it to the <b>icons/</b> folder</p>
+      <a href="icons/generate_icons.html" class="cta" target="_blank">Open Icon Generator →</a>
+    </div>
+  </div>
+
+  <!-- STEP 3: GITHUB PAGES -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Host Online for Free (GitHub Pages)</div>
+    </div>
+    <div class="step-body">
+      <p>To install on your phone, the app needs to be online with HTTPS. GitHub Pages is completely free and takes about 10 minutes.</p>
+      <p>
+        <b>1.</b> Create a free account at <a href="https://github.com" target="_blank">github.com</a><br>
+        <b>2.</b> Click the <b>"+"</b> button → <b>"New repository"</b><br>
+        <b>3.</b> Name it <b>forge-gym</b>, select <b>Public</b>, click <b>Create repository</b><br>
+        <b>4.</b> Click <b>"uploading an existing file"</b> and drag in ALL files from your <b>gym app</b> folder<br>
+        <b>5.</b> Click <b>"Commit changes"</b><br>
+        <b>6.</b> Go to <b>Settings → Pages</b>, under Source select <b>"Deploy from branch"</b>, branch: <b>main</b>, folder: <b>/ (root)</b>, click Save<br>
+        <b>7.</b> Wait 2–3 minutes. Your app is now live at: <b>https://YOUR-USERNAME.github.io/forge-gym/</b>
+      </p>
+      <div class="note"><strong>Free &amp; permanent:</strong> GitHub Pages is free forever for public repositories. Your data stays on your device (localStorage), not on GitHub.</div>
+    </div>
+  </div>
+
+  <!-- STEP 4: INSTALL ON PHONE -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Install on Your Phone</div>
+    </div>
+    <div class="step-body">
+      <p>Once your app is live online, open the URL in your phone's browser and install it:</p>
+      <div class="platform-grid">
+        <div class="platform-card">
+          <div class="p-title">🤖 Android (Chrome)</div>
+          <div class="p-step">
+            1. Open the URL in Chrome<br>
+            2. Tap the <b>⋮ three-dot menu</b><br>
+            3. Tap <b>"Add to Home screen"</b><br>
+            4. Tap <b>"Install"</b><br>
+            5. FORGE appears on your home screen ✅
+          </div>
+        </div>
+        <div class="platform-card">
+          <div class="p-title">🍎 iPhone (Safari)</div>
+          <div class="p-step">
+            1. Open the URL in Safari<br>
+            2. Tap the <b>Share button</b> (box with arrow)<br>
+            3. Scroll and tap <b>"Add to Home Screen"</b><br>
+            4. Tap <b>"Add"</b><br>
+            5. FORGE appears on your home screen ✅
+          </div>
+        </div>
+      </div>
+      <div class="note"><strong>After install:</strong> FORGE will open full-screen with no browser bar, just like a native app. It works offline for all core features.</div>
+    </div>
+  </div>
+
+  <!-- STEP 5: REAL APK (OPTIONAL) -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">Get a Real Android APK (Optional)</div>
+    </div>
+    <div class="step-body">
+      <p>If you want a proper <b>.apk</b> file that can be shared and sideloaded on Android:</p>
+      <p>
+        <b>1.</b> Complete Step 3 first (your app must be hosted online)<br>
+        <b>2.</b> Go to <a href="https://www.pwabuilder.com" target="_blank"><b>pwabuilder.com</b></a><br>
+        <b>3.</b> Paste your GitHub Pages URL and click <b>"Start"</b><br>
+        <b>4.</b> Click <b>"Package for Stores"</b> → <b>"Android"</b><br>
+        <b>5.</b> Click <b>"Generate"</b> — it downloads a ZIP with your <b>.apk</b> file<br>
+        <b>6.</b> On your Android phone, enable <b>"Install from Unknown Sources"</b> in Settings<br>
+        <b>7.</b> Transfer the APK to your phone and tap it to install
+      </p>
+      <div class="note"><strong>PWABuilder is free</strong> and made by Microsoft. The APK it generates uses Chrome's TWA (Trusted Web Activity) engine — high quality and approved for Google Play Store submission.</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <p style="font-size:12px;color:var(--text3);text-align:center;">FORGE Gym Tracker · All data stored locally on your device · No account required</p>
+
+</div>
+</body>
+</html>

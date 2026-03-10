@@ -1,0 +1,274 @@
+// FORGE Sync Engine
+// Syncs localStorage data to/from Supabase in the background.
+// offline-first: localStorage is the working copy; Supabase is the cloud source of truth.
+//
+// Public API (on window):
+//   _syncPull(userId)            — fetch all user data from Supabase → localStorage
+//   _syncPush(userId)            — push all localStorage data to Supabase (upsert)
+//   _syncPushDebounced()         — debounced version called after every save()
+//   _syncPushProfile(userId)     — push only the profile row (called after onboarding)
+//   _forgeSignOut()              — sign out and reset to auth screen
+
+(function () {
+  'use strict';
+
+  const LS = window.FORGE_STORAGE ? window.FORGE_STORAGE.KEYS : null;
+  const PENDING_KEY = 'forge_sync_pending';
+  const DEBOUNCE_MS = 2000;
+
+  let _debounceTimer = null;
+  let _currentUserId = null;
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  function _ls(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  }
+  function _lsSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+
+  async function _upsert(table, rows) {
+    if (!window._sb || !rows) return;
+    if (!Array.isArray(rows)) rows = [rows];
+    if (rows.length === 0) return;
+    const { error } = await window._sb.from(table).upsert(rows, { onConflict: 'id' });
+    if (error) console.warn('[FORGE sync] upsert error', table, error.message);
+  }
+
+  async function _upsertSingle(table, row, conflictCol) {
+    if (!window._sb || !row) return;
+    const { error } = await window._sb.from(table).upsert(row, { onConflict: conflictCol || 'user_id' });
+    if (error) console.warn('[FORGE sync] upsert error', table, error.message);
+  }
+
+  // ── Push ─────────────────────────────────────────────────────────────────
+
+  async function _syncPushWorkouts(userId) {
+    const workouts = _ls('forge_workouts');
+    if (!Array.isArray(workouts) || workouts.length === 0) return;
+    const rows = workouts.map(w => ({
+      id:      String(w.id || w.date || Date.now()),
+      user_id: userId,
+      data:    w,
+      date:    w.date ? new Date(w.date).toISOString() : new Date().toISOString()
+    }));
+    await _upsert('workouts', rows);
+  }
+
+  async function _syncPushBwWorkouts(userId) {
+    const bw = _ls('forge_bw_workouts');
+    if (!Array.isArray(bw) || bw.length === 0) return;
+    const rows = bw.map(w => ({
+      id:      String(w.id || w.date || Date.now()),
+      user_id: userId,
+      data:    w,
+      date:    w.date ? new Date(w.date).toISOString() : new Date().toISOString()
+    }));
+    await _upsert('bw_workouts', rows);
+  }
+
+  async function _syncPushBodyWeight(userId) {
+    const entries = _ls('forge_bodyweight');
+    if (!Array.isArray(entries) || entries.length === 0) return;
+    const rows = entries.map((e, i) => ({
+      id:      String(e.id || e.date || i),
+      user_id: userId,
+      data:    e,
+      date:    e.date || new Date().toISOString().slice(0, 10)
+    }));
+    const { error } = await window._sb.from('body_weight').upsert(rows, { onConflict: 'id' });
+    if (error) console.warn('[FORGE sync] upsert error body_weight', error.message);
+  }
+
+  async function _syncPushTemplates(userId) {
+    const templates = _ls('forge_templates');
+    if (!Array.isArray(templates) || templates.length === 0) return;
+    const rows = templates.map(t => ({
+      id:      String(t.id || t.name || Math.random()),
+      user_id: userId,
+      data:    t
+    }));
+    await _upsert('templates', rows);
+  }
+
+  async function _syncPushSimple(table, lsKey, userId) {
+    const data = _ls(lsKey);
+    if (data === null || data === undefined) return;
+    await _upsertSingle(table, { user_id: userId, data });
+  }
+
+  async function _syncPushCheckins(userId) {
+    // forge_checkins is an object keyed by date string e.g. "2026-03-10"
+    const checkins = _ls('forge_checkins');
+    if (!checkins || typeof checkins !== 'object') return;
+    const rows = Object.entries(checkins).map(([date, data]) => ({
+      user_id: userId,
+      date,
+      data
+    }));
+    if (rows.length === 0) return;
+    const { error } = await window._sb.from('checkins').upsert(rows, { onConflict: 'user_id,date' });
+    if (error) console.warn('[FORGE sync] upsert error checkins', error.message);
+  }
+
+  async function _syncPushWater(userId) {
+    const water = _ls('forge_water');
+    if (!water || typeof water !== 'object') return;
+    const rows = Object.entries(water).map(([date, data]) => ({
+      user_id: userId,
+      date,
+      data
+    }));
+    if (rows.length === 0) return;
+    const { error } = await window._sb.from('water').upsert(rows, { onConflict: 'user_id,date' });
+    if (error) console.warn('[FORGE sync] upsert error water', error.message);
+  }
+
+  async function _syncPushSteps(userId) {
+    const steps = _ls('forge_steps');
+    if (!steps || typeof steps !== 'object') return;
+    const rows = Object.entries(steps).map(([date, val]) => ({
+      user_id: userId,
+      date,
+      steps: typeof val === 'number' ? val : (val?.steps || 0)
+    }));
+    if (rows.length === 0) return;
+    const { error } = await window._sb.from('steps').upsert(rows, { onConflict: 'user_id,date' });
+    if (error) console.warn('[FORGE sync] upsert error steps', error.message);
+  }
+
+  // Profile push (called directly after onboarding)
+  window._syncPushProfile = async function (userId) {
+    if (!window._sb || !userId) return;
+    const profileRaw = _ls('forge_profile') || {};
+    const { error } = await window._sb.from('profiles')
+      .upsert({ id: userId, data: profileRaw }, { onConflict: 'id' });
+    if (error) console.warn('[FORGE sync] upsert error profiles', error.message);
+  };
+
+  // Full push of all data
+  window._syncPush = async function (userId) {
+    if (!window._sb || !userId) return;
+    try {
+      await Promise.all([
+        window._syncPushProfile(userId),
+        _syncPushWorkouts(userId),
+        _syncPushBwWorkouts(userId),
+        _syncPushBodyWeight(userId),
+        _syncPushTemplates(userId),
+        _syncPushSimple('settings',     'forge_settings',     userId),
+        _syncPushSimple('meals',        'forge_meals',        userId),
+        _syncPushSimple('meal_library', 'forge_meal_library', userId),
+        _syncPushCheckins(userId),
+        _syncPushWater(userId),
+        _syncPushSteps(userId)
+      ]);
+      localStorage.removeItem(PENDING_KEY);
+    } catch (e) {
+      console.warn('[FORGE sync] push error', e);
+      localStorage.setItem(PENDING_KEY, '1');
+    }
+  };
+
+  // Debounced push — called after every save()
+  window._syncPushDebounced = function () {
+    if (!window._sb || !_currentUserId) return;
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(() => {
+      window._syncPush(_currentUserId);
+    }, DEBOUNCE_MS);
+  };
+
+  // ── Pull ─────────────────────────────────────────────────────────────────
+
+  window._syncPull = async function (userId) {
+    if (!window._sb || !userId) return;
+    _currentUserId = userId;
+    try {
+      const [
+        profileRes, workoutsRes, bwRes, bwWeightRes, tplRes,
+        settingsRes, mealsRes, mealLibRes, checkinsRes, waterRes, stepsRes
+      ] = await Promise.all([
+        window._sb.from('profiles').select('data').eq('id', userId).maybeSingle(),
+        window._sb.from('workouts').select('data').eq('user_id', userId),
+        window._sb.from('bw_workouts').select('data').eq('user_id', userId),
+        window._sb.from('body_weight').select('data').eq('user_id', userId),
+        window._sb.from('templates').select('data').eq('user_id', userId),
+        window._sb.from('settings').select('data').eq('user_id', userId).maybeSingle(),
+        window._sb.from('meals').select('data').eq('user_id', userId).maybeSingle(),
+        window._sb.from('meal_library').select('data').eq('user_id', userId).maybeSingle(),
+        window._sb.from('checkins').select('date,data').eq('user_id', userId),
+        window._sb.from('water').select('date,data').eq('user_id', userId),
+        window._sb.from('steps').select('date,steps').eq('user_id', userId)
+      ]);
+
+      // Profiles
+      if (profileRes.data?.data) _lsSet('forge_profile', profileRes.data.data);
+
+      // Arrays
+      if (workoutsRes.data?.length) _lsSet('forge_workouts', workoutsRes.data.map(r => r.data));
+      if (bwRes.data?.length)       _lsSet('forge_bw_workouts', bwRes.data.map(r => r.data));
+      if (bwWeightRes.data?.length) _lsSet('forge_bodyweight', bwWeightRes.data.map(r => r.data));
+      if (tplRes.data?.length)      _lsSet('forge_templates', tplRes.data.map(r => r.data));
+
+      // Single-row blobs
+      if (settingsRes.data?.data) _lsSet('forge_settings', settingsRes.data.data);
+      if (mealsRes.data?.data)    _lsSet('forge_meals', mealsRes.data.data);
+      if (mealLibRes.data?.data)  _lsSet('forge_meal_library', mealLibRes.data.data);
+
+      // Date-keyed objects
+      if (checkinsRes.data?.length) {
+        const obj = {};
+        checkinsRes.data.forEach(r => { obj[r.date] = r.data; });
+        _lsSet('forge_checkins', obj);
+      }
+      if (waterRes.data?.length) {
+        const obj = {};
+        waterRes.data.forEach(r => { obj[r.date] = r.data; });
+        _lsSet('forge_water', obj);
+      }
+      if (stepsRes.data?.length) {
+        const obj = {};
+        stepsRes.data.forEach(r => { obj[r.date] = r.steps; });
+        _lsSet('forge_steps', obj);
+      }
+
+      console.log('[FORGE sync] pull complete');
+    } catch (e) {
+      console.warn('[FORGE sync] pull error', e);
+    }
+  };
+
+  // ── Sign out ─────────────────────────────────────────────────────────────
+
+  window._forgeSignOut = async function () {
+    clearTimeout(_debounceTimer);
+    _currentUserId = null;
+    if (window._sb) await window._sb.auth.signOut();
+    // Clear user data from localStorage (keep app shell keys)
+    [
+      'forge_workouts','forge_bw_workouts','forge_bodyweight',
+      'forge_templates','forge_settings','forge_meals','forge_meal_library',
+      'forge_checkins','forge_water','forge_steps','forge_profile',
+      'forge_sync_pending','forge_schema_version'
+    ].forEach(k => localStorage.removeItem(k));
+    // Reload to show auth screen
+    window.location.reload();
+  };
+
+  // ── Online retry ─────────────────────────────────────────────────────────
+
+  window.addEventListener('online', function () {
+    if (localStorage.getItem(PENDING_KEY) && _currentUserId) {
+      console.log('[FORGE sync] back online — retrying pending push');
+      window._syncPush(_currentUserId);
+    }
+  });
+
+  // ── Set current user (called after pull/boot) ────────────────────────────
+  window._syncSetUser = function (userId) {
+    _currentUserId = userId;
+  };
+
+})();
