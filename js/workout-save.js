@@ -142,6 +142,25 @@ function _saveWeightedWorkout() {
     if (isPR) {
       showToast(typeof t === 'function' ? (currentLang === 'ar' ? 'رقم قياسي جديد! تم تسجيل التمرين' : 'NEW PR! Workout logged!') : 'NEW PR! Workout logged!');
       if (typeof hapPR === 'function') hapPR();
+      if (typeof _addEnergy === 'function') _addEnergy(10);
+      (function() {
+        var _exCard = document.getElementById('form-panel') || document.querySelector('.exercise-card') || document.getElementById('log-form');
+        if (_exCard) {
+          _exCard.classList.add('boss-fight-card');
+          var _hdr = _exCard.querySelector('h3, .form-title, .exercise-name');
+          if (_hdr && !_hdr.querySelector('.boss-badge')) {
+            var _badge = document.createElement('span');
+            _badge.className = 'boss-badge boss-defeated-badge';
+            _badge.textContent = '\u2694 BOSS DEFEATED!';
+            _hdr.appendChild(_badge);
+          }
+          setTimeout(function() {
+            _exCard.classList.remove('boss-fight-card');
+            var _b = _exCard.querySelector('.boss-badge');
+            if (_b) _b.remove();
+          }, 4000);
+        }
+      })();
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
       if (typeof burstPR === 'function') burstPR(btn);
@@ -245,6 +264,25 @@ function saveBwWorkout() {
     if (isPR) {
       showToast(typeof t === 'function' && currentLang === 'ar' ? `رقم قياسي! ${newMaxVal} — رقم جديد!` : `BW PR! ${newMaxVal} ${_prUnit} — new record!`);
       if (typeof hapPR === 'function') hapPR();
+      if (typeof _addEnergy === 'function') _addEnergy(10);
+      (function() {
+        var _exCard = document.getElementById('form-panel') || document.querySelector('.exercise-card') || document.getElementById('log-form');
+        if (_exCard) {
+          _exCard.classList.add('boss-fight-card');
+          var _hdr = _exCard.querySelector('h3, .form-title, .exercise-name');
+          if (_hdr && !_hdr.querySelector('.boss-badge')) {
+            var _badge = document.createElement('span');
+            _badge.className = 'boss-badge boss-defeated-badge';
+            _badge.textContent = '\u2694 BOSS DEFEATED!';
+            _hdr.appendChild(_badge);
+          }
+          setTimeout(function() {
+            _exCard.classList.remove('boss-fight-card');
+            var _b = _exCard.querySelector('.boss-badge');
+            if (_b) _b.remove();
+          }, 4000);
+        }
+      })();
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
     } else {
@@ -255,4 +293,57 @@ function saveBwWorkout() {
     }
     startTimer();
   }, 300);
+}
+
+/* ── Arcade Star Rating ── */
+function _showSessionStars() {
+  var logs = (typeof _sessionWkLogs !== 'undefined') ? _sessionWkLogs : [];
+  if (!logs.length) return;
+
+  var totalVol  = logs.reduce(function(a,l){ return a+(l.volume||0); }, 0);
+  var prCount   = logs.filter(function(l){ return l.isPR; }).length;
+  var bestCombo = (typeof _bestCombo !== 'undefined') ? _bestCombo : 0;
+
+  var prevWorkouts = (typeof workouts !== 'undefined') ? workouts : [];
+  var prevAvgVol = 0;
+  if (prevWorkouts.length >= 2) {
+    var recent = prevWorkouts.slice(-5);
+    prevAvgVol = recent.reduce(function(a,w){ return a+(w.totalVolume||0); },0) / recent.length;
+  }
+
+  var stars = 1;
+  var meetsVolume = prevAvgVol > 0 && totalVol >= prevAvgVol * 0.8;
+  if (meetsVolume || prCount > 0) stars = 2;
+  if ((prevAvgVol === 0 || totalVol >= prevAvgVol) && prCount > 0 && bestCombo >= 3) stars = 3;
+
+  var totalSets = logs.reduce(function(a,l){ return a+(l.sets?l.sets.length:0); },0);
+  var energyPct = (typeof _sessionEnergy !== 'undefined') ? Math.round(_sessionEnergy) : 0;
+  var parts = [totalSets + ' SETS'];
+  if (bestCombo >= 2) parts.push('BEST COMBO x' + bestCombo);
+  if (prCount > 0) parts.push(prCount + ' PR');
+  parts.push(energyPct + '% ENERGY');
+
+  var titleEl = document.getElementById('wend-title');
+  if (!titleEl) return;
+  titleEl.innerHTML =
+    '<div class="wend-stars">' +
+    [1,2,3].map(function(n,i){ return '<div class="wend-star" id="wend-star-'+(i+1)+'">&#11088;</div>'; }).join('') +
+    '</div>';
+
+  var subEl = document.getElementById('wend-sub');
+  if (subEl) {
+    var oldText = subEl.textContent || '';
+    subEl.innerHTML = '<div class="wend-star-summary">' + parts.join(' &middot; ') + '</div><div>' + oldText + '</div>';
+  }
+
+  if (typeof sndStars === 'function') sndStars(stars);
+  if (typeof hapStars === 'function') hapStars(stars);
+  for (var i = 0; i < stars; i++) {
+    (function(idx) {
+      setTimeout(function() {
+        var el = document.getElementById('wend-star-' + (idx+1));
+        if (el) el.classList.add('revealed');
+      }, idx * 420);
+    })(i);
+  }
 }

@@ -52,3 +52,31 @@ function toggleHaptic(on) {
   localStorage.setItem('forge_haptic', on ? 'on' : 'off');
   if (on) hapTap(); // confirm it's working
 }
+
+/* ── Arcade Gym Haptic Extensions ── */
+
+/* hapCombo — escalating combo pulses */
+function hapCombo(level) {
+  if (level === 1) _vib([20]);
+  else if (level === 2) _vib([30,20,50]);
+  else _vib([50,30,80,30,120]);
+}
+
+/* hapComboBreak — short deflation */
+function hapComboBreak() { _vib([15,10,15]); }
+
+/* hapBossMode — tension rumble */
+function hapBossMode() { _vib([40,20,40,20,80]); }
+
+/* hapSessionStart — startup pulse */
+function hapSessionStart() { _vib([30,20,30,20,60]); }
+
+/* hapStars — one pulse per star */
+function hapStars(n) {
+  const pattern = [];
+  for (let i = 0; i < n; i++) {
+    if (i > 0) pattern.push(100);
+    pattern.push(40, 30);
+  }
+  _vib(pattern);
+}

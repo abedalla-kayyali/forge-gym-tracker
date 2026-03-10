@@ -470,6 +470,9 @@
 
   </header>
 
+<!-- SESSION ENERGY BAR -->
+<div id="session-energy-bar" style="display:none"><div id="session-energy-fill"></div><span id="session-energy-label">WARMING UP</span></div>
+
   <!-- ????????????????????????????????????
        MISSION BANNER (sticky, always visible)
   ???????????????????????????????????? -->
@@ -909,6 +912,8 @@
           <div class="sets-header" id="weighted-sets-header">
             <span data-i18n="form.set" title="Tap set number to mark Warmup / Dropset / AMRAP" style="cursor:default;">TYPE</span><span data-i18n="form.reps">REPS</span><span data-i18n="form.weight">WEIGHT</span><span data-i18n="form.unit">UNIT</span><span id="rpe-header" style="display:none;font-size:9px;" data-i18n="form.rpe">RPE</span><span></span>
           </div>
+<!-- COMBO STRIP -->
+<div id="combo-strip" class="combo-strip" style="display:none"><div class="combo-strip-left"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="combo-strip-label">COMBO STREAK</span></div><span class="combo-strip-count" id="combo-count">x2</span></div>
           <div id="sets-container"></div>
           <div class="sets-empty-hint" id="sets-empty-hint">
             <div class="empty-hint-icon">🏋️</div>
@@ -2482,6 +2487,7 @@ function startWorkoutSession() {
   const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
   showToast(isAr ? '??? ���� ������!' : '??? Session started � let\'s go!', 'var(--accent)');
   if (typeof sndStart === 'function') sndStart();
+  if (typeof playSessionCeremony === 'function') playSessionCeremony();
 }
 
 let _endConfirmPending = false, _endConfirmTimer = null;
@@ -2519,7 +2525,12 @@ function endWorkoutSession() {
   if (shAct)  shAct.style.display  = 'none';
   if (shIdle) shIdle.style.display = '';
   _initSessionCard();
+  // Arcade session end
+  const _ebar = document.getElementById('session-energy-bar');
+  if (_ebar) _ebar.style.display = 'none';
+  if (typeof sndSessionEnd === 'function') sndSessionEnd();
   _showSessionSummary(duration);
+  if (typeof _showSessionStars === 'function') setTimeout(_showSessionStars, 800);
 }
 
 function _buildSessionBodyMapSVG(muscles, side) {
@@ -8552,6 +8563,9 @@ if (document.readyState === 'loading') {
     </div>
   </div>
 </div>
+
+<!-- SESSION START CEREMONY -->
+<div id="session-start-overlay" onclick="_skipSessionCeremony()"><div id="session-countdown-num">3</div></div>
 
 <!-- WORKOUT END SUMMARY OVERLAY -->
 <div id="wend-overlay" class="wend-overlay" style="display:none;" onclick="if(event.target===this)closeSessionSummary()">

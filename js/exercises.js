@@ -252,6 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 0);
 });
 
+/* ── Arcade Gym State ── */
+let _comboCount = 0;
+let _comboTimer = null;
+let _bestCombo  = 0;
+let _sessionEnergy = 0;
+let _energyMilestones = [25, 50, 75, 100];
+let _energyMilestonesHit = new Set();
+
 // ═══════════════════════════════════════════
 //  SETS
 // ═══════════════════════════════════════════
@@ -261,6 +269,108 @@ function _updateSetBadge(n) {
   const _sAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
   el.textContent = n + (_sAr ? ' مجموعات' : ' SETS');
 }
+/* ── Arcade: Combo Counter ── */
+function _updateComboStrip() {
+  const strip = document.getElementById('combo-strip');
+  const countEl = document.getElementById('combo-count');
+  if (!strip || !countEl) return;
+  if (_comboCount < 2) {
+    strip.style.display = 'none';
+    strip.classList.remove('combo-strip-glow','combo-strip-fire','combo-fire-anim');
+    return;
+  }
+  strip.style.display = 'flex';
+  countEl.textContent = 'x' + _comboCount;
+  strip.classList.remove('combo-strip-glow','combo-strip-fire','combo-fire-anim');
+  if (_comboCount >= 10) {
+    strip.classList.add('combo-strip-fire','combo-fire-anim');
+    countEl.textContent = 'x' + _comboCount + ' \uD83D\uDD25';
+  } else if (_comboCount >= 5) {
+    strip.classList.add('combo-strip-glow');
+  }
+}
+
+function _breakCombo() {
+  if (_comboCount >= 2) {
+    if (typeof sndComboBreak === 'function') sndComboBreak();
+    if (typeof hapComboBreak === 'function') hapComboBreak();
+  }
+  _comboCount = 0;
+  _updateComboStrip();
+}
+
+function _incrementCombo() {
+  clearTimeout(_comboTimer);
+  _comboCount++;
+  if (_comboCount > _bestCombo) _bestCombo = _comboCount;
+  if (_comboCount >= 10) {
+    if (typeof sndCombo === 'function') sndCombo(3);
+    if (typeof hapCombo === 'function') hapCombo(3);
+  } else if (_comboCount >= 5) {
+    if (typeof sndCombo === 'function') sndCombo(2);
+    if (typeof hapCombo === 'function') hapCombo(2);
+  } else if (_comboCount >= 3) {
+    if (typeof sndCombo === 'function') sndCombo(1);
+    if (typeof hapCombo === 'function') hapCombo(1);
+  } else if (_comboCount === 2) {
+    if (typeof hapTap === 'function') hapTap();
+  }
+  if (_comboCount === 3 || _comboCount === 5 || _comboCount === 10) {
+    _addEnergy(3);
+  }
+  _updateComboStrip();
+  _comboTimer = setTimeout(_breakCombo, 90000);
+}
+
+function resetCombo() {
+  clearTimeout(_comboTimer);
+  _comboCount = 0;
+  _bestCombo  = 0;
+  _updateComboStrip();
+}
+
+/* ── Arcade: Session Energy Meter ── */
+function _updateEnergyMeter() {
+  const bar   = document.getElementById('session-energy-bar');
+  const fill  = document.getElementById('session-energy-fill');
+  const label = document.getElementById('session-energy-label');
+  if (!bar || !fill || !label) return;
+  fill.style.width = _sessionEnergy + '%';
+  bar.classList.remove('energy-warm','energy-zone','energy-beast','energy-fire');
+  if (_sessionEnergy > 90) {
+    bar.classList.add('energy-fire');
+    label.textContent = 'ON FIRE';
+  } else if (_sessionEnergy > 60) {
+    bar.classList.add('energy-beast');
+    label.textContent = 'BEAST MODE';
+  } else if (_sessionEnergy > 30) {
+    bar.classList.add('energy-zone');
+    label.textContent = 'IN THE ZONE';
+  } else {
+    bar.classList.add('energy-warm');
+    label.textContent = 'WARMING UP';
+  }
+}
+
+function _addEnergy(n) {
+  const bar = document.getElementById('session-energy-bar');
+  if (!bar || bar.style.display === 'none') return;
+  _sessionEnergy = Math.min(100, _sessionEnergy + n);
+  _updateEnergyMeter();
+  _energyMilestones.forEach(m => {
+    if (_sessionEnergy >= m && !_energyMilestonesHit.has(m)) {
+      _energyMilestonesHit.add(m);
+      if (typeof sndMilestone === 'function') sndMilestone();
+    }
+  });
+}
+
+function _resetEnergy() {
+  _sessionEnergy = 0;
+  _energyMilestonesHit = new Set();
+  _updateEnergyMeter();
+}
+
 function addSet() {
   setCount++;
   _updateSetBadge(setCount);
@@ -297,6 +407,10 @@ function addSet() {
   if (!('ontouchstart' in window)) row.querySelector('.set-reps').focus();
   if (typeof sndSetLog === 'function') sndSetLog();
   if (typeof hapSetLog === 'function') hapSetLog();
+  if (typeof _sessionActive !== 'undefined' && _sessionActive) {
+    _incrementCombo();
+    _addEnergy(5);
+  }
   updateRepeatBtn();
 }
 
@@ -963,3 +1077,51 @@ document.addEventListener('DOMContentLoaded', () => {
     openWheelPicker(inp);
   }, { passive: false });
 });
+
+/* ── Session Start Ceremony ── */
+var _ceremonyCancelled = false;
+
+function _skipSessionCeremony() {
+  _ceremonyCancelled = true;
+  var overlay = document.getElementById('session-start-overlay');
+  if (overlay) overlay.classList.remove('active');
+  _initSessionArcade();
+}
+
+function _initSessionArcade() {
+  var bar = document.getElementById('session-energy-bar');
+  if (bar) bar.style.display = '';
+  _resetEnergy();
+  resetCombo();
+}
+
+function playSessionCeremony() {
+  _ceremonyCancelled = false;
+  var overlay = document.getElementById('session-start-overlay');
+  var num     = document.getElementById('session-countdown-num');
+  if (!overlay || !num) { _initSessionArcade(); return; }
+
+  if (typeof sndSessionStart === 'function') sndSessionStart();
+  if (typeof hapSessionStart === 'function') hapSessionStart();
+
+  overlay.classList.add('active');
+  var steps = ['3','2','1','FORGE!'];
+  var i = 0;
+
+  function _nextStep() {
+    if (_ceremonyCancelled) return;
+    if (i >= steps.length) {
+      overlay.classList.remove('active');
+      _initSessionArcade();
+      return;
+    }
+    num.textContent = steps[i];
+    num.classList.remove('pop');
+    void num.offsetWidth;
+    num.classList.add('pop');
+    if (typeof hapTap === 'function') hapTap();
+    i++;
+    setTimeout(_nextStep, i < steps.length ? 380 : 500);
+  }
+  _nextStep();
+}

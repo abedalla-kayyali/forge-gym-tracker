@@ -224,3 +224,77 @@ function _syncSoundSetting(on) {
 (function initSoundBtn() {
   _updateSoundBtn();
 })();
+
+/* ── Arcade Gym Sound Extensions ── */
+
+/* sndSessionStart — rising power-up chord */
+function sndSessionStart() {
+  if (!soundOn) return;
+  _note(261.63, 'sawtooth', 0.18, 0.001, 0,    0.3);
+  _note(329.63, 'sawtooth', 0.14, 0.001, 0.15, 0.3);
+  _note(523.25, 'sine',     0.20, 0.001, 0.3,  0.5);
+  _note(659.25, 'sine',     0.12, 0.001, 0.45, 0.45);
+  _note(783.99, 'sine',     0.08, 0.001, 0.6,  0.4);
+}
+
+/* sndSessionEnd — epic victory fanfare */
+function sndSessionEnd() {
+  if (!soundOn) return;
+  const prog = [[392,0],[523,0.18],[659,0.36],[784,0.54]];
+  prog.forEach(([f,t]) => {
+    _note(f,   'sawtooth', 0.22, 0.001, t, 0.32);
+    _note(f*2, 'sine',     0.10, 0.001, t, 0.40);
+  });
+  [523.25,659.25,783.99,1046.5].forEach(f => _note(f,'sine',0.12,0.001,0.9,0.35));
+}
+
+/* sndCombo — escalating combo sound, level 1/2/3 */
+function sndCombo(level) {
+  if (!soundOn) return;
+  if (level === 1) {
+    _note(880, 'sine', 0.18, 0.001, 0, 0.14);
+  } else if (level === 2) {
+    _note(880, 'sine',  0.18, 0.001, 0,    0.12);
+    _note(990, 'sine',  0.16, 0.001, 0.12, 0.12);
+    _note(220, 'sine',  0.20, 0.001, 0,    0.25);
+  } else {
+    [880,1108,1320,1568,2093].forEach((f,i) => _note(f,'sine',0.16,0.001,i*0.07,0.20));
+  }
+}
+
+/* sndComboBreak — deflating break */
+function sndComboBreak() {
+  if (!soundOn) return;
+  const ctx = _ctx();
+  const osc  = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(440, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.3);
+  gain.gain.setValueAtTime(0.2, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.32);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.35);
+}
+
+/* sndBossMode — tension build for PR attempt */
+function sndBossMode() {
+  if (!soundOn) return;
+  _note(80,  'sawtooth', 0.22, 0.001, 0,    0.6);
+  _note(160, 'sawtooth', 0.10, 0.001, 0.1,  0.5);
+  [0, 0.2, 0.4].forEach(t => _note(440, 'sine', 0.12, 0.001, t, 0.12));
+}
+
+/* sndStars — n chimes (1/2/3) */
+function sndStars(n) {
+  if (!soundOn) return;
+  const chimes = [783.99, 1046.5, 1318.51];
+  for (let i = 0; i < n; i++) {
+    _note(chimes[i], 'sine', 0.22, 0.001, i * 0.22, 0.28);
+    if (i === 2) {
+      _note(1568, 'sine', 0.14, 0.001, i * 0.22 + 0.1, 0.4);
+      _note(2093, 'sine', 0.08, 0.001, i * 0.22 + 0.18, 0.4);
+    }
+  }
+}
