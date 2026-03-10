@@ -179,21 +179,33 @@
 }
 
 function exportJSON() {
+  const _lsGet = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const data = {
     exportDate: new Date().toISOString(),
+    version: 2,
     summary: {
       totalWeightedWorkouts: (typeof workouts !== 'undefined' ? workouts : []).length,
       totalBWWorkouts: (typeof bwWorkouts !== 'undefined' ? bwWorkouts : []).length,
       totalBodyCompEntries: (typeof bodyWeight !== 'undefined' ? bodyWeight : []).length,
     },
-    workouts:    typeof workouts   !== 'undefined' ? workouts   : [],
-    bwWorkouts:  typeof bwWorkouts !== 'undefined' ? bwWorkouts : [],
-    bodyWeight:  typeof bodyWeight !== 'undefined' ? bodyWeight : [],
-    templates:   typeof templates  !== 'undefined' ? templates  : [],
-    settings:    typeof settings   !== 'undefined' ? settings   : {}
+    // Workout data
+    workouts:    typeof workouts   !== 'undefined' ? workouts   : (_lsGet('forge_workouts') || []),
+    bwWorkouts:  typeof bwWorkouts !== 'undefined' ? bwWorkouts : (_lsGet('forge_bw_workouts') || []),
+    bodyWeight:  typeof bodyWeight !== 'undefined' ? bodyWeight : (_lsGet('forge_bodyweight') || []),
+    templates:   typeof templates  !== 'undefined' ? templates  : (_lsGet('forge_templates') || []),
+    settings:    typeof settings   !== 'undefined' ? settings   : (_lsGet('forge_settings') || {}),
+    // Nutrition
+    meals:       _lsGet('forge_meals') || [],
+    meal_library: _lsGet('forge_meal_library') || {},
+    // Health tracking
+    checkins:    _lsGet('forge_checkins') || {},
+    water:       _lsGet('forge_water') || {},
+    steps:       _lsGet('forge_steps') || {},
+    // Profile
+    profile:     _lsGet('forge_profile') || {}
   };
   download('FORGE_backup.json', JSON.stringify(data, null, 2), 'application/json');
-  showToast(typeof t==='function' && currentLang==='ar' ? '�� ����� ������ ����������!' : 'Backup downloaded!');
+  showToast(typeof t==='function' && currentLang==='ar' ? 'تم تنزيل النسخة الاحتياطية!' : 'Backup downloaded!');
 }
 
 function importJSON(input) {
@@ -202,11 +214,29 @@ function importJSON(input) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.workouts)   workouts    = data.workouts;
-      if (data.bodyWeight) bodyWeight  = data.bodyWeight;
-      if (data.templates)  templates   = data.templates;
-      if (data.settings)   settings    = data.settings;
-      save(); updateStatBar(); postSaveHooks(); showToast(typeof t==='function' && currentLang==='ar' ? '�� ������� ��������!' : 'Backup restored!');
+      const _lsSet = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
+
+      // Workout data — update global vars + localStorage
+      if (data.workouts)   { workouts   = data.workouts;   _lsSet('forge_workouts', data.workouts); }
+      if (data.bwWorkouts) { bwWorkouts = data.bwWorkouts; _lsSet('forge_bw_workouts', data.bwWorkouts); }
+      if (data.bodyWeight) { bodyWeight = data.bodyWeight; _lsSet('forge_bodyweight', data.bodyWeight); }
+      if (data.templates)  { templates  = data.templates;  _lsSet('forge_templates', data.templates); }
+      if (data.settings)   { settings   = data.settings;   _lsSet('forge_settings', data.settings); }
+
+      // Nutrition
+      if (data.meals)       _lsSet('forge_meals', data.meals);
+      if (data.meal_library) _lsSet('forge_meal_library', data.meal_library);
+
+      // Health tracking
+      if (data.checkins)   _lsSet('forge_checkins', data.checkins);
+      if (data.water)      _lsSet('forge_water', data.water);
+      if (data.steps)      _lsSet('forge_steps', data.steps);
+
+      // Profile
+      if (data.profile && Object.keys(data.profile).length) _lsSet('forge_profile', data.profile);
+
+      save(); updateStatBar(); postSaveHooks();
+      showToast(typeof t==='function' && currentLang==='ar' ? 'تم استعادة النسخة الاحتياطية!' : 'Backup restored!');
     } catch(err) { showToast('Invalid backup file!'); }
   };
   reader.readAsText(file);
