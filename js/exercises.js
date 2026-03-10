@@ -395,6 +395,8 @@ function openWheelPicker(input) {
   }
 
   _wpRefreshDisplay();
+  // Dismiss any visible toast so it can't intercept button taps
+  if (typeof dismissToast === 'function') dismissToast();
   document.getElementById('wheel-picker-overlay').classList.add('open');
   return true;
 }
@@ -406,18 +408,36 @@ function _wpRefreshDisplay() {
 
 function wpKey(k) {
   if (k === 'del') {
+    if (!_wpValue) return;
     _wpValue = _wpValue.slice(0, -1);
   } else if (k === '.') {
     if (!_wpIsWeight || _wpValue.includes('.')) return;
     _wpValue = (_wpValue || '0') + '.';
   } else {
-    // Guard: max 5 significant digits before decimal
     const [intPart] = (_wpValue || '').split('.');
     if (intPart.length >= 4) return;
     if (_wpValue === '0') _wpValue = k;
     else _wpValue += k;
   }
   _wpRefreshDisplay();
+  // Haptic feedback
+  if (typeof hapTap === 'function') hapTap();
+  // Voice feedback — speak the current display value
+  _wpSpeak(_wpValue || '0');
+}
+
+/* Speak via Web Speech API (respects soundOn) */
+function _wpSpeak(text) {
+  if (typeof soundOn !== 'undefined' && !soundOn) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.volume = 0.9;
+    utt.rate   = 1.3;
+    utt.pitch  = 1;
+    speechSynthesis.speak(utt);
+  } catch (e) {}
 }
 
 function wpPreset(v) {
@@ -441,6 +461,8 @@ function confirmWheelPicker() {
   if (!_wpTarget) { closeWheelPicker(); return; }
   const val = parseFloat(_wpValue) || 0;
   _wpTarget.value = _wpIsWeight ? val : Math.round(val);
+  if (typeof hapSetLog === 'function') hapSetLog();
+  _wpSpeak('confirmed');
   closeWheelPicker();
 }
 
