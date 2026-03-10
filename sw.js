@@ -1,6 +1,6 @@
 // FORGE Gym Tracker — Service Worker
 // Bump version to force cache refresh after updates
-const CACHE_NAME = 'forge-v34';
+const CACHE_NAME = 'forge-v35';
 
 const CORE_ASSETS = [
   './index.html',
@@ -42,19 +42,32 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// ── ACTIVATE: clean up old caches ──
+// ── ACTIVATE: clean up old caches, then reload all open clients ──
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => {
-          console.log('[FORGE SW] Removing old cache:', k);
-          return caches.delete(k);
-        })
+    caches.keys()
+      .then(keys =>
+        Promise.all(
+          keys.filter(k => k !== CACHE_NAME).map(k => {
+            console.log('[FORGE SW] Removing old cache:', k);
+            return caches.delete(k);
+          })
+        )
       )
-    )
+      .then(() => self.clients.claim())
+      .then(() =>
+        // Force every open window to reload so it picks up the fresh cache.
+        // This breaks the "old bootstrap.js doesn't reload on controllerchange"
+        // deadlock — the SW itself triggers the reload after taking control.
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+          .then(clients => {
+            clients.forEach(client => {
+              console.log('[FORGE SW] Reloading client:', client.url);
+              client.navigate(client.url);
+            });
+          })
+      )
   );
-  self.clients.claim();
 });
 
 // ── FETCH: cache-first for same-origin, network-only for CDN ──
