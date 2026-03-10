@@ -398,6 +398,8 @@ function openWheelPicker(input) {
   // Dismiss any visible toast so it can't intercept button taps
   if (typeof dismissToast === 'function') dismissToast();
   document.getElementById('wheel-picker-overlay').classList.add('open');
+  // Install nuclear capture listener — intercepts all touches at OS level
+  _wpInstallCapture();
   return true;
 }
 
@@ -452,8 +454,52 @@ function wpPresetDelta(delta, base) {
   _wpRefreshDisplay();
 }
 
+// Document-level capture listener installed while picker is open.
+// Fires before any other handler, preventing Android gesture detection
+// and ensuring taps always reach the correct button regardless of z-index.
+let _wpTouchCapture = null;
+
+function _wpInstallCapture() {
+  if (_wpTouchCapture) return; // already installed
+  _wpTouchCapture = function(e) {
+    const overlay = document.getElementById('wheel-picker-overlay');
+    if (!overlay || !overlay.classList.contains('open')) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    // Find the real element under the finger using coordinates
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const sheet = document.getElementById('wheel-picker-sheet');
+    if (sheet && el && sheet.contains(el)) {
+      // Finger is inside the sheet — check if it's a numpad key
+      const btn = el.closest('[data-key]');
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        wpKey(btn.dataset.key);
+        btn.classList.add('wp-active');
+        setTimeout(() => btn.classList.remove('wp-active'), 120);
+      }
+      // Other sheet controls (cancel, done, presets) handled normally — don't block
+      return;
+    }
+    // Finger is on overlay background — block completely (no accidental dismissal,
+    // no touch leaking to elements behind the overlay)
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  document.addEventListener('touchstart', _wpTouchCapture, { capture: true, passive: false });
+}
+
+function _wpRemoveCapture() {
+  if (_wpTouchCapture) {
+    document.removeEventListener('touchstart', _wpTouchCapture, { capture: true });
+    _wpTouchCapture = null;
+  }
+}
+
 function closeWheelPicker() {
   document.getElementById('wheel-picker-overlay').classList.remove('open');
+  _wpRemoveCapture();
   _wpTarget = null;
 }
 
@@ -465,24 +511,6 @@ function confirmWheelPicker() {
   _wpSpeak('confirmed');
   closeWheelPicker();
 }
-
-// Numpad key delegation — pointerdown fires before Android gesture detection
-// and before any overlay element can intercept the event.
-document.addEventListener('DOMContentLoaded', () => {
-  const numpad = document.getElementById('wp-numpad');
-  if (numpad) {
-    numpad.addEventListener('pointerdown', e => {
-      const btn = e.target.closest('[data-key]');
-      if (!btn) return;
-      e.preventDefault();  // block synthetic click / gesture detection
-      e.stopPropagation();
-      wpKey(btn.dataset.key);
-      // visual active flash
-      btn.classList.add('wp-active');
-      setTimeout(() => btn.classList.remove('wp-active'), 120);
-    }, { passive: false });
-  }
-});
 
 // Hook inputs — tap-detection prevents picker opening during scroll gestures
 document.addEventListener('DOMContentLoaded', () => {

@@ -157,6 +157,15 @@
         border-color: var(--text2, #7a9e7e);
         color: var(--text, #c8dcc9);
       }
+      .auth-version {
+        text-align: center;
+        margin-top: 18px;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.7rem;
+        color: var(--text3, #6a9a6e);
+        letter-spacing: 1px;
+        opacity: 0.75;
+      }
     </style>
 
     <div class="auth-card">
@@ -190,6 +199,7 @@
       <div class="auth-error" id="auth-error"></div>
       <div class="auth-divider">or</div>
       <button class="auth-guest-btn" onclick="window._authGuestMode()">Continue as Guest</button>
+      <div class="auth-version">${window.FORGE_VERSION || ''} &middot; ${window.FORGE_BUILD || ''}</div>
     </div>
   `;
   document.body.insertBefore(overlay, document.body.firstChild);

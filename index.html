@@ -8523,13 +8523,13 @@ if (document.readyState === 'loading') {
 </div>
 
 <!-- NUMPAD PICKER -->
-<div id="wheel-picker-overlay" onclick="if(event.target===this)closeWheelPicker()">
+<div id="wheel-picker-overlay">
   <div id="wheel-picker-sheet">
     <div class="wp-handle"></div>
     <div class="wp-header">
-      <button class="wp-btn-cancel" onclick="closeWheelPicker()">?</button>
+      <button class="wp-btn-cancel" onclick="closeWheelPicker()">&#10005;</button>
       <span class="wp-title" id="wp-title">REPS</span>
-      <button class="wp-btn-done" onclick="confirmWheelPicker()">DONE ?</button>
+      <button class="wp-btn-done" onclick="confirmWheelPicker()">DONE &#10003;</button>
     </div>
     <div class="wp-display">
       <span id="wp-display-val">0</span>
