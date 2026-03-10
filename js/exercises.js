@@ -466,6 +466,24 @@ function confirmWheelPicker() {
   closeWheelPicker();
 }
 
+// Numpad key delegation — pointerdown fires before Android gesture detection
+// and before any overlay element can intercept the event.
+document.addEventListener('DOMContentLoaded', () => {
+  const numpad = document.getElementById('wp-numpad');
+  if (numpad) {
+    numpad.addEventListener('pointerdown', e => {
+      const btn = e.target.closest('[data-key]');
+      if (!btn) return;
+      e.preventDefault();  // block synthetic click / gesture detection
+      e.stopPropagation();
+      wpKey(btn.dataset.key);
+      // visual active flash
+      btn.classList.add('wp-active');
+      setTimeout(() => btn.classList.remove('wp-active'), 120);
+    }, { passive: false });
+  }
+});
+
 // Hook inputs — tap-detection prevents picker opening during scroll gestures
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('sets-container');

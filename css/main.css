@@ -1679,7 +1679,7 @@ button:focus:not(:focus-visible){outline:none;}
 /* Numpad grid */
 .wp-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:6px 10px 10px;}
 .wp-key{height:56px;border-radius:10px;border:none;background:var(--bg3);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;cursor:pointer;transition:background .1s,transform .08s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;}
-.wp-key:active{background:var(--border2);transform:scale(.93);}
+.wp-key:active,.wp-key.wp-active{background:var(--border2);transform:scale(.93);}
 .wp-key-del{font-size:22px;color:var(--text3);}
 .wp-key-dec{font-size:22px;color:var(--text2);}
 .step-dn,.step-up{
