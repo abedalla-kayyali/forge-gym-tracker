@@ -71,10 +71,8 @@ function _showStepMilestone(milestone, isAr) {
   if (milestone.at >= 10000 && typeof sndStepGoal === 'function') sndStepGoal();
   else if (typeof sndStep === 'function') sndStep();
 
-  if ('vibrate' in navigator) {
-    if (milestone.at >= 10000) navigator.vibrate([150, 50, 150, 50, 300]);
-    else navigator.vibrate([80, 40, 80]);
-  }
+  if (milestone.at >= 10000 && typeof hapStepGoal === 'function') hapStepGoal();
+  else if (typeof hapStep === 'function') hapStep();
 }
 
 function logSteps(amount, btnEl) {

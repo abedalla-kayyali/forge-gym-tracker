@@ -1726,11 +1726,21 @@
         </div>
         <div class="toggle-row">
           <div>
-            <div class="toggle-label" data-i18n="settings.sound">Rest Timer Sound</div>
-            <div class="toggle-sub" data-i18n="settings.soundSub">Vibrate &amp; beep when rest ends</div>
+            <div class="toggle-label" data-i18n="settings.sound">Sound Effects</div>
+            <div class="toggle-sub" data-i18n="settings.soundSub">Beeps, chimes &amp; audio feedback</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="sound-setting" onchange="saveSetting('sound',this.checked)" checked>
+            <input type="checkbox" id="sound-setting" onchange="_syncSoundSetting(this.checked)" checked>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Haptic Feedback</div>
+            <div class="toggle-sub">Vibration on taps, saves &amp; alerts</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="haptic-setting" onchange="toggleHaptic(this.checked)" checked>
             <span class="toggle-thumb"></span>
           </label>
         </div>
@@ -2363,6 +2373,7 @@ setInterval(() => {
       : `${mins} min session � keep crushing it!`;
     showToast(msg, 'var(--accent)');
       if (typeof sndMilestone === 'function') sndMilestone();
+      if (typeof hapMilestone === 'function') hapMilestone();
     }
     _updateSessionCard();
   } else {
@@ -2641,7 +2652,7 @@ function hdrRestToggle() {
         const btn = document.getElementById('hdr-rest-start');
         if (btn) btn.textContent = '?';
         if (typeof sndTimerDone === 'function') sndTimerDone();
-        if ('vibrate' in navigator) navigator.vibrate([200,100,200]);
+        if (typeof hapTimerDone === 'function') hapTimerDone();
         _restToastHide();
         _restDoneNotif();
         setTimeout(() => { _hdrRestSecs = _hdrRestTarget; _hdrRestRender(); }, 2000);
@@ -2875,6 +2886,7 @@ function hdrAddWater(e) {
     _updateHdrWater();
     if (typeof initWater === 'function') initWater();
     if (typeof sndWaterDrop === 'function') sndWaterDrop();
+    if (typeof hapWater === 'function') hapWater();
 
     if (waterToday.length >= goal) {
       // ?? CELEBRATION � goal reached!
@@ -2904,9 +2916,7 @@ function _waterCelebration(waterL, isAr) {
     flash.classList.add('flash');
     flash.addEventListener('animationend', () => { flash.classList.remove('flash'); flash.style.background = ''; }, { once:true });
   }
-  // Vibrate
-  if ('vibrate' in navigator) navigator.vibrate([100, 50, 100, 50, 200]);
-  // Sound
+  if (typeof hapWaterGoal === 'function') hapWaterGoal();
   if (typeof sndWaterDrop === 'function') setTimeout(() => sndWaterDrop(), 300);
 }
 
@@ -8370,6 +8380,7 @@ if (document.readyState === 'loading') {
 ?????????????????????????????????????????? -->
 <script src="js/workout-save.js"></script>
 <script src="js/fx-sound.js"></script>
+<script src="js/fx-haptic.js"></script>
 <script src="js/fx-visuals.js"></script>
 <script src="js/bodyweight-mode.js"></script>
 <script src="js/steps-health.js"></script>

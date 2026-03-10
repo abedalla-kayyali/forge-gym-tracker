@@ -43,6 +43,7 @@ function timerDone() {
   const el = document.getElementById('timer-display');
   el.textContent = 'GO!';
   el.className = 'timer-display done';
+  if (typeof hapTimerDone === 'function') hapTimerDone();
   // FX sound engine (falls back to legacy if not loaded)
   if (typeof sndTimerDone === 'function') {
     sndTimerDone();

@@ -141,7 +141,7 @@ function _saveWeightedWorkout() {
 
     if (isPR) {
       showToast(typeof t === 'function' ? (currentLang === 'ar' ? 'رقم قياسي جديد! تم تسجيل التمرين' : 'NEW PR! Workout logged!') : 'NEW PR! Workout logged!');
-      if ('vibrate' in navigator) navigator.vibrate([50, 30, 100]);
+      if (typeof hapPR === 'function') hapPR();
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
       if (typeof burstPR === 'function') burstPR(btn);
@@ -151,7 +151,7 @@ function _saveWeightedWorkout() {
       }
     } else {
       showToast(typeof t === 'function' && currentLang === 'ar' ? 'تم تسجيل التمرين!' : 'Workout logged!');
-      if ('vibrate' in navigator) navigator.vibrate(20);
+      if (typeof hapSave === 'function') hapSave();
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
       if (typeof burstSave === 'function') burstSave();
@@ -244,10 +244,12 @@ function saveBwWorkout() {
     const _prUnit = _currentBwType === 'hold' ? 'secs' : 'reps';
     if (isPR) {
       showToast(typeof t === 'function' && currentLang === 'ar' ? `رقم قياسي! ${newMaxVal} — رقم جديد!` : `BW PR! ${newMaxVal} ${_prUnit} — new record!`);
+      if (typeof hapPR === 'function') hapPR();
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
     } else {
       showToast(typeof t === 'function' && currentLang === 'ar' ? `${name} — ${totalReps} إجمالي` : `${name} logged! ${totalReps} total ${_prUnit}`);
+      if (typeof hapSave === 'function') hapSave();
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
     }

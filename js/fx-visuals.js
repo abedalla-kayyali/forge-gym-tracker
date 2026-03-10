@@ -38,6 +38,7 @@ function initRipples() {
     if (target) {
       addRipple(target, e);
       sndTap();
+      if (typeof hapTap === 'function') hapTap();
     }
   }, { passive: true });
 }
@@ -180,6 +181,7 @@ function showLevelUp(rankName, icon) {
     }, i * 180);
   }
   sndLevelUp();
+  if (typeof hapLevelUp === 'function') hapLevelUp();
 }
 
 // Skill unlock celebration
@@ -213,4 +215,5 @@ function _showSkillUnlock(skillName, treeIcon, nextSkill) {
     }, i * 190);
   }
   if (typeof sndPR === 'function') sndPR();
+  if (typeof hapPR === 'function') hapPR();
 }

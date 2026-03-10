@@ -7,9 +7,15 @@ function loadSettings() {
   const du = document.getElementById('default-unit-setting');
   const ss = document.getElementById('sound-setting');
   const hs = document.getElementById('hint-setting');
+  const hap = document.getElementById('haptic-setting');
   if (du) du.value = settings.defaultUnit || 'kg';
-  if (ss) ss.checked = settings.sound !== false;
+  // Sound: canonical source is forge_sound key (managed by fx-sound.js)
+  const _sndOn = localStorage.getItem('forge_sound') !== 'off';
+  if (ss) ss.checked = _sndOn;
+  if (typeof soundOn !== 'undefined') window.soundOn = _sndOn; // keep in sync
   if (hs) hs.checked = settings.showHint !== false;
+  // Haptic: canonical source is forge_haptic key
+  if (hap) hap.checked = localStorage.getItem('forge_haptic') !== 'off';
   const ars = document.getElementById('autorest-setting');
   if (ars) ars.checked = !!settings.autoRest;
   const rpes = document.getElementById('rpe-setting');

@@ -192,21 +192,35 @@ function sndMilestone() {
   _note(440, 'sine', 0.05, 0.0001, 0.55, 0.4);
 }
 
-/* Sound toggle */
+/* Sync header button icon to current soundOn state */
+function _updateSoundBtn() {
+  const iconOn  = document.getElementById('sound-icon-on');
+  const iconOff = document.getElementById('sound-icon-off');
+  const btn     = document.getElementById('sound-toggle');
+  const chk     = document.getElementById('sound-setting');
+  if (iconOn)  iconOn.style.display  = soundOn ? '' : 'none';
+  if (iconOff) iconOff.style.display = soundOn ? 'none' : '';
+  if (btn)     btn.classList.toggle('muted', !soundOn);
+  if (chk)     chk.checked = soundOn;
+}
+
+/* Header button toggle */
 function toggleSound() {
   soundOn = !soundOn;
   localStorage.setItem('forge_sound', soundOn ? 'on' : 'off');
-  document.getElementById('sound-icon-on').style.display = soundOn ? '' : 'none';
-  document.getElementById('sound-icon-off').style.display = soundOn ? 'none' : '';
-  document.getElementById('sound-toggle').classList.toggle('muted', !soundOn);
+  _updateSoundBtn();
   if (soundOn) sndTap();
+}
+
+/* Settings checkbox — called from sound-setting onchange */
+function _syncSoundSetting(on) {
+  soundOn = on;
+  localStorage.setItem('forge_sound', on ? 'on' : 'off');
+  _updateSoundBtn();
+  if (on) sndTap();
 }
 
 /* Init sound button state */
 (function initSoundBtn() {
-  const btn = document.getElementById('sound-toggle');
-  if (!btn) return;
-  document.getElementById('sound-icon-on').style.display = soundOn ? '' : 'none';
-  document.getElementById('sound-icon-off').style.display = soundOn ? 'none' : '';
-  btn.classList.toggle('muted', !soundOn);
+  _updateSoundBtn();
 })();

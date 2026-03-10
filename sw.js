@@ -1,6 +1,6 @@
 // FORGE Gym Tracker — Service Worker
 // Bump version to force cache refresh after updates
-const CACHE_NAME = 'forge-v28';
+const CACHE_NAME = 'forge-v29';
 
 const CORE_ASSETS = [
   './index.html',
@@ -12,7 +12,8 @@ const CORE_ASSETS = [
   './js/auth-ui.js',
   './js/sync.js',
   './js/exercises.js',
-  './js/i18n.js'
+  './js/i18n.js',
+  './js/fx-haptic.js'
 ];
 
 // CDN assets to cache opportunistically on install.
