@@ -4757,6 +4757,15 @@ html[dir="rtl"] .toast { right: auto; left: 50%; }
 /* Water tracker RTL */
 html[dir="rtl"] .water-cups { flex-direction: row-reverse; }
 
+/* Bodyweight arcade RTL */
+html[dir="rtl"] .bw-muscle-filter { flex-direction: row-reverse; }
+html[dir="rtl"] .bw-arcade-middle { flex-direction: row-reverse; }
+html[dir="rtl"] .bw-dot-row       { flex-direction: row-reverse; }
+html[dir="rtl"] .bw-reps-area     { flex-direction: row-reverse; }
+html[dir="rtl"] .bw-reps-stepper  { flex-direction: row-reverse; }
+html[dir="rtl"] .bw-reps-btn:first-child { border-radius: 0 10px 10px 0; }
+html[dir="rtl"] .bw-reps-btn:last-child  { border-radius: 10px 0 0 10px; }
+
 /* Section edit controls RTL (flipped to left side for RTL) */
 html[dir="rtl"] .section-edit-controls {
   right: auto; left: 0;
