@@ -57,11 +57,48 @@ body::before {
 
 /* ── HEADER ── */
 header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:20px 0 14px; border-bottom:1px solid var(--border2); margin-bottom:20px;
   position:relative; top:0; z-index:50;
   background:var(--bg);
-  padding-top:calc(20px + var(--safe-top));
+  border-bottom:1px solid var(--border2);
+  margin-bottom:0;
+}
+.header-slim-strip{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px;
+  padding-top:calc(10px + var(--safe-top));
+  min-height:44px;
+}
+.header-collapse-zone{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .3s ease;
+}
+header.header-expanded .header-collapse-zone{
+  max-height:700px;
+}
+.header-expand-btn{
+  background:none;border:none;cursor:pointer;
+  padding:8px;margin:-8px -8px -8px 4px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.header-expand-btn svg{
+  transition:transform .3s ease;
+}
+header.header-expanded .header-expand-btn svg{
+  transform:rotate(180deg);
+}
+.slim-strip-right{
+  display:flex;align-items:center;gap:8px;
+}
+header.header-expanded .header-collapse-zone{
+  border-bottom:1px solid var(--border2);
+  padding-bottom:4px;
+}
+.collapse-zone-inner{
+  padding:0 16px 8px;
+  display:flex;flex-direction:column;gap:10px;
 }
 .logo{display:flex;align-items:baseline;gap:8px;}
 .logo-word{
@@ -842,8 +879,6 @@ body.deload-active .body-zone.zone-selected{
   cursor:pointer;
   user-select:none;
   transition:background .15s;
-  position:relative;
-  z-index:10;
 }
 .mission-banner:hover{ background:rgba(255,255,255,0.03); }
 .mission-banner-top{
