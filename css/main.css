@@ -75,6 +75,8 @@ header{
 }
 header.header-expanded .header-collapse-zone{
   max-height:700px;
+  border-bottom:1px solid var(--border2);
+  padding-bottom:4px;
 }
 .header-expand-btn{
   background:none;border:none;cursor:pointer;
@@ -91,10 +93,6 @@ header.header-expanded .header-expand-btn svg{
 }
 .slim-strip-right{
   display:flex;align-items:center;gap:8px;
-}
-header.header-expanded .header-collapse-zone{
-  border-bottom:1px solid var(--border2);
-  padding-bottom:4px;
 }
 .collapse-zone-inner{
   padding:0 16px 8px;
