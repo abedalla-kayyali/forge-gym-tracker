@@ -2519,6 +2519,11 @@ function sessionPillTap() {
   if (_sessionActive) { endWorkoutSession(); } else { startWorkoutSession(); }
 }
 
+function toggleHeader() {
+  const hdr = document.getElementById('app-header');
+  if (hdr) hdr.classList.toggle('header-expanded');
+}
+
 function startWorkoutSession() {
   _sessionActive    = true;
   _sessionWkStart   = Date.now();
@@ -2540,6 +2545,9 @@ function startWorkoutSession() {
   if (hero)   hero.classList.add('sh-is-active');
   if (shIdle) shIdle.style.display = 'none';
   if (shAct)  shAct.style.display  = '';
+  // Slim strip: hide subtitle during active session
+  const greeting = document.getElementById('header-greeting');
+  if (greeting) greeting.style.display = 'none';
   _updateSessionCard();
   const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
   showToast(isAr ? '??? ���� ������!' : '??? Session started � let\'s go!', 'var(--accent)');
@@ -2581,6 +2589,9 @@ function endWorkoutSession() {
   if (hero)   hero.classList.remove('sh-is-active');
   if (shAct)  shAct.style.display  = 'none';
   if (shIdle) shIdle.style.display = '';
+  // Slim strip: restore subtitle on session end
+  const greeting = document.getElementById('header-greeting');
+  if (greeting) greeting.style.display = '';
   _initSessionCard();
   // Arcade session end
   const _ebar = document.getElementById('session-energy-bar');
