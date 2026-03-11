@@ -15,16 +15,18 @@
       #forge-auth {
         background: #080c09;
         display: flex !important;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
         min-height: 100vh;
-        overflow: hidden;
+        overflow-y: auto;
+        padding: 32px 16px 48px;
+        box-sizing: border-box;
       }
       #forge-auth.auth-hidden { display: none !important; }
 
       /* Animated grid background */
       .auth-bg {
-        position: absolute;
+        position: fixed;
         inset: 0;
         background-image:
           linear-gradient(rgba(57,255,143,.06) 1px, transparent 1px),
@@ -40,7 +42,7 @@
 
       /* Radial glow blobs */
       .auth-glow-1 {
-        position: absolute;
+        position: fixed;
         width: 480px; height: 480px;
         border-radius: 50%;
         background: radial-gradient(circle, rgba(57,255,143,.09) 0%, transparent 70%);
@@ -49,7 +51,7 @@
         pointer-events: none;
       }
       .auth-glow-2 {
-        position: absolute;
+        position: fixed;
         width: 360px; height: 360px;
         border-radius: 50%;
         background: radial-gradient(circle, rgba(46,204,113,.07) 0%, transparent 70%);
@@ -67,7 +69,7 @@
       }
 
       /* Floating particles */
-      .auth-particles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+      .auth-particles { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
       .auth-particle {
         position: absolute;
         width: 2px; height: 2px;

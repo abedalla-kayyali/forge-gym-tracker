@@ -244,7 +244,6 @@ function saveBwWorkout() {
     bwSetCount = 0;
     _updateSetBadge(0);
     renderBwExercisePicker();
-    renderBwStats();
     // Re-apply zone highlight and refresh history for the kept muscle
     if (selectedMuscle) {
       document.querySelectorAll('.body-zone').forEach(z => {
