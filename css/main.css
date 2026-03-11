@@ -5764,6 +5764,63 @@ html[dir="rtl"] .logo-word { font-family: 'Bebas Neue', sans-serif; letter-spaci
   flex-shrink:0; width:14px; height:2px; background:var(--border2);
 }
 
+/* ── BW MUSCLE FILTER CHIPS ── */
+.bw-muscle-filter {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.bw-filter-chip {
+  padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border2);
+  color: var(--text3); font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+  background: none; transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bw-filter-chip.active {
+  border-color: var(--green); color: var(--accent); background: var(--green-dim);
+}
+
+/* ── BW RPG SKILL TREE ── */
+.bw-rpg-tree { display: flex; flex-direction: column; margin-bottom: 18px; }
+
+.bw-tree-section-label {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--green);
+  padding: 8px 0; border-bottom: 1px solid var(--border2); margin-bottom: 10px;
+}
+.bw-tree-section-icon { font-size: 18px; line-height: 1; }
+
+.bw-rpg-connector { width: 2px; height: 8px; margin-left: 19px; }
+.bw-rpg-connector.green { background: linear-gradient(180deg, var(--green), var(--border2)); }
+.bw-rpg-connector.dim  { background: var(--bg3); }
+
+.bw-rpg-node {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 12px; cursor: pointer;
+  transition: all .2s; border: 1.5px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+.bw-rpg-node:active { transform: scale(.98); }
+.bw-rpg-node.done    { background: rgba(46,204,113,.05); border-color: rgba(46,204,113,.2); }
+.bw-rpg-node.current { background: rgba(57,255,143,.08); border-color: var(--accent); box-shadow: 0 0 16px var(--green-glow); }
+.bw-rpg-node.next-up { background: var(--bg); border: 1.5px dashed var(--border2); }
+.bw-rpg-node.locked  { background: var(--bg); border-color: var(--border); opacity: .35; pointer-events: none; }
+
+.bw-rpg-icon { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 3px; }
+.bw-rpg-info { flex: 1; min-width: 0; }
+.bw-rpg-lvl  { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 3px; }
+.bw-rpg-lvl.done    { color: var(--green); }
+.bw-rpg-lvl.current { color: var(--accent); }
+.bw-rpg-lvl.next-up { color: var(--text3); }
+.bw-rpg-lvl.locked  { color: var(--border2); }
+.bw-rpg-name { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 1px; color: var(--white); margin-bottom: 5px; line-height: 1; }
+.bw-rpg-node.locked .bw-rpg-name { color: var(--border2); }
+.bw-rpg-bar-wrap { height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; margin-bottom: 3px; }
+.bw-rpg-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--green), var(--accent)); }
+.bw-rpg-pct    { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--text3); }
+.bw-rpg-target { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--text3); }
+.bw-rpg-badge  { flex-shrink: 0; font-size: 18px; margin-top: 2px; }
+
 /* ═══════════════════════════════════════════════════════════════════
    SKILL UNLOCK OVERLAY  (Phase 1)
 ═══════════════════════════════════════════════════════════════════ */
