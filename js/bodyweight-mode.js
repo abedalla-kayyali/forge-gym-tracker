@@ -20,7 +20,6 @@ function setWorkoutMode(mode) {
   document.getElementById('weighted-sets-section').style.display = isWgt ? '' : 'none';
   document.getElementById('bw-sets-section').style.display = isWgt ? 'none' : '';
   document.getElementById('bw-exercise-picker').style.display = isWgt ? 'none' : '';
-  document.getElementById('bw-stats-area').style.display = isWgt ? 'none' : '';
 
   // Body map: always visible
   const bodyMapSection = document.getElementById('section-bodymap');
@@ -44,7 +43,19 @@ function setWorkoutMode(mode) {
 
   if (!isWgt) {
     renderBwExercisePicker();
-    renderBwStats();
+    // Reset arcade zone
+    document.getElementById('bw-arcade-ex-name').textContent = '—';
+    document.getElementById('bw-arcade-ex-sub').textContent = '';
+    document.getElementById('bw-ring-progress').style.strokeDashoffset = '220';
+    document.getElementById('bw-ring-pct').textContent = '0%';
+    _currentBwReps = 10;
+    _currentBwEffort = 'medium';
+    _renderBwRepsVal();
+    // Reset effort button active state
+    document.querySelectorAll('.bw-eff-btn').forEach(b => b.classList.remove('active'));
+    const medBtn = document.querySelector('.bw-eff-med');
+    if (medBtn) medBtn.classList.add('active');
+    _renderBwActiveDot();
     // Clear weighted sets
     document.getElementById('sets-container').innerHTML = '';
     setCount = 0;
@@ -336,22 +347,4 @@ function _renderBwActiveDot() {
     </div>
   `;
   container.appendChild(ph);
-}
-
-function renderBwStats() {
-  const statsArea = document.getElementById('bw-stats-area');
-  const statsStrip = document.getElementById('bw-stats-strip');
-  if (!statsStrip) return;
-  const name = document.getElementById('exercise-name').value.trim();
-  const sessions = (bwWorkouts || []).filter(w => !name || w.exercise.toLowerCase() === name.toLowerCase());
-  if (!sessions.length) { statsArea.style.display = 'none'; return; }
-  statsArea.style.display = '';
-  const totalRepsAll = sessions.reduce((a, w) => a + w.sets.reduce((b, s) => b + (s.reps || s.secs || 0), 0), 0);
-  const maxEver = Math.max(...sessions.flatMap(w => w.sets.map(s => s.reps || s.secs || 0)));
-  const totalSessions = sessions.length;
-  statsStrip.innerHTML = `
-    <div class="bw-stat-card"><div class="bw-stat-val">${totalSessions}</div><div class="bw-stat-lbl">${t('bw.stat.sessions')}</div></div>
-    <div class="bw-stat-card"><div class="bw-stat-val">${totalRepsAll}</div><div class="bw-stat-lbl">${t('bw.stat.totalReps')}</div></div>
-    <div class="bw-stat-card"><div class="bw-stat-val">${maxEver}</div><div class="bw-stat-lbl">${t('bw.stat.bestSet')}</div></div>
-  `;
 }
