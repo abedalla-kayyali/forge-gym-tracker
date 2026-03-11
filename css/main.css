@@ -879,6 +879,7 @@ body.deload-active .body-zone.zone-selected{
   transition:background .15s;
 }
 .mission-banner:hover{ background:rgba(255,255,255,0.03); }
+.collapse-zone-inner .mission-banner{ border-bottom:none; }
 .mission-banner-top{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
