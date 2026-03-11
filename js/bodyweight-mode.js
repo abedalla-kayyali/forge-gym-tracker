@@ -21,11 +21,17 @@ function setWorkoutMode(mode) {
   document.getElementById('bw-sets-section').style.display = isWgt ? 'none' : '';
   document.getElementById('bw-exercise-picker').style.display = isWgt ? 'none' : '';
 
-  // Body map: always visible
+  // Muscle group: weighted only
   const bodyMapSection = document.getElementById('section-bodymap');
-  const bodyTapHint = document.getElementById('body-tap-hint-el');
-  if (bodyMapSection) bodyMapSection.style.display = '';
-  if (bodyTapHint) bodyTapHint.style.display = '';
+  if (bodyMapSection) bodyMapSection.classList.toggle('bw-mode-hidden', !isWgt);
+
+  // Auto-scroll to BW picker after fade-out completes
+  if (!isWgt) {
+    setTimeout(() => {
+      const picker = document.getElementById('bw-exercise-picker');
+      if (picker) picker.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 280);
+  }
 
   // Show/hide weighted muscle history quick-select
   const wgtHist = document.getElementById('wgt-muscle-history');
