@@ -161,24 +161,88 @@ function pickBwExercise(name, muscle, type) {
   selectedMuscle = muscle;
   _currentBwType = type || 'reps';
 
-  // Update column header: REPS vs SECS
-  const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
-  const hdr = document.getElementById('bw-val-header');
-  if (hdr) hdr.textContent = _currentBwType === 'hold' ? (isAr ? 'ثوانٍ' : 'SECS') : (isAr ? 'تكرار' : 'REPS');
+  // Update reps unit label
+  const unit = _currentBwType === 'hold' ? 'secs' : 'reps';
+  const unitEl = document.getElementById('bw-reps-unit');
+  if (unitEl) unitEl.textContent = unit;
 
+  // Update arcade header
+  _updateBwArcadeHeader(name);
+
+  // Re-render tree (highlights selected node)
   renderBwExercisePicker();
   renderBwLastSession(name);
-  renderBwStats();
 
-  // Pre-fill sets from last session, or add one blank set
+  // Pre-fill reps from last session, or use default
   const bwPrev = (bwWorkouts || []).slice().reverse().find(w => w.exercise.toLowerCase() === name.toLowerCase());
-  if (bwPrev && document.querySelectorAll('#bw-sets-container .bw-set-row').length === 0) {
-    bwSetCount = 0;
-    document.getElementById('bw-sets-container').innerHTML = '';
-    bwPrev.sets.forEach(s => addBwSet(s.reps || s.secs, s.effort));
-  } else if (document.querySelectorAll('#bw-sets-container .bw-set-row').length === 0) {
-    addBwSet();
+  if (bwPrev && bwPrev.sets.length) {
+    const lastSet = bwPrev.sets[bwPrev.sets.length - 1];
+    _currentBwReps = lastSet.reps || lastSet.secs || 10;
+  } else {
+    _currentBwReps = _currentBwType === 'hold' ? 20 : 10;
   }
+  _renderBwRepsVal();
+
+  // Clear existing sets if switching exercises
+  document.getElementById('bw-sets-container').innerHTML = '';
+  bwSetCount = 0;
+  _updateSetBadge(0);
+
+  // If coming from a previous session, pre-fill sets
+  if (bwPrev && document.querySelectorAll('#bw-sets-container .bw-dot-row').length === 0) {
+    bwPrev.sets.forEach(s => _addBwDot(s.reps || s.secs, s.effort));
+  }
+
+  _renderBwActiveDot();
+  _updateBwRing(name);
+}
+
+function _updateBwArcadeHeader(name) {
+  const nameEl = document.getElementById('bw-arcade-ex-name');
+  const subEl  = document.getElementById('bw-arcade-ex-sub');
+  if (!nameEl || !subEl) return;
+
+  nameEl.textContent = name.toUpperCase();
+
+  // Find tree + level for this exercise
+  let subtitle = '';
+  CALISTHENICS_TREES.forEach(tree => {
+    tree.levels.forEach((lvl, i) => {
+      if (lvl.n.toLowerCase() === name.toLowerCase()) {
+        const nextLvl = tree.levels[i + 1];
+        const unit = lvl.t === 'hold' ? 'secs hold' : 'reps';
+        if (nextLvl) {
+          subtitle = `LVL ${lvl.l} · TARGET ${lvl.target} ${unit} TO UNLOCK ${nextLvl.n.toUpperCase()}`;
+        } else {
+          subtitle = `LVL ${lvl.l} · MASTER LEVEL · TARGET ${lvl.target} ${unit}`;
+        }
+      }
+    });
+  });
+  subEl.textContent = subtitle;
+}
+
+function _updateBwRing(name) {
+  const ringEl = document.getElementById('bw-ring-progress');
+  const pctEl  = document.getElementById('bw-ring-pct');
+  if (!ringEl || !pctEl) return;
+
+  const CIRCUMFERENCE = 220;
+  let pct = 0;
+
+  CALISTHENICS_TREES.forEach(tree => {
+    tree.levels.forEach(lvl => {
+      if (lvl.n.toLowerCase() === name.toLowerCase()) {
+        const history = (bwWorkouts || []).filter(w => w.exercise.toLowerCase() === name.toLowerCase());
+        const maxVal = history.reduce((mx, w) => Math.max(mx, ...w.sets.map(s => s.reps || s.secs || 0)), 0);
+        pct = Math.min(100, Math.round((maxVal / lvl.target) * 100));
+      }
+    });
+  });
+
+  const offset = CIRCUMFERENCE - (CIRCUMFERENCE * pct / 100);
+  ringEl.style.strokeDashoffset = offset;
+  pctEl.textContent = pct + '%';
 }
 
 function renderBwLastSession(name) {
