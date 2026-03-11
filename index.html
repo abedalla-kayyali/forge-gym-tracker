@@ -936,18 +936,57 @@
           </div>
         </div>
 
-        <!-- BODYWEIGHT sets header -->
-        <div id="bw-sets-section" class="form-group" style="display:none;">
-          <div class="sets-header" style="grid-template-columns:36px 1fr 1fr 34px;">
-            <span data-i18n="form.set">SET</span><span data-i18n="form.reps" id="bw-val-header">REPS</span><span data-i18n="bw.effort">EFFORT</span><span></span>
+        <!-- BODYWEIGHT arcade zone -->
+        <div id="bw-sets-section" style="display:none;">
+          <div id="bw-arcade-zone" class="bw-arcade-zone">
+            <!-- Top: exercise name + level subtitle -->
+            <div class="bw-arcade-top">
+              <div class="bw-arcade-ex-name" id="bw-arcade-ex-name">—</div>
+              <div class="bw-arcade-ex-sub" id="bw-arcade-ex-sub"></div>
+            </div>
+            <!-- Middle: progress ring + set dot timeline -->
+            <div class="bw-arcade-middle">
+              <div class="bw-ring-wrap">
+                <svg class="bw-ring" viewBox="0 0 80 80">
+                  <defs>
+                    <linearGradient id="bwRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" style="stop-color:var(--green)"/>
+                      <stop offset="100%" style="stop-color:var(--accent)"/>
+                    </linearGradient>
+                  </defs>
+                  <circle class="bw-ring-bg" cx="40" cy="40" r="35"/>
+                  <circle class="bw-ring-progress" id="bw-ring-progress" cx="40" cy="40" r="35"/>
+                </svg>
+                <div class="bw-ring-center">
+                  <div class="bw-ring-pct" id="bw-ring-pct">0%</div>
+                  <div class="bw-ring-lbl">unlock</div>
+                </div>
+              </div>
+              <div class="bw-sets-dots" id="bw-sets-container"></div>
+            </div>
+            <!-- Reps stepper -->
+            <div class="bw-reps-area">
+              <div class="bw-reps-stepper">
+                <button class="bw-reps-btn" onclick="adjustBwReps(-1)">−</button>
+                <div class="bw-reps-val" id="bw-reps-val">10</div>
+                <button class="bw-reps-btn" onclick="adjustBwReps(1)">+</button>
+              </div>
+              <div class="bw-reps-unit" id="bw-reps-unit">reps</div>
+              <button class="bw-ditto-btn" onclick="bwDitto()">↩ Ditto</button>
+            </div>
+            <!-- Effort buttons -->
+            <div class="bw-effort-area">
+              <div class="bw-effort-label">How did it feel?</div>
+              <div class="bw-effort-buttons">
+                <button class="bw-eff-btn bw-eff-easy" data-effort="easy"    onclick="selectBwEffort(this)">😌 Easy</button>
+                <button class="bw-eff-btn bw-eff-med  active" data-effort="medium" onclick="selectBwEffort(this)">😤 Med</button>
+                <button class="bw-eff-btn bw-eff-hard" data-effort="hard"    onclick="selectBwEffort(this)">🔥 Hard</button>
+                <button class="bw-eff-btn bw-eff-fail" data-effort="failure" onclick="selectBwEffort(this)">💀 Fail</button>
+              </div>
+            </div>
+            <!-- Log set button -->
+            <button class="bw-log-btn" onclick="addBwSet()">⚡ LOG SET</button>
           </div>
-          <div id="bw-sets-container"></div>
-          <button class="btn btn-add" onclick="addBwSet()" data-i18n="form.addSet">+ Add Set</button>
-        </div>
-
-        <!-- BW stats under the form -->
-        <div id="bw-stats-area" style="display:none;">
-          <div class="bw-stats-strip" id="bw-stats-strip"></div>
         </div>
 
         <!-- EFFORT SELECTOR (Feature 3) -->
