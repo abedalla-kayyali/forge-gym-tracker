@@ -3209,7 +3209,6 @@ function selectMuscle(muscleOrBtn, fromOverlay) {
   _updateMuscleTargetLabel();
   // In BW mode, refresh picker filter instead of opening overlay
   if ((typeof workoutMode !== 'undefined') && workoutMode === 'bodyweight') {
-    _bwPickerShowAll = false;
     if (typeof renderBwExercisePicker === 'function') renderBwExercisePicker();
     return;
   }
