@@ -259,47 +259,83 @@ function renderBwLastSession(name) {
     `<b>${d}</b> &nbsp; ${prev.sets.length} sets · ${totalVal} total ${unit} · Max ${maxVal} ${unit}/set`;
 }
 
-function addBwSet(val, effort) {
+function adjustBwReps(delta) {
+  _currentBwReps = Math.max(1, _currentBwReps + delta);
+  _renderBwRepsVal();
+}
+
+function _renderBwRepsVal() {
+  const el = document.getElementById('bw-reps-val');
+  if (el) el.textContent = _currentBwReps;
+}
+
+function bwDitto() {
+  // Copy reps from last completed dot (reads data-val attribute set by _addBwDot)
+  const dots = document.querySelectorAll('#bw-sets-container .bw-dot-row');
+  if (!dots.length) return;
+  const lastDot = dots[dots.length - 1];
+  const infoEl = lastDot.querySelector('.bw-dot-info');
+  if (infoEl) {
+    const val = parseInt(infoEl.dataset.val, 10);
+    if (!isNaN(val)) { _currentBwReps = val; _renderBwRepsVal(); }
+  }
+}
+
+function selectBwEffort(btn) {
+  document.querySelectorAll('.bw-eff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _currentBwEffort = btn.dataset.effort;
+}
+
+function addBwSet() {
   bwSetCount++;
   _updateSetBadge(bwSetCount);
-  const container = document.getElementById('bw-sets-container');
-  const row = document.createElement('div');
-  row.className = 'bw-set-row';
-  row.id = 'bw-set-' + bwSetCount;
-  const prevRow = container.querySelector('.bw-set-row:last-child');
-  const prevVal = val !== undefined ? val : (prevRow ? prevRow.querySelector('.bw-val-input').value : '');
-  const prevEff = effort !== undefined ? effort : (prevRow ? prevRow.querySelector('.bw-effort').value : 'medium');
-  const isHold = _currentBwType === 'hold';
-  const ph = isHold ? '20' : '10';
-  const unitLbl = isHold ? 'sec' : 'rep';
-  row.innerHTML = `
-    <div class="set-num">${bwSetCount}</div>
-    <div style="position:relative;display:flex;align-items:center;">
-      <input type="number" min="1" inputmode="numeric" placeholder="${ph}" class="bw-val-input" value="${prevVal}" style="padding-right:30px;">
-      <span style="position:absolute;right:10px;font-size:10px;color:var(--text3);pointer-events:none;font-family:'DM Mono',monospace;">${unitLbl}</span>
-    </div>
-    <select class="bw-effort" style="padding:8px 4px;font-size:13px;">
-      <option value="easy" ${prevEff === 'easy' ? 'selected' : ''}>Easy</option>
-      <option value="medium" ${!prevEff || prevEff === 'medium' ? 'selected' : ''}>Medium</option>
-      <option value="hard" ${prevEff === 'hard' ? 'selected' : ''}>Hard</option>
-      <option value="fail" ${prevEff === 'fail' ? 'selected' : ''}>Failure</option>
-    </select>
-    <button class="btn-icon" onclick="removeBwSet(${bwSetCount})">×</button>
-  `;
-  container.appendChild(row);
-  const inp = row.querySelector('.bw-val-input');
-  if (!('ontouchstart' in window)) inp.focus();
+  _addBwDot(_currentBwReps, _currentBwEffort);
+  _renderBwActiveDot();
   if (typeof sndSetLog === 'function') sndSetLog();
   if (typeof hapSetLog === 'function') hapSetLog();
 }
 
-function removeBwSet(id) {
-  const el = document.getElementById('bw-set-' + id);
-  if (el) el.remove();
-  const rows = document.querySelectorAll('#bw-sets-container .bw-set-row');
-  bwSetCount = rows.length;
-  rows.forEach((r, i) => { r.querySelector('.set-num').textContent = i + 1; });
-  _updateSetBadge(bwSetCount);
+function _addBwDot(val, effort) {
+  const container = document.getElementById('bw-sets-container');
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'bw-dot-row';
+  const effortLabel = { easy: 'Easy', medium: 'Med', hard: 'Hard', failure: 'Fail' }[effort] || 'Med';
+  const effortClass = effort || 'medium';
+  const unit = _currentBwType === 'hold' ? 'secs' : 'reps';
+  row.innerHTML = `
+    <div class="bw-dot done"></div>
+    <div class="bw-dot-info" data-val="${val}">${val} ${unit}</div>
+    <div class="bw-dot-sub ${effortClass}">${effortLabel}</div>
+  `;
+  // Insert before the active placeholder (if any)
+  const activePlaceholder = container.querySelector('.bw-active-placeholder');
+  if (activePlaceholder) container.insertBefore(row, activePlaceholder);
+  else container.appendChild(row);
+}
+
+function _renderBwActiveDot() {
+  const container = document.getElementById('bw-sets-container');
+  if (!container) return;
+  // Remove old active placeholder
+  const old = container.querySelector('.bw-active-placeholder');
+  if (old) old.remove();
+
+  const ph = document.createElement('div');
+  ph.className = 'bw-active-placeholder';
+  ph.innerHTML = `
+    <div class="bw-dot-row">
+      <div class="bw-dot active"></div>
+      <div class="bw-dot-info" style="color:var(--accent)">Set ${bwSetCount + 1}</div>
+      <div class="bw-dot-sub" style="color:var(--accent)">logging...</div>
+    </div>
+    <div class="bw-add-dot-row">
+      <div class="bw-add-dot"></div>
+      <div class="bw-add-lbl" onclick="addBwSet()">+ add set</div>
+    </div>
+  `;
+  container.appendChild(ph);
 }
 
 function renderBwStats() {
