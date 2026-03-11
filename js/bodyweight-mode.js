@@ -5,6 +5,9 @@
 let workoutMode = 'weighted'; // 'weighted' | 'bodyweight'
 let bwSetCount = 0;
 let _currentBwType = 'reps'; // 'reps' | 'hold' (isometric seconds)
+let _bwFilterMuscle = ''; // active muscle filter for RPG tree
+let _currentBwEffort = 'medium'; // tracks active effort button
+let _currentBwReps = 10; // tracks reps stepper value
 
 function setWorkoutMode(mode) {
   workoutMode = mode;
@@ -60,12 +63,22 @@ function setWorkoutMode(mode) {
   _updateMuscleTargetLabel();
 }
 
-function renderBwExercisePicker() {
-  const currentEx = document.getElementById('exercise-name').value.trim();
+function setBwFilter(btn, muscle) {
+  _bwFilterMuscle = muscle;
+  document.querySelectorAll('.bw-filter-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderBwExercisePicker();
+}
 
-  // Filter trees by selected muscle
-  const trees = selectedMuscle
-    ? CALISTHENICS_TREES.filter(t => t.muscle === selectedMuscle)
+function renderBwExercisePicker() {
+  const wrap = document.getElementById('bw-rpg-trees');
+  if (!wrap) return;
+
+  const currentEx = document.getElementById('exercise-name').value.trim().toLowerCase();
+
+  // Filter trees by muscle chip selection (case-sensitive — matches CALISTHENICS_TREES muscle values)
+  const trees = _bwFilterMuscle
+    ? CALISTHENICS_TREES.filter(t => t.muscle === _bwFilterMuscle)
     : CALISTHENICS_TREES;
   const treesToRender = trees.length ? trees : CALISTHENICS_TREES;
 
@@ -79,31 +92,68 @@ function renderBwExercisePicker() {
       if (maxVal >= lvl.target) unlockedLvl = Math.max(unlockedLvl, lvl.l + 1);
     });
 
-    html += `<div class="cali-tree">
-      <div class="cali-tree-header">${tree.icon} ${tree.tree}</div>
-      <div class="cali-nodes">`;
+    html += `<div class="bw-rpg-tree">
+      <div class="bw-tree-section-label">
+        <span class="bw-tree-section-icon">${tree.icon}</span>
+        ${tree.tree.toUpperCase()}
+      </div>`;
 
     tree.levels.forEach((lvl, i) => {
-      const isLocked = lvl.l > unlockedLvl;
-      const isActive = currentEx.toLowerCase() === lvl.n.toLowerCase();
-      const targetLbl = lvl.t === 'hold' ? `${lvl.target}s hold` : `${lvl.target} reps`;
-      html += `<div class="cali-node${isLocked ? ' locked' : ''}${isActive ? ' active' : ''}"
-                   onclick="pickBwExercise('${lvl.n.replace(/'/g, '\\\'')}','${tree.muscle}','${lvl.t}')">
-        <div class="cali-node-lvl">${isLocked ? '🔒' : '🔓'} LVL ${lvl.l}</div>
-        <div class="cali-node-name">${lvl.n}</div>
-        <div class="cali-node-target">🎯 ${targetLbl}</div>
+      // Classify node state by level number vs highest unlocked level
+      const isDone    = lvl.l < unlockedLvl;
+      const isCurrent = lvl.l === unlockedLvl;
+      const isNextUp  = lvl.l === unlockedLvl + 1; // first locked level, show as "next up"
+      const isLocked  = lvl.l > unlockedLvl + 1;   // deeper locked levels
+
+      // Determine node state
+      let nodeClass = 'locked', lvlClass = 'locked', badge = '🔒';
+      if (isDone) {
+        nodeClass = 'done'; lvlClass = 'done'; badge = '✅';
+      } else if (isCurrent) {
+        nodeClass = 'current'; lvlClass = 'current'; badge = '🎯';
+      } else if (isNextUp) {
+        nodeClass = 'next-up'; lvlClass = 'next-up'; badge = '🔒';
+      }
+
+      // Progress bar (only for done + current)
+      let barHtml = '';
+      if (isDone || isCurrent) {
+        const history = (bwWorkouts || []).filter(w => w.exercise.toLowerCase() === lvl.n.toLowerCase());
+        const maxVal = history.reduce((mx, w) => Math.max(mx, ...w.sets.map(s => s.reps || s.secs || 0)), 0);
+        const pct = Math.min(100, Math.round((maxVal / lvl.target) * 100));
+        const unit = lvl.t === 'hold' ? 'secs' : 'reps';
+        const pctLabel = isDone
+          ? `Best: ${maxVal} ${unit} ✓`
+          : `Best: ${maxVal} ${unit} · ${pct}% to unlock (need ${lvl.target})`;
+        barHtml = `
+          <div class="bw-rpg-bar-wrap"><div class="bw-rpg-bar-fill" style="width:${pct}%"></div></div>
+          <div class="bw-rpg-pct">${pctLabel}</div>`;
+      } else if (isNextUp) {
+        const unit = lvl.t === 'hold' ? 'secs hold' : 'reps';
+        barHtml = `<div class="bw-rpg-target">Unlock by hitting ${lvl.target} ${unit} on previous level</div>`;
+      }
+
+      // Connector between nodes
+      const connectorClass = isDone ? 'green' : 'dim';
+      if (i > 0) html += `<div class="bw-rpg-connector ${connectorClass}"></div>`;
+
+      const isClickable = isDone || isCurrent;
+      html += `<div class="bw-rpg-node ${nodeClass}"
+                    ${isClickable ? `onclick="pickBwExercise('${lvl.n.replace(/'/g,"\\'")}','${tree.muscle}','${lvl.t}')"` : ''}>
+        <div class="bw-rpg-icon">${tree.icon}</div>
+        <div class="bw-rpg-info">
+          <div class="bw-rpg-lvl ${lvlClass}">LVL ${lvl.l} · ${nodeClass.replace('-',' ').toUpperCase()}</div>
+          <div class="bw-rpg-name">${lvl.n}</div>
+          ${barHtml}
+        </div>
+        <div class="bw-rpg-badge">${badge}</div>
       </div>`;
-      if (i < tree.levels.length - 1) html += '<div class="cali-connector"></div>';
     });
 
-    html += '</div></div>';
+    html += '</div>'; // end bw-rpg-tree
   });
 
-  const container = document.getElementById('bw-rpg-trees');
-  if (container) {
-    container.innerHTML = html;
-    container.className = 'cali-trees-container';
-  }
+  wrap.innerHTML = html;
 }
 
 function pickBwExercise(name, muscle, type) {
