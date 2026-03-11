@@ -8193,10 +8193,10 @@ function _updateSaveBtnState() {
     if (reps > 0 || (weight && parseFloat(weight) >= 0)) hasValid = true;
   });
   // Bodyweight mode sets
-  const bwRows = document.querySelectorAll('#bw-sets-container .bw-set-row');
+  const bwRows = document.querySelectorAll('#bw-sets-container .bw-dot-row');
   bwRows.forEach(row => {
-    const reps = parseInt(row.querySelector('.bw-val-input')?.value);
-    if (reps > 0) hasValid = true;
+    const val = parseInt(row.querySelector('.bw-dot-info')?.dataset.val);
+    if (val > 0) hasValid = true;
   });
   btn.disabled = !hasValid;
   btn.classList.toggle('btn-disabled', !hasValid);

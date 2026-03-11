@@ -188,18 +188,18 @@ function saveBwWorkout() {
   const name = document.getElementById('exercise-name').value.trim();
   if (!name) { showToast('Enter or pick an exercise!'); return; }
 
-  const rows = document.querySelectorAll('#bw-sets-container .bw-set-row');
-  if (!rows.length) { showToast('Add at least one set!'); return; }
+  const bwRows = document.querySelectorAll('#bw-sets-container .bw-dot-row');
+  if (!bwRows.length) { showToast('Add at least one set!'); return; }
 
-  const sets = [];
-  rows.forEach(r => {
-    const val = parseInt(r.querySelector('.bw-val-input').value);
-    const effort = r.querySelector('.bw-effort').value;
-    if (val > 0) {
-      if (_currentBwType === 'hold') sets.push({ secs: val, effort });
-      else sets.push({ reps: val, effort });
-    }
-  });
+  const sets = Array.from(bwRows).map(row => {
+    const infoEl = row.querySelector('.bw-dot-info');
+    const subEl  = row.querySelector('.bw-dot-sub');
+    const val = parseInt(infoEl ? infoEl.dataset.val : '0', 10) || 0;
+    const effortClass = subEl ? [...subEl.classList].find(c => ['easy','medium','hard','failure'].includes(c)) : 'medium';
+    return _currentBwType === 'hold'
+      ? { secs: val, effort: effortClass || 'medium' }
+      : { reps: val, effort: effortClass || 'medium' };
+  }).filter(s => (s.reps || s.secs || 0) > 0);
   if (!sets.length) { showToast('Enter values!'); return; }
 
   const btn = document.getElementById('save-btn');
