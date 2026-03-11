@@ -158,6 +158,9 @@ header.header-expanded .header-expand-btn svg{
 [dir="rtl"] .mb-radar-legend{flex-direction:row-reverse;}
 /* Status bar: use column layout, no direction reversal (avoid breaking children) */
 [dir="rtl"] .hdr-status-bar{direction:rtl;}
+[dir="rtl"] .header-slim-strip{ flex-direction:row-reverse; }
+[dir="rtl"] .slim-strip-right{ flex-direction:row-reverse; }
+[dir="rtl"] .collapse-zone-inner .header-right{ flex-direction:row-reverse; }
 .hdr-streak-pill,.hdr-rest-pill,.hdr-water-pill{
   display:flex;align-items:center;gap:5px;
   background:var(--panel);border:1px solid var(--border2);
