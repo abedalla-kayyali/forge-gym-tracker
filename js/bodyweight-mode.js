@@ -28,6 +28,7 @@ function setWorkoutMode(mode) {
   // Auto-scroll to BW picker after fade-out completes
   if (!isWgt) {
     setTimeout(() => {
+      if (workoutMode !== 'bodyweight') return;
       const picker = document.getElementById('bw-exercise-picker');
       if (picker) picker.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 280);
