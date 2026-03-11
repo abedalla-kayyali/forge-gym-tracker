@@ -6077,3 +6077,16 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .ccali-dormant-name{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--text2);letter-spacing:.5px;}
 .ccali-dormant-start{font-size:10px;color:var(--text3);margin-top:3px;}
 .ccali-dormant-target{font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);margin-top:2px;}
+
+/* Muscle group: hidden in BW mode */
+#section-bodymap {
+  transition: max-height .3s ease, opacity .2s ease, margin .3s ease;
+}
+#section-bodymap.bw-mode-hidden {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin-bottom: 0;
+  pointer-events: none;
+  transition: max-height .3s ease, opacity .2s ease, margin .3s ease;
+}
