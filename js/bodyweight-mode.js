@@ -60,28 +60,11 @@ function setWorkoutMode(mode) {
   _updateMuscleTargetLabel();
 }
 
-let _bwPickerShowAll = false;
 function renderBwExercisePicker() {
-  const wrap = document.getElementById('bw-exercise-picker');
-  const grid = document.getElementById('bw-exercises-grid');
-  if (!grid) return;
   const currentEx = document.getElementById('exercise-name').value.trim();
-  const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
 
-  // Update label
-  const labelEl = wrap ? wrap.querySelector('label') : null;
-  if (labelEl) {
-    if (selectedMuscle && !_bwPickerShowAll) {
-      labelEl.innerHTML = `${isAr ? 'مسارات' : 'Skill Trees'} — <span style="color:var(--green);font-weight:700;">${selectedMuscle.toUpperCase()}</span> &nbsp;<button onclick="_bwPickerShowAll=true;renderBwExercisePicker();" style="background:none;border:none;color:var(--accent);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;padding:0;">${isAr ? '(الكل)' : '(all)'}</button>`;
-    } else if (selectedMuscle && _bwPickerShowAll) {
-      labelEl.innerHTML = `${isAr ? 'كل المسارات' : 'All Skill Trees'} &nbsp;<button onclick="_bwPickerShowAll=false;renderBwExercisePicker();" style="background:none;border:none;color:var(--accent);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;cursor:pointer;padding:0;">${isAr ? '(فلتر)' : '(filter)'}</button>`;
-    } else {
-      labelEl.innerHTML = isAr ? 'مسارات الكاليستينيكس' : 'Calisthenics Skill Trees';
-    }
-  }
-
-  // Filter trees by selected muscle (unless show-all)
-  const trees = (selectedMuscle && !_bwPickerShowAll)
+  // Filter trees by selected muscle
+  const trees = selectedMuscle
     ? CALISTHENICS_TREES.filter(t => t.muscle === selectedMuscle)
     : CALISTHENICS_TREES;
   const treesToRender = trees.length ? trees : CALISTHENICS_TREES;
@@ -116,8 +99,11 @@ function renderBwExercisePicker() {
     html += '</div></div>';
   });
 
-  grid.innerHTML = html;
-  grid.className = 'cali-trees-container';
+  const container = document.getElementById('bw-rpg-trees');
+  if (container) {
+    container.innerHTML = html;
+    container.className = 'cali-trees-container';
+  }
 }
 
 function pickBwExercise(name, muscle, type) {

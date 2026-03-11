@@ -871,8 +871,18 @@
 
         <!-- BODYWEIGHT MODE: quick exercise picker -->
         <div id="bw-exercise-picker" style="display:none;">
-          <label style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:8px;" data-i18n="form.quickSelect">Quick Select</label>
-          <div class="bw-exercises-grid" id="bw-exercises-grid"></div>
+          <!-- Muscle filter chips -->
+          <div class="bw-muscle-filter" id="bw-muscle-filter">
+            <button class="bw-filter-chip active" data-muscle="" onclick="setBwFilter(this,'')">All</button>
+            <button class="bw-filter-chip" data-muscle="Chest" onclick="setBwFilter(this,'Chest')">Chest</button>
+            <button class="bw-filter-chip" data-muscle="Back" onclick="setBwFilter(this,'Back')">Back</button>
+            <button class="bw-filter-chip" data-muscle="Core" onclick="setBwFilter(this,'Core')">Core</button>
+            <button class="bw-filter-chip" data-muscle="Legs" onclick="setBwFilter(this,'Legs')">Legs</button>
+            <button class="bw-filter-chip" data-muscle="Shoulders" onclick="setBwFilter(this,'Shoulders')">Shoulders</button>
+            <button class="bw-filter-chip" data-muscle="Triceps" onclick="setBwFilter(this,'Triceps')">Triceps</button>
+          </div>
+          <!-- RPG skill trees rendered here by JS -->
+          <div id="bw-rpg-trees"></div>
         </div>
 
         <!-- WEIGHTED: previous workouts for selected muscle -->
