@@ -5794,6 +5794,17 @@ html[dir="rtl"] .logo-word { font-family: 'Bebas Neue', sans-serif; letter-spaci
 .bw-filter-chip.active {
   border-color: var(--green); color: var(--accent); background: var(--green-dim);
 }
+/* Compact chips — tree is the hero (patch; inherits color/border/radius from rules above) */
+.bw-filter-chip {
+  font-size: 9px;
+  padding: 3px 8px;
+  letter-spacing: 1px;
+  opacity: 0.6;
+  transition: opacity .15s ease;
+}
+.bw-filter-chip.active {
+  opacity: 1;
+}
 
 /* ── BW RPG SKILL TREE ── */
 .bw-rpg-tree { display: flex; flex-direction: column; margin-bottom: 18px; }
@@ -6153,4 +6164,51 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   border-left: 3px solid var(--accent);
   background: rgba(57,255,143,.10);
   box-shadow: 0 0 10px rgba(57,255,143,.08);
+}
+
+/* ── BW PR STRIP ── */
+.bw-pr-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: 8px;
+}
+.bw-pr-cell {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.bw-pr-icon {
+  font-size: 13px;
+}
+.bw-pr-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.bw-pr-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--accent);
+  min-width: 40px;
+}
+.bw-pr-divider {
+  color: var(--border2);
+  font-size: 18px;
+}
+@keyframes bwPrFlash {
+  0%   { background: transparent; }
+  20%  { background: rgba(57,255,143,.25); box-shadow: 0 0 14px rgba(57,255,143,.35); }
+  100% { background: transparent; }
+}
+.bw-pr-new-record {
+  animation: bwPrFlash 0.8s ease-out forwards;
+  border-radius: 6px;
+  padding: 2px 6px;
 }
