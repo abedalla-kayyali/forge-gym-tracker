@@ -52,6 +52,8 @@ function setWorkoutMode(mode) {
 
   if (!isWgt) {
     _setBwStep(1);
+    _bwSessionMax = 0;
+    _updateBwPrStrip('');
     renderBwExercisePicker();
     // Reset arcade zone
     document.getElementById('bw-arcade-ex-name').textContent = '—';
