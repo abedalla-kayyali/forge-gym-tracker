@@ -1127,6 +1127,7 @@ function renderMuscleFreshness() {
 
 // ── Volume Panel State + Helpers ──────────────────────────────
 let _volRange = '3m', _volMuscle = '';
+let _nutCalChart = null, _nutMacroChart = null, _nutWeekChart = null, _nutScoreChart = null;
 
 function setVolRange(r) {
   _volRange = r;
@@ -1356,157 +1357,321 @@ function _flattenMealsByPeriod() {
   return dayMap;
 }
 
+function _mkNutChartOpts(overrides) {
+  const base = {
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 400 },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(0,0,0,.85)',
+        titleFont: { family: "'DM Mono',monospace", size: 10 },
+        bodyFont: { family: "'DM Mono',monospace", size: 10 },
+        padding: 8, cornerRadius: 6
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b' } },
+      y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b' } }
+    }
+  };
+  if (!overrides) return base;
+  if ('scales' in overrides) base.scales = overrides.scales;
+  if ('plugins' in overrides) Object.assign(base.plugins, overrides.plugins);
+  Object.keys(overrides).forEach(k => { if (k !== 'scales' && k !== 'plugins') base[k] = overrides[k]; });
+  return base;
+}
+
+function _renderNutTodayZone(zone, targets) {
+  if (!zone) return;
+  const todayKey = _isoKey(new Date());
+  const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
+  const todayMeals = Array.isArray(ml[todayKey]) ? ml[todayKey] : [];
+  if (!todayMeals.length) {
+    zone.innerHTML = '<div class="nut-today-card"><div class="nut-today-empty">No meals logged today \u2014 <a onclick="switchMainTab(\'coach\');setTimeout(()=>switchCoachTab&&switchCoachTab(\'nutrition\'),120)" style="cursor:pointer">Log your first meal \uD83C\uDF7D\uFE0F</a></div></div>';
+    return;
+  }
+  const s = todayMeals.reduce((a, m) => { a.kcal += (+m.kcal||0); a.p += (+m.p||0); a.c += (+m.c||0); a.f += (+m.f||0); return a; }, { kcal:0, p:0, c:0, f:0 });
+  const pct = (v, t) => Math.min(100, Math.round(v / Math.max(t, 1) * 100));
+  const remaining = Math.max(0, Math.round(targets.targetCal - s.kcal));
+  zone.innerHTML = `
+<div class="nut-today-card">
+  <div class="nut-today-header">
+    <span class="nut-today-title">\uD83C\uDF7D\uFE0F TODAY</span>
+    <span class="nut-today-meals-badge">${todayMeals.length} meal${todayMeals.length !== 1 ? 's' : ''}</span>
+  </div>
+  <div class="nut-today-kcal">${Math.round(s.kcal)}<span class="nut-today-kcal-target"> / ${Math.round(targets.targetCal)} kcal</span></div>
+  <div class="nut-today-remaining">${remaining > 0 ? remaining + ' kcal remaining' : 'Goal reached! \uD83C\uDFAF'}</div>
+  <div class="nut-cal-bar-wrap"><div class="nut-cal-bar-fill" style="width:${pct(s.kcal, targets.targetCal)}%"></div></div>
+  <div class="nut-macro-rows">
+    <div class="nut-macro-row"><span class="nut-macro-label">P</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.p, targets.proteinG)}%;background:#4ade80"></div></div><span class="nut-macro-val">${Math.round(s.p)}g / ${Math.round(targets.proteinG)}g</span></div>
+    <div class="nut-macro-row"><span class="nut-macro-label">C</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.c, targets.carbG)}%;background:#e6b84a"></div></div><span class="nut-macro-val">${Math.round(s.c)}g / ${Math.round(targets.carbG)}g</span></div>
+    <div class="nut-macro-row"><span class="nut-macro-label">F</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.f, targets.fatG)}%;background:#5b8dee"></div></div><span class="nut-macro-val">${Math.round(s.f)}g / ${Math.round(targets.fatG)}g</span></div>
+  </div>
+</div>`;
+}
+
+function _renderCalorieTrendChart(daily, targetCal, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (_nutCalChart) { _nutCalChart.destroy(); _nutCalChart = null; }
+  if (daily.length < 3) { if (canvas.parentElement) canvas.parentElement.style.display = 'none'; return; }
+  if (canvas.parentElement) canvas.parentElement.style.display = '';
+  const labels = daily.map(d => { const p = d.key.split('-'); return p[2] + '/' + p[1]; });
+  const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4ade80';
+  _nutCalChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { data: daily.map(d => d.kcal), borderColor: accentColor, backgroundColor: accentColor + '26', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 4, borderWidth: 2 },
+        { data: daily.map(() => targetCal), borderColor: 'rgba(255,80,80,.4)', borderDash: [4,3], borderWidth: 1, pointRadius: 0, fill: false }
+      ]
+    },
+    options: _mkNutChartOpts({ scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b', maxTicksLimit: 7 } }, y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b' } } } })
+  });
+}
+
+function _renderMacroDonutChart(avgP, avgC, avgF, compliance, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (_nutMacroChart) { _nutMacroChart.destroy(); _nutMacroChart = null; }
+  if (avgP + avgC + avgF < 1) return;
+  const _comp = compliance;
+  const centerPlugin = {
+    id: 'nutCenterText',
+    beforeDraw(chart) {
+      const { ctx, chartArea: { width, top, height } } = chart;
+      ctx.save();
+      ctx.font = "bold 20px 'Bebas Neue', sans-serif";
+      ctx.fillStyle = '#c8dcc9';
+      ctx.textAlign = 'center';
+      ctx.fillText(_comp + '%', width / 2, top + height / 2 + 7);
+      ctx.restore();
+    }
+  };
+  _nutMacroChart = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Protein', 'Carbs', 'Fat'],
+      datasets: [{ data: [avgP, avgC, avgF], backgroundColor: ['#4ade80', '#e6b84a', '#5b8dee'], borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: { duration: 400 }, cutout: '68%',
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,.85)', bodyFont: { family: "'DM Mono',monospace", size: 10 }, padding: 8, cornerRadius: 6, callbacks: { label: ctx => ' ' + ctx.label + ': ' + Math.round(ctx.parsed) + 'g' } } }
+    },
+    plugins: [centerPlugin]
+  });
+  const legendEl = document.getElementById(canvasId + '-legend');
+  if (legendEl) legendEl.innerHTML = [['Protein','#4ade80',avgP],['Carbs','#e6b84a',avgC],['Fat','#5b8dee',avgF]].map(([n,c,v]) => `<span class="nut-macro-legend-item"><span class="nut-macro-legend-dot" style="background:${c}"></span>${Math.round(v)}g ${n}</span>`).join('');
+}
+
+function _renderWeeklyBarChart(targetCal, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (_nutWeekChart) { _nutWeekChart.destroy(); _nutWeekChart = null; }
+  const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
+  const today = new Date();
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today); d.setDate(d.getDate() - (6 - i));
+    return { key: _isoKey(d), label: d.toLocaleDateString('en-GB', { weekday: 'short' }) };
+  });
+  const data = days.map(d => (Array.isArray(ml[d.key]) ? ml[d.key] : []).reduce((s, m) => s + (+m.kcal || 0), 0));
+  const colors = data.map(v => { const r = v / Math.max(targetCal, 1); return r >= 0.8 ? '#4ade80' : r >= 0.5 ? '#e6b84a' : 'rgba(255,255,255,.12)'; });
+  _nutWeekChart = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.label),
+      datasets: [
+        { type: 'bar', data, backgroundColor: colors, borderRadius: 4, borderWidth: 0 },
+        { type: 'line', data: days.map(() => targetCal), borderColor: 'rgba(255,80,80,.4)', borderDash: [4,3], borderWidth: 1, pointRadius: 0, fill: false }
+      ]
+    },
+    options: _mkNutChartOpts({ scales: { x: { grid: { display: false }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b' } }, y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b' } } } })
+  });
+}
+
+function _renderDayScoreChart(dayScores, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (_nutScoreChart) { _nutScoreChart.destroy(); _nutScoreChart = null; }
+  if (!dayScores || !dayScores.length) return;
+  const labels = dayScores.map(d => { const p = d.key.split('-'); return p[2] + '/' + p[1]; });
+  const data = dayScores.map(d => Math.round((d.score || 0) * 100));
+  const colors = data.map(v => v >= 70 ? '#4ade80' : v >= 40 ? '#e6b84a' : 'rgba(255,80,80,.45)');
+  _nutScoreChart = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 4, borderWidth: 0 }] },
+    options: _mkNutChartOpts({
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b', maxTicksLimit: 8 } },
+        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b', callback: v => v + '%' } }
+      },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,.85)', bodyFont: { family: "'DM Mono',monospace", size: 10 }, padding: 8, cornerRadius: 6, callbacks: { label: ctx => 'Score: ' + ctx.parsed.y + '%' } } }
+    })
+  });
+}
+
 function renderNutritionAnalyticsPanel() {
-  const bodyEl = document.getElementById('nutrition-analytics-body');
+  const bodyEl  = document.getElementById('nutrition-analytics-body');
   const insightsEl = document.getElementById('nutrition-insights-body');
   const badgeEl = document.getElementById('nutrition-analytics-badge');
   if (!bodyEl) return;
 
-  const ar = (typeof currentLang !== 'undefined') && currentLang === 'ar';
-  const tx = (en, arText) => ar ? arText : en;
-  const pLabel = _dashPeriod === 'ALL' ? tx('ALL TIME', 'كل الوقت')
-    : _dashPeriod === '7D' ? tx('LAST 7D', 'آخر 7 أيام')
-      : _dashPeriod === '1M' ? tx('LAST 30D', 'آخر 30 يوم')
-        : _dashPeriod === '3M' ? tx('LAST 3M', 'آخر 3 أشهر')
-          : tx('LAST 6M', 'آخر 6 أشهر');
+  const ar  = (typeof currentLang !== 'undefined') && currentLang === 'ar';
+  const tx  = (en, arTxt) => ar ? arTxt : en;
+  const pLabel = _dashPeriod === 'ALL' ? tx('ALL TIME','كل الوقت')
+    : _dashPeriod === '7D' ? tx('LAST 7D','آخر 7 أيام')
+    : _dashPeriod === '1M' ? tx('LAST 30D','آخر 30 يوم')
+    : _dashPeriod === '3M' ? tx('LAST 3M','آخر 3 أشهر')
+    : tx('LAST 6M','آخر 6 أشهر');
   if (badgeEl) badgeEl.textContent = pLabel;
 
   const targets = _calcNutritionTargetsForStats();
-  const dayMap = _flattenMealsByPeriod();
+
+  // Zone 0: Today (always rendered, ignores period)
+  _renderNutTodayZone(document.getElementById('nut-today-zone'), targets);
+
+  const dayMap  = _flattenMealsByPeriod();
   const dayKeys = Object.keys(dayMap).sort();
+
   if (!dayKeys.length) {
-    bodyEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🍽️</div><div class="empty-title">${tx('Log meals in Coach Nutrition to unlock insights','سجّل وجباتك في تبويب التغذية لعرض التحليلات')}</div></div>`;
-    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">${tx('No nutrition trend data yet.','لا توجد بيانات كافية للاتجاهات بعد.')}</div></div>`;
+    const sz = document.getElementById('nut-stats-zone');
+    const cz = document.getElementById('nut-charts-zone');
+    if (sz) sz.innerHTML = '';
+    if (cz) cz.innerHTML = '';
+    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">\uD83D\uDCCA</div><div class="empty-title">${tx('No nutrition trend data yet.','لا توجد بيانات كافية للاتجاهات بعد.')}</div></div>`;
     return;
   }
 
+  // Aggregate daily stats
   const daily = dayKeys.map(k => {
     const sums = (dayMap[k] || []).reduce((a, m) => {
-      a.kcal += (+m.kcal || 0);
-      a.p += (+m.p || 0);
-      a.c += (+m.c || 0);
-      a.f += (+m.f || 0);
-      a.count += 1;
+      a.kcal += (+m.kcal||0); a.p += (+m.p||0); a.c += (+m.c||0); a.f += (+m.f||0); a.count += 1;
       return a;
-    }, { kcal: 0, p: 0, c: 0, f: 0, count: 0 });
+    }, { kcal:0, p:0, c:0, f:0, count:0 });
     return { key: k, ...sums };
   });
-  const allMeals = daily.flatMap(d => (dayMap[d.key] || []).map(m => ({ ...m, dayKey: d.key })));
-
-  const avg = daily.reduce((a, d) => {
-    a.kcal += d.kcal; a.p += d.p; a.c += d.c; a.f += d.f; a.count += d.count;
-    return a;
-  }, { kcal: 0, p: 0, c: 0, f: 0, count: 0 });
   const nDays = Math.max(daily.length, 1);
-  const avgKcal = avg.kcal / nDays;
-  const avgP = avg.p / nDays;
-  const avgC = avg.c / nDays;
-  const avgF = avg.f / nDays;
+  const tot   = daily.reduce((a, d) => { a.kcal+=d.kcal; a.p+=d.p; a.c+=d.c; a.f+=d.f; a.count+=d.count; return a; }, { kcal:0,p:0,c:0,f:0,count:0 });
+  const avgKcal = tot.kcal / nDays, avgP = tot.p / nDays, avgC = tot.c / nDays, avgF = tot.f / nDays;
 
-  const closeness = (actual, target) => {
-    const t = Math.max(target, 1);
-    return Math.max(0, Math.min(1, 1 - Math.abs(actual - t) / t));
-  };
-  const dayScores = daily.map(d => ({
-    ...d,
-    score: (
-      closeness(d.kcal, targets.targetCal) +
-      closeness(d.p, targets.proteinG) +
-      closeness(d.c, targets.carbG) +
-      closeness(d.f, targets.fatG)
-    ) / 4
-  }));
-  const compliance = Math.round(dayScores.reduce((s, d) => s + d.score, 0) / nDays * 100);
+  const closeness = (v, t) => { const tt = Math.max(t,1); return Math.max(0, Math.min(1, 1 - Math.abs(v-tt)/tt)); };
+  const dayScores = daily.map(d => ({ ...d, score: (closeness(d.kcal,targets.targetCal)+closeness(d.p,targets.proteinG)+closeness(d.c,targets.carbG)+closeness(d.f,targets.fatG))/4 }));
+  const compliance = Math.round(dayScores.reduce((s,d) => s+d.score, 0) / nDays * 100);
+
+  const calPct  = Math.min(100, Math.round(avgKcal / Math.max(targets.targetCal,1) * 100));
+  const mkBar   = (pct, col) => `<div style="height:4px;background:var(--border2);border-radius:2px;margin-top:6px"><div style="height:4px;background:${col};border-radius:2px;width:${pct}%"></div></div>`;
+
+  // Zone 1: Period stat cards
+  const statsZone = document.getElementById('nut-stats-zone');
+  if (statsZone) statsZone.innerHTML = `
+<div class="stats-grid" style="margin-bottom:14px">
+  <div class="sg-card">
+    <div class="sg-label">${tx('Avg Calories','متوسط السعرات')}</div>
+    <div class="sg-val">${Math.round(avgKcal)}<span class="sg-unit"> / ${Math.round(targets.targetCal)}</span></div>
+    ${mkBar(calPct,'var(--accent)')}
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">${tx('Macro Compliance','الالتزام بالماكرو')}</div>
+    <div class="sg-val">${compliance}<span class="sg-unit">%</span></div>
+    ${mkBar(compliance,'var(--accent)')}
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">${tx('Logged Days','أيام مسجلة')}</div>
+    <div class="sg-val sg-neutral">${nDays}<span class="sg-unit">d</span></div>
+    <div class="sg-sub">${tx('Meals:','وجبات:')} ${tot.count}</div>
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">${tx('Avg Macros','متوسط الماكرو')}</div>
+    <div class="sg-val sg-neutral" style="font-size:16px;line-height:1.5">${Math.round(avgP)}P / ${Math.round(avgC)}C / ${Math.round(avgF)}F</div>
+    <div class="sg-sub">${tx('Targets:','أهداف:')} ${Math.round(targets.proteinG)}P / ${Math.round(targets.carbG)}C / ${Math.round(targets.fatG)}F</div>
+  </div>
+</div>`;
+
+  // Zone 2: Charts HTML scaffold
+  const chartsZone = document.getElementById('nut-charts-zone');
+  if (chartsZone) chartsZone.innerHTML = `
+<div class="nut-charts-grid">
+  <div class="nut-chart-card">
+    <div class="nut-chart-label">\uD83D\uDCC8 ${tx('Calorie Trend','منحنى السعرات')}</div>
+    <div style="height:140px"><canvas id="nut-cal-chart"></canvas></div>
+  </div>
+  <div class="nut-chart-card">
+    <div class="nut-chart-label">\uD83E\uDD57 ${tx('Macro Split','توزيع الماكرو')}</div>
+    <div style="height:140px"><canvas id="nut-macro-chart"></canvas></div>
+    <div class="nut-macro-legend" id="nut-macro-chart-legend"></div>
+  </div>
+  <div class="nut-chart-card">
+    <div class="nut-chart-label">\uD83D\uDCC5 ${tx('Weekly Calories','السعرات الأسبوعية')}</div>
+    <div style="height:140px"><canvas id="nut-week-chart"></canvas></div>
+  </div>
+  <div class="nut-chart-card">
+    <div class="nut-chart-label">\uD83C\uDFAF ${tx('Day Score','نقاط اليوم')}</div>
+    <div style="height:140px"><canvas id="nut-score-chart"></canvas></div>
+  </div>
+</div>`;
+
+  // Init charts after DOM settles
+  requestAnimationFrame(() => {
+    _renderCalorieTrendChart(daily, targets.targetCal, 'nut-cal-chart');
+    _renderMacroDonutChart(avgP, avgC, avgF, compliance, 'nut-macro-chart');
+    _renderWeeklyBarChart(targets.targetCal, 'nut-week-chart');
+    _renderDayScoreChart(dayScores, 'nut-score-chart');
+  });
+
+  // Zone 3: Insights
   const underProteinDays = daily.filter(d => d.p < targets.proteinG * 0.9).length;
-  const overCalDays = daily.filter(d => d.kcal > targets.targetCal * 1.1).length;
-  const lowCalDays = daily.filter(d => d.kcal < targets.targetCal * 0.8).length;
+  const overCalDays  = daily.filter(d => d.kcal > targets.targetCal * 1.1).length;
+  const lowCalDays   = daily.filter(d => d.kcal < targets.targetCal * 0.8).length;
+  const sorted = [...dayScores].sort((a,b) => b.score-a.score);
+  const bestDay  = sorted[0];
+  const worstDay = sorted[sorted.length-1];
+  const fmtDate  = k => { try { return new Date(k).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); } catch(e){ return k; } };
 
-  const best = [...dayScores].sort((a, b) => b.score - a.score)[0];
-  const worst = [...dayScores].sort((a, b) => a.score - b.score)[0];
-  const half = Math.floor(dayScores.length / 2);
-  const firstHalf = dayScores.slice(0, Math.max(half, 1));
-  const secondHalf = dayScores.slice(Math.max(half, 1));
-  const avgK = arr => arr.reduce((s, x) => s + x.kcal, 0) / Math.max(arr.length, 1);
-  const kcalTrend = avgK(secondHalf) - avgK(firstHalf);
-  const trendTxt = kcalTrend > 80
-    ? tx('Calories are trending up in this period.', 'السعرات في اتجاه صاعد خلال هذه الفترة.')
-    : kcalTrend < -80
-      ? tx('Calories are trending down in this period.', 'السعرات في اتجاه هابط خلال هذه الفترة.')
-      : tx('Calories are relatively stable.', 'السعرات مستقرة نسبيا.');
+  const calTrend = (() => {
+    if (daily.length < 4) return tx('Not enough data.','بيانات غير كافية.');
+    const half = Math.floor(daily.length/2);
+    const firstHalf = daily.slice(0,half).reduce((s,d)=>s+d.kcal,0)/half;
+    const secHalf   = daily.slice(half).reduce((s,d)=>s+d.kcal,0)/(daily.length-half);
+    const delta = secHalf - firstHalf;
+    if (Math.abs(delta) < 50) return tx('Calories are relatively stable.','السعرات مستقرة نسبياً.');
+    return delta > 0 ? tx('Calorie intake trending up.','السعرات في تزايد.') : tx('Calorie intake trending down.','السعرات في تناقص.');
+  })();
 
-  const pct = (a, b) => Math.max(0, Math.min(100, Math.round((a / Math.max(b, 1)) * 100)));
-  const fmt = n => Number.isFinite(n) ? (Math.round(n * 10) / 10).toString().replace(/\.0$/, '') : '--';
-  const fmtDay = k => {
-    const d = new Date(k + 'T00:00:00');
-    return d.toLocaleDateString(ar ? 'ar-SA' : 'en-GB', { day: '2-digit', month: 'short' });
-  };
+  const allMeals = daily.flatMap(d => (dayMap[d.key]||[]).map(m=>({...m,dayKey:d.key})));
+  const peakHour = (() => {
+    if (!allMeals.length) return null;
+    const hours = allMeals.map(m => { const d = new Date(m.ts||m.createdAtIso); return isNaN(d)?-1:d.getHours(); }).filter(h=>h>=0);
+    if (!hours.length) return null;
+    const cnt = {}; hours.forEach(h=>{cnt[h]=(cnt[h]||0)+1;});
+    return Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0];
+  })();
 
-  bodyEl.innerHTML = `
-    <div class="nutri-ana-grid">
-      <div class="nutri-ana-card">
-        <div class="nutri-ana-label">${tx('Avg Calories','متوسط السعرات')}</div>
-        <div class="nutri-ana-value">${Math.round(avgKcal)}<span> / ${targets.targetCal}</span></div>
-        <div class="nutri-ana-bar"><div style="width:${pct(avgKcal, targets.targetCal)}%"></div></div>
-      </div>
-      <div class="nutri-ana-card">
-        <div class="nutri-ana-label">${tx('Macro Compliance','الالتزام بالماكروز')}</div>
-        <div class="nutri-ana-value">${compliance}<span>%</span></div>
-        <div class="nutri-ana-bar"><div style="width:${compliance}%"></div></div>
-      </div>
-      <div class="nutri-ana-card">
-        <div class="nutri-ana-label">${tx('Logged Days','الأيام المسجلة')}</div>
-        <div class="nutri-ana-value">${dayScores.length}<span>${tx(' days',' يوم')}</span></div>
-        <div class="nutri-ana-sub">${tx('Meals logged','الوجبات المسجلة')}: ${avg.count}</div>
-      </div>
-      <div class="nutri-ana-card">
-        <div class="nutri-ana-label">${tx('Avg Macros','متوسط الماكروز')}</div>
-        <div class="nutri-ana-sub">${Math.round(avgP)}P / ${Math.round(avgC)}C / ${Math.round(avgF)}F</div>
-        <div class="nutri-ana-sub">${tx('Targets','الأهداف')}: ${targets.proteinG}P / ${targets.carbG}C / ${targets.fatG}F</div>
-      </div>
-    </div>
-    <div class="nutri-ana-insights">
-      <div class="nutri-ana-insight">${tx('Protein low on','البروتين منخفض في')} ${underProteinDays}/${dayScores.length} ${tx('days','يوم')}</div>
-      <div class="nutri-ana-insight">${tx('High-calorie days','الأيام مرتفعة السعرات')}: ${overCalDays} • ${tx('Low-calorie days','الأيام منخفضة السعرات')}: ${lowCalDays}</div>
-      <div class="nutri-ana-insight">${tx('Best day','أفضل يوم')}: ${fmtDay(best.key)} (${Math.round(best.score * 100)}%) • ${tx('Needs work','يحتاج تحسين')}: ${fmtDay(worst.key)} (${Math.round(worst.score * 100)}%)</div>
-      <div class="nutri-ana-insight">${trendTxt}</div>
-    </div>`;
+  const rows = [
+    underProteinDays > 0 ? `\uD83D\uDEA8 ${tx('Protein low on','بروتين منخفض في')} ${underProteinDays}/${nDays} ${tx('days','أيام')}` : null,
+    `${tx('High-calorie days:','أيام عالية السعرات:')} ${overCalDays} \u2022 ${tx('Low-calorie days:','أيام منخفضة السعرات:')} ${lowCalDays}`,
+    bestDay && worstDay ? `${tx('Best day:','أفضل يوم:')} ${fmtDate(bestDay.key)} (${Math.round(bestDay.score*100)}%) \u2022 ${tx('Needs work:','يحتاج تحسين:')} ${fmtDate(worstDay.key)} (${Math.round(worstDay.score*100)}%)` : null,
+    calTrend
+  ].filter(Boolean);
 
-  if (insightsEl) {
-    const byHour = new Array(24).fill(0);
-    const byName = {};
-    allMeals.forEach(m => {
-      const rawTs = +m.ts || (m.createdAtIso ? Date.parse(m.createdAtIso) : NaN);
-      if (Number.isFinite(rawTs)) {
-        const h = new Date(rawTs).getHours();
-        if (h >= 0 && h < 24) byHour[h] += 1;
-      }
-      const nm = (m.name || '').trim().toLowerCase();
-      if (nm) byName[nm] = (byName[nm] || 0) + 1;
-    });
-    const peakHour = byHour.indexOf(Math.max(...byHour));
-    const peakLabel = `${String(Math.max(0, peakHour)).padStart(2, '0')}:00`;
-    const topFoods = Object.entries(byName).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const topFoodsHtml = topFoods.length
-      ? topFoods.map(([name, n]) => `<span class="nutri-pill">${name} ×${n}</span>`).join('')
-      : `<span class="nutri-pill">${tx('No repeating foods yet','لا توجد وجبات متكررة بعد')}</span>`;
+  const insightRowsHtml = rows.map(r => `<div class="stat-insight-row">${r}</div>`).join('');
 
-    const consistencyPct = Math.round((dayKeys.length / Math.max(_dashPeriodDays() || dayKeys.length, 1)) * 100);
-    insightsEl.innerHTML = `
-      <div class="nutri-deep-grid">
-        <div class="nutri-deep-card">
-          <div class="nutri-deep-title">${tx('Meal Timing','توقيت الوجبات')}</div>
-          <div class="nutri-deep-line">${tx('Most active meal hour','أكثر ساعة تسجيل للوجبات')}: <strong>${peakLabel}</strong></div>
-          <div class="nutri-deep-line">${tx('Total meals in period','إجمالي الوجبات في الفترة')}: <strong>${allMeals.length}</strong></div>
-        </div>
-        <div class="nutri-deep-card">
-          <div class="nutri-deep-title">${tx('Logging Consistency','الانتظام في التسجيل')}</div>
-          <div class="nutri-deep-line">${tx('Days with meal logs','أيام بها تسجيل وجبات')}: <strong>${dayKeys.length}</strong></div>
-          <div class="nutri-deep-line">${tx('Consistency score','درجة الانتظام')}: <strong>${consistencyPct}%</strong></div>
-        </div>
-      </div>
-      <div class="nutri-deep-title" style="margin-top:8px;">${tx('Most Logged Foods','أكثر الأطعمة تسجيلاً')}</div>
-      <div class="nutri-pill-row">${topFoodsHtml}</div>`;
-  }
+  const mealTimingHtml = `
+<div class="nutri-deep-grid">
+  <div class="nutri-deep-card">
+    <div class="nutri-deep-title">${tx('MEAL TIMING','توقيت الوجبات')}</div>
+    <div class="nutri-deep-line">${tx('Most active meal hour:','أكثر وقت لتناول الوجبات:')} <strong>${peakHour !== null ? peakHour+':00' : '—'}</strong></div>
+    <div class="nutri-deep-line">${tx('Total meals in period:','إجمالي الوجبات:')}<strong>${tot.count}</strong></div>
+  </div>
+  <div class="nutri-deep-card">
+    <div class="nutri-deep-title">${tx('LOGGING CONSISTENCY','انتظام التسجيل')}</div>
+    <div class="nutri-deep-line">${tx('Days with meal logs:','أيام بوجبات مسجلة:')}<strong>${nDays}</strong></div>
+    <div class="nutri-deep-line">${tx('Consistency score:','نقاط الانتظام:')} <strong>${Math.round(nDays / Math.max(daily.length,1) * 100)}%</strong></div>
+  </div>
+</div>`;
+
+  if (insightsEl) insightsEl.innerHTML = insightRowsHtml + mealTimingHtml;
 }
 
 function renderDashboard() {
