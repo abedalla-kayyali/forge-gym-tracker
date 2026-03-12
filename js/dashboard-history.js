@@ -1564,7 +1564,7 @@ function renderNutritionAnalyticsPanel() {
   // v45 engagement stats
   const proteinDays   = daily.filter(d => d.p >= targets.proteinG * 0.9).length;
   const deficitDays   = daily.filter(d => d.kcal < targets.targetCal).length;
-  const bestStreak    = (() => { let cur=0,max=0; daily.forEach(d => { cur = d.p>=targets.proteinG*.9 ? cur+1 : 0; max=Math.max(max,cur); }); return max; })();
+  const bestStreak    = (() => { const s=[...daily].sort((a,b)=>a.key<b.key?-1:1); let cur=0,max=0; s.forEach(d => { cur = d.p>=targets.proteinG*.9 ? cur+1 : 0; max=Math.max(max,cur); }); return max; })();
   const currentStreak = (() => {
     const ml = (typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object') ? mealsLog : {};
     let streak = 0;
