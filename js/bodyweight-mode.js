@@ -8,6 +8,7 @@ let _currentBwType = 'reps'; // 'reps' | 'hold' (isometric seconds)
 let _bwFilterMuscle = ''; // active muscle filter for RPG tree
 let _currentBwEffort = 'medium'; // tracks active effort button
 let _currentBwReps = 10; // tracks reps stepper value
+let _bwStep = 1; // 1=pick muscle, 2=pick exercise, 3=log sets
 
 function setWorkoutMode(mode) {
   workoutMode = mode;
@@ -18,7 +19,7 @@ function setWorkoutMode(mode) {
 
   // Toggle UI sections
   document.getElementById('weighted-sets-section').style.display = isWgt ? '' : 'none';
-  document.getElementById('bw-sets-section').style.display = isWgt ? 'none' : '';
+  document.getElementById('bw-sets-section').style.display = 'none';
   document.getElementById('bw-exercise-picker').style.display = isWgt ? 'none' : '';
 
   // Muscle group: weighted only
@@ -49,6 +50,7 @@ function setWorkoutMode(mode) {
     : (_modeAr ? 'مثال: ضغط، بيربي…' : 'e.g. Push-Ups, Burpees…');
 
   if (!isWgt) {
+    _setBwStep(1);
     renderBwExercisePicker();
     // Reset arcade zone
     document.getElementById('bw-arcade-ex-name').textContent = '—';
@@ -81,10 +83,24 @@ function setWorkoutMode(mode) {
   _updateMuscleTargetLabel();
 }
 
+function _setBwStep(n) {
+  _bwStep = n;
+  [1, 2, 3].forEach(i => {
+    const el = document.getElementById(`bw-step-${i}`);
+    if (!el) return;
+    el.classList.remove('active', 'done');
+    if (i < n)       el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+    const numEl = el.querySelector('.bw-step-num');
+    if (numEl) numEl.textContent = i < n ? '✓' : ['①','②','③'][i - 1];
+  });
+}
+
 function setBwFilter(btn, muscle) {
   _bwFilterMuscle = muscle;
   document.querySelectorAll('.bw-filter-chip').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  if (_bwStep < 2) _setBwStep(2);
   renderBwExercisePicker();
 }
 
@@ -156,7 +172,8 @@ function renderBwExercisePicker() {
       if (i > 0) html += `<div class="bw-rpg-connector ${connectorClass}"></div>`;
 
       const isClickable = isDone || isCurrent;
-      html += `<div class="bw-rpg-node ${nodeClass}"
+      const isSelected = isClickable && lvl.n.toLowerCase() === currentEx;
+      html += `<div class="bw-rpg-node ${nodeClass}${isSelected ? ' selected' : ''}"
                     ${isClickable ? `onclick="pickBwExercise('${lvl.n.replace(/'/g,"\\'")}','${tree.muscle}','${lvl.t}')"` : ''}>
         <div class="bw-rpg-icon">${tree.icon}</div>
         <div class="bw-rpg-info">
@@ -186,6 +203,20 @@ function pickBwExercise(name, muscle, type) {
 
   // Update arcade header
   _updateBwArcadeHeader(name);
+
+  // Step 3: advance indicator
+  _setBwStep(3);
+
+  // Sound + haptic feedback
+  if (typeof sndTap === 'function') sndTap();
+  if (typeof hapTap === 'function') hapTap();
+
+  // Reveal arcade zone + scroll into view
+  const arcadeZone = document.getElementById('bw-sets-section');
+  if (arcadeZone) {
+    arcadeZone.style.display = '';
+    setTimeout(() => arcadeZone.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  }
 
   // Re-render tree (highlights selected node)
   renderBwExercisePicker();
