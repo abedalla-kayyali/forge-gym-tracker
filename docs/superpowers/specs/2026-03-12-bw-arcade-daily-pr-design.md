@@ -1,7 +1,7 @@
 # Design: BW Arcade Daily Reset + Personal Best Scoreboard
 
 **Date:** 2026-03-12
-**Status:** Approved
+**Status:** Approved (v2 — post-review fixes)
 
 ## Problem
 
@@ -15,7 +15,7 @@ Three related gaps in the current BW arcade experience:
 
 - **Daily session model:** arcade starts fresh each day; same-day sets accumulate as one session
 - **PR strip:** arcade header shows `🏆 RECORD` (all-time best) and `⚡ TODAY` (today's best) side by side
-- **Live PR detection:** logging a set that beats the all-time best fires `sndPR()` + `hapPR()` + flash animation
+- **Live PR detection:** logging a set that beats the all-time best (including current session high-water mark) fires `sndPR()` + `hapPR()` + flash animation — fires exactly once per new peak
 - **Tree node PBs:** each done/current node shows `🏆 X reps` inline — the tree becomes a personal scoreboard
 - **Compact chips:** muscle filter chips de-emphasised so the tree is the visual hero
 
@@ -23,10 +23,18 @@ Three related gaps in the current BW arcade experience:
 
 No new storage keys. All data derived from the existing `bwWorkouts` array.
 
+### New state variable in `js/bodyweight-mode.js`
+
+```js
+// In-session high-water mark — reset when a new exercise is selected
+// Allows live RECORD / PR detection before the session is saved
+let _bwSessionMax = 0;
+```
+
 ### New helpers in `js/bodyweight-mode.js`
 
 ```js
-// All-time best single set value for an exercise
+// All-time best single set value for an exercise (saved history only)
 function _getBwPR(name) {
   const history = (bwWorkouts || []).filter(w => w.exercise.toLowerCase() === name.toLowerCase());
   return history.reduce((mx, w) => Math.max(mx, ...w.sets.map(s => s.reps || s.secs || 0)), 0);
@@ -40,16 +48,17 @@ function _getBwTodaySets(name) {
     .flatMap(w => w.sets);
 }
 
-// Today's best single set value
+// Today's best single set value (saved history; _bwSessionMax layered on top in _updateBwPrStrip)
 function _getBwTodayMax(name) {
   const sets = _getBwTodaySets(name);
   return sets.length ? Math.max(...sets.map(s => s.reps || s.secs || 0)) : 0;
 }
 
-// Refresh PR strip UI
+// Refresh PR strip UI — uses _bwSessionMax for optimistic live display
 function _updateBwPrStrip(name) {
-  const pr  = _getBwPR(name);
-  const tod = _getBwTodayMax(name);
+  const savedPR = _getBwPR(name);
+  const pr      = Math.max(savedPR, _bwSessionMax);           // live RECORD
+  const tod     = Math.max(_getBwTodayMax(name), _bwSessionMax); // live TODAY
   const lvl = CALISTHENICS_TREES.flatMap(t => t.levels).find(l => l.n.toLowerCase() === name.toLowerCase());
   const unit = (lvl && lvl.t === 'hold') ? 'secs' : 'reps';
   const recEl = document.getElementById('bw-record-val');
@@ -64,17 +73,17 @@ function _updateBwPrStrip(name) {
 | File | Change |
 |------|--------|
 | `index.html` | Add `#bw-pr-strip` between `bw-arcade-top` and `bw-arcade-middle` |
-| `css/main.css` | PR strip styles, flash keyframe, compact chip styles |
-| `js/bodyweight-mode.js` | Helpers, daily pre-fill, live PR detection, node PB labels |
+| `css/main.css` | Append PR strip styles, flash keyframe, compact chip patch |
+| `js/bodyweight-mode.js` | `_bwSessionMax` var, helpers, daily pre-fill, live PR detection, node PB labels |
 
 ---
 
 ## Section 1: Compact Muscle Chips
 
-Current `.bw-filter-chip` is prominent. New style: smaller font, reduced padding, muted colour until active.
+The existing `.bw-filter-chip` rule must **not** be replaced — only augmented. Append these lines **after** the existing `.bw-filter-chip` rule in `css/main.css` (it currently sits around line 5787). This overrides only `font-size`, `padding`, `letter-spacing`, `opacity`, and `transition`:
 
 ```css
-/* Compact chips — tree is the hero */
+/* Compact chips — tree is the hero (patch appended after existing .bw-filter-chip rule) */
 .bw-filter-chip {
   font-size: 9px;
   padding: 3px 8px;
@@ -87,17 +96,27 @@ Current `.bw-filter-chip` is prominent. New style: smaller font, reduced padding
 }
 ```
 
+All other existing chip properties (`color`, `border`, `border-radius`, `cursor`, etc.) are inherited from the existing rule above — do not touch them.
+
 ---
 
 ## Section 2: Daily Session Model
 
-### `pickBwExercise()` pre-fill change
+### `pickBwExercise()` changes
 
-**Old:** find last session ever → pre-fill all its sets
-**New:** find today's sets → pre-fill those; empty arcade if no today sets
+Two things must happen in `pickBwExercise()`:
+
+1. **Reset `_bwSessionMax`** to 0 at the very start of the function (before clearing dots).
+2. **Replace the pre-fill block**: clear dots + use today's sets instead of all-time last session.
+
+The existing pre-fill logic (the `bwPrev` block) occupies roughly lines 225–243 in `bodyweight-mode.js`. The implementer must:
+
+1. Add `_bwSessionMax = 0;` as the first line inside `pickBwExercise()`.
+2. Keep the existing dot-clear block (`bw-sets-container innerHTML = ''`, `bwSetCount = 0`) — it must run **before** the today-sets pre-fill below.
+3. Replace only the `bwPrev` pre-fill block (the `if (bwPrev && bwPrev.exercise ...)` section) with:
 
 ```js
-// Replace old bwPrev pre-fill block with:
+// Daily pre-fill: show today's sets; start fresh if new day
 const todaySets = _getBwTodaySets(name);
 if (todaySets.length) {
   todaySets.forEach(s => _addBwDot(s.reps || s.secs, s.effort));
@@ -109,13 +128,23 @@ if (todaySets.length) {
 } else {
   _currentBwReps = _currentBwType === 'hold' ? 20 : 10;
 }
+// _renderBwRepsVal() call at line ~233 remains in place after this block
 ```
 
-The `last-session-hint` bar (shows previous saved session date + stats) remains unchanged — it still provides historical reference.
+The existing `_renderBwRepsVal()` call that follows the old pre-fill block must remain — it renders the stepper display after `_currentBwReps` is set.
 
-### `setWorkoutMode()` reset
+The `last-session-hint` bar (shows previous saved session date + stats) remains unchanged.
 
-Add `_updateBwPrStrip('')` call (clears strip to `—`) when switching mode.
+### `setWorkoutMode()` strip reset
+
+Inside the `if (!isWgt)` branch, directly after the existing `_setBwStep(1)` call, add:
+
+```js
+_bwSessionMax = 0;
+_updateBwPrStrip('');
+```
+
+This clears the strip to `—` whenever the user enters BW mode (before an exercise is selected).
 
 ---
 
@@ -142,7 +171,7 @@ Inserted between `#bw-arcade-top` and `#bw-arcade-middle`:
 </div>
 ```
 
-### CSS
+### CSS (append to end of `css/main.css`)
 
 ```css
 /* PR strip */
@@ -197,25 +226,32 @@ Inserted between `#bw-arcade-top` and `#bw-arcade-middle`:
 
 ### PR state table
 
+RECORD is the live value: `Math.max(saved all-time best, _bwSessionMax)`. TODAY is `Math.max(saved today best, _bwSessionMax)`. Both update immediately after each set — no save required.
+
 | Situation | RECORD | TODAY |
 |-----------|--------|-------|
-| No history | `—` | `—` |
+| No history, new session | `—` | `—` |
 | History, no today sets | `25 reps` | `—` |
-| Logged today, below record | `25 reps` | `18 reps` |
-| Today set beats record | `26 reps` + flash | `26 reps` |
+| Logged today (below record) | `25 reps` | `18 reps` |
+| Logged set beats all-time record | `26 reps` + flash | `26 reps` |
+| Second set in same session also above saved record | no new flash (already `_bwSessionMax` ≥ value) | updates if higher |
 
 ---
 
 ## Section 4: Live PR Detection in `addBwSet()`
 
-After `_addBwDot()` is called:
+### Placement
+
+After `_addBwDot()` is called, **replace** the existing `sndSetLog()` + `hapSetLog()` calls with a conditional block so they do not double-fire on a PR:
 
 ```js
-// PR check
+// PR check — fires at most once per new session peak
 const exName = document.getElementById('exercise-name').value.trim();
-const oldPR  = _getBwPR(exName);
-if (exName && _currentBwReps > oldPR) {
-  // New all-time record
+const savedPR = _getBwPR(exName);
+const isNewPR = exName && _currentBwReps > Math.max(savedPR, _bwSessionMax);
+
+if (isNewPR) {
+  _bwSessionMax = _currentBwReps; // update high-water mark
   if (typeof sndPR  === 'function') sndPR();
   if (typeof hapPR  === 'function') hapPR();
   const recCell = document.getElementById('bw-record-cell');
@@ -225,12 +261,16 @@ if (exName && _currentBwReps > oldPR) {
     recCell.classList.add('bw-pr-new-record');
   }
 } else {
-  // Normal set — existing sndSetLog + hapSetLog already fire
+  // Normal set — fire standard feedback
+  if (typeof sndSetLog === 'function') sndSetLog();
+  if (typeof hapSetLog === 'function') hapSetLog();
 }
 _updateBwPrStrip(exName);
 ```
 
-Note: `_getBwPR()` reads from `bwWorkouts` which is updated on *save*, not on `addBwSet()`. So during a session the PR comparison uses the **saved history** as baseline. The live PR fires correctly the first time the user surpasses their all-time saved best in the current session.
+**Key change:** `sndSetLog()` + `hapSetLog()` are moved **inside the `else` branch** — they do NOT fire on a PR set. The PR sound replaces them. This avoids double audio/haptic.
+
+**Session behaviour:** `_bwSessionMax` tracks the peak within the current session (reset to 0 in `pickBwExercise()`). PR fires exactly once per new personal peak — even across multiple sets in the same unsaved session.
 
 ---
 
@@ -250,11 +290,11 @@ const pctLabel = maxVal > 0
       ? `🏆 ${maxVal} ${unit}  ·  ✓ Unlocked`
       : `🏆 ${maxVal} ${unit}  ·  ${pct}% to unlock (need ${lvl.target})`)
   : (isDone
-      ? `✓ Unlocked`
+      ? `✓ Unlocked`          // valid edge case: unlocked with no local history
       : `${pct}% to unlock (need ${lvl.target} ${unit})`);
 ```
 
-No structural HTML change — just the label string. The `🏆` prefix makes each node a visible scoreboard entry at a glance.
+No structural HTML change — just the label string. The `🏆` prefix makes each node a visible scoreboard entry at a glance. The `maxVal === 0 && isDone` case is intentional and valid (e.g., data imported from another device).
 
 ---
 
@@ -262,10 +302,11 @@ No structural HTML change — just the label string. The `🏆` prefix makes eac
 
 | Action | Result |
 |--------|--------|
-| Enter BW mode | Tree shows with PBs on each node, chips compact |
+| Enter BW mode | Tree shows with PBs on each node, chips compact; strip resets to `—` |
 | Tap muscle chip | Filters tree (step advance as before) |
-| Tap exercise node | Arcade reveals; PR strip shows record + today; today's sets pre-filled |
-| Log a set (below record) | Dot added, sndSetLog + hapSetLog, TODAY val updates |
-| Log a set (beats record) | Dot added, sndPR + hapPR, RECORD val flashes + updates |
+| Tap exercise node | Arcade reveals; PR strip shows RECORD + TODAY; today's sets pre-filled; `_bwSessionMax` reset to 0 |
+| Log a set (below record) | Dot added, sndSetLog + hapSetLog, TODAY val updates if new session max |
+| Log a set (beats record) | Dot added, sndPR + hapPR (not sndSetLog), RECORD val flashes + updates immediately |
+| Log another set same session above saved best | No new flash (session max already set); RECORD/TODAY update |
 | New day | Arcade starts empty, RECORD shows old best, TODAY shows `—` |
-| Switch to weighted mode | PR strip resets to `—` |
+| Switch to weighted mode | Strip resets to `—`; `_bwSessionMax` reset to 0 |
