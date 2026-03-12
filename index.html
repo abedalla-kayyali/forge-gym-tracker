@@ -1363,7 +1363,12 @@
         <span class="panel-badge" id="nutrition-analytics-badge">PERIOD</span>
       </div>
       <div id="nutrition-analytics-body" style="padding:10px 14px 14px;">
-        <div class="empty-state"><div class="empty-icon">🍽️</div><div class="empty-title">Log meals in Coach Nutrition to unlock insights</div></div>
+        <!-- Zone 0: Today (always live) -->
+        <div id="nut-today-zone"></div>
+        <!-- Zone 1: Period stat cards -->
+        <div id="nut-stats-zone"></div>
+        <!-- Zone 2: Charts 2×2 -->
+        <div id="nut-charts-zone"></div>
       </div>
     </div>
     <div class="panel" data-dash-tab="nutrition" id="nutrition-insights-panel">
