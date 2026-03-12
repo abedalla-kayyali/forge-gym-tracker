@@ -1074,7 +1074,7 @@
       <button class="dash-tab dash-tab-cali" onclick="switchDashTab('cali',this)">?? Cali</button>
     </div>
     <!-- PERIOD SELECTOR -->
-    <div class="dash-period-strip" id="dash-period-strip">
+    <div class="dash-period-strip" id="dash-period-strip" data-dash-tab="progress">
       <button class="dash-period active" data-i18n="dash.period.7d" onclick="_setPeriod('7D',this)">7D</button>
       <button class="dash-period" data-i18n="dash.period.1m" onclick="_setPeriod('1M',this)">1M</button>
       <button class="dash-period" data-i18n="dash.period.3m" onclick="_setPeriod('3M',this)">3M</button>
@@ -1168,11 +1168,37 @@
       <span class="vsh-line"></span>
       <button class="share-open-btn" onclick="openShareModal()" title="Share My Forge">?? SHARE</button>
     </div>
-    <div class="stats-bar" data-dash-tab="overview">
-      <div class="stat-card"><div class="stat-label" data-i18n="dash.statVol">Total Volume</div><div class="stat-value" id="dash-total-vol">0<span class="stat-unit">kg</span></div><div class="stat-delta up" id="dash-vol-delta">�</div></div>
-      <div class="stat-card"><div class="stat-label" data-i18n="dash.statSessions">Sessions</div><div class="stat-value" id="dash-sessions">0</div><div class="stat-delta neutral" data-i18n="dash.allTime">All time</div></div>
-      <div class="stat-card"><div class="stat-label" data-i18n="dash.statSets">Total Sets</div><div class="stat-value" id="dash-sets">0</div><div class="stat-delta neutral" data-i18n="dash.allTime">All time</div></div>
-      <div class="stat-card"><div class="stat-label" data-i18n="dash.statPR">Personal Best</div><div class="stat-value" id="dash-pr">0<span class="stat-unit">kg</span></div><div class="stat-delta up" id="dash-pr-exercise">�</div></div>
+    <div class="stats-grid" data-dash-tab="overview">
+      <div class="sg-card">
+        <div class="sg-label">🏋️ Total Sessions</div>
+        <div class="sg-val" id="sg-sessions">0</div>
+        <div class="sg-sub">All time</div>
+      </div>
+      <div class="sg-card">
+        <div class="sg-label">⚡ Total Volume</div>
+        <div class="sg-val" id="sg-volume">0<span class="sg-unit">kg</span></div>
+        <div class="sg-sub">kg lifted</div>
+      </div>
+      <div class="sg-card">
+        <div class="sg-label">🏆 Best Lift</div>
+        <div class="sg-val sg-neutral" id="sg-best-lift">—</div>
+        <div class="sg-sub" id="sg-best-lift-sub">—</div>
+      </div>
+      <div class="sg-card">
+        <div class="sg-label">🔥 Day Streak</div>
+        <div class="sg-val" id="sg-streak">0<span class="sg-unit">d</span></div>
+        <div class="sg-sub" id="sg-streak-sub">Train today!</div>
+      </div>
+      <div class="sg-card">
+        <div class="sg-label">🎯 Total PRs</div>
+        <div class="sg-val sg-neutral" id="sg-prs">0</div>
+        <div class="sg-sub">Personal records</div>
+      </div>
+      <div class="sg-card">
+        <div class="sg-label">📅 Last Session</div>
+        <div class="sg-val sg-neutral" id="sg-last-session">—</div>
+        <div class="sg-sub" id="sg-last-session-sub">—</div>
+      </div>
     </div>
 
     <!-- ?? BODYWEIGHT WORKOUT STATS ?? -->
@@ -1182,10 +1208,23 @@
       <span class="vsh-line"></span>
     </div>
     <div class="stats-bar bw-stats-bar" data-dash-tab="overview">
-      <div class="stat-card bw-card"><div class="stat-label" data-i18n="dash.bwSessions">BW Sessions</div><div class="stat-value" id="dash-bw-sessions">0</div><div class="stat-delta neutral" data-i18n="dash.allTime">All time</div></div>
-      <div class="stat-card bw-card"><div class="stat-label" data-i18n="dash.bwSets">BW Sets</div><div class="stat-value" id="dash-bw-sets">0</div><div class="stat-delta neutral" data-i18n="dash.allTime">All time</div></div>
-      <div class="stat-card bw-card"><div class="stat-label" data-i18n="dash.bwTopEx">Top Exercise</div><div class="stat-value bw-top-ex" id="dash-bw-top-ex">�</div><div class="stat-delta neutral" id="dash-bw-top-ex-sets">�</div></div>
-      <div class="stat-card bw-card"><div class="stat-label" data-i18n="dash.bwStreak">BW Streak</div><div class="stat-value" id="dash-bw-streak">0</div><div class="stat-delta up" id="dash-bw-streak-unit">days</div></div>
+      <div class="stat-card bw-card">
+        <div class="stat-label">BW Sessions</div>
+        <div class="stat-value" id="sg-bw-sessions">0</div>
+        <div class="stat-delta neutral">All time</div>
+      </div>
+      <div class="stat-card bw-card">
+        <div class="stat-label">Skills Done</div>
+        <div class="stat-value" id="sg-skills">0/0</div>
+        <div class="stat-delta neutral">Unlocked</div>
+      </div>
+      <div class="stat-card bw-card" style="flex:2;">
+        <div class="stat-label">Journey</div>
+        <div class="stat-value" id="sg-journey-pct">0%</div>
+        <div class="cali-journey-bar-wrap">
+          <div class="cali-journey-bar-fill" id="cali-journey-bar-fill" style="width:0%"></div>
+        </div>
+      </div>
     </div>
 
     <!-- BODY COMPOSITION � full section -->
