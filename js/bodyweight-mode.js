@@ -384,8 +384,28 @@ function addBwSet() {
   _updateSetBadge(bwSetCount);
   _addBwDot(_currentBwReps, _currentBwEffort);
   _renderBwActiveDot();
-  if (typeof sndSetLog === 'function') sndSetLog();
-  if (typeof hapSetLog === 'function') hapSetLog();
+
+  // PR check — fires at most once per new session peak
+  const exName  = (document.getElementById('exercise-name') || {}).value || '';
+  const savedPR = _getBwPR(exName.trim());
+  const isNewPR = exName.trim() && _currentBwReps > Math.max(savedPR, _bwSessionMax);
+
+  if (isNewPR) {
+    _bwSessionMax = _currentBwReps; // update high-water mark
+    if (typeof sndPR  === 'function') sndPR();
+    if (typeof hapPR  === 'function') hapPR();
+    const recCell = document.getElementById('bw-record-cell');
+    if (recCell) {
+      recCell.classList.remove('bw-pr-new-record');
+      void recCell.offsetWidth; // reflow to restart animation
+      recCell.classList.add('bw-pr-new-record');
+    }
+  } else {
+    // Normal set — standard audio + haptic
+    if (typeof sndSetLog === 'function') sndSetLog();
+    if (typeof hapSetLog === 'function') hapSetLog();
+  }
+  _updateBwPrStrip(exName.trim());
 }
 
 function _addBwDot(val, effort) {
