@@ -6228,7 +6228,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .nut-today-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:14px; margin:0 14px 14px; }
 .nut-today-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
 .nut-today-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; }
-.nut-today-meals-badge { font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); background:rgba(var(--accent-rgb),.12); border-radius:6px; padding:2px 7px; }
+.nut-today-meals-badge { font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); background:rgba(57,255,143,.12); border-radius:6px; padding:2px 7px; }
 .nut-today-kcal { font-family:'Bebas Neue',sans-serif; font-size:34px; line-height:1; color:var(--accent); }
 .nut-today-kcal-target { font-size:14px; opacity:.5; margin-left:3px; }
 .nut-today-remaining { font-size:10px; color:var(--text3); margin-top:2px; margin-bottom:8px; }
