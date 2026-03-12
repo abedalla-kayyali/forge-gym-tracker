@@ -6263,7 +6263,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .cardio-form-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .cardio-form-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); }
 .cardio-optional { opacity:.5; }
-.cardio-num-input { width:90px; background:var(--border2); border:none; border-radius:8px; color:var(--text1); font-family:'DM Mono',monospace; font-size:14px; text-align:center; padding:6px; cursor:pointer; }
+.cardio-num-input { width:90px; background:var(--border2); border:none; border-radius:8px; color:var(--text1); font-family:'DM Mono',monospace; font-size:14px; text-align:center; padding:6px; cursor:text; }
 .cardio-hrzone-row { display:flex; gap:5px; }
 .cardio-hz-btn { width:34px; height:30px; border-radius:6px; font-size:10px; font-family:'DM Mono',monospace; background:var(--card); border:1px solid var(--border2); color:var(--text3); cursor:pointer; }
 .cardio-hz-btn.active { background:#e6b84a; border-color:#e6b84a; color:#000; font-weight:600; }
