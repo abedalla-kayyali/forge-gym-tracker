@@ -16,12 +16,14 @@ function setWorkoutMode(mode) {
   const isWgt = mode === 'weighted';
 
   document.getElementById('mode-btn-weighted').classList.toggle('active', isWgt);
-  document.getElementById('mode-btn-bodyweight').classList.toggle('active', !isWgt);
+  document.getElementById('mode-btn-bodyweight').classList.toggle('active', mode === 'bodyweight');
+  document.getElementById('mode-btn-cardio').classList.toggle('active', mode === 'cardio');
 
   // Toggle UI sections
   document.getElementById('weighted-sets-section').style.display = isWgt ? '' : 'none';
   document.getElementById('bw-sets-section').style.display = 'none';
-  document.getElementById('bw-exercise-picker').style.display = isWgt ? 'none' : '';
+  document.getElementById('bw-exercise-picker').style.display = mode === 'bodyweight' ? '' : 'none';
+  document.getElementById('cardio-zone').style.display = mode === 'cardio' ? '' : 'none';
 
   // Muscle group: weighted only
   const bodyMapSection = document.getElementById('section-bodymap');
