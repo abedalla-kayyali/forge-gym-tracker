@@ -1441,6 +1441,7 @@ function _renderMacroDonutChart(avgP, avgC, avgF, compliance, canvasId) {
   const centerPlugin = {
     id: 'nutCenterText',
     beforeDraw(chart) {
+      if (!chart.chartArea) return;
       const { ctx, chartArea: { width, top, height } } = chart;
       ctx.save();
       ctx.font = "bold 20px 'Bebas Neue', sans-serif";
