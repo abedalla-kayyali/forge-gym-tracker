@@ -879,6 +879,23 @@
 
         <!-- BODYWEIGHT MODE: quick exercise picker -->
         <div id="bw-exercise-picker" style="display:none;">
+          <!-- BW guided-flow step indicator -->
+          <div class="bw-step-strip" id="bw-step-strip">
+            <div class="bw-step active" id="bw-step-1">
+              <span class="bw-step-num">①</span>
+              <span class="bw-step-lbl">MUSCLE</span>
+            </div>
+            <div class="bw-step-arrow">──</div>
+            <div class="bw-step" id="bw-step-2">
+              <span class="bw-step-num">②</span>
+              <span class="bw-step-lbl">EXERCISE</span>
+            </div>
+            <div class="bw-step-arrow">──</div>
+            <div class="bw-step" id="bw-step-3">
+              <span class="bw-step-num">③</span>
+              <span class="bw-step-lbl">LOG SETS</span>
+            </div>
+          </div>
           <!-- Muscle filter chips -->
           <div class="bw-muscle-filter" id="bw-muscle-filter">
             <button class="bw-filter-chip active" data-muscle="" onclick="setBwFilter(this,'')">All</button>
