@@ -5796,9 +5796,7 @@ html[dir="rtl"] .logo-word { font-family: 'Bebas Neue', sans-serif; letter-spaci
 }
 /* Compact chips — tree is the hero (patch; inherits color/border/radius from rules above) */
 .bw-filter-chip {
-  font-size: 9px;
   padding: 3px 8px;
-  letter-spacing: 1px;
   opacity: 0.6;
   transition: opacity .15s ease;
 }
