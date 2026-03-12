@@ -1514,106 +1514,61 @@ function renderDashboard() {
   const _ndb = document.getElementById('dash-nodata-banner');
   if (_ndb) _ndb.classList.toggle('show', workouts.length === 0);
 
-  // ── Weighted lifting stats ──
-  // Period-filtered workouts — computed once, used for all stat cards + charts
+  // Period-filtered workouts — used by charts below
   const _pw = _getPw();
-  const _periodLabel = _dashPeriod === 'ALL' ? 'All time'
-    : _dashPeriod === '7D' ? 'Last 7 days'
-      : _dashPeriod === '1M' ? 'Last 30 days'
-        : _dashPeriod === '3M' ? 'Last 3 months'
-          : 'Last 6 months';
-  const totalVol = _pw.reduce((a, w) => a + (w.totalVolume || 0), 0);
-  const totalSets = _pw.reduce((a, w) => a + (w.sets || []).length, 0);
+
+  // ── All-time weighted stats (v43 stats-grid) ──
+  const totalSessions = workouts.length;
+  const totalVol = workouts.reduce((a,w) => a+(w.totalVolume||0), 0);
+
+  // Best lift — reuse existing _dashPRCache to avoid O(n) scan on every render
   if (!_dashPRCache) {
     _dashPRCache = { val: 0, ex: '—' };
-    workouts.forEach(w => w.sets.forEach(s => { if (s.weight > _dashPRCache.val) { _dashPRCache.val = s.weight; _dashPRCache.ex = w.exercise; } }));
+    workouts.forEach(w => (w.sets||[]).forEach(s => {
+      if (s.weight > _dashPRCache.val) { _dashPRCache.val = s.weight; _dashPRCache.ex = w.exercise; }
+    }));
   }
-  const prVal = _dashPRCache.val; const prEx = _dashPRCache.ex;
 
-  document.getElementById('dash-total-vol').innerHTML = Math.round(totalVol) + '<span class="stat-unit">kg</span>';
-  document.getElementById('dash-sessions').textContent = _pw.length;
-  document.getElementById('dash-sets').textContent = totalSets;
+  const streak = calcStreak();
+  const totalPRs = workouts.filter(w => w.isPR).length;
+  const lastW = workouts.slice().sort((a,b) => new Date(b.date)-new Date(a.date))[0];
+  const todayStr = new Date().toISOString().slice(0,10);
+  const lastDateStr = lastW ? lastW.date.slice(0,10) : null;
+  const daysAgo = lastDateStr === null ? null
+    : lastDateStr === todayStr ? 0
+    : Math.floor((Date.now()-new Date(lastDateStr))/86400000);
 
-  // Update "All time" labels on period-sensitive stat cards
-  const _statDeltas = document.querySelectorAll('#view-dashboard .stats-bar .stat-delta[data-i18n="dash.allTime"]');
-  _statDeltas.forEach(el => { el.textContent = _periodLabel; });
+  const _sgEl = id => document.getElementById(id);
+  _sgEl('sg-sessions') && (_sgEl('sg-sessions').textContent = totalSessions);
+  _sgEl('sg-volume') && (_sgEl('sg-volume').innerHTML = Math.round(totalVol).toLocaleString()+'<span class="sg-unit">kg</span>');
+  _sgEl('sg-best-lift') && (_sgEl('sg-best-lift').textContent = _dashPRCache.val > 0 ? _dashPRCache.val+'kg' : '—');
+  _sgEl('sg-best-lift-sub') && (_sgEl('sg-best-lift-sub').textContent = _dashPRCache.ex);
+  _sgEl('sg-streak') && (_sgEl('sg-streak').innerHTML = streak+'<span class="sg-unit">d</span>');
+  _sgEl('sg-streak-sub') && (_sgEl('sg-streak-sub').textContent = streak>=7?'On fire! 🔥':streak>=3?'Building habit':'Train today!');
+  _sgEl('sg-prs') && (_sgEl('sg-prs').textContent = totalPRs);
+  _sgEl('sg-last-session') && (_sgEl('sg-last-session').textContent = daysAgo===null?'—':daysAgo===0?'Today':daysAgo+'d ago');
+  _sgEl('sg-last-session-sub') && (_sgEl('sg-last-session-sub').textContent = lastDateStr ? new Date(lastDateStr).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—');
 
-  // Volume delta vs previous period
-  const _volDeltaEl = document.getElementById('dash-vol-delta');
-  if (_volDeltaEl) {
-    if (_dashPeriod === 'ALL') {
-      _volDeltaEl.textContent = 'All time';
-      _volDeltaEl.className = 'stat-delta neutral';
-    } else {
-      const _days = _dashPeriod === '7D' ? 7 : _dashPeriod === '1M' ? 30 : _dashPeriod === '3M' ? 90 : 180;
-      const _prevEnd = new Date(); _prevEnd.setDate(_prevEnd.getDate() - _days);
-      const _prevStart = new Date(_prevEnd); _prevStart.setDate(_prevStart.getDate() - _days);
-      const _prevPw = workouts.filter(w => {
-        const d = (w.date || '').slice(0, 10);
-        return d >= _prevStart.toISOString().slice(0, 10) && d < _prevEnd.toISOString().slice(0, 10);
-      });
-      const _prevVol = _prevPw.reduce((a, w) => a + (w.totalVolume || 0), 0);
-      if (_prevVol > 0) {
-        const _delta = Math.round(((totalVol - _prevVol) / _prevVol) * 100);
-        const _sign = _delta >= 0 ? '+' : '';
-        _volDeltaEl.textContent = _sign + _delta + '% vs prev';
-        _volDeltaEl.className = 'stat-delta ' + (_delta >= 0 ? 'up' : 'down');
-      } else if (totalVol > 0) {
-        _volDeltaEl.textContent = 'First period';
-        _volDeltaEl.className = 'stat-delta neutral';
-      } else {
-        _volDeltaEl.textContent = '—';
-        _volDeltaEl.className = 'stat-delta neutral';
-      }
-    }
-  }
-  document.getElementById('dash-pr').innerHTML = prVal + '<span class="stat-unit">kg</span>';
-  document.getElementById('dash-pr-exercise').textContent = prEx !== '—' ? '↑ ' + prEx : '—';
-
-  // ── Bodyweight workout stats ──
+  // ── CALI row (v43) ──
   const bwAll = typeof bwWorkouts !== 'undefined' ? bwWorkouts : [];
-  const bwSessions = bwAll.length;
-  const bwSets = bwAll.reduce((a, w) => a + (w.sets ? w.sets.length : 0), 0);
-
-  // top BW exercise by frequency
-  const bwExCounts = {};
-  bwAll.forEach(w => { bwExCounts[w.exercise] = (bwExCounts[w.exercise] || 0) + (w.sets ? w.sets.length : 1); });
-  const bwTopEntries = Object.entries(bwExCounts).sort((a, b) => b[1] - a[1]);
-  const bwTopEx = bwTopEntries[0]?.[0] || '—';
-  const bwTopCnt = bwTopEntries[0]?.[1] || 0;
-
-  // BW streak (consecutive days with a BW workout)
-  const bwDays = [...new Set(bwAll.map(w => w.date ? w.date.slice(0, 10) : ''))].filter(Boolean).sort();
-  let bwStreak = 0;
-  if (bwDays.length) {
-    bwStreak = 1;
-    const today = new Date().toISOString().slice(0, 10);
-    let cur = new Date(bwDays[bwDays.length - 1]);
-    for (let i = bwDays.length - 2; i >= 0; i--) {
-      const prev2 = new Date(bwDays[i]);
-      const diff = Math.round((cur - prev2) / 86400000);
-      if (diff === 1) { bwStreak++; cur = prev2; } else break;
-    }
-    // reset if last session not today or yesterday
-    const lastDay = bwDays[bwDays.length - 1];
-    const diffToday = Math.round((new Date(today) - new Date(lastDay)) / 86400000);
-    if (diffToday > 1) bwStreak = 0;
+  let _sgUnlocked = 0, _sgTotal = 0;
+  if (bwAll.length && typeof CALISTHENICS_TREES !== 'undefined') {
+    CALISTHENICS_TREES.forEach(tree => {
+      tree.levels.forEach(lvl => {
+        _sgTotal++;
+        const maxVal = bwAll
+          .filter(w => w.exercise.toLowerCase() === lvl.n.toLowerCase())
+          .reduce((mx,w) => Math.max(mx, ...(w.sets||[]).map(s => s.reps||s.secs||0)), 0);
+        if (maxVal >= lvl.target) _sgUnlocked++;
+      });
+    });
   }
-
-  const elBwSess = document.getElementById('dash-bw-sessions');
-  const elBwSets = document.getElementById('dash-bw-sets');
-  const elBwTopEx = document.getElementById('dash-bw-top-ex');
-  const elBwTopCnt = document.getElementById('dash-bw-top-ex-sets');
-  const elBwStreak = document.getElementById('dash-bw-streak');
-  const elBwStUnit = document.getElementById('dash-bw-streak-unit');
-  const _ar = typeof currentLang !== 'undefined' && currentLang === 'ar';
-
-  if (elBwSess) elBwSess.textContent = bwSessions;
-  if (elBwSets) elBwSets.textContent = bwSets;
-  if (elBwTopEx) elBwTopEx.textContent = bwTopEx !== '—' ? bwTopEx : '—';
-  if (elBwTopCnt) elBwTopCnt.textContent = bwTopCnt ? bwTopCnt + ' ' + t('history.sets') : '—';
-  if (elBwStreak) elBwStreak.textContent = bwStreak;
-  if (elBwStUnit) elBwStUnit.textContent = _ar ? 'أيام' : 'days';
+  const journeyPct = _sgTotal > 0 ? Math.round((_sgUnlocked/_sgTotal)*100) : 0;
+  _sgEl('sg-bw-sessions') && (_sgEl('sg-bw-sessions').textContent = bwAll.length);
+  _sgEl('sg-skills') && (_sgEl('sg-skills').textContent = _sgUnlocked+'/'+_sgTotal);
+  _sgEl('sg-journey-pct') && (_sgEl('sg-journey-pct').textContent = journeyPct+'%');
+  const _jBar = document.getElementById('cali-journey-bar-fill');
+  if (_jBar) _jBar.style.width = journeyPct+'%';
 
   _renderVolPanel();
   renderMuscleVol(_pw);
