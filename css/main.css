@@ -6222,3 +6222,31 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 /* CALI journey bar */
 .cali-journey-bar-wrap { width:100%; height:4px; background:var(--border2); border-radius:2px; margin-top:6px; }
 .cali-journey-bar-fill { height:4px; background:var(--accent); border-radius:2px; transition:width .4s ease; }
+
+/* ── NUTRITION DASHBOARD (v44) ── */
+/* Today zone */
+.nut-today-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:14px; margin:0 14px 14px; }
+.nut-today-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.nut-today-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; }
+.nut-today-meals-badge { font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); background:rgba(var(--accent-rgb),.12); border-radius:6px; padding:2px 7px; }
+.nut-today-kcal { font-family:'Bebas Neue',sans-serif; font-size:34px; line-height:1; color:var(--accent); }
+.nut-today-kcal-target { font-size:14px; opacity:.5; margin-left:3px; }
+.nut-today-remaining { font-size:10px; color:var(--text3); margin-top:2px; margin-bottom:8px; }
+.nut-cal-bar-wrap { width:100%; height:6px; background:var(--border2); border-radius:3px; margin-bottom:12px; }
+.nut-cal-bar-fill { height:6px; background:var(--accent); border-radius:3px; transition:width .4s ease; }
+.nut-macro-rows { display:flex; flex-direction:column; gap:5px; }
+.nut-macro-row { display:flex; align-items:center; gap:8px; font-family:'DM Mono',monospace; font-size:9px; color:var(--text3); }
+.nut-macro-label { width:10px; text-align:center; }
+.nut-macro-bar-wrap { flex:1; height:4px; background:var(--border2); border-radius:2px; }
+.nut-macro-bar-fill { height:4px; border-radius:2px; transition:width .4s ease; }
+.nut-macro-val { width:72px; text-align:right; color:var(--text1); }
+.nut-today-empty { text-align:center; padding:18px 0; color:var(--text3); font-size:12px; }
+.nut-today-empty a { color:var(--accent); text-decoration:none; cursor:pointer; }
+/* Charts grid */
+.nut-charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 14px; }
+.nut-chart-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:12px 14px; }
+.nut-chart-label { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; margin-bottom:8px; }
+.nut-chart-card canvas { width:100% !important; }
+.nut-macro-legend { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.nut-macro-legend-item { font-family:'DM Mono',monospace; font-size:8px; color:var(--text3); display:flex; align-items:center; gap:3px; }
+.nut-macro-legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
