@@ -11,32 +11,37 @@ Append 4 new stat cards to the existing 2×2 `stats-grid` (making it 2×4). All 
 ## New Stat Cards
 
 ### Card 5: 🥩 Protein Days
-- **Value:** `X / Y` where X = days meeting protein goal, Y = nDays in period
-- **Sub-label:** percentage of period (e.g. "60% of period")
+- **Value:** `X / Y` where X = days meeting protein goal, Y = `nDays` (= `daily.length`, i.e. logged days in period — NOT calendar days)
+- **Sub-label:** percentage of logged days (e.g. "60% of period")
 - **Threshold:** `dailyProtein >= targets.proteinG * 0.9` (≥90% of goal — matches existing `underProteinDays` threshold)
 - **Data source:** `daily` array (period-filtered)
+- **Color/class:** `sg-val sg-neutral` (default white/text1) — no special color
 
 ### Card 6: 📉 Deficit Days
-- **Value:** `X / Y` where X = days below calorie target, Y = nDays in period
-- **Sub-label:** percentage of period (e.g. "40% of period")
+- **Value:** `X / Y` where X = days below calorie target, Y = `nDays` (= `daily.length`, logged days in period — NOT calendar days)
+- **Sub-label:** percentage of logged days (e.g. "40% of period")
 - **Threshold:** `dailyKcal < targets.targetCal` (any amount below target)
 - **Data source:** `daily` array (period-filtered)
+- **Color/class:** `sg-val sg-neutral` (default white/text1) — no special color
 
 ### Card 7: 🔥 Current Streak
 - **Value:** `X days` (number of consecutive days hitting protein goal up to and including today or yesterday)
 - **Sub-label:** "protein goal" always; if streak = 0 → value shows "—" + sub "start your streak!"
 - **Color:** value renders in `#e6b84a` (existing gold/amber) when streak ≥ 3; default `sg-val sg-neutral` when < 3
 - **Data source:** reads `mealsLog` **directly** (NOT period-filtered — a 15-day streak shouldn't show as 7 in 7D view)
+- **Color/class:** `sg-val` with inline `style="color:#e6b84a"` when streak ≥ 3; `sg-val sg-neutral` when streak < 3; value shows `"—"` when streak === 0
 - **Algorithm:**
   1. Start from today's ISO key (`_isoKey(new Date())`)
-  2. If today has meals and protein ≥ 90% → count it, move to yesterday
-  3. If today has NO meals → skip today (don't break streak before dinner), start from yesterday
-  4. Walk backwards: stop at first day where `!Array.isArray(ml[key]) || !ml[key].length` OR `dailyProtein < targets.proteinG * 0.9`
-  5. Guard: `typeof mealsLog !== 'undefined'`
+  2. If today has meals AND protein ≥ 90% → count it (`startOffset = 0`), then walk backwards from yesterday
+  3. If today has meals AND protein < 90% → streak is 0 immediately (today broke it)
+  4. If today has NO meals → skip today (don't break streak before dinner), start walking backwards from yesterday (`startOffset = 1`)
+  5. Walk backwards: stop at first day where `!meals.length` (no meals logged) OR `p < targets.proteinG * 0.9`
+  6. Guard: `typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object'`
 
 ### Card 8: 🏆 Best Streak
 - **Value:** `X days`
 - **Sub-label:** "this period"
+- **Color/class:** `sg-val sg-neutral` (default white/text1) — no special color
 - **Data source:** `daily` array (period-filtered)
 - **Algorithm:** scan `daily` sorted by date; maintain a running count and max count; increment when protein ≥ 90%, reset to 0 otherwise
 
@@ -84,7 +89,7 @@ const proteinDays  = daily.filter(d => d.p >= targets.proteinG * 0.9).length;
 const deficitDays  = daily.filter(d => d.kcal < targets.targetCal).length;
 const bestStreak   = (() => { let cur=0,max=0; daily.forEach(d => { cur = d.p>=targets.proteinG*.9 ? cur+1 : 0; max=Math.max(max,cur); }); return max; })();
 const currentStreak = (() => {
-  const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
+  const ml = (typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object') ? mealsLog : {};
   let streak = 0;
   const today = new Date();
   const todayKey = _isoKey(today);
@@ -105,6 +110,37 @@ const currentStreak = (() => {
 ```
 
 The 4 new cards are appended to the end of the `statsZone.innerHTML` template string (inside the existing `<div class="stats-grid">` wrapper).
+
+> **⚠️ Closing `</div>` relocation:** The existing `statsZone.innerHTML` ends with `</div>` to close the `stats-grid` wrapper. When appending the 4 new cards, remove that closing tag from its current position and place it **after** the last new card. Do not add a second closing tag.
+
+### HTML template for the 4 new cards
+
+```html
+<!-- Card 5: Protein Days -->
+<div class="sg-card">
+  <div class="sg-label">🥩 Protein Days</div>
+  <div class="sg-val sg-neutral">${proteinDays}<span class="sg-unit"> / ${nDays}</span></div>
+  <div class="sg-sub">${nDays ? Math.round(proteinDays/nDays*100) : 0}% of period</div>
+</div>
+<!-- Card 6: Deficit Days -->
+<div class="sg-card">
+  <div class="sg-label">📉 Deficit Days</div>
+  <div class="sg-val sg-neutral">${deficitDays}<span class="sg-unit"> / ${nDays}</span></div>
+  <div class="sg-sub">${nDays ? Math.round(deficitDays/nDays*100) : 0}% of period</div>
+</div>
+<!-- Card 7: Current Streak -->
+<div class="sg-card">
+  <div class="sg-label">🔥 Cur. Streak</div>
+  <div class="sg-val${currentStreak >= 3 ? '' : ' sg-neutral'}"${currentStreak >= 3 ? ' style="color:#e6b84a"' : ''}>${currentStreak > 0 ? currentStreak + '<span class="sg-unit"> days</span>' : '—'}</div>
+  <div class="sg-sub">${currentStreak > 0 ? 'protein goal' : 'start your streak!'}</div>
+</div>
+<!-- Card 8: Best Streak -->
+<div class="sg-card">
+  <div class="sg-label">🏆 Best Streak</div>
+  <div class="sg-val sg-neutral">${bestStreak}<span class="sg-unit"> days</span></div>
+  <div class="sg-sub">this period</div>
+</div>
+```
 
 ---
 
