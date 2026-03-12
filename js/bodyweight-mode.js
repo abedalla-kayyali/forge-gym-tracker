@@ -9,6 +9,7 @@ let _bwFilterMuscle = ''; // active muscle filter for RPG tree
 let _currentBwEffort = 'medium'; // tracks active effort button
 let _currentBwReps = 10; // tracks reps stepper value
 let _bwStep = 1; // 1=pick muscle, 2=pick exercise, 3=log sets
+let _bwSessionMax = 0; // in-session high-water mark; reset when new exercise selected
 
 function setWorkoutMode(mode) {
   workoutMode = mode;
@@ -94,6 +95,45 @@ function _setBwStep(n) {
     const numEl = el.querySelector('.bw-step-num');
     if (numEl) numEl.textContent = i < n ? '✓' : ['①','②','③'][i - 1];
   });
+}
+
+// ── PR HELPERS ──────────────────────────────────────────────────────────────
+
+// All-time best single set value for an exercise (saved history only)
+function _getBwPR(name) {
+  if (!name) return 0;
+  const history = (bwWorkouts || []).filter(w => w.exercise.toLowerCase() === name.toLowerCase());
+  return history.reduce((mx, w) => Math.max(mx, ...w.sets.map(s => s.reps || s.secs || 0)), 0);
+}
+
+// Today's flat set array for an exercise (may span multiple saves in one day)
+function _getBwTodaySets(name) {
+  if (!name) return [];
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return (bwWorkouts || [])
+    .filter(w => w.exercise.toLowerCase() === name.toLowerCase() && w.date.startsWith(today))
+    .flatMap(w => w.sets);
+}
+
+// Today's best single set value (saved history; _bwSessionMax layered in _updateBwPrStrip)
+function _getBwTodayMax(name) {
+  if (!name) return 0;
+  const sets = _getBwTodaySets(name);
+  return sets.length ? Math.max(...sets.map(s => s.reps || s.secs || 0)) : 0;
+}
+
+// Refresh PR strip UI — uses _bwSessionMax for live display before save
+function _updateBwPrStrip(name) {
+  const savedPR = _getBwPR(name);
+  const pr      = Math.max(savedPR, _bwSessionMax);              // live RECORD
+  const tod     = Math.max(_getBwTodayMax(name), _bwSessionMax); // live TODAY
+  const lvl = CALISTHENICS_TREES.flatMap(t => t.levels)
+    .find(l => l.n.toLowerCase() === (name || '').toLowerCase());
+  const unit = (lvl && lvl.t === 'hold') ? 'secs' : 'reps';
+  const recEl = document.getElementById('bw-record-val');
+  const todEl = document.getElementById('bw-today-val');
+  if (recEl) recEl.textContent = pr  > 0 ? `${pr} ${unit}`  : '—';
+  if (todEl) todEl.textContent = tod > 0 ? `${tod} ${unit}` : '—';
 }
 
 function setBwFilter(btn, muscle) {
