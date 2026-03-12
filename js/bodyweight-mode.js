@@ -198,9 +198,13 @@ function renderBwExercisePicker() {
         const maxVal = history.reduce((mx, w) => Math.max(mx, ...w.sets.map(s => s.reps || s.secs || 0)), 0);
         const pct = Math.min(100, Math.round((maxVal / lvl.target) * 100));
         const unit = lvl.t === 'hold' ? 'secs' : 'reps';
-        const pctLabel = isDone
-          ? `Best: ${maxVal} ${unit} ✓`
-          : `Best: ${maxVal} ${unit} · ${pct}% to unlock (need ${lvl.target})`;
+        const pctLabel = maxVal > 0
+          ? (isDone
+              ? `🏆 ${maxVal} ${unit}  ·  ✓ Unlocked`
+              : `🏆 ${maxVal} ${unit}  ·  ${pct}% to unlock (need ${lvl.target})`)
+          : (isDone
+              ? `✓ Unlocked`          // valid edge case: unlocked with no local history
+              : `${pct}% to unlock (need ${lvl.target} ${unit})`);
         barHtml = `
           <div class="bw-rpg-bar-wrap"><div class="bw-rpg-bar-fill" style="width:${pct}%"></div></div>
           <div class="bw-rpg-pct">${pctLabel}</div>`;
