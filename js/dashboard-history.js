@@ -1533,7 +1533,7 @@ function renderDashboard() {
   const totalPRs = workouts.filter(w => w.isPR).length;
   const lastW = workouts.slice().sort((a,b) => new Date(b.date)-new Date(a.date))[0];
   const todayStr = new Date().toISOString().slice(0,10);
-  const lastDateStr = lastW ? lastW.date.slice(0,10) : null;
+  const lastDateStr = lastW?.date ? lastW.date.slice(0,10) : null;
   const daysAgo = lastDateStr === null ? null
     : lastDateStr === todayStr ? 0
     : Math.floor((Date.now()-new Date(lastDateStr))/86400000);
