@@ -33,7 +33,7 @@ Append 4 new stat cards to the existing 2×2 `stats-grid` (making it 2×4). All 
 - **Algorithm:**
   1. Start from today's ISO key (`_isoKey(new Date())`)
   2. If today has meals AND protein ≥ 90% → count it (`startOffset = 0`), then walk backwards from yesterday
-  3. If today has meals AND protein < 90% → streak is 0 immediately (today broke it)
+  3. If today has meals AND protein < 90% → also use `startOffset = 1` (treat today like no-meals — user may still eat more before day ends); walk backwards from yesterday
   4. If today has NO meals → skip today (don't break streak before dinner), start walking backwards from yesterday (`startOffset = 1`)
   5. Walk backwards: stop at first day where `!meals.length` (no meals logged) OR `p < targets.proteinG * 0.9`
   6. Guard: `typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object'`
@@ -145,4 +145,5 @@ The 4 new cards are appended to the end of the `statsZone.innerHTML` template st
 ---
 
 ## Version
-`v45` — `2026-03-12 (nutrition streaks)` — `forge-v45`
+- `js/config.js`: `FORGE_VERSION = 'v45'`, `FORGE_BUILD = '2026-03-12 (nutrition streaks)'`
+- `sw.js`: `CACHE_NAME = 'forge-v45'`
