@@ -11,7 +11,8 @@
     MEALS: 'forge_meals',
     MEAL_LIBRARY: 'forge_meal_library',
     BW_WORKOUTS: 'forge_bw_workouts',
-    WATER_PREFIX: 'forge_water_'
+    WATER_PREFIX: 'forge_water_',
+    CARDIO: 'forge_cardio'
   });
 
   const CORE_IDB_KEYS = Object.freeze([
@@ -20,7 +21,8 @@
     KEYS.TEMPLATES,
     KEYS.SETTINGS,
     KEYS.MEALS,
-    KEYS.MEAL_LIBRARY
+    KEYS.MEAL_LIBRARY,
+    KEYS.CARDIO
   ]);
 
   function lsGet(key, fallback) {
