@@ -6091,3 +6091,66 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   margin-bottom: 0;
   pointer-events: none;
 }
+
+/* BW guided-flow step indicator */
+.bw-step-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0 14px;
+}
+.bw-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  opacity: .35;
+  transition: opacity .2s ease, color .2s ease;
+}
+.bw-step.active {
+  opacity: 1;
+}
+.bw-step.done {
+  opacity: .75;
+}
+.bw-step-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text3);
+  transition: color .2s ease;
+}
+.bw-step.active .bw-step-num {
+  color: var(--accent);
+  font-size: 18px;
+}
+.bw-step.done .bw-step-num {
+  color: var(--green);
+}
+.bw-step-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+.bw-step.active .bw-step-lbl {
+  color: var(--accent);
+}
+.bw-step.done .bw-step-lbl {
+  color: var(--green);
+}
+.bw-step-arrow {
+  font-size: 10px;
+  color: var(--border2);
+  letter-spacing: -2px;
+  flex-shrink: 0;
+}
+
+/* Selected exercise node highlight */
+.bw-rpg-node.selected {
+  border-left: 3px solid var(--accent);
+  background: rgba(57,255,143,.10);
+  box-shadow: 0 0 10px rgba(57,255,143,.08);
+}
