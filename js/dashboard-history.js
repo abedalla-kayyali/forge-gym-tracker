@@ -1561,6 +1561,30 @@ function renderNutritionAnalyticsPanel() {
   const dayScores = daily.map(d => ({ ...d, score: (closeness(d.kcal,targets.targetCal)+closeness(d.p,targets.proteinG)+closeness(d.c,targets.carbG)+closeness(d.f,targets.fatG))/4 }));
   const compliance = Math.round(dayScores.reduce((s,d) => s+d.score, 0) / nDays * 100);
 
+  // v45 engagement stats
+  const proteinDays   = daily.filter(d => d.p >= targets.proteinG * 0.9).length;
+  const deficitDays   = daily.filter(d => d.kcal < targets.targetCal).length;
+  const bestStreak    = (() => { let cur=0,max=0; daily.forEach(d => { cur = d.p>=targets.proteinG*.9 ? cur+1 : 0; max=Math.max(max,cur); }); return max; })();
+  const currentStreak = (() => {
+    const ml = (typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object') ? mealsLog : {};
+    let streak = 0;
+    const today = new Date();
+    const todayKey = _isoKey(today);
+    const todayMeals = Array.isArray(ml[todayKey]) ? ml[todayKey] : [];
+    const todayP = todayMeals.reduce((s,m) => s+(+m.p||0), 0);
+    let startOffset = (todayMeals.length && todayP >= targets.proteinG*.9) ? 0 : 1;
+    for (let i = startOffset; i < 365; i++) {
+      const d = new Date(today); d.setDate(d.getDate()-i);
+      const key = _isoKey(d);
+      const meals = Array.isArray(ml[key]) ? ml[key] : [];
+      if (!meals.length) break;
+      const p = meals.reduce((s,m) => s+(+m.p||0), 0);
+      if (p < targets.proteinG*.9) break;
+      streak++;
+    }
+    return streak;
+  })();
+
   const calPct  = Math.min(100, Math.round(avgKcal / Math.max(targets.targetCal,1) * 100));
   const mkBar   = (pct, col) => `<div style="height:4px;background:var(--border2);border-radius:2px;margin-top:6px"><div style="height:4px;background:${col};border-radius:2px;width:${pct}%"></div></div>`;
 
@@ -1587,6 +1611,26 @@ function renderNutritionAnalyticsPanel() {
     <div class="sg-label">${tx('Avg Macros','متوسط الماكرو')}</div>
     <div class="sg-val sg-neutral" style="font-size:16px;line-height:1.5">${Math.round(avgP)}P / ${Math.round(avgC)}C / ${Math.round(avgF)}F</div>
     <div class="sg-sub">${tx('Targets:','أهداف:')} ${Math.round(targets.proteinG)}P / ${Math.round(targets.carbG)}C / ${Math.round(targets.fatG)}F</div>
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">🥩 ${tx('Protein Days','أيام البروتين')}</div>
+    <div class="sg-val sg-neutral">${proteinDays}<span class="sg-unit"> / ${nDays}</span></div>
+    <div class="sg-sub">${nDays ? Math.round(proteinDays/nDays*100) : 0}% ${tx('of period','من الفترة')}</div>
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">📉 ${tx('Deficit Days','أيام العجز')}</div>
+    <div class="sg-val sg-neutral">${deficitDays}<span class="sg-unit"> / ${nDays}</span></div>
+    <div class="sg-sub">${nDays ? Math.round(deficitDays/nDays*100) : 0}% ${tx('of period','من الفترة')}</div>
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">🔥 ${tx('Cur. Streak','الإنجاز الحالي')}</div>
+    <div class="sg-val${currentStreak >= 3 ? '' : ' sg-neutral'}"${currentStreak >= 3 ? ' style="color:#e6b84a"' : ''}>${currentStreak > 0 ? currentStreak + '<span class="sg-unit"> ' + tx('days','أيام') + '</span>' : '—'}</div>
+    <div class="sg-sub">${currentStreak > 0 ? tx('protein goal','هدف البروتين') : tx('start your streak!','ابدأ إنجازك!')}</div>
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">🏆 ${tx('Best Streak','أفضل إنجاز')}</div>
+    <div class="sg-val sg-neutral">${bestStreak}<span class="sg-unit"> ${tx('days','أيام')}</span></div>
+    <div class="sg-sub">${tx('this period','هذه الفترة')}</div>
   </div>
 </div>`;
 
