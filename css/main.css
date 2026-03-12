@@ -6250,3 +6250,27 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .nut-macro-legend { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
 .nut-macro-legend-item { font-family:'DM Mono',monospace; font-size:8px; color:var(--text3); display:flex; align-items:center; gap:3px; }
 .nut-macro-legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+
+
+/* ── CARDIO / RECOVERY (v46) ── */
+.cardio-cat-block { margin: 0 14px 12px; }
+.cardio-cat-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; margin-bottom:6px; }
+.cardio-grid { display:flex; flex-wrap:wrap; gap:6px; }
+.cardio-act-btn { font-size:11px; padding:5px 10px; border-radius:8px; background:var(--card); border:1px solid var(--border2); color:var(--text1); cursor:pointer; transition:background .15s,border-color .15s; }
+.cardio-act-btn.active { background:var(--accent); border-color:var(--accent); color:#000; font-weight:600; }
+.cardio-form { margin:0 14px 12px; background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:14px; }
+.cardio-form-title { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--accent); margin-bottom:10px; }
+.cardio-form-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.cardio-form-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); }
+.cardio-optional { opacity:.5; }
+.cardio-num-input { width:90px; background:var(--border2); border:none; border-radius:8px; color:var(--text1); font-family:'DM Mono',monospace; font-size:14px; text-align:center; padding:6px; cursor:pointer; }
+.cardio-hrzone-row { display:flex; gap:5px; }
+.cardio-hz-btn { width:34px; height:30px; border-radius:6px; font-size:10px; font-family:'DM Mono',monospace; background:var(--card); border:1px solid var(--border2); color:var(--text3); cursor:pointer; }
+.cardio-hz-btn.active { background:#e6b84a; border-color:#e6b84a; color:#000; font-weight:600; }
+.cardio-select { background:var(--border2); border:none; border-radius:8px; color:var(--text1); font-family:'DM Mono',monospace; font-size:11px; padding:5px 8px; }
+.cardio-log-btn { width:100%; margin-top:4px; padding:12px; border-radius:10px; background:var(--accent); border:none; color:#000; font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:1px; cursor:pointer; }
+.cardio-recent-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; margin:0 14px 6px; }
+.cardio-log-row { display:flex; align-items:baseline; gap:8px; padding:7px 14px; border-bottom:1px solid var(--border2); }
+.cardio-log-act { font-size:12px; color:var(--text1); flex:1; }
+.cardio-log-meta { font-family:'DM Mono',monospace; font-size:10px; color:var(--text3); }
+.cardio-log-date { font-family:'DM Mono',monospace; font-size:9px; color:var(--text3); opacity:.6; }
