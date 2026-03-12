@@ -234,6 +234,7 @@ function renderBwExercisePicker() {
 }
 
 function pickBwExercise(name, muscle, type) {
+  _bwSessionMax = 0; // reset in-session high-water mark for new exercise
   document.getElementById('exercise-name').value = name;
   selectedMuscle = muscle;
   _currentBwType = type || 'reps';
@@ -264,28 +265,28 @@ function pickBwExercise(name, muscle, type) {
   renderBwExercisePicker();
   renderBwLastSession(name);
 
-  // Pre-fill reps from last session, or use default
-  const bwPrev = (bwWorkouts || []).slice().reverse().find(w => w.exercise.toLowerCase() === name.toLowerCase());
-  if (bwPrev && bwPrev.sets.length) {
-    const lastSet = bwPrev.sets[bwPrev.sets.length - 1];
+  // Clear existing sets before pre-fill
+  document.getElementById('bw-sets-container').innerHTML = '';
+  bwSetCount = 0;
+  _updateSetBadge(0);
+
+  // Daily pre-fill: show today's sets; start fresh if new day
+  const todaySets = _getBwTodaySets(name);
+  if (todaySets.length) {
+    todaySets.forEach(s => _addBwDot(s.reps || s.secs, s.effort));
+    bwSetCount = todaySets.length;
+    _updateSetBadge(bwSetCount);
+    // Pre-fill reps stepper from last today set
+    const lastSet = todaySets[todaySets.length - 1];
     _currentBwReps = lastSet.reps || lastSet.secs || 10;
   } else {
     _currentBwReps = _currentBwType === 'hold' ? 20 : 10;
   }
   _renderBwRepsVal();
 
-  // Clear existing sets if switching exercises
-  document.getElementById('bw-sets-container').innerHTML = '';
-  bwSetCount = 0;
-  _updateSetBadge(0);
-
-  // If coming from a previous session, pre-fill sets
-  if (bwPrev && document.querySelectorAll('#bw-sets-container .bw-dot-row').length === 0) {
-    bwPrev.sets.forEach(s => _addBwDot(s.reps || s.secs, s.effort));
-  }
-
   _renderBwActiveDot();
   _updateBwRing(name);
+  _updateBwPrStrip(name); // show RECORD + TODAY in arcade header
 }
 
 function _updateBwArcadeHeader(name) {
