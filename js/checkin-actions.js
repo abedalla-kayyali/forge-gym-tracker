@@ -1,5 +1,6 @@
-﻿function submitCheckin() {
+function submitCheckin() {
   localStorage.setItem(_ciKey(), JSON.stringify({ ..._ciVals, ts: Date.now() }));
+  if (typeof save === 'function') save();
   const o = document.getElementById('checkin-overlay');
   if (o) o.style.display = 'none';
   // Award +5 XP stored in profile
@@ -15,6 +16,7 @@
 function skipCheckin() {
   // Mark skipped so it doesn't re-prompt today
   localStorage.setItem(_ciKey(), JSON.stringify({ skipped: true, ts: Date.now() }));
+  if (typeof save === 'function') save();
   const o = document.getElementById('checkin-overlay');
   if (o) o.style.display = 'none';
 }
@@ -26,3 +28,4 @@ function getTodayCheckin() {
     return null;
   }
 }
+

@@ -8,6 +8,7 @@ let bwWorkouts = _lsGet(STORAGE_KEYS.BW_WORKOUTS, []);
 
 function saveBwData() {
   localStorage.setItem(STORAGE_KEYS.BW_WORKOUTS, JSON.stringify(bwWorkouts));
+  if (typeof save === 'function') save();
 }
 
 // ── Volume Quality Scoring (Feature 3) ─────────────────────

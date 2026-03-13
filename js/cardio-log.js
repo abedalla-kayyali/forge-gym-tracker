@@ -233,6 +233,7 @@ function submitCardioLog() {
 
   cardioLog.push(entry);
   localStorage.setItem(STORAGE_KEYS.CARDIO, JSON.stringify(cardioLog));
+  if (typeof save === 'function') save();
   if (typeof _sessionActive !== 'undefined' && _sessionActive) {
     if (typeof _sessionWkMuscles !== 'undefined') _sessionWkMuscles.add('Cardio');
     if (typeof _sessionWkLogs !== 'undefined') {

@@ -68,6 +68,18 @@
     await _upsert('bw_workouts', rows);
   }
 
+  async function _syncPushCardio(userId) {
+    const cardio = _ls('forge_cardio');
+    if (!Array.isArray(cardio) || cardio.length === 0) return;
+    const rows = cardio.map(c => ({
+      id:      String(c.id || c.date || Date.now()),
+      user_id: userId,
+      data:    c,
+      date:    c.date ? new Date(c.date).toISOString() : new Date().toISOString()
+    }));
+    await _upsert('cardio', rows);
+  }
+
   async function _syncPushBodyWeight(userId) {
     const entries = _ls('forge_bodyweight');
     if (!Array.isArray(entries) || entries.length === 0) return;
@@ -98,28 +110,49 @@
     await _upsertSingle(table, { user_id: userId, data });
   }
 
+  function _collectDateRowsFromPrefixedKeys(prefix, userId) {
+    const rows = [];
+    try {
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(prefix)) continue;
+        const date = key.slice(prefix.length);
+        if (!date) continue;
+        const data = _ls(key);
+        if (data == null) continue;
+        rows.push({ user_id: userId, date, data });
+      }
+    } catch (_err) {}
+    return rows;
+  }
+
   async function _syncPushCheckins(userId) {
-    // forge_checkins is an object keyed by date string e.g. "2026-03-10"
+    // Prefer the actual runtime storage model: forge_checkin_<toDateString()>
+    // Keep fallback support for legacy forge_checkins object.
+    const rows = _collectDateRowsFromPrefixedKeys('forge_checkin_', userId);
     const checkins = _ls('forge_checkins');
-    if (!checkins || typeof checkins !== 'object') return;
-    const rows = Object.entries(checkins).map(([date, data]) => ({
-      user_id: userId,
-      date,
-      data
-    }));
+    if (checkins && typeof checkins === 'object') {
+      Object.entries(checkins).forEach(([date, data]) => {
+        if (rows.some(r => r.date === date)) return;
+        rows.push({ user_id: userId, date, data });
+      });
+    }
     if (rows.length === 0) return;
     const { error } = await window._sb.from('checkins').upsert(rows, { onConflict: 'user_id,date' });
     if (error) console.warn('[FORGE sync] upsert error checkins', error.message);
   }
 
   async function _syncPushWater(userId) {
+    // Prefer runtime storage model: forge_water_<toDateString()>
+    // Keep fallback support for legacy forge_water object.
+    const rows = _collectDateRowsFromPrefixedKeys('forge_water_', userId);
     const water = _ls('forge_water');
-    if (!water || typeof water !== 'object') return;
-    const rows = Object.entries(water).map(([date, data]) => ({
-      user_id: userId,
-      date,
-      data
-    }));
+    if (water && typeof water === 'object') {
+      Object.entries(water).forEach(([date, data]) => {
+        if (rows.some(r => r.date === date)) return;
+        rows.push({ user_id: userId, date, data });
+      });
+    }
     if (rows.length === 0) return;
     const { error } = await window._sb.from('water').upsert(rows, { onConflict: 'user_id,date' });
     if (error) console.warn('[FORGE sync] upsert error water', error.message);
@@ -155,6 +188,7 @@
         window._syncPushProfile(userId),
         _syncPushWorkouts(userId),
         _syncPushBwWorkouts(userId),
+        _syncPushCardio(userId),
         _syncPushBodyWeight(userId),
         _syncPushTemplates(userId),
         _syncPushSimple('settings',     'forge_settings',     userId),
@@ -187,12 +221,13 @@
     _currentUserId = userId;
     try {
       const [
-        profileRes, workoutsRes, bwRes, bwWeightRes, tplRes,
+        profileRes, workoutsRes, bwRes, cardioRes, bwWeightRes, tplRes,
         settingsRes, mealsRes, mealLibRes, checkinsRes, waterRes, stepsRes
       ] = await Promise.all([
         window._sb.from('profiles').select('data').eq('id', userId).maybeSingle(),
         window._sb.from('workouts').select('data').eq('user_id', userId),
         window._sb.from('bw_workouts').select('data').eq('user_id', userId),
+        window._sb.from('cardio').select('data').eq('user_id', userId),
         window._sb.from('body_weight').select('data').eq('user_id', userId),
         window._sb.from('templates').select('data').eq('user_id', userId),
         window._sb.from('settings').select('data').eq('user_id', userId).maybeSingle(),
@@ -209,6 +244,7 @@
       // Arrays
       if (workoutsRes.data?.length) _lsSet('forge_workouts', workoutsRes.data.map(r => r.data));
       if (bwRes.data?.length)       _lsSet('forge_bw_workouts', bwRes.data.map(r => r.data));
+      if (cardioRes.data?.length)   _lsSet('forge_cardio', cardioRes.data.map(r => r.data));
       if (bwWeightRes.data?.length) _lsSet('forge_bodyweight', bwWeightRes.data.map(r => r.data));
       if (tplRes.data?.length)      _lsSet('forge_templates', tplRes.data.map(r => r.data));
 
@@ -220,12 +256,18 @@
       // Date-keyed objects
       if (checkinsRes.data?.length) {
         const obj = {};
-        checkinsRes.data.forEach(r => { obj[r.date] = r.data; });
+        checkinsRes.data.forEach(r => {
+          obj[r.date] = r.data;
+          _lsSet('forge_checkin_' + r.date, r.data);
+        });
         _lsSet('forge_checkins', obj);
       }
       if (waterRes.data?.length) {
         const obj = {};
-        waterRes.data.forEach(r => { obj[r.date] = r.data; });
+        waterRes.data.forEach(r => {
+          obj[r.date] = r.data;
+          _lsSet('forge_water_' + r.date, r.data);
+        });
         _lsSet('forge_water', obj);
       }
       if (stepsRes.data?.length) {
@@ -249,7 +291,7 @@
     // Clear user data from localStorage (keep app shell keys)
     [
       'forge_workouts','forge_bw_workouts','forge_bodyweight',
-      'forge_templates','forge_settings','forge_meals','forge_meal_library',
+      'forge_cardio','forge_templates','forge_settings','forge_meals','forge_meal_library',
       'forge_checkins','forge_water','forge_steps','forge_profile',
       'forge_sync_pending','forge_schema_version'
     ].forEach(k => localStorage.removeItem(k));

@@ -92,10 +92,22 @@
     const mealsLog = window.mealsLog || {};
     const todayKey = (typeof window._mealTodayKey === 'function') ? window._mealTodayKey() : _iso(new Date());
     const todayMeals = _arr(mealsLog[todayKey]);
-    if (!todayMeals.length) return { score: 45, proteinPct: 0, kcalPct: 0, note: 'No meals logged yet' };
+    let usedKey = todayKey;
+    let meals = todayMeals;
+    if (!meals.length) {
+      const keys = Object.keys(mealsLog || {})
+        .filter(k => _arr(mealsLog[k]).length > 0)
+        .sort();
+      if (keys.length) {
+        usedKey = keys[keys.length - 1];
+        meals = _arr(mealsLog[usedKey]);
+      } else {
+        return { score: 45, proteinPct: 0, kcalPct: 0, note: 'No meals logged yet' };
+      }
+    }
 
-    const p = _sum(todayMeals, m => _toNum(m?.p, 0));
-    const kcal = _sum(todayMeals, m => _toNum(m?.kcal, 0));
+    const p = _sum(meals, m => _toNum(m?.p, 0));
+    const kcal = _sum(meals, m => _toNum(m?.kcal, 0));
 
     const wtRaw = _toNum(window.userProfile?.weight, 75);
     const wtKg = (window.userProfile?.bwUnit === 'lbs' || window.userProfile?.weightUnit === 'lbs') ? wtRaw * 0.453592 : wtRaw;
@@ -110,7 +122,8 @@
     const kcalComponent = Math.max(0, 100 - Math.abs(100 - kcalPct));
     const score = Math.round((proteinComponent * 0.65) + (kcalComponent * 0.35));
 
-    return { score, proteinPct, kcalPct, note: `${p.toFixed(0)}g protein / ${kcal.toFixed(0)} kcal` };
+    const suffix = (usedKey !== todayKey) ? ` (last logged ${usedKey})` : '';
+    return { score, proteinPct, kcalPct, note: `${p.toFixed(0)}g protein / ${kcal.toFixed(0)} kcal${suffix}` };
   }
 
   function _readinessScore(lastWeightedDate, lastCardioDate) {
