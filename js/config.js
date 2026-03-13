@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v80';
-window.FORGE_BUILD   = '2026-03-13 (nutrition habit calendar + gamified history tracking)';
+window.FORGE_VERSION = 'v81';
+window.FORGE_BUILD   = '2026-03-13 (hotfix: duplicate streak variable crash in nutrition calendar)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

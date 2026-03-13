@@ -7474,8 +7474,8 @@ function renderCoachNutrition() {
   const last30 = daysArr.slice(-30);
   const logged30 = last30.filter(d => d.has).length;
   const perfect30 = last30.filter(d => d.lvl >= 4).length;
-  const currentMealStreak = calcCurrentStreak();
-  const bestMealStreak = calcBestStreak();
+  const currentLogStreak = calcCurrentStreak();
+  const bestLogStreak = calcBestStreak();
   const calCellsHtml = daysArr.map(d =>
     `<button class="nutri-cal-cell lvl-${d.lvl}${d.isToday ? ' today' : ''}" onclick="_cnSetMealDate('${d.key}')" title="${d.key} | ${d.meals} meals | ${Math.round(d.kcal)} kcal | ${Math.round(d.p)}g P | ${d.adherence}%"></button>`
   ).join('');
@@ -7486,8 +7486,8 @@ function renderCoachNutrition() {
         <div class="nutri-cal-sub">${tx('Tap any day to open its log', 'اضغط أي يوم لفتح سجلّه')}</div>
       </div>
       <div class="nutri-cal-kpis">
-        <div class="nutri-cal-kpi"><span>${tx('Current Streak', 'السلسلة الحالية')}</span><strong>${currentMealStreak}d</strong></div>
-        <div class="nutri-cal-kpi"><span>${tx('Best Streak', 'أفضل سلسلة')}</span><strong>${bestMealStreak}d</strong></div>
+        <div class="nutri-cal-kpi"><span>${tx('Current Streak', 'السلسلة الحالية')}</span><strong>${currentLogStreak}d</strong></div>
+        <div class="nutri-cal-kpi"><span>${tx('Best Streak', 'أفضل سلسلة')}</span><strong>${bestLogStreak}d</strong></div>
         <div class="nutri-cal-kpi"><span>${tx('Logged (30d)', 'مسجل (30 يوم)')}</span><strong>${logged30}</strong></div>
         <div class="nutri-cal-kpi"><span>${tx('Perfect Days', 'أيام مثالية')}</span><strong>${perfect30}</strong></div>
       </div>
