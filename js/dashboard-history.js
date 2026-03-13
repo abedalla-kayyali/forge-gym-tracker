@@ -132,6 +132,86 @@ function _isoKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function _histSvgIcon(kind, cls = '') {
+  const pathMap = {
+    workout: '<path d="M6 5v14M18 5v14"/><path d="M2 9h4M18 9h4M2 15h4M18 15h4"/><rect x="6" y="8" width="12" height="8" rx="1"/>',
+    steps: '<path d="M8 4v6M16 4v6"/><path d="M6 14c0 3 2 6 6 6s6-3 6-6"/><path d="M6 14h12"/>',
+    water: '<path d="M12 3C9 7 6 10 6 14a6 6 0 0 0 12 0c0-4-3-7-6-11z"/>',
+    weight: '<path d="M6 8h12l-1 10H7L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/><line x1="12" y1="11" x2="12" y2="14"/>',
+    meals: '<path d="M8 3v8M12 3v8M10 3v8"/><path d="M16 3v7a2 2 0 0 0 2 2"/><line x1="7" y1="21" x2="7" y2="12"/><line x1="17" y1="21" x2="17" y2="12"/>',
+    chest: '<path d="M6 5v14M18 5v14"/><path d="M6 9h12M6 15h12"/>',
+    back: '<path d="M4 6s2-2 8-2 8 2 8 2"/><line x1="12" y1="4" x2="12" y2="20"/><path d="M4 18s2 2 8 2 8-2 8-2"/>',
+    shoulders: '<path d="M12 8c-4 0-7 2-7 5s3 5 7 5 7-2 7-5-3-5-7-5z"/><path d="M12 5v3"/>',
+    legs: '<path d="M10 3s0 4-2 8-2 8-2 9"/><path d="M14 3s0 4 2 8 2 8 2 9"/>',
+    core: '<ellipse cx="12" cy="12" rx="4" ry="6"/><line x1="12" y1="6" x2="12" y2="18"/>',
+    biceps: '<path d="M6 16c0-4 2-8 6-8s6 4 6 8"/>',
+    triceps: '<path d="M8 6l-2 12M16 6l2 12M7 14h10"/>',
+    forearms: '<path d="M6 8h12M6 12h12M6 16h8"/>',
+    glutes: '<path d="M6 14c0-4 2-7 6-7s6 3 6 7c0 2-2 4-6 4s-6-2-6-4z"/>',
+    calves: '<path d="M10 3l-2 10 2 8"/><path d="M14 3l2 10-2 8"/>',
+    neck: '<path d="M12 3c-2 0-3 1-3 3v4c0 2 1 3 3 3s3-1 3-3V6c0-2-1-3-3-3z"/>',
+    traps: '<path d="M4 8c2-3 5-5 8-5s6 2 8 5"/><path d="M4 8l-2 6h20l-2-6"/>',
+    lowerback: '<path d="M6 12h12"/><path d="M8 8c0-2 1.5-4 4-4s4 2 4 4"/><path d="M6 16h12"/>',
+    generic: '<circle cx="12" cy="12" r="5"/>',
+    star: '<polygon points="12 3.5 14.9 9.3 21.2 10.2 16.6 14.6 17.7 20.9 12 17.9 6.3 20.9 7.4 14.6 2.8 10.2 9.1 9.3 12 3.5"/>',
+    flame: '<path d="M12 3c3 4 5 6 5 10a5 5 0 1 1-10 0c0-2 1-4 3-6"/>',
+    bolt: '<path d="M13 2L5 13h6l-1 9 8-11h-6z"/>',
+    trendup: '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="21 12 21 7 16 7"/>',
+    chevron: '<polyline points="6 9 12 15 18 9"/>'
+  };
+  const path = pathMap[kind] || pathMap.generic;
+  return `<svg class="${cls}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+}
+
+function _histMuscleIcon(muscle, cls = 'hist-icon') {
+  const keyMap = {
+    Chest: 'chest',
+    Back: 'back',
+    Shoulders: 'shoulders',
+    Legs: 'legs',
+    Core: 'core',
+    Biceps: 'biceps',
+    Triceps: 'triceps',
+    Forearms: 'forearms',
+    Glutes: 'glutes',
+    Calves: 'calves',
+    Neck: 'neck',
+    Traps: 'traps',
+    'Lower Back': 'lowerback'
+  };
+  return _histSvgIcon(keyMap[muscle] || 'generic', cls);
+}
+
+function _calcStreakFromDateKeys(dateKeys) {
+  if (!dateKeys || !dateKeys.length) return { current: 0, best: 0 };
+  const unique = [...new Set(dateKeys)].sort();
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < unique.length; i++) {
+    const prev = new Date(unique[i - 1] + 'T00:00:00');
+    const cur = new Date(unique[i] + 'T00:00:00');
+    const diff = Math.round((cur.getTime() - prev.getTime()) / 86400000);
+    if (diff === 1) {
+      run += 1;
+      if (run > best) best = run;
+    } else {
+      run = 1;
+    }
+  }
+  const set = new Set(unique);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yday = new Date(today);
+  yday.setDate(yday.getDate() - 1);
+  let cursor = set.has(_isoKey(today)) ? today : (set.has(_isoKey(yday)) ? yday : null);
+  let current = 0;
+  while (cursor && set.has(_isoKey(cursor))) {
+    current += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return { current, best: Math.max(best, current) };
+}
+
 // â”€â”€ Main calendar renderer â”€â”€
 function renderWorkoutCalendar() {
   const wrap = document.getElementById('workout-calendar-wrap');
@@ -164,10 +244,10 @@ function renderWorkoutCalendar() {
 
   // â”€â”€ Tab labels â”€â”€
   const tabs = [
-    { id: 'workout', icon: 'ًںڈ‹ï¸ڈ', label: isAr ? 'طھظ…ط±ظٹظ†' : 'Workout' },
-    { id: 'steps', icon: 'ًں‘ں', label: isAr ? 'ط®ط·ظˆط§طھ' : 'Steps' },
-    { id: 'water', icon: 'ًں’§', label: isAr ? 'ظ…ط§ط،' : 'Water' },
-    { id: 'weight', icon: 'âڑ–ï¸ڈ', label: isAr ? 'ظˆط²ظ†' : 'Weight' }
+    { id: 'workout', icon: _histSvgIcon('workout', 'tab-ic'), label: isAr ? 'طھظ…ط±ظٹظ†' : 'Workout' },
+    { id: 'steps', icon: _histSvgIcon('steps', 'tab-ic'), label: isAr ? 'ط®ط·ظˆط§طھ' : 'Steps' },
+    { id: 'water', icon: _histSvgIcon('water', 'tab-ic'), label: isAr ? 'ظ…ط§ط،' : 'Water' },
+    { id: 'weight', icon: _histSvgIcon('weight', 'tab-ic'), label: isAr ? 'ظˆط²ظ†' : 'Weight' }
   ];
   const tabsHtml = `<div class="cal-track-tabs">${tabs.map(tb =>
     `<button class="cal-track-tab${_calMode === tb.id ? ' active' : ''}" onclick="calSetMode('${tb.id}')">
@@ -276,41 +356,41 @@ function renderWorkoutCalendar() {
     const dateLabel = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-GB', { weekday: 'long', month: 'long', day: 'numeric' });
 
     const cellWkt = wk
-      ? `<div class="cal-ddc-label">ًں’ھ ${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</div>
+      ? `<div class="cal-ddc-label">${_histSvgIcon('workout')} ${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</div>
          <div class="cal-ddc-val">${wk.count}<span class="cal-ddc-unit">${isAr ? 'ط¬ظ„ط³ط©' : 'sess'}</span></div>
          <div class="cal-ddc-sub">${Math.round(wk.vol).toLocaleString()} kg vol</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:100%;background:#2ecc71;"></div></div>`
-      : `<div class="cal-ddc-label">ًں’ھ ${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</div><div class="cal-ddc-empty">${isAr ? 'ط±ط§ط­ط©' : 'Rest day'}</div>`;
+      : `<div class="cal-ddc-label">${_histSvgIcon('workout')} ${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</div><div class="cal-ddc-empty">${isAr ? 'ط±ط§ط­ط©' : 'Rest day'}</div>`;
 
     const stPct = st && st.steps ? Math.min(100, Math.round(st.steps / stGoal * 100)) : 0;
     const cellSt = st && st.steps
-      ? `<div class="cal-ddc-label">ًں‘ں ${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</div>
+      ? `<div class="cal-ddc-label">${_histSvgIcon('steps')} ${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</div>
          <div class="cal-ddc-val">${(st.steps / 1000).toFixed(1)}<span class="cal-ddc-unit">k</span></div>
          <div class="cal-ddc-sub">${stPct}% ${isAr ? 'ظ…ظ† ط§ظ„ظ‡ط¯ظپ' : 'of goal'}</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:${stPct}%;background:#f39c12;"></div></div>`
-      : `<div class="cal-ddc-label">ًں‘ں ${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">${_histSvgIcon('steps')} ${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     const h2oPct = h2o ? Math.min(100, Math.round(h2o.cups / goal * 100)) : 0;
     const cellH2o = h2o && h2o.cups
-      ? `<div class="cal-ddc-label">ًں’§ ${isAr ? 'ظ…ط§ط،' : 'Water'}</div>
+      ? `<div class="cal-ddc-label">${_histSvgIcon('water')} ${isAr ? 'ظ…ط§ط،' : 'Water'}</div>
          <div class="cal-ddc-val">${h2o.cups}<span class="cal-ddc-unit">/${goal}</span></div>
          <div class="cal-ddc-sub">${h2oPct}% ${isAr ? 'ظ…ظ† ط§ظ„ظ‡ط¯ظپ' : 'of goal'}</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:${h2oPct}%;background:#3498db;"></div></div>`
-      : `<div class="cal-ddc-label">ًں’§ ${isAr ? 'ظ…ط§ط،' : 'Water'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">${_histSvgIcon('water')} ${isAr ? 'ظ…ط§ط،' : 'Water'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     const cellWt = wt
-      ? `<div class="cal-ddc-label">âڑ–ï¸ڈ ${isAr ? 'ط§ظ„ظˆط²ظ†' : 'Weight'}</div>
+      ? `<div class="cal-ddc-label">${_histSvgIcon('weight')} ${isAr ? 'ط§ظ„ظˆط²ظ†' : 'Weight'}</div>
          <div class="cal-ddc-val">${wt.weight}<span class="cal-ddc-unit">${wt.unit}</span></div>
          <div class="cal-ddc-sub" style="margin-top:4px;">&nbsp;</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:100%;background:#9b59b6;"></div></div>`
-      : `<div class="cal-ddc-label">âڑ–ï¸ڈ ${isAr ? 'ط§ظ„ظˆط²ظ†' : 'Weight'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">${_histSvgIcon('weight')} ${isAr ? 'ط§ظ„ظˆط²ظ†' : 'Weight'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     const cellMeal = meal && meal.count
-      ? `<div class="cal-ddc-label">ًںچ½ï¸ڈ ${isAr ? 'ط§ظ„ظˆط¬ط¨ط§طھ' : 'Meals'}</div>
+      ? `<div class="cal-ddc-label">${_histSvgIcon('meals')} ${isAr ? 'ط§ظ„ظˆط¬ط¨ط§طھ' : 'Meals'}</div>
          <div class="cal-ddc-val">${meal.count}<span class="cal-ddc-unit">${isAr ? 'ظˆط¬ط¨ط©' : 'meal'}</span></div>
          <div class="cal-ddc-sub">${Math.round(meal.kcal)} ${isAr ? 'ط³ط¹ط±ط©' : 'kcal'} â€¢ ${Math.round(meal.p)}P ${Math.round(meal.c)}C ${Math.round(meal.f)}F</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:${Math.min(100, meal.count * 25)}%;background:#e67e22;"></div></div>`
-      : `<div class="cal-ddc-label">ًںچ½ï¸ڈ ${isAr ? 'ط§ظ„ظˆط¬ط¨ط§طھ' : 'Meals'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">${_histSvgIcon('meals')} ${isAr ? 'ط§ظ„ظˆط¬ط¨ط§طھ' : 'Meals'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     selDetail = `<div class="cal-day-detail">
       <div class="cal-day-detail-header">${dateLabel}</div>
@@ -2272,13 +2352,9 @@ function renderHistory() {
   const tFn = (typeof t === 'function') ? t : (k => k);
   const lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
   const dateLoc = lang === 'ar' ? 'ar-SA' : 'en-GB';
-  document.getElementById('hist-count-badge').textContent = filtered.length + (lang === 'ar' ? ' ط¥ط¯ط®ط§ظ„' : ' ENTRIES');
-  if (!filtered.length) {
-    document.getElementById('history-list').innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-title">${tFn('history.empty')}</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">${tFn('history.emptyHint')}</div></div>`;
-    return;
-  }
+  const histCountBadge = document.getElementById('hist-count-badge');
+  if (histCountBadge) histCountBadge.textContent = filtered.length + (lang === 'ar' ? ' ط¥ط¯ط®ط§ظ„' : ' ENTRIES');
 
-  // Group by date (YYYY-MM-DD) â€” same day = same session
   const sessionMap = {};
   const sessionOrder = [];
   filtered.forEach(w => {
@@ -2286,6 +2362,45 @@ function renderHistory() {
     if (!sessionMap[key]) { sessionMap[key] = []; sessionOrder.push(key); }
     sessionMap[key].push(w);
   });
+  const dateKeys = Object.keys(sessionMap);
+  const streak = _calcStreakFromDateKeys(dateKeys);
+  const totalVolume = filtered.reduce((a, w) => a + (w.type === 'bodyweight' ? 0 : (w.totalVolume || 0)), 0);
+  const prCountTotal = filtered.filter(w => w.isPR).length;
+  const xp = Math.round(totalVolume / 100) + (prCountTotal * 45) + (filtered.length * 12);
+  const nextXp = Math.ceil((xp + 1) / 200) * 200;
+  const lvl = Math.max(1, Math.floor(xp / 200) + 1);
+  const lvlProgress = Math.min(100, Math.round(((xp % 200) / 200) * 100));
+  const histInsight = document.getElementById('history-gamify-insights');
+  if (histInsight) {
+    histInsight.innerHTML = `
+      <div class="hist-gamify-grid">
+        <div class="hist-gamify-card streak">
+          <div class="hist-gamify-top">${_histSvgIcon('flame')} <span>${lang === 'ar' ? 'ط§ظ„ظ…طھطھط§ظ„ظٹط©' : 'Current Streak'}</span></div>
+          <div class="hist-gamify-val">${streak.current}<small>${lang === 'ar' ? 'ظٹظˆظ…' : 'days'}</small></div>
+          <div class="hist-gamify-sub">${lang === 'ar' ? 'ط£ظپط¶ظ„: ' : 'Best: '}${streak.best} ${lang === 'ar' ? 'ظٹظˆظ…' : 'days'}</div>
+        </div>
+        <div class="hist-gamify-card pr">
+          <div class="hist-gamify-top">${_histSvgIcon('star')} <span>${lang === 'ar' ? 'ط¨ط·ط§ظ‚ط§طھ PR' : 'PR Hits'}</span></div>
+          <div class="hist-gamify-val">${prCountTotal}<small>${lang === 'ar' ? 'ط¥ظ†ط¬ط§ط²' : 'records'}</small></div>
+          <div class="hist-gamify-sub">${lang === 'ar' ? 'ظ…ظ† ط§ظ„ط¥ط¬ظ…ط§ظ„ظٹ' : 'of all visible sessions'}</div>
+        </div>
+        <div class="hist-gamify-card xp">
+          <div class="hist-gamify-top">${_histSvgIcon('bolt')} <span>${lang === 'ar' ? 'ظ„ظٹظپظ„ ظ„ظˆط¬' : 'History Level'}</span></div>
+          <div class="hist-gamify-val">L${lvl}<small>XP</small></div>
+          <div class="hist-gamify-sub">${xp}/${nextXp}</div>
+          <div class="hist-gamify-bar"><span style="width:${lvlProgress}%"></span></div>
+        </div>
+        <div class="hist-gamify-card volume">
+          <div class="hist-gamify-top">${_histSvgIcon('trendup')} <span>${lang === 'ar' ? 'حجم العمل' : 'Volume Bank'}</span></div>
+          <div class="hist-gamify-val">${Math.round(totalVolume).toLocaleString()}<small>kg</small></div>
+          <div class="hist-gamify-sub">${dateKeys.length} ${lang === 'ar' ? 'ظٹظˆظ… ظ†ط´ط·' : 'active days'}</div>
+        </div>
+      </div>`;
+  }
+  if (!filtered.length) {
+    document.getElementById('history-list').innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-title">${tFn('history.empty')}</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">${tFn('history.emptyHint')}</div></div>`;
+    return;
+  }
 
   // Build exercise card HTML (reused inside each session)
   function _buildExCard(w) {
@@ -2297,10 +2412,10 @@ function renderHistory() {
       const effortIcons = [...new Set((w.sets || []).map(s => effortColorMap[(s.e || s.effort || '').toLowerCase()]).filter(Boolean))].map(c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};margin:1px;"></span>`).join('');
       const bdrDir = lang === 'ar' ? 'border-right' : 'border-left';
       return `<div class="hist-item" style="${bdrDir}:3px solid #3a9e6a;">
-        <div class="hist-muscle-badge">${MUSCLE_ICONS[w.muscle] || MUSCLE_ICONS.Chest}</div>
+        <div class="hist-muscle-badge">${_histMuscleIcon(w.muscle)}</div>
         <div class="hist-info">
           <div class="hist-name">${w.exercise}${w.isPR ? ' <span class="pr-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px;"><polyline points="6 9 12 4 18 9"/><path d="M6 9v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9"/><line x1="12" y1="4" x2="12" y2="14"/></svg> ' + tFn('history.pr') + '</span>' : ''} <span style="font-size:9px;color:var(--text3);font-family:'DM Mono'">BW</span></div>
-          <div class="hist-meta">${w.muscle || tFn('bw.title')} آ· ${dStr}${w.notes ? ' آ· ' + w.notes : ''}</div>
+          <div class="hist-meta">${w.muscle || tFn('bw.title')} • ${dStr}${w.notes ? ' • ' + w.notes : ''}</div>
         </div>
         <div class="hist-stats">
           <div><div class="hist-stat-val">${(w.sets || []).length}</div><div class="hist-stat-lbl">${tFn('history.sets')}</div></div>
@@ -2314,16 +2429,16 @@ function renderHistory() {
     let trendArrow = ''; let trendClass = 'same';
     if (prev.length) {
       const pm = Math.max(...prev[prev.length - 1].sets.map(s => s.weight));
-      if (maxW > pm) { trendArrow = 'â†‘'; trendClass = 'up'; } else if (maxW < pm) { trendArrow = 'â†“'; trendClass = 'down'; } else { trendArrow = 'â†’'; trendClass = 'same'; }
+      if (maxW > pm) { trendArrow = '↑'; trendClass = 'up'; } else if (maxW < pm) { trendArrow = '↓'; trendClass = 'down'; } else { trendArrow = '→'; trendClass = 'same'; }
     }
     const _eff = w.effort || null;
     const _qScore = (typeof calcQualityScore === 'function' && _eff) ? calcQualityScore(w) : null;
     const _qBadge = (_eff && _qScore !== null) ? `<span class="quality-badge ${_eff}">${_qScore}Q</span>` : '';
     return `<div class="hist-item">
-      <div class="hist-muscle-badge">${MUSCLE_ICONS[w.muscle] || MUSCLE_ICONS.Chest}</div>
+      <div class="hist-muscle-badge">${_histMuscleIcon(w.muscle)}</div>
       <div class="hist-info">
         <div class="hist-name">${w.exercise}${w.isPR ? ' <span class="pr-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px;"><polyline points="6 9 12 4 18 9"/><path d="M6 9v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9"/><line x1="12" y1="4" x2="12" y2="14"/></svg> ' + tFn('history.pr') + '</span>' : ''}</div>
-        <div class="hist-meta">${w.muscle} آ· ${dStr}${w.notes ? ' آ· ' + w.notes : ''}</div>
+        <div class="hist-meta">${w.muscle} • ${dStr}${w.notes ? ' • ' + w.notes : ''}</div>
       </div>
       <div class="hist-stats">
         <div><div class="hist-stat-val">${w.sets.length}</div><div class="hist-stat-lbl">${tFn('history.sets')}</div></div>
@@ -2339,19 +2454,19 @@ function renderHistory() {
     const d = new Date(dateKey + 'T12:00:00');
     const dateStr = d.toLocaleDateString(dateLoc, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
     const muscles = [...new Set(items.map(w => w.muscle).filter(Boolean))];
-    const muscleChips = muscles.map(m => `<span class="session-muscle-chip">${MUSCLE_ICONS[m] || ''} ${t('muscle.' + m.replace(/ /g, '')) || m}</span>`).join('');
+    const muscleChips = muscles.map(m => `<span class="session-muscle-chip">${_histMuscleIcon(m, 'session-chip-icon')} ${t('muscle.' + m.replace(/ /g, '')) || m}</span>`).join('');
     const totalSets = items.reduce((a, w) => a + (w.sets ? w.sets.length : 0), 0);
     const totalVol = items.reduce((a, w) => a + (w.type === 'bodyweight' ? 0 : (w.totalVolume || 0)), 0);
     const prCount = items.filter(w => w.isPR).length;
-    const prBadge = prCount > 0 ? `<span class="session-pr-badge">â­گ ${prCount} PR${prCount > 1 ? 's' : ''}</span>` : '';
-    const volStr = totalVol > 0 ? `${Math.round(totalVol).toLocaleString()} kg آ· ` : '';
+    const prBadge = prCount > 0 ? `<span class="session-pr-badge">${_histSvgIcon('star', 'session-pr-icon')} ${prCount} PR${prCount > 1 ? 's' : ''}</span>` : '';
+    const volStr = totalVol > 0 ? `${Math.round(totalVol).toLocaleString()} kg • ` : '';
     const exerciseCards = items.map(_buildExCard).join('');
     return `<div class="session-card">
       <div class="session-header" onclick="this.parentElement.classList.toggle('open')">
         <div class="session-date">${dateStr}</div>
         <div class="session-chips">${muscleChips}</div>
-        <div class="session-summary">${volStr}${totalSets} sets${prBadge ? ' آ· ' : ' '}${prBadge}</div>
-        <div class="session-arrow">â–¾</div>
+        <div class="session-summary">${volStr}${totalSets} sets${prBadge ? ' • ' : ' '}${prBadge}</div>
+        <div class="session-arrow">${_histSvgIcon('chevron', 'session-arrow-icon')}</div>
       </div>
       <div class="session-exs">${exerciseCards}</div>
     </div>`;
