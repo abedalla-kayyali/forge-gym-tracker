@@ -525,6 +525,7 @@ function _setPeriod(period, btn) {
 // Overview Quick Snapshot â€” period-aware insights bar
 function _renderOverviewSnapshot() {
   const _pw = _getPw();
+  const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
 
   // Streak (consecutive days trained)
   const _streak = typeof calcStreak === 'function' ? calcStreak() : 0;
@@ -543,7 +544,11 @@ function _renderOverviewSnapshot() {
     } else {
       const _lastD = new Date(workouts[workouts.length - 1].date);
       const _dAgo = Math.floor((Date.now() - _lastD.getTime()) / 86400000);
-      elLast.textContent = _dAgo === 0 ? 'Today' : _dAgo === 1 ? 'Yest.' : _dAgo + 'd ago';
+      elLast.textContent = _dAgo === 0
+        ? (isAr ? 'اليوم' : 'Today')
+        : _dAgo === 1
+          ? (isAr ? 'أمس' : 'Yest.')
+          : (isAr ? `${_dAgo} يوم` : `${_dAgo}d ago`);
       elLast.className = 'snap-val' + (_dAgo <= 2 ? ' snap-pos' : _dAgo > 4 ? ' snap-neg' : '');
     }
   }
@@ -555,7 +560,7 @@ function _renderOverviewSnapshot() {
       elTrend.textContent = workouts.length;
       elTrend.className = 'snap-val snap-neutral';
       const lbl = document.getElementById('snap-trend-lbl');
-      if (lbl) lbl.textContent = 'total sessions';
+      if (lbl) lbl.textContent = isAr ? 'إجمالي الجلسات' : 'total sessions';
     } else {
       const _td = _dashPeriod === '7D' ? 7 : _dashPeriod === '1M' ? 30 : _dashPeriod === '3M' ? 90 : 180;
       const _pEnd = new Date(); _pEnd.setDate(_pEnd.getDate() - _td);
@@ -576,7 +581,7 @@ function _renderOverviewSnapshot() {
         elTrend.className = 'snap-val snap-neutral';
       }
       const lbl2 = document.getElementById('snap-trend-lbl');
-      if (lbl2) lbl2.textContent = 'vs prev period';
+      if (lbl2) lbl2.textContent = isAr ? 'مقارنة بالفترة السابقة' : 'vs prev period';
     }
   }
 
@@ -648,6 +653,12 @@ function switchDashTab(name, btn) {
     _applyProgressAccordion();
   } else {
     _applyProgressAccordion();
+  }
+  if (name === 'overview') {
+    _ensureOverviewAccordion();
+    _applyOverviewAccordion();
+  } else {
+    _applyOverviewAccordion();
   }
 }
 
@@ -767,6 +778,123 @@ function _applyProgressAccordion() {
     const btn = panel.querySelector('.prog-acc-toggle');
     const expanded = !useCompact || idx === _progressAccordionOpenIndex;
     panel.classList.toggle('progress-collapsed', !expanded);
+    if (btn) {
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      btn.style.display = useCompact ? 'inline-flex' : 'none';
+    }
+  });
+}
+
+let _overviewAccordionInit = false;
+let _overviewAccordionOpenIndex = 0;
+
+function _getOverviewPanels() {
+  return Array.from(document.querySelectorAll('#view-dashboard .panel[data-dash-tab="overview"]'));
+}
+
+function _isOverviewCompactMobile() {
+  return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width:700px)').matches;
+}
+
+function _ensureOverviewAccordion() {
+  const panels = _getOverviewPanels();
+  const isAr = (typeof currentLang !== 'undefined' && currentLang === 'ar');
+
+  panels.forEach((panel, idx) => {
+    const header = panel.querySelector('.panel-header');
+    if (!header) return;
+    let btn = header.querySelector('.ov-acc-toggle');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ov-acc-toggle';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+      btn.onclick = (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        _overviewAccordionOpenIndex = (_overviewAccordionOpenIndex === idx) ? -1 : idx;
+        _applyOverviewAccordion();
+      };
+      header.appendChild(btn);
+    }
+    const title = (header.querySelector('.panel-title')?.textContent || `Section ${idx + 1}`).trim();
+    btn.setAttribute('aria-label', (isAr ? 'فتح أو طي: ' : 'Expand or collapse: ') + title);
+  });
+
+  let tools = document.getElementById('overview-compact-tools');
+  if (!tools) {
+    tools = document.createElement('div');
+    tools.id = 'overview-compact-tools';
+    tools.className = 'overview-compact-tools';
+    tools.innerHTML = `
+      <select id="overview-compact-select" class="overview-compact-select" aria-label="Overview section"></select>
+      <button type="button" id="overview-compact-collapse-btn" class="overview-compact-collapse-btn">Collapse</button>
+    `;
+    const anchor = document.getElementById('overview-quick-actions') || document.getElementById('overview-snapshot');
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(tools, anchor.nextSibling);
+  }
+
+  const sel = document.getElementById('overview-compact-select');
+  if (sel) {
+    sel.innerHTML = panels.map((panel, idx) => {
+      const tEl = panel.querySelector('.panel-title');
+      const title = (tEl ? tEl.textContent : '').trim() || `Section ${idx + 1}`;
+      return `<option value="${idx}">${title}</option>`;
+    }).join('');
+    sel.onchange = () => {
+      _overviewAccordionOpenIndex = parseInt(sel.value, 10);
+      _applyOverviewAccordion();
+      const activePanel = panels[_overviewAccordionOpenIndex];
+      if (activePanel) activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  }
+
+  const colBtn = document.getElementById('overview-compact-collapse-btn');
+  if (colBtn) {
+    colBtn.textContent = isAr ? 'طي الكل' : 'Collapse all';
+    colBtn.onclick = () => {
+      if (_overviewAccordionOpenIndex === -1) _overviewAccordionOpenIndex = 0;
+      else _overviewAccordionOpenIndex = -1;
+      _applyOverviewAccordion();
+    };
+  }
+
+  if (!_overviewAccordionInit) {
+    window.addEventListener('resize', () => {
+      if (_dashActiveTab === 'overview') _applyOverviewAccordion();
+    });
+    _overviewAccordionInit = true;
+  }
+}
+
+function _applyOverviewAccordion() {
+  const view = document.getElementById('view-dashboard');
+  if (!view) return;
+  const panels = _getOverviewPanels();
+  const useCompact = _dashActiveTab === 'overview' && _isOverviewCompactMobile();
+  view.classList.toggle('overview-compact-mode', useCompact);
+
+  const tools = document.getElementById('overview-compact-tools');
+  if (tools) tools.style.display = useCompact ? 'flex' : 'none';
+
+  if (!panels.length) return;
+  if (_overviewAccordionOpenIndex < -1 || _overviewAccordionOpenIndex >= panels.length) _overviewAccordionOpenIndex = 0;
+
+  const sel = document.getElementById('overview-compact-select');
+  if (sel && _overviewAccordionOpenIndex >= 0) sel.value = String(_overviewAccordionOpenIndex);
+
+  const colBtn = document.getElementById('overview-compact-collapse-btn');
+  const isAr = (typeof currentLang !== 'undefined' && currentLang === 'ar');
+  if (colBtn) {
+    colBtn.textContent = _overviewAccordionOpenIndex === -1
+      ? (isAr ? 'فتح الأول' : 'Open first')
+      : (isAr ? 'طي الكل' : 'Collapse all');
+  }
+
+  panels.forEach((panel, idx) => {
+    const btn = panel.querySelector('.ov-acc-toggle');
+    const expanded = !useCompact || idx === _overviewAccordionOpenIndex;
+    panel.classList.toggle('overview-collapsed', !expanded);
     if (btn) {
       btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       btn.style.display = useCompact ? 'inline-flex' : 'none';

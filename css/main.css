@@ -1752,17 +1752,38 @@ button:focus:not(:focus-visible){outline:none;}
 .save-sticky{position:sticky;bottom:0;z-index:10;padding:10px 0 4px;background:linear-gradient(to bottom,transparent,var(--bg) 40%);}
 .save-sticky #save-btn{width:100%;}
 /* Stats inner tabs */
-.overview-snapshot{display:flex;align-items:center;background:var(--card);border-radius:14px;padding:14px 6px;margin:0 0 10px;border:1px solid rgba(255,255,255,.06);}
-.snap-item{text-align:center;flex:1;padding:0 4px;}
+.overview-snapshot{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;
+  background:var(--card);border-radius:14px;padding:10px;margin:0 0 10px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.snap-item{
+  text-align:center;padding:10px 6px;
+  border:1px solid var(--border2);border-radius:10px;background:var(--bg3);
+}
 .snap-val{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--accent);line-height:1;}
 .snap-val.snap-pos{color:#2ecc71;}
 .snap-val.snap-neg{color:#e74c3c;}
 .snap-val.snap-neutral{color:var(--text3);}
 .snap-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
-.snap-sep{width:1px;height:32px;background:rgba(255,255,255,.08);flex-shrink:0;}
+.snap-sep{display:none;}
 .cali-snapshot{border-color:rgba(46,204,113,.15);margin-top:-6px;}
-.snap-cali-label{flex:0 0 36px;padding:0 2px;}
+.snap-cali-label{padding:10px 2px;}
 .cali-snap-icon{font-size:18px;display:block;line-height:1;}
+.overview-quick-actions{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  margin:0 0 12px;
+}
+.overview-qa-btn{
+  height:34px;border-radius:10px;border:1.5px solid var(--border2);
+  background:var(--bg3);color:var(--text2);
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.7px;
+  text-transform:uppercase;cursor:pointer;
+}
+.overview-qa-btn:active{transform:scale(.98);}
+@media (max-width:700px){
+  .overview-snapshot{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
 /* ── CALI DASHBOARD TAB ── */
 .dash-tab-cali{border-color:rgba(46,204,113,.4)!important;color:#2ecc71!important;}
 .dash-tab-cali.active{background:#2ecc71!important;color:#0a1a0e!important;border-color:#2ecc71!important;}
@@ -1987,6 +2008,39 @@ body.progress-compact-active .rest-fab,
 body.progress-compact-active .rest-fab-panel{
   opacity:.12 !important;
   pointer-events:none !important;
+}
+.ov-acc-toggle{
+  margin-left:auto;
+  width:26px;height:26px;border-radius:8px;
+  border:1px solid var(--border2);background:var(--bg3);color:var(--text2);
+  align-items:center;justify-content:center;cursor:pointer;display:none;
+}
+.ov-acc-toggle svg{
+  width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .18s ease;
+}
+.overview-compact-tools{
+  display:none;align-items:center;gap:8px;padding:0 14px 10px;
+  position:sticky;top:0;z-index:21;background:var(--bg);
+}
+.overview-compact-select{
+  flex:1;height:36px;border-radius:10px;border:1.5px solid var(--border2);
+  background:var(--bg3);color:var(--text);padding:0 10px;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;
+}
+.overview-compact-collapse-btn{
+  flex:0 0 auto;height:36px;border-radius:10px;border:1.5px solid var(--border2);
+  background:var(--panel);color:var(--text2);padding:0 10px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.6px;cursor:pointer;
+}
+.overview-compact-collapse-btn:active{transform:scale(.98);}
+#view-dashboard.overview-compact-mode .panel[data-dash-tab="overview"]{margin-bottom:8px;}
+#view-dashboard.overview-compact-mode .panel[data-dash-tab="overview"] .ov-acc-toggle{display:inline-flex;}
+#view-dashboard.overview-compact-mode .panel[data-dash-tab="overview"].overview-collapsed > :not(.panel-header){
+  display:none !important;
+}
+#view-dashboard.overview-compact-mode .panel[data-dash-tab="overview"].overview-collapsed .ov-acc-toggle svg{
+  transform:rotate(-90deg);
 }
 @media (max-width:700px){
   .dash-period-mobile-nav{display:block;}

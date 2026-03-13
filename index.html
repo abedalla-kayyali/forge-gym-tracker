@@ -1248,6 +1248,13 @@
       </div>
     </div>
 
+    <div class="overview-quick-actions" id="overview-quick-actions" data-dash-tab="overview">
+      <button class="overview-qa-btn" onclick="switchDashTab('progress', document.querySelector('.dash-tab[data-tab=&quot;progress&quot;]'))">Progress</button>
+      <button class="overview-qa-btn" onclick="switchDashTab('muscles', document.querySelector('.dash-tab[data-tab=&quot;muscles&quot;]'))">Muscles</button>
+      <button class="overview-qa-btn" onclick="switchDashTab('body', document.querySelector('.dash-tab[data-tab=&quot;body&quot;]'))">Body</button>
+      <button class="overview-qa-btn" onclick="switchView('log', document.getElementById('bnav-log'))">Log workout</button>
+    </div>
+
     <!-- ?? CALISTHENICS DASHBOARD TAB -->
     <div id="cali-dash-panel" data-dash-tab="cali" style="display:none;"></div>
     <div data-dash-tab="cardio" style="display:none">
