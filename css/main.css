@@ -7022,18 +7022,22 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   height:18px;
   display:block;
 }
-.bw-card-main { display:flex; flex-direction:column; min-width:0; }
+.bw-card-main { display:flex; flex-direction:column; min-width:0; flex:1 1 auto; }
 .bw-card-name-row{
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content:flex-start;
   gap:8px;
+  min-width:0;
 }
 .bw-card-name {
   font-family:'Barlow Condensed',sans-serif;
   font-size:20px;
   line-height:1;
   letter-spacing:.4px;
+  display:block;
+  flex:1 1 auto;
+  min-width:0;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -7048,6 +7052,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   background:rgba(58,126,92,.18);
   display:grid;
   place-items:center;
+  margin-left:auto;
 }
 .bw-card-muscle-row{
   margin-top:4px;
@@ -7076,7 +7081,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   letter-spacing:1.1px;
   color:#b9ffe0;
 }
-.bw-card-meta { display:flex; align-items:center; gap:7px; }
+.bw-card-meta { display:flex; align-items:center; gap:7px; flex:0 0 auto; }
 .bw-card-kind {
   font-family:'DM Mono',monospace;
   font-size:9px;
@@ -7230,4 +7235,30 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 }
 @media (max-width:380px){
   .bw-insight-row{ grid-template-columns:1fr; }
+}
+@media (max-width:480px){
+  .bw-card-btn{
+    padding:10px 10px;
+    gap:8px;
+  }
+  .bw-card-icon{
+    width:30px;
+    height:30px;
+    border-radius:9px;
+  }
+  .bw-card-name{
+    font-size:18px;
+    letter-spacing:.2px;
+  }
+  .bw-card-meta{
+    gap:5px;
+  }
+  .bw-card-kind{
+    display:none;
+  }
+  .bw-card-max,
+  .bw-card-streak{
+    padding:3px 6px;
+    font-size:8px;
+  }
 }
