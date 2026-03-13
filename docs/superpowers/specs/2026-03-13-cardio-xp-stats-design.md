@@ -126,7 +126,8 @@ if (name === 'cardio') renderCardioStatsPanel();
 ```
 `_setCardioPeriod(period, btn)` — defined in `cardio-stats.js`:
 - Stores period in module-level `let _cardioPeriod = '30D'`
-- Removes `active` from all `.dash-period` siblings, adds `active` to `btn`
+- Removes `active` from all period buttons **scoped to the cardio strip only** (use `btn.closest('.dash-period-strip').querySelectorAll('.dash-period')` — do NOT use a page-wide query, which would conflict with the global `_setPeriod` progress period strip)
+- Adds `active` to `btn`
 - Calls `renderCardioStatsPanel()`
 
 Default: `30D`.
@@ -220,7 +221,9 @@ If `cardioLog.length === 0`, render only:
 - Any existing stats tabs — isolated to new panel
 
 ### Load Order Note
-`cardio-stats.js` reads the global `cardioLog` (declared with `let` in `cardio-log.js`) and calls `_calcCardioStreak()` (also in `cardio-log.js`). Both are available as globals since no ES modules are used. `cardio-stats.js` must appear in `index.html` **after** `cardio-log.js`.
+- `_isoKey()` is defined in `dashboard-history.js` (line 131). It is called by `_calcCardioStreak()` in `cardio-log.js`. `dashboard-history.js` already loads well before `cardio-log.js` in the existing script order — do not move `cardio-log.js` before it.
+- `cardioLog` (global `let` in `cardio-log.js`) and `_calcCardioStreak()` are read by `cardio-stats.js`. Since no ES modules are used, all are plain globals.
+- Required load order: `dashboard-history.js` → `cardio-log.js` → `cardio-stats.js`.
 
 ### Chart Lifecycle
 Charts are stored in module-level variables (`_cardioChart1`, `_cardioChart2`, `_cardioChart3`). On each `renderCardioStatsPanel()` call, existing chart instances are `.destroy()`ed before recreation — same pattern as nutrition charts.
