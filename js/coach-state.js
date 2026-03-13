@@ -381,6 +381,23 @@
     if (typeof window.switchView === 'function') window.switchView('log', document.getElementById('bnav-log'));
     if (typeof window.setWorkoutMode === 'function') window.setWorkoutMode('bodyweight');
   }
+  function _coachFocusNutritionLog() {
+    if (typeof window.switchView === 'function') {
+      window.switchView('coach', document.querySelector('.bnav-btn[data-view="coach"]'));
+    }
+    if (typeof window.switchCoachTab === 'function') {
+      const btn = document.querySelector('.coach-tab-btn[data-tab="nutrition"]');
+      window.switchCoachTab('nutrition', btn || null);
+    }
+    setTimeout(() => {
+      const nameInput = document.getElementById('meal-name-input');
+      if (nameInput) {
+        try { nameInput.focus(); } catch (_e) {}
+        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 140);
+  }
+
 
   function _replaceCoachInject(host, cls, html, mode) {
     if (!host) return;
@@ -489,11 +506,11 @@
           '<div style="height:7px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;"><div style="height:7px;background:linear-gradient(90deg,#5b8dee,var(--accent));width:' + Math.min(100, k) + '%;"></div></div>' +
         '</div>' +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="switchCoachTab&&switchCoachTab(\'nutrition\')">Log Meal</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachFocusNutritionLog()">Log Meal</button>' +
           '<button class="coach-action-btn" onclick="switchView&&switchView(\'dashboard\',document.getElementById(\'bnav-dashboard\'));switchDashTab&&switchDashTab(\'nutrition\',document.querySelector(\'.dash-tab[data-tab=\\\'nutrition\\\']\'));">Open Nutrition Stats</button>' +
         '</div>' +
         '<div style="margin-top:8px;" class="coach-kpi-sub">' +
-          'Remaining today: ' + proteinRemain + 'g protein · ' + kcalRemain + ' kcal' +
+          'Remaining today: ' + proteinRemain + 'g protein ï¿½ ' + kcalRemain + ' kcal' +
         '</div>' +
         '<div style="margin-top:6px;">' +
           guidance +
