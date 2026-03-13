@@ -3471,7 +3471,15 @@ function switchView(name, btn) {
   }
   if (name === 'more')      { renderBWHistory(); renderMyTemplates(); loadSettings(); renderProfile(); renderCompCards(); renderGuide(); }
   if (name === 'log')       { setTimeout(_updateMuscleChipColors, 0); _initSessionCard(); }
-  if (name === 'coach')     { setTimeout(() => { _renderAskChips(); if (typeof renderCoachToday === 'function') renderCoachToday(); else if (typeof renderCoach === 'function') renderCoach(); }, 0); }
+  if (name === 'coach')     {
+    setTimeout(() => {
+      _renderAskChips();
+      const todayBtn = document.querySelector('.coach-tab[onclick*="coachSwitchTab(\'today\'"]') || document.querySelector('.coach-tab');
+      if (typeof coachSwitchTab === 'function') coachSwitchTab('today', todayBtn || null);
+      else if (typeof renderCoachToday === 'function') renderCoachToday();
+      else if (typeof renderCoach === 'function') renderCoach();
+    }, 0);
+  }
   if (name === 'nutrition') {
     setTimeout(() => {
       _renderAskChips();
@@ -6144,13 +6152,30 @@ function _ctodaySaveProfile() {
 
 // ?? Compute a Training Score (0?100) ??
 function calcTrainingScore() {
+  const _canonScoreMuscle = (raw) => {
+    const m = String(raw || '').trim().toLowerCase();
+    if (!m) return '';
+    if (m.includes('chest') || m.includes('pec')) return 'Chest';
+    if (m.includes('back') || m.includes('lat')) return 'Back';
+    if (m.includes('shoulder') || m.includes('delt')) return 'Shoulders';
+    if (m.includes('leg') || m.includes('quad') || m.includes('hamstring')) return 'Legs';
+    if (m.includes('core') || m.includes('abs')) return 'Core';
+    if (m.includes('bicep')) return 'Biceps';
+    if (m.includes('tricep')) return 'Triceps';
+    if (m.includes('forearm')) return 'Forearms';
+    if (m.includes('glute')) return 'Glutes';
+    if (m.includes('calf')) return 'Calves';
+    return '';
+  };
   const streak      = calcStreak();
   const total       = workouts.length;
   const allMuscles  = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Forearms','Glutes','Calves'];
-  const muscleCounts= {};
-  workouts.forEach(w => { muscleCounts[w.muscle] = (muscleCounts[w.muscle]||0)+1; });
-  const trained     = allMuscles.filter(m => muscleCounts[m]);
-  const balanceScore= Math.round((trained.length / allMuscles.length) * 100);
+  const trainedSet = new Set();
+  workouts.forEach(w => {
+    const c = _canonScoreMuscle(w?.muscle);
+    if (c) trainedSet.add(c);
+  });
+  const balanceScore= Math.min(100, Math.round((trainedSet.size / allMuscles.length) * 100));
 
   // Consistency: sessions last 4 weeks vs ideal 3/week
   const fourWeeksAgo = Date.now() - 28*86400000;
@@ -6842,10 +6867,11 @@ function _getNutriCustomTargets() {
 
 function _nutriSaveCustomTargets() {
   const enabled = !!document.getElementById('nutri-custom-enable')?.checked;
-  const kcal = Math.max(0, parseFloat(document.getElementById('nutri-target-kcal')?.value) || 0);
+  let kcal = Math.max(0, parseFloat(document.getElementById('nutri-target-kcal')?.value) || 0);
   const p = Math.max(0, parseFloat(document.getElementById('nutri-target-p')?.value) || 0);
   const c = Math.max(0, parseFloat(document.getElementById('nutri-target-c')?.value) || 0);
   const f = Math.max(0, parseFloat(document.getElementById('nutri-target-f')?.value) || 0);
+  if (kcal <= 0 && (p > 0 || c > 0 || f > 0)) kcal = Math.round((p * 4) + (c * 4) + (f * 9));
   if (enabled && kcal <= 0 && p <= 0 && c <= 0 && f <= 0) {
     if (typeof showToast === 'function') showToast('Set at least one custom target before enabling', 'warn');
     return;
@@ -6855,6 +6881,19 @@ function _nutriSaveCustomTargets() {
   try { localStorage.setItem('forge_profile', JSON.stringify(userProfile)); } catch(_e) {}
   if (typeof showToast === 'function') showToast('Nutrition targets saved', 'success');
   renderCoachNutrition();
+}
+
+function _nutriRecalcTargetCalories() {
+  const kcalEl = document.getElementById('nutri-target-kcal');
+  const pEl = document.getElementById('nutri-target-p');
+  const cEl = document.getElementById('nutri-target-c');
+  const fEl = document.getElementById('nutri-target-f');
+  if (!kcalEl || !pEl || !cEl || !fEl) return;
+  const p = Math.max(0, parseFloat(pEl.value) || 0);
+  const c = Math.max(0, parseFloat(cEl.value) || 0);
+  const f = Math.max(0, parseFloat(fEl.value) || 0);
+  const kcal = Math.round((p * 4) + (c * 4) + (f * 9));
+  if (kcal > 0) kcalEl.value = String(kcal);
 }
 
 function _cnRecalcMealCaloriesFromMacros() {
@@ -7331,9 +7370,9 @@ function renderCoachNutrition() {
       </div>
       <div class="nutri-custom-grid">
         <input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}">
-        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="Protein (g)" value="${customTargets.p || ''}">
-        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="Carbs (g)" value="${customTargets.c || ''}">
-        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="Fats (g)" value="${customTargets.f || ''}">
+        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="Protein (g)" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()">
+        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="Carbs (g)" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()">
+        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="Fats (g)" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()">
       </div>
     </div>
     <div class="nutrition-grid">

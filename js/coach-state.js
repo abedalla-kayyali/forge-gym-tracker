@@ -304,23 +304,13 @@
   function calcTrainingScoreUnified() {
     const state = buildCoachUnifiedState();
     const weighted = state.weighted;
-    const balanceMuscles = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Glutes'];
+    const balanceMuscles = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Forearms', 'Glutes', 'Calves'];
     const trained = new Set();
     weighted.forEach(w => {
       const c = _canonMuscleName(w.muscle);
       if (c) trained.add(c);
     });
-    state.bw.forEach(w => {
-      const c = _canonMuscleName(w.muscle);
-      if (c) trained.add(c);
-    });
-    const muscleCoverage = Math.round((trained.size / balanceMuscles.length) * 100);
-
-    const hasW = state.weighted.length >= 2;
-    const hasB = state.bw.length >= 2;
-    const hasC = state.cardio.length >= 2;
-    const modalityCoverage = Math.round(((Number(hasW) + Number(hasB) + Number(hasC)) / 3) * 100);
-    const balanceScore = Math.round((muscleCoverage * 0.78) + (modalityCoverage * 0.22));
+    const balanceScore = Math.min(100, Math.round((trained.size / balanceMuscles.length) * 100));
 
     const consistencyScore = Math.min(100, Math.round((state.consistency.activeDays28 / 20) * 100));
 
