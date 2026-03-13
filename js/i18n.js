@@ -1605,10 +1605,8 @@ function applyLanguage() {
   html.setAttribute('lang', isAr ? 'ar' : 'en');
 
   // Update language buttons (header + floating)
-  const btn = document.getElementById('lang-toggle-btn');
   const floatBtn = document.getElementById('lang-toggle-float');
   const langLabel = isAr ? 'EN' : 'AR';
-  if (btn) btn.textContent = langLabel;
   if (floatBtn) floatBtn.textContent = langLabel;
   if (typeof window._authApplyLanguage === 'function') window._authApplyLanguage();
 

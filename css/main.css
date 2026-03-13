@@ -5143,12 +5143,21 @@ body[data-theme="solar"] .xp-fill {
   width:34px; height:34px; border-radius:50%;
   background:var(--panel); border:1px solid var(--border2);
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; z-index:200; transition:all .2s;
+  cursor:pointer; z-index:12000; transition:all .2s;
   font-family:'DM Mono',monospace; font-size:10px; font-weight:700;
   letter-spacing:1px; color:var(--accent);
 }
 .lang-toggle-float:hover { border-color:var(--accent); background:rgba(57,255,143,.08); }
 html[dir="rtl"] .lang-toggle-float { font-size:11px; letter-spacing:0; }
+body.auth-visible .lang-toggle-float {
+  top:calc(env(safe-area-inset-top, 0px) + 10px);
+  bottom:auto;
+  right:12px;
+}
+html[dir="rtl"] body.auth-visible .lang-toggle-float {
+  right:auto;
+  left:12px;
+}
 /* ── Floating rest timer FAB (above lang toggle) ── */
 .rest-fab {
   position:fixed; bottom:calc(152px + var(--safe-bot)); right:14px;

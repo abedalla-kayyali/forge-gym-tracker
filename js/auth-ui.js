@@ -456,7 +456,6 @@
     <div class="auth-glow-1"></div>
     <div class="auth-glow-2"></div>
     <div class="auth-particles" id="auth-particles"></div>
-    <button class="auth-lang-float" id="auth-lang-float" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
 
     <div class="auth-card">
       <div class="auth-logo">
@@ -695,13 +694,6 @@
       if (el) el.textContent = _authT(key);
     });
 
-    const langFloatBtn = document.getElementById('auth-lang-float');
-    if (langFloatBtn) {
-      langFloatBtn.textContent = isAr ? 'EN' : 'AR';
-      langFloatBtn.title = _authT('langTitle');
-      langFloatBtn.setAttribute('aria-label', _authT('langTitle'));
-    }
-
     const emailL = document.getElementById('auth-email-l');
     const passL = document.getElementById('auth-pass-l');
     const emailS = document.getElementById('auth-email-s');
@@ -762,10 +754,12 @@
   window._authShowOverlay = function () {
     const el = document.getElementById('forge-auth');
     if (el) el.style.removeProperty('display');
+    document.body.classList.add('auth-visible');
   };
   window._authHideOverlay = function () {
     const el = document.getElementById('forge-auth');
     if (el) el.style.setProperty('display', 'none', 'important');
+    document.body.classList.remove('auth-visible');
   };
 
   // â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
