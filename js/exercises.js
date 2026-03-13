@@ -637,6 +637,9 @@ function confirmWheelPicker() {
   if (!_wpTarget) { closeWheelPicker(); return; }
   const val = parseFloat(_wpValue) || 0;
   _wpTarget.value = _wpIsWeight ? val : Math.round(val);
+  if (_wpTarget.classList && _wpTarget.classList.contains('bw-val-input') && typeof onBwNumpadConfirm === 'function') {
+    onBwNumpadConfirm(_wpTarget.value);
+  }
   if (typeof hapSetLog === 'function') hapSetLog();
   _wpSpeak('confirmed');
   closeWheelPicker();

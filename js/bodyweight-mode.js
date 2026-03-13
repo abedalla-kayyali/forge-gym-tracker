@@ -10,6 +10,7 @@ let _currentBwEffort = 'medium'; // tracks active effort button
 let _currentBwReps = 10; // tracks reps stepper value
 let _bwStep = 1; // 1=pick muscle, 2=pick exercise, 3=log sets
 let _bwSessionMax = 0; // in-session high-water mark; reset when new exercise selected
+let _bwSearchQuery = ''; // bodyweight picker search text
 
 function setWorkoutMode(mode) {
   workoutMode = mode;
@@ -24,6 +25,10 @@ function setWorkoutMode(mode) {
   document.getElementById('bw-sets-section').style.display = 'none';
   document.getElementById('bw-exercise-picker').style.display = mode === 'bodyweight' ? '' : 'none';
   document.getElementById('cardio-zone').style.display = mode === 'cardio' ? '' : 'none';
+  const effortGroup = document.getElementById('session-effort-group');
+  if (effortGroup) effortGroup.style.display = isWgt ? '' : 'none';
+  const saveSticky = document.getElementById('save-sticky');
+  if (saveSticky) saveSticky.style.display = isWgt ? '' : 'none';
 
   // Muscle group: weighted only
   const bodyMapSection = document.getElementById('section-bodymap');
@@ -400,6 +405,36 @@ function _renderBwRepsVal() {
   if (el) el.textContent = _currentBwReps;
 }
 
+function _ensureBwNumpadInput() {
+  let input = document.getElementById('bw-reps-picker-input');
+  if (input) return input;
+  input = document.createElement('input');
+  input.id = 'bw-reps-picker-input';
+  input.type = 'number';
+  input.className = 'bw-val-input';
+  input.tabIndex = -1;
+  input.setAttribute('aria-hidden', 'true');
+  input.style.position = 'absolute';
+  input.style.opacity = '0';
+  input.style.pointerEvents = 'none';
+  const host = document.getElementById('bw-sets-section') || document.body;
+  host.appendChild(input);
+  return input;
+}
+
+function openBwRepsPicker() {
+  if (typeof openWheelPicker !== 'function') return;
+  const input = _ensureBwNumpadInput();
+  input.value = String(_currentBwReps || 0);
+  openWheelPicker(input);
+}
+
+function onBwNumpadConfirm(rawVal) {
+  const nextVal = Math.max(1, parseInt(rawVal, 10) || 0);
+  _currentBwReps = nextVal;
+  _renderBwRepsVal();
+}
+
 function bwDitto() {
   // Copy reps from last completed dot (reads data-val attribute set by _addBwDot)
   const dots = document.querySelectorAll('#bw-sets-container .bw-dot-row');
@@ -460,11 +495,31 @@ function _addBwDot(val, effort) {
     <div class="bw-dot done"></div>
     <div class="bw-dot-info" data-val="${val}">${val} ${unit}</div>
     <div class="bw-dot-sub ${effortClass}">${effortLabel}</div>
+    <button type="button" class="bw-dot-del" onclick="removeBwSet(this)" aria-label="Delete set">x</button>
   `;
   // Insert before the active placeholder (if any)
   const activePlaceholder = container.querySelector('.bw-active-placeholder');
   if (activePlaceholder) container.insertBefore(row, activePlaceholder);
   else container.appendChild(row);
+}
+
+function removeBwSet(btn) {
+  const row = btn && btn.closest ? btn.closest('.bw-dot-row') : null;
+  if (!row) return;
+  row.remove();
+  bwSetCount = Math.max(0, bwSetCount - 1);
+  _updateSetBadge(bwSetCount);
+  const exName = ((document.getElementById('exercise-name') || {}).value || '').trim();
+  const vals = Array.from(document.querySelectorAll('#bw-sets-container .bw-dot-info[data-val]'))
+    .map(el => parseInt(el.dataset.val, 10))
+    .filter(v => Number.isFinite(v) && v > 0);
+  _bwSessionMax = vals.length ? Math.max(...vals) : 0;
+  _renderBwActiveDot();
+  if (exName) {
+    _updateBwPrStrip(exName);
+    _updateBwRing(exName);
+  }
+  renderBwExercisePicker();
 }
 
 function _renderBwActiveDot() {
@@ -511,6 +566,10 @@ function _renderBwActiveDot() {
     if (bwSets) bwSets.style.display = 'none';
     if (bwPicker) bwPicker.style.display = 'none';
     if (cardio) cardio.style.display = 'none';
+    const effortGroup = document.getElementById('session-effort-group');
+    if (effortGroup) effortGroup.style.display = 'none';
+    const saveSticky = document.getElementById('save-sticky');
+    if (saveSticky) saveSticky.style.display = 'none';
 
     const bodyMap = document.getElementById('section-bodymap');
     if (bodyMap) bodyMap.classList.add('bw-mode-hidden');
@@ -574,6 +633,112 @@ function addCustomBwExercise() {
   showToast('Custom bodyweight card added');
 }
 
+function _bwExerciseExists(name) {
+  const target = String(name || '').trim().toLowerCase();
+  if (!target) return false;
+  const baseExists = CALISTHENICS_TREES.flatMap(tree => tree.levels).some(lvl =>
+    String(lvl?.n || '').trim().toLowerCase() === target
+  );
+  if (baseExists) return true;
+  return _bwCustomExercises.some(x => String(x?.n || '').trim().toLowerCase() === target);
+}
+
+function addBwFromSearch() {
+  const name = String(_bwSearchQuery || '').trim();
+  if (!name) { showToast('Type workout name first'); return; }
+  if (_bwExerciseExists(name)) { showToast('Exercise already exists'); return; }
+  const muscleEl = document.getElementById('bw-add-muscle');
+  const typeEl = document.getElementById('bw-add-type');
+  const muscle = String(muscleEl?.value || _bwFilterMuscle || 'Core').trim() || 'Core';
+  const tRaw = String(typeEl?.value || 'reps').toLowerCase();
+  const t = tRaw === 'hold' ? 'hold' : 'reps';
+  _bwCustomExercises.push({ id: 'bwc_' + Date.now(), n: name, muscle, t });
+  _saveBwCustomExercises();
+
+  _bwSearchQuery = '';
+  const input = document.querySelector('#bw-rpg-trees .bw-search-input');
+  if (input) input.value = '';
+  _bwFilterMuscle = muscle;
+  document.querySelectorAll('.bw-filter-chip').forEach(chip => {
+    chip.classList.toggle('active', String(chip.dataset.muscle || '').toLowerCase() === muscle.toLowerCase());
+  });
+  renderBwExercisePicker();
+  pickBwExercise(name, muscle, t);
+  showToast('Custom bodyweight card added');
+}
+
+function setBwSearchQuery(val) {
+  _bwSearchQuery = String(val || '').trim();
+  if (_bwSearchQuery && _bwStep < 2) _setBwStep(2);
+  renderBwExercisePicker();
+  // Keep typing flow stable: picker re-renders on each key, so restore focus/caret.
+  const q = _bwSearchQuery;
+  requestAnimationFrame(() => {
+    const input = document.querySelector('#bw-rpg-trees .bw-search-input');
+    if (!input) return;
+    input.focus();
+    const pos = q.length;
+    try { input.setSelectionRange(pos, pos); } catch (_) {}
+  });
+}
+
+function _calcBwDayStreak() {
+  const all = Array.isArray(bwWorkouts) ? bwWorkouts : [];
+  const daySet = new Set(all.map(w => _bwNormalizeDate(w?.date)).filter(Boolean));
+  if (!daySet.size) return 0;
+  const today = _isoKey(new Date());
+  if (!daySet.has(today)) return 0;
+  let count = 1;
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  while (daySet.has(_isoKey(d))) {
+    count++;
+    d.setDate(d.getDate() - 1);
+  }
+  return count;
+}
+
+function _calcBwBestDayStreak() {
+  const all = Array.isArray(bwWorkouts) ? bwWorkouts : [];
+  const uniq = Array.from(new Set(all.map(w => _bwNormalizeDate(w?.date)).filter(Boolean))).sort();
+  if (!uniq.length) return 0;
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < uniq.length; i++) {
+    const prev = new Date(uniq[i - 1] + 'T00:00:00');
+    const cur = new Date(uniq[i] + 'T00:00:00');
+    const diff = Math.round((cur - prev) / 86400000);
+    if (diff === 1) run++;
+    else run = 1;
+    if (run > best) best = run;
+  }
+  return best;
+}
+
+function _bwMuscleIconSvg(muscleRaw) {
+  const muscle = String(muscleRaw || '').toLowerCase();
+  if (muscle.includes('core')) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="3" width="8" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  }
+  if (muscle.includes('leg') || muscle.includes('calf')) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h4l-1 7 3 4v7h-4v-5l-3-4zM13 3h2l2 7v11h-3v-8l-2-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+  }
+  if (muscle.includes('back')) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c2 0 3 2 3 4v2l2 2v8h-2v-7l-3-2-3 2v7H7v-8l2-2V7c0-2 1-4 3-4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+  }
+  if (muscle.includes('shoulder') || muscle.includes('chest') || muscle.includes('triceps') || muscle.includes('biceps')) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10c0-3 2-5 6-5s6 2 6 5v7h-3v-5h-6v5H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v10l-7 4-7-4V7z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v8M8.5 10l3.5 2 3.5-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function _bwTypeIconSvg(type) {
+  if (type === 'hold') {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4l2.8 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h3l2-3h6l2 3h3v4h-3l-2 3H9l-2-3H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7" cy="12" r="1.3" fill="currentColor"/><circle cx="17" cy="12" r="1.3" fill="currentColor"/></svg>';
+}
+
 function renderBwExercisePicker() {
   const wrap = document.getElementById('bw-rpg-trees');
   if (!wrap) return;
@@ -594,9 +759,15 @@ function renderBwExercisePicker() {
     tree: 'Custom'
   })));
 
-  const filtered = _bwFilterMuscle
-    ? all.filter(x => String(x.muscle || '').toLowerCase() === _bwFilterMuscle.toLowerCase())
-    : all;
+  const query = String(_bwSearchQuery || '').toLowerCase();
+  const hasFilter = Boolean(_bwFilterMuscle);
+  const hasSearch = Boolean(query);
+  const hasCriteria = hasFilter || hasSearch;
+  const filtered = all.filter(x => {
+    const muscleOk = hasFilter ? String(x.muscle || '').toLowerCase() === _bwFilterMuscle.toLowerCase() : true;
+    const queryOk = hasSearch ? String(x.n || '').toLowerCase().includes(query) : true;
+    return muscleOk && queryOk;
+  });
 
   const cards = filtered.map(ex => {
     const rawName = String(ex.n || 'Exercise');
@@ -605,25 +776,99 @@ function renderBwExercisePicker() {
     const muscle = _esc(rawMuscle);
     const type = ex.t === 'hold' ? 'hold' : 'reps';
     const streak = _bwExerciseStreakDays(rawName);
+    const maxVal = _getBwPR(rawName);
     const selected = currentEx === rawName.toLowerCase();
     const kind = type === 'hold' ? 'HOLD' : 'REPS';
+    const maxUnit = type === 'hold' ? 's' : 'r';
+    const maxTxt = maxVal > 0 ? (maxVal + maxUnit) : '--';
+    const muscleIcon = _bwMuscleIconSvg(rawMuscle);
+    const typeIcon = _bwTypeIconSvg(type);
     return '<button class="bw-card-btn' + (selected ? ' active' : '') + '" data-name="' + name + '" data-muscle="' + muscle + '" data-type="' + type + '">' +
+      '<span class="bw-card-icon-wrap">' +
+        '<span class="bw-card-icon bw-card-icon-muscle">' + muscleIcon + '</span>' +
+      '</span>' +
       '<span class="bw-card-main">' +
-        '<span class="bw-card-name">' + name + '</span>' +
-        '<span class="bw-card-muscle">' + muscle + '</span>' +
+        '<span class="bw-card-name-row">' +
+          '<span class="bw-card-name">' + name + '</span>' +
+          '<span class="bw-card-type-icon" title="' + kind + '">' + typeIcon + '</span>' +
+        '</span>' +
+        '<span class="bw-card-muscle-row">' +
+          '<span class="bw-card-muscle">' + muscle + '</span>' +
+          '<span class="bw-card-signal"></span>' +
+          '<span class="bw-card-live">LIVE</span>' +
+        '</span>' +
       '</span>' +
       '<span class="bw-card-meta">' +
         '<span class="bw-card-kind">' + kind + '</span>' +
+        '<span class="bw-card-max' + (maxVal > 0 ? ' active' : '') + '">MAX ' + maxTxt + '</span>' +
         '<span class="bw-card-streak' + (streak > 0 ? ' active' : '') + '">' + (streak > 0 ? (streak + 'd') : '0d') + '</span>' +
       '</span>' +
     '</button>';
   }).join('');
 
+  const bwStreak = _calcBwDayStreak();
+  const bwBest = _calcBwBestDayStreak();
+  const sessions = (Array.isArray(bwWorkouts) ? bwWorkouts.length : 0);
+  const todayKey = _isoKey(new Date());
+  const todaySessions = (Array.isArray(bwWorkouts) ? bwWorkouts : []).filter(w => _bwNormalizeDate(w?.date) === todayKey).length;
+  const uniqueMoves = new Set((Array.isArray(bwWorkouts) ? bwWorkouts : []).map(w => String(w?.exercise || '').trim().toLowerCase()).filter(Boolean)).size;
+  const latestBw = (Array.isArray(bwWorkouts) ? bwWorkouts : []).slice().sort((a, b) =>
+    new Date(b?.date || 0) - new Date(a?.date || 0)
+  )[0] || null;
+  const latestBwDate = latestBw ? new Date(latestBw.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--';
+  const latestBwName = latestBw ? _esc(String(latestBw.exercise || 'Workout')) : '--';
+  const streakText = bwStreak === 0
+    ? 'Start your bodyweight streak today'
+    : (bwStreak + ' day' + (bwStreak > 1 ? 's' : '') + ' streak active');
+
+  const searchVal = _esc(_bwSearchQuery || '');
+  const suggestedMuscle = _esc(_bwFilterMuscle || 'Core');
+  const notFoundHtml = hasSearch
+    ? (
+      '<div class="bw-card-empty bw-card-empty-gated">' +
+        '<div class="bw-gated-title">Workout not found</div>' +
+        '<div class="bw-gated-sub">Add "' + _esc(_bwSearchQuery) + '" for future use</div>' +
+        '<div class="bw-add-inline">' +
+          '<select id="bw-add-muscle" class="bw-add-select">' +
+            '<option value="Chest"' + (suggestedMuscle === 'Chest' ? ' selected' : '') + '>Chest</option>' +
+            '<option value="Back"' + (suggestedMuscle === 'Back' ? ' selected' : '') + '>Back</option>' +
+            '<option value="Core"' + (suggestedMuscle === 'Core' ? ' selected' : '') + '>Core</option>' +
+            '<option value="Legs"' + (suggestedMuscle === 'Legs' ? ' selected' : '') + '>Legs</option>' +
+            '<option value="Shoulders"' + (suggestedMuscle === 'Shoulders' ? ' selected' : '') + '>Shoulders</option>' +
+            '<option value="Triceps"' + (suggestedMuscle === 'Triceps' ? ' selected' : '') + '>Triceps</option>' +
+          '</select>' +
+          '<select id="bw-add-type" class="bw-add-select bw-add-type">' +
+            '<option value="reps">Reps</option>' +
+            '<option value="hold">Hold</option>' +
+          '</select>' +
+          '<button type="button" class="bw-add-inline-btn" onclick="addBwFromSearch()">+ Add Workout</button>' +
+        '</div>' +
+      '</div>'
+    )
+    : '<div class="bw-card-empty">No exercises in this filter</div>';
+  const listHtml = !hasCriteria
+    ? '<div class="bw-card-empty bw-card-empty-gated">Pick a muscle or type a workout name to reveal cards</div>'
+    : (cards || notFoundHtml);
+
   wrap.innerHTML =
+    '<div class="bw-streak-bar">' +
+      '<div class="bw-streak-kicker">BODYWEIGHT STREAK</div>' +
+      '<div class="bw-streak-main">' + streakText + '</div>' +
+      '<div class="bw-streak-sub">' + sessions + ' sessions logged</div>' +
+      '<div class="bw-streak-latest">Latest: ' + latestBwName + ' · ' + latestBwDate + '</div>' +
+      '<div class="bw-insight-row">' +
+        '<div class="bw-insight-chip"><span class="bw-insight-lbl">TODAY</span><span class="bw-insight-val">' + todaySessions + '</span></div>' +
+        '<div class="bw-insight-chip"><span class="bw-insight-lbl">MOVES</span><span class="bw-insight-val">' + uniqueMoves + '</span></div>' +
+        '<div class="bw-insight-chip"><span class="bw-insight-lbl">BEST STREAK</span><span class="bw-insight-val">' + bwBest + 'd</span></div>' +
+      '</div>' +
+    '</div>' +
     '<div class="bw-card-tools">' +
+      '<div class="bw-search-wrap">' +
+        '<input class="bw-search-input" type="text" value="' + searchVal + '" placeholder="Search workout name..." oninput="setBwSearchQuery(this.value)">' +
+      '</div>' +
       '<button class="bw-add-custom-btn" type="button" onclick="addCustomBwExercise()">+ Add Custom Card</button>' +
     '</div>' +
-    '<div class="bw-card-grid">' + (cards || '<div class="bw-card-empty">No exercises in this filter</div>') + '</div>';
+    '<div class="bw-card-grid">' + listHtml + '</div>';
 
   wrap.querySelectorAll('.bw-card-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -634,3 +879,16 @@ function renderBwExercisePicker() {
     });
   });
 }
+
+(function initBwRepsTapTarget() {
+  function bind() {
+    const valEl = document.getElementById('bw-reps-val');
+    if (!valEl || valEl.dataset.pickerBound === '1') return;
+    valEl.dataset.pickerBound = '1';
+    valEl.title = 'Tap to open numpad';
+    valEl.addEventListener('click', () => openBwRepsPicker());
+    _ensureBwNumpadInput();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();

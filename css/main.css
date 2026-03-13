@@ -6027,6 +6027,20 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .bw-dot-sub.medium { color: #f39c12; }
 .bw-dot-sub.hard   { color: #e74c3c; }
 .bw-dot-sub.failure { color: #8e44ad; }
+.bw-dot-del{
+  margin-left:6px;
+  width:20px;
+  height:20px;
+  border-radius:999px;
+  border:1px solid rgba(239,122,122,.36);
+  background:rgba(68,20,20,.6);
+  color:#ff9d9d;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  line-height:1;
+  cursor:pointer;
+}
+.bw-dot-del:active{ transform:scale(.96); }
 .bw-add-dot-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 .bw-add-dot    { width: 10px; height: 10px; border-radius: 50%; border: 1.5px dashed var(--border2); flex-shrink: 0; }
 .bw-add-lbl    { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--border2); cursor: pointer; }
@@ -6050,7 +6064,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   font-family: 'Bebas Neue', sans-serif; font-size: 36px; color: var(--accent);
   min-width: 60px; text-align: center; background: var(--bg);
   border-top: 1px solid var(--border2); border-bottom: 1px solid var(--border2);
-  line-height: 44px; height: 44px; user-select: none;
+  line-height: 44px; height: 44px; user-select: none; cursor:pointer;
 }
 .bw-reps-unit { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
 .bw-ditto-btn {
@@ -6436,6 +6450,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .cardio-streak-kicker { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.8px; color:#7ecaa8; }
 .cardio-streak-main { font-family:'Bebas Neue',sans-serif; font-size:30px; color:#ccffe7; letter-spacing:.5px; line-height:1; margin-top:4px; text-shadow:0 0 14px rgba(67,255,153,.22); }
 .cardio-streak-sub { font-family:'DM Mono',monospace; font-size:10px; color:#8ec7b0; margin-top:6px; }
+.cardio-streak-latest { font-family:'DM Mono',monospace; font-size:10px; color:#b4e8cd; margin-top:5px; }
 
 .cardio-log-shell .cardio-cat-block,
 .cardio-log-shell .cardio-mission-card,
@@ -6723,6 +6738,25 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   color:#042316;
   box-shadow: 0 8px 22px rgba(67,255,153,.25);
 }
+.bw-log-workout-btn{
+  display:flex;
+  width:calc(100% - 32px);
+  margin:0 16px 16px;
+  background:linear-gradient(135deg, rgba(86,250,175,.24), rgba(95,214,255,.2));
+  border:1px solid rgba(92,255,188,.48);
+  border-radius:12px;
+  padding:11px;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1.4px;
+  color:#dffdf0;
+  -webkit-tap-highlight-color:transparent;
+}
+.bw-log-workout-btn:active { transform: scale(.98); }
 
 /* Log view clean state before mode selection */
 #view-log .log-mode-prompt{
@@ -6798,9 +6832,117 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   color:#8fb9a6;
   padding:8px 2px;
 }
+.cardio-filter-tools{
+  margin:4px 14px 10px;
+  padding:10px;
+  border:1px solid rgba(87,190,145,.22);
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(9,26,20,.9), rgba(6,19,15,.95));
+}
+.cardio-search-wrap{ margin-bottom:8px; }
+.cardio-search-input{
+  width:100%;
+  border:1px solid rgba(95,160,127,.38);
+  background:rgba(12,23,17,.86);
+  color:#ddfbe9;
+  border-radius:10px;
+  padding:10px 11px;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  outline:none;
+}
+.cardio-search-input:focus{
+  border-color:#60ffb5;
+  box-shadow:0 0 0 2px rgba(96,255,181,.12);
+}
+.cardio-filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.cardio-filter-chip{
+  border:1px solid rgba(95,160,127,.35);
+  background:rgba(13,29,22,.85);
+  color:#9ad8b8;
+  border-radius:999px;
+  padding:6px 10px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.6px;
+  cursor:pointer;
+}
+.cardio-filter-chip.active{
+  border-color:#6bffb7;
+  background:rgba(67,255,153,.18);
+  color:#e8fff4;
+}
+.cardio-gated-msg{
+  margin-top:8px;
+  border:1px dashed rgba(103,196,154,.34);
+  border-radius:10px;
+  background:rgba(18,35,27,.45);
+  padding:10px 12px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#8fb9a6;
+}
+.cardio-gated-title{
+  color:#dff9ea;
+  font-size:11px;
+  letter-spacing:.4px;
+}
+.cardio-gated-sub{
+  margin-top:4px;
+  color:#9fd8bf;
+  font-size:10px;
+}
+.cardio-add-inline{
+  margin-top:8px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.cardio-add-select{
+  flex:1;
+  min-width:0;
+  border:1px solid rgba(95,160,127,.38);
+  background:rgba(11,25,19,.9);
+  color:#def9e9;
+  border-radius:8px;
+  padding:8px 9px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+}
+.cardio-add-inline-btn{
+  border:1px solid rgba(104,255,178,.45);
+  background:rgba(26,58,42,.7);
+  color:#b9ffde;
+  border-radius:8px;
+  padding:8px 10px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  cursor:pointer;
+  white-space:nowrap;
+}
 
 /* Bodyweight card-style picker */
 .bw-card-tools { margin:2px 0 10px; }
+.bw-search-wrap{ margin:0 0 8px; }
+.bw-search-input{
+  width:100%;
+  border:1px solid rgba(95,160,127,.38);
+  background:rgba(12,23,17,.86);
+  color:#ddfbe9;
+  border-radius:10px;
+  padding:10px 11px;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  outline:none;
+}
+.bw-search-input:focus{
+  border-color:#60ffb5;
+  box-shadow:0 0 0 2px rgba(96,255,181,.12);
+}
 .bw-add-custom-btn {
   width:100%;
   border:1px dashed rgba(104,255,178,.4);
@@ -6818,8 +6960,12 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   gap:8px;
 }
 .bw-card-btn {
+  position:relative;
+  isolation:isolate;
   border:1px solid rgba(95,160,127,.35);
-  background:rgba(16,28,21,.8);
+  background:
+    linear-gradient(140deg, rgba(24,44,33,.92), rgba(11,23,17,.94)),
+    radial-gradient(circle at 85% 15%, rgba(77,255,168,.14), transparent 45%);
   color:#dff7e8;
   border-radius:12px;
   padding:11px 12px;
@@ -6828,13 +6974,61 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   justify-content:space-between;
   gap:10px;
   cursor:pointer;
+  transition:transform .18s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+  overflow:hidden;
+}
+.bw-card-btn::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(180deg, rgba(140,255,205,.05) 0 1px, transparent 1px 4px);
+  mix-blend-mode:screen;
+  pointer-events:none;
+  opacity:.34;
+  z-index:-1;
+}
+.bw-card-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(102,255,182,.56);
+  box-shadow:0 8px 16px rgba(0,0,0,.28), 0 0 16px rgba(84,255,171,.2);
 }
 .bw-card-btn.active {
   border-color:#54ffab;
-  box-shadow:0 0 14px rgba(84,255,171,.22);
-  background:rgba(23,48,35,.88);
+  box-shadow:0 0 14px rgba(84,255,171,.22), inset 0 0 0 1px rgba(140,255,205,.25);
+  background:
+    linear-gradient(140deg, rgba(30,58,43,.95), rgba(14,31,22,.96)),
+    radial-gradient(circle at 86% 10%, rgba(84,255,171,.24), transparent 45%);
+}
+.bw-card-icon-wrap{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+}
+.bw-card-icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  color:#98ffd0;
+  border:1px solid rgba(108,255,188,.28);
+  background:linear-gradient(155deg, rgba(74,255,166,.22), rgba(14,28,21,.95));
+  box-shadow:inset 0 0 0 1px rgba(187,255,223,.08), 0 0 10px rgba(65,255,157,.12);
+}
+.bw-card-icon svg,
+.bw-card-type-icon svg{
+  width:18px;
+  height:18px;
+  display:block;
 }
 .bw-card-main { display:flex; flex-direction:column; min-width:0; }
+.bw-card-name-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
 .bw-card-name {
   font-family:'Barlow Condensed',sans-serif;
   font-size:20px;
@@ -6844,13 +7038,43 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.bw-card-muscle {
+.bw-card-type-icon{
+  flex:0 0 auto;
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  border:1px solid rgba(145,255,212,.28);
+  color:#aafed6;
+  background:rgba(58,126,92,.18);
+  display:grid;
+  place-items:center;
+}
+.bw-card-muscle-row{
   margin-top:4px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.bw-card-muscle {
   font-family:'DM Mono',monospace;
   font-size:9px;
   color:#8fc4a9;
   letter-spacing:1.1px;
   text-transform:uppercase;
+}
+.bw-card-signal{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#63ffb5;
+  box-shadow:0 0 8px rgba(99,255,181,.7);
+  animation:bwCardPulse 1.35s ease-in-out infinite;
+}
+.bw-card-live{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.1px;
+  color:#b9ffe0;
 }
 .bw-card-meta { display:flex; align-items:center; gap:7px; }
 .bw-card-kind {
@@ -6860,6 +7084,19 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   border:1px solid rgba(84,255,171,.32);
   border-radius:999px;
   padding:3px 7px;
+}
+.bw-card-max {
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:#7f9f8f;
+  border:1px solid rgba(123,158,141,.24);
+  border-radius:999px;
+  padding:3px 7px;
+}
+.bw-card-max.active {
+  color:#dffff0;
+  border-color:rgba(109,255,189,.42);
+  background:rgba(73,173,126,.16);
 }
 .bw-card-streak {
   font-family:'DM Mono',monospace;
@@ -6879,4 +7116,118 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   font-size:10px;
   color:#8fb9a6;
   padding:8px 2px;
+}
+.bw-card-empty-gated{
+  border:1px dashed rgba(103,196,154,.34);
+  border-radius:10px;
+  background:rgba(18,35,27,.45);
+  padding:10px 12px;
+}
+.bw-gated-title{
+  color:#dff9ea;
+  font-size:11px;
+  letter-spacing:.4px;
+}
+.bw-gated-sub{
+  margin-top:4px;
+  color:#9fd8bf;
+  font-size:10px;
+}
+.bw-add-inline{
+  margin-top:8px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.bw-add-select{
+  flex:1;
+  min-width:0;
+  border:1px solid rgba(95,160,127,.38);
+  background:rgba(11,25,19,.9);
+  color:#def9e9;
+  border-radius:8px;
+  padding:8px 9px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+}
+.bw-add-type{ max-width:84px; flex:0 0 84px; }
+.bw-add-inline-btn{
+  border:1px solid rgba(104,255,178,.45);
+  background:rgba(26,58,42,.7);
+  color:#b9ffde;
+  border-radius:8px;
+  padding:8px 10px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+/* Bodyweight streak header (same day-streak behavior as cardio) */
+.bw-streak-bar {
+  margin:0 0 10px;
+  padding:12px 12px 11px;
+  border:1px solid rgba(84,255,171,.28);
+  border-radius:12px;
+  background:linear-gradient(145deg, rgba(17,35,26,.88), rgba(11,23,17,.9));
+}
+.bw-streak-kicker {
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1.8px;
+  color:#86d9b0;
+}
+.bw-streak-main {
+  margin-top:4px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:27px;
+  color:#d7ffea;
+  line-height:1;
+  text-shadow:0 0 12px rgba(67,255,153,.2);
+}
+.bw-streak-sub {
+  margin-top:6px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#8ec7b0;
+}
+.bw-streak-latest{
+  margin-top:5px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#b4e8cd;
+}
+.bw-insight-row{
+  margin-top:9px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+}
+.bw-insight-chip{
+  border:1px solid rgba(131,255,198,.2);
+  border-radius:9px;
+  background:linear-gradient(145deg, rgba(19,40,30,.85), rgba(11,24,18,.88));
+  padding:7px 7px 6px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.bw-insight-lbl{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1px;
+  color:#8ec7b0;
+}
+.bw-insight-val{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:20px;
+  line-height:1;
+  color:#e5ffef;
+  text-shadow:0 0 10px rgba(84,255,171,.2);
+}
+@keyframes bwCardPulse{
+  0%,100%{ opacity:1; box-shadow:0 0 8px rgba(99,255,181,.7); }
+  50%{ opacity:.45; box-shadow:0 0 3px rgba(99,255,181,.4); }
+}
+@media (max-width:380px){
+  .bw-insight-row{ grid-template-columns:1fr; }
 }

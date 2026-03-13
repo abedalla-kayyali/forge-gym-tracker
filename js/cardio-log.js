@@ -6,6 +6,8 @@
 let cardioLog          = _lsGet(STORAGE_KEYS.CARDIO, []);
 let _selectedCardioAct = null; // { cat, act }
 let _selectedHRZone    = 0;
+let _cardioFilterCat   = '';
+let _cardioSearchQuery = '';
 
 const _cardioCategoryIcon = {
   cardio: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h4l2-4 4 8 2-4h6"/></svg>',
@@ -23,6 +25,26 @@ function _initCardioLogShell() {
   if (!zone || zone.dataset.arcadeInit === '1') return;
   zone.dataset.arcadeInit = '1';
   zone.classList.add('cardio-log-shell');
+
+  const streakBar = document.getElementById('cardio-streak-bar');
+  if (streakBar && !document.getElementById('cardio-filter-tools')) {
+    const tools = document.createElement('div');
+    tools.id = 'cardio-filter-tools';
+    tools.className = 'cardio-filter-tools';
+    tools.innerHTML =
+      '<div class="cardio-search-wrap">' +
+        '<input class="cardio-search-input" type="text" placeholder="Search workout name..." oninput="setCardioSearchQuery(this.value)">' +
+      '</div>' +
+      '<div class="cardio-filter-row">' +
+        '<button type="button" class="cardio-filter-chip active" data-cat="" onclick="setCardioFilterCategory(\'\',this)">All</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="cardio" onclick="setCardioFilterCategory(\'cardio\',this)">Cardio</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="hiit" onclick="setCardioFilterCategory(\'hiit\',this)">HIIT</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="sports" onclick="setCardioFilterCategory(\'sports\',this)">Sports</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="recovery" onclick="setCardioFilterCategory(\'recovery\',this)">Recovery</button>' +
+      '</div>' +
+      '<div class="cardio-gated-msg" id="cardio-gated-msg"></div>';
+    streakBar.insertAdjacentElement('afterend', tools);
+  }
 
   const form = document.getElementById('cardio-form');
   if (form) form.classList.add('cardio-mission-card');
@@ -49,6 +71,124 @@ function _initCardioLogShell() {
       '<span class="cardio-btn-label">' + label + '</span>' +
       '<span class="cardio-streak-chip" data-chip-for="' + label + '">--</span>';
   });
+
+  _applyCardioActivityFilter();
+}
+
+function setCardioSearchQuery(val) {
+  _cardioSearchQuery = String(val || '').trim();
+  _applyCardioActivityFilter();
+}
+
+function setCardioFilterCategory(cat, btn) {
+  _cardioFilterCat = String(cat || '').trim().toLowerCase();
+  document.querySelectorAll('#cardio-filter-tools .cardio-filter-chip').forEach(chip => chip.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  _applyCardioActivityFilter();
+}
+
+function _resolveCardioBlockCat(block) {
+  if (!block) return '';
+  if (block.id === 'cardio-custom-block') return 'custom';
+  const firstBtn = block.querySelector('.cardio-act-btn');
+  return String(firstBtn?.dataset?.cat || '').toLowerCase();
+}
+
+function _applyCardioActivityFilter() {
+  const zone = document.getElementById('cardio-zone');
+  if (!zone) return;
+  const query = _cardioSearchQuery.toLowerCase();
+  const hasCategory = Boolean(_cardioFilterCat);
+  const hasQuery = Boolean(query);
+  const hasCriteria = hasCategory || hasQuery;
+  const blocks = Array.from(zone.querySelectorAll('.cardio-cat-block'));
+  let visibleCount = 0;
+
+  blocks.forEach(block => {
+    const cards = Array.from(block.querySelectorAll('.cardio-act-btn'));
+    let cardVisible = 0;
+
+    cards.forEach(card => {
+      const act = String(card.dataset.act || card.textContent || '').toLowerCase();
+      const cardCat = String(card.dataset.cat || '').toLowerCase();
+      const qMatch = !hasQuery || act.includes(query);
+      const catMatch = !hasCategory || cardCat === _cardioFilterCat;
+      const showCard = hasCriteria && catMatch && qMatch;
+      card.style.display = showCard ? '' : 'none';
+      if (showCard) cardVisible++;
+    });
+
+    block.style.display = (hasCriteria && cardVisible > 0) ? '' : 'none';
+    if (block.style.display !== 'none') visibleCount++;
+  });
+
+  const gatedMsg = document.getElementById('cardio-gated-msg');
+  if (gatedMsg) {
+    if (!hasCriteria) {
+      gatedMsg.style.display = '';
+      gatedMsg.innerHTML = 'Pick a category or type a workout name to reveal cards';
+    } else if (visibleCount === 0 && hasQuery) {
+      const suggestedCat = ['cardio', 'hiit', 'sports', 'recovery'].includes(_cardioFilterCat) ? _cardioFilterCat : 'cardio';
+      gatedMsg.style.display = '';
+      gatedMsg.innerHTML =
+        '<div class="cardio-gated-title">Workout not found</div>' +
+        '<div class="cardio-gated-sub">Add "' + _esc(_cardioSearchQuery) + '" for future use</div>' +
+        '<div class="cardio-add-inline">' +
+          '<select id="cardio-add-cat" class="cardio-add-select">' +
+            '<option value="cardio"' + (suggestedCat === 'cardio' ? ' selected' : '') + '>Cardio</option>' +
+            '<option value="hiit"' + (suggestedCat === 'hiit' ? ' selected' : '') + '>HIIT</option>' +
+            '<option value="sports"' + (suggestedCat === 'sports' ? ' selected' : '') + '>Sports</option>' +
+            '<option value="recovery"' + (suggestedCat === 'recovery' ? ' selected' : '') + '>Recovery</option>' +
+          '</select>' +
+          '<button type="button" class="cardio-add-inline-btn" onclick="addCardioFromSearch()">+ Add Workout</button>' +
+        '</div>';
+    } else if (visibleCount === 0) {
+      gatedMsg.style.display = '';
+      gatedMsg.innerHTML = 'No workouts in this category';
+    } else {
+      gatedMsg.style.display = 'none';
+      gatedMsg.innerHTML = '';
+    }
+  }
+
+  const form = document.getElementById('cardio-form');
+  if (form && !hasCriteria) form.style.display = 'none';
+}
+
+function _cardioActivityExists(name, cat) {
+  const target = String(name || '').trim().toLowerCase();
+  const targetCat = String(cat || '').trim().toLowerCase();
+  if (!target || !targetCat) return false;
+  return Array.from(document.querySelectorAll('#cardio-zone .cardio-act-btn')).some(btn =>
+    String(btn.dataset.act || '').trim().toLowerCase() === target &&
+    String(btn.dataset.cat || '').trim().toLowerCase() === targetCat
+  );
+}
+
+function addCardioFromSearch() {
+  const act = String(_cardioSearchQuery || '').trim();
+  if (!act) { showToast('Type workout name first'); return; }
+  const catEl = document.getElementById('cardio-add-cat');
+  const catRaw = String(catEl?.value || _cardioFilterCat || 'cardio').toLowerCase();
+  const cat = ['cardio', 'hiit', 'sports', 'recovery'].includes(catRaw) ? catRaw : 'cardio';
+  if (_cardioActivityExists(act, cat)) { showToast('Workout already exists'); return; }
+  _cardioCustomTypes.push({ id: 'cc_' + Date.now(), act, cat });
+  _saveCardioCustomTypes();
+  _renderCardioCustomCards();
+  _renderCardioActivityStreaks();
+
+  _cardioSearchQuery = '';
+  const searchInput = document.querySelector('#cardio-filter-tools .cardio-search-input');
+  if (searchInput) searchInput.value = '';
+  const catBtn = document.querySelector('#cardio-filter-tools .cardio-filter-chip[data-cat="' + cat + '"]');
+  setCardioFilterCategory(cat, catBtn);
+
+  const freshBtn = Array.from(document.querySelectorAll('#cardio-zone .cardio-act-btn')).find(btn =>
+    String(btn.dataset.act || '').trim().toLowerCase() === act.toLowerCase() &&
+    String(btn.dataset.cat || '').trim().toLowerCase() === cat
+  );
+  if (freshBtn) selectCardioActivity(freshBtn);
+  showToast('Workout added to your cards');
 }
 
 // ── Activity selection ────────────────────────────────────────────────────────
@@ -157,6 +297,11 @@ function _renderCardioStreakBar() {
   _initCardioLogShell();
   const sessions = Array.isArray(cardioLog) ? cardioLog.length : 0;
   const totalMins = (Array.isArray(cardioLog) ? cardioLog : []).reduce((a, e) => a + (Number(e.durationMins || e.duration || 0) || 0), 0);
+  const latest = (Array.isArray(cardioLog) ? cardioLog : []).slice().sort((a, b) =>
+    new Date(b?.date || 0) - new Date(a?.date || 0)
+  )[0] || null;
+  const latestName = latest ? _esc(String(latest.activity || 'Workout')) : '--';
+  const latestDate = latest ? new Date(latest.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--';
   const streak = _calcCardioStreak();
   const streakText = streak === 0
     ? 'Start your streak today'
@@ -164,7 +309,8 @@ function _renderCardioStreakBar() {
   el.innerHTML =
     '<div class="cardio-streak-kicker">ARCADE CARDIO</div>' +
     `<div class="cardio-streak-main">\uD83D\uDD25 ${streakText}</div>` +
-    `<div class="cardio-streak-sub">${sessions} missions logged · ${totalMins} total mins</div>`;
+    `<div class="cardio-streak-sub">${sessions} missions logged · ${totalMins} total mins</div>` +
+    `<div class="cardio-streak-latest">Latest: ${latestName} · ${latestDate}</div>`;
 }
 
 function _normalizeCardioDate(raw) {
@@ -285,6 +431,7 @@ function _renderCardioCustomCards() {
       '<span class="cardio-streak-chip" data-chip-for="' + act + '">0d</span>' +
     '</button>';
   }).join('');
+  _applyCardioActivityFilter();
 }
 
 function _ensureCardioCustomUi() {
@@ -307,4 +454,5 @@ const _origInitCardioLogShell = _initCardioLogShell;
 _initCardioLogShell = function patchedInitCardioLogShell() {
   _origInitCardioLogShell();
   _ensureCardioCustomUi();
+  _applyCardioActivityFilter();
 };
