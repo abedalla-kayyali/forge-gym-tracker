@@ -22,6 +22,15 @@ if ('serviceWorker' in navigator) {
             }
           });
         });
+
+        // Keep checking in active sessions so mobile devices pick updates faster.
+        const _checkNow = () => reg.update().catch(() => {});
+        setInterval(_checkNow, 60 * 1000);
+        window.addEventListener('focus', _checkNow);
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') _checkNow();
+        });
+        window.addEventListener('pageshow', _checkNow);
       })
       .catch(() => console.log('[FORGE SW] Not available (local file mode)'));
 
