@@ -243,3 +243,68 @@ document.addEventListener('DOMContentLoaded', () => {
   _renderCardioStreakBar();
   _renderCardioActivityStreaks();
 });
+
+// Custom cardio activity cards (persisted)
+const _CARDIO_CUSTOM_KEY = 'forge_cardio_custom_types';
+let _cardioCustomTypes = _lsGet(_CARDIO_CUSTOM_KEY, []);
+
+function _saveCardioCustomTypes() {
+  localStorage.setItem(_CARDIO_CUSTOM_KEY, JSON.stringify(_cardioCustomTypes));
+}
+
+function addCustomCardioType() {
+  const act = (prompt('New cardio activity name (example: Ski Erg, Padel, Dance)') || '').trim();
+  if (!act) return;
+  const catRaw = (prompt('Category: cardio / hiit / sports / recovery', 'cardio') || 'cardio').trim().toLowerCase();
+  const cat = ['cardio', 'hiit', 'sports', 'recovery'].includes(catRaw) ? catRaw : 'cardio';
+  const exists = _cardioCustomTypes.some(x =>
+    String(x?.act || '').toLowerCase() === act.toLowerCase() && String(x?.cat || '') === cat
+  );
+  if (exists) { showToast('Card already exists'); return; }
+  _cardioCustomTypes.push({ id: 'cc_' + Date.now(), act, cat });
+  _saveCardioCustomTypes();
+  _renderCardioCustomCards();
+  _renderCardioActivityStreaks();
+  showToast('Custom cardio card added');
+}
+
+function _renderCardioCustomCards() {
+  const wrap = document.getElementById('cardio-custom-grid');
+  if (!wrap) return;
+  if (!_cardioCustomTypes.length) {
+    wrap.innerHTML = '<div class="cardio-custom-empty">No custom cards yet</div>';
+    return;
+  }
+  wrap.innerHTML = _cardioCustomTypes.map(c => {
+    const act = _esc(c.act || '');
+    const cat = _esc(c.cat || 'cardio');
+    const icon = _activityIconSVG(c.cat || 'cardio');
+    return '<button class="cardio-act-btn cardio-act-btn-custom" data-cat="' + cat + '" data-act="' + act + '" onclick="selectCardioActivity(this)">' +
+      '<span class="cardio-btn-icon">' + icon + '</span>' +
+      '<span class="cardio-btn-label">' + act + '</span>' +
+      '<span class="cardio-streak-chip" data-chip-for="' + act + '">0d</span>' +
+    '</button>';
+  }).join('');
+}
+
+function _ensureCardioCustomUi() {
+  const zone = document.getElementById('cardio-zone');
+  if (!zone || document.getElementById('cardio-custom-block')) return;
+  const targetBefore = document.getElementById('cardio-form');
+  const block = document.createElement('div');
+  block.id = 'cardio-custom-block';
+  block.className = 'cardio-cat-block cardio-custom-block';
+  block.innerHTML =
+    '<div class="cardio-cat-label">CUSTOM WORKOUT TYPES</div>' +
+    '<button class="cardio-add-custom-btn" type="button" onclick="addCustomCardioType()">+ Add Custom Card</button>' +
+    '<div id="cardio-custom-grid" class="cardio-grid cardio-custom-grid"></div>';
+  if (targetBefore && targetBefore.parentNode === zone) zone.insertBefore(block, targetBefore);
+  else zone.appendChild(block);
+  _renderCardioCustomCards();
+}
+
+const _origInitCardioLogShell = _initCardioLogShell;
+_initCardioLogShell = function patchedInitCardioLogShell() {
+  _origInitCardioLogShell();
+  _ensureCardioCustomUi();
+};

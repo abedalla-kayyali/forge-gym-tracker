@@ -6775,3 +6775,108 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   background:rgba(90,210,150,.38);
   border-radius:9px;
 }
+/* Custom cardio cards */
+.cardio-custom-block { margin-top:8px; }
+.cardio-add-custom-btn {
+  width:100%;
+  border:1px dashed rgba(104,255,178,.45);
+  background:rgba(22,44,33,.55);
+  color:#9df8c8;
+  border-radius:10px;
+  padding:10px 12px;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  cursor:pointer;
+  margin-bottom:8px;
+}
+.cardio-custom-grid { margin-top:2px; }
+.cardio-act-btn-custom { border-style:dashed; }
+.cardio-custom-empty {
+  width:100%;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#8fb9a6;
+  padding:8px 2px;
+}
+
+/* Bodyweight card-style picker */
+.bw-card-tools { margin:2px 0 10px; }
+.bw-add-custom-btn {
+  width:100%;
+  border:1px dashed rgba(104,255,178,.4);
+  background:rgba(22,44,33,.5);
+  color:#9df8c8;
+  border-radius:10px;
+  padding:10px 12px;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  cursor:pointer;
+}
+.bw-card-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.bw-card-btn {
+  border:1px solid rgba(95,160,127,.35);
+  background:rgba(16,28,21,.8);
+  color:#dff7e8;
+  border-radius:12px;
+  padding:11px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+}
+.bw-card-btn.active {
+  border-color:#54ffab;
+  box-shadow:0 0 14px rgba(84,255,171,.22);
+  background:rgba(23,48,35,.88);
+}
+.bw-card-main { display:flex; flex-direction:column; min-width:0; }
+.bw-card-name {
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:20px;
+  line-height:1;
+  letter-spacing:.4px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.bw-card-muscle {
+  margin-top:4px;
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:#8fc4a9;
+  letter-spacing:1.1px;
+  text-transform:uppercase;
+}
+.bw-card-meta { display:flex; align-items:center; gap:7px; }
+.bw-card-kind {
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:#9ef7ca;
+  border:1px solid rgba(84,255,171,.32);
+  border-radius:999px;
+  padding:3px 7px;
+}
+.bw-card-streak {
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:#789d8b;
+  border:1px solid rgba(123,158,141,.28);
+  border-radius:999px;
+  padding:3px 7px;
+}
+.bw-card-streak.active {
+  color:#f6fffb;
+  border-color:rgba(84,255,171,.46);
+  background:rgba(84,255,171,.16);
+}
+.bw-card-empty {
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#8fb9a6;
+  padding:8px 2px;
+}

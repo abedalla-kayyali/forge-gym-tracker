@@ -552,3 +552,85 @@ function _renderBwActiveDot() {
     resetWorkoutModeSelection();
   }
 })();
+// Bodyweight card-style picker + custom cards (persisted)
+const _BW_CUSTOM_KEY = 'forge_bw_custom_exercises';
+let _bwCustomExercises = _lsGet(_BW_CUSTOM_KEY, []);
+
+function _saveBwCustomExercises() {
+  localStorage.setItem(_BW_CUSTOM_KEY, JSON.stringify(_bwCustomExercises));
+}
+
+function addCustomBwExercise() {
+  const name = (prompt('New bodyweight exercise name (example: Wall Sit, Hollow Hold)') || '').trim();
+  if (!name) return;
+  const muscle = (prompt('Primary muscle (example: Core, Legs, Chest)', 'Core') || 'Core').trim() || 'Core';
+  const typeRaw = (prompt('Type: reps or hold', 'reps') || 'reps').trim().toLowerCase();
+  const t = typeRaw === 'hold' ? 'hold' : 'reps';
+  const exists = _bwCustomExercises.some(x => String(x?.n || '').toLowerCase() === name.toLowerCase());
+  if (exists) { showToast('Exercise already exists'); return; }
+  _bwCustomExercises.push({ id: 'bwc_' + Date.now(), n: name, muscle, t });
+  _saveBwCustomExercises();
+  renderBwExercisePicker();
+  showToast('Custom bodyweight card added');
+}
+
+function renderBwExercisePicker() {
+  const wrap = document.getElementById('bw-rpg-trees');
+  if (!wrap) return;
+
+  const currentEx = (document.getElementById('exercise-name').value || '').trim().toLowerCase();
+  const base = CALISTHENICS_TREES.flatMap(tree =>
+    tree.levels.map(lvl => ({
+      n: lvl.n,
+      muscle: tree.muscle,
+      t: lvl.t,
+      tree: tree.tree
+    }))
+  );
+  const all = base.concat(_bwCustomExercises.map(x => ({
+    n: x.n,
+    muscle: x.muscle || 'Core',
+    t: x.t === 'hold' ? 'hold' : 'reps',
+    tree: 'Custom'
+  })));
+
+  const filtered = _bwFilterMuscle
+    ? all.filter(x => String(x.muscle || '').toLowerCase() === _bwFilterMuscle.toLowerCase())
+    : all;
+
+  const cards = filtered.map(ex => {
+    const rawName = String(ex.n || 'Exercise');
+    const rawMuscle = String(ex.muscle || 'Core');
+    const name = _esc(rawName);
+    const muscle = _esc(rawMuscle);
+    const type = ex.t === 'hold' ? 'hold' : 'reps';
+    const streak = _bwExerciseStreakDays(rawName);
+    const selected = currentEx === rawName.toLowerCase();
+    const kind = type === 'hold' ? 'HOLD' : 'REPS';
+    return '<button class="bw-card-btn' + (selected ? ' active' : '') + '" data-name="' + name + '" data-muscle="' + muscle + '" data-type="' + type + '">' +
+      '<span class="bw-card-main">' +
+        '<span class="bw-card-name">' + name + '</span>' +
+        '<span class="bw-card-muscle">' + muscle + '</span>' +
+      '</span>' +
+      '<span class="bw-card-meta">' +
+        '<span class="bw-card-kind">' + kind + '</span>' +
+        '<span class="bw-card-streak' + (streak > 0 ? ' active' : '') + '">' + (streak > 0 ? (streak + 'd') : '0d') + '</span>' +
+      '</span>' +
+    '</button>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<div class="bw-card-tools">' +
+      '<button class="bw-add-custom-btn" type="button" onclick="addCustomBwExercise()">+ Add Custom Card</button>' +
+    '</div>' +
+    '<div class="bw-card-grid">' + (cards || '<div class="bw-card-empty">No exercises in this filter</div>') + '</div>';
+
+  wrap.querySelectorAll('.bw-card-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.getAttribute('data-name') || '';
+      const muscle = btn.getAttribute('data-muscle') || 'Core';
+      const type = btn.getAttribute('data-type') || 'reps';
+      pickBwExercise(name, muscle, type);
+    });
+  });
+}
