@@ -56,7 +56,7 @@
   }
 
   function _normalizedCardio() {
-    const raw = _arr(window.cardioLog);
+    const raw = _arr(_cardioLogRef());
     return raw.map(e => {
       const date = _asDateKey(e?.date || e?.day || e?.dateKey || e?.createdAt || e?.ts);
       return {
@@ -71,7 +71,7 @@
   }
 
   function _normalizedWeighted() {
-    return _arr(window.workouts).map(w => ({
+    return _arr(_workoutsRef()).map(w => ({
       date: _asDateKey(w?.date),
       totalVolume: _toNum(w?.totalVolume, 0),
       muscle: String(w?.muscle || ''),
@@ -80,7 +80,7 @@
   }
 
   function _normalizedBw() {
-    return _arr(window.bwWorkouts).map(w => ({
+    return _arr(_bwWorkoutsRef()).map(w => ({
       date: _asDateKey(w?.date),
       exercise: String(w?.exercise || ''),
       totalReps: _toNum(w?.totalReps, 0),
@@ -91,6 +91,18 @@
   function _mealsLogRef() {
     if (typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object') return mealsLog;
     return (window.mealsLog && typeof window.mealsLog === 'object') ? window.mealsLog : {};
+  }
+  function _workoutsRef() {
+    if (typeof workouts !== 'undefined' && Array.isArray(workouts)) return workouts;
+    return Array.isArray(window.workouts) ? window.workouts : [];
+  }
+  function _bwWorkoutsRef() {
+    if (typeof bwWorkouts !== 'undefined' && Array.isArray(bwWorkouts)) return bwWorkouts;
+    return Array.isArray(window.bwWorkouts) ? window.bwWorkouts : [];
+  }
+  function _cardioLogRef() {
+    if (typeof cardioLog !== 'undefined' && Array.isArray(cardioLog)) return cardioLog;
+    return Array.isArray(window.cardioLog) ? window.cardioLog : [];
   }
 
   function _nutritionTargets() {

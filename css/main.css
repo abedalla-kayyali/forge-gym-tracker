@@ -3767,6 +3767,21 @@ body[data-theme="solar"] .xp-fill {
   scrollbar-width:none;
 }
 .coach-tabs::-webkit-scrollbar{display:none;}
+.nutrition-mode .coach-score-wrap,
+.nutrition-mode .coach-header,
+.nutrition-mode .coach-tabs,
+.nutrition-mode #coach-tab-today,
+.nutrition-mode #coach-tab-train,
+.nutrition-mode #coach-tab-insights,
+.nutrition-mode #coach-tab-cardio,
+.nutrition-mode #coach-tab-plan,
+.nutrition-mode #coach-tab-cali,
+.nutrition-mode .coach-ask-bar{
+  display:none !important;
+}
+.nutrition-mode #coach-tab-nutrition{
+  display:block !important;
+}
 .coach-tab {
   flex:0 0 auto; min-width:94px; padding:10px 8px; border:none; background:transparent;
   font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px;
@@ -3819,6 +3834,45 @@ body[data-theme="solar"] .xp-fill {
   transition:border-color .15s ease, transform .12s ease;
 }
 .nutr-card:hover { border-color:var(--border2); transform:translateY(-1px); }
+.nutri-focus-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  padding:8px 16px 4px;
+}
+.nutri-focus-card{
+  border:1px solid color-mix(in srgb,var(--accent) 24%,var(--border));
+  background:linear-gradient(180deg,rgba(57,255,143,.08),rgba(57,255,143,.02));
+  border-radius:12px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.nutri-focus-card span{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--text3);
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+.nutri-focus-card strong{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  color:var(--accent);
+  letter-spacing:1px;
+  line-height:1;
+}
+.nutri-focus-card strong small{
+  font-size:14px;
+  opacity:.7;
+}
+.nutri-focus-card em{
+  font-style:normal;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text2);
+}
 .nutr-val {
   font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--accent);
   line-height:1; letter-spacing:1px;
@@ -4110,6 +4164,7 @@ body[data-theme="solar"] .xp-fill {
 }
 
 @media (max-width: 680px) {
+  .nutri-focus-grid { grid-template-columns:1fr; gap:8px; }
   .nutrition-grid { grid-template-columns:1fr; gap:8px; }
   .nutr-val { font-size:24px; }
   .meal-datetime-row { grid-template-columns:1fr; }

@@ -3434,6 +3434,8 @@ function switchView(name, btn) {
   if (!targetView) return;
   targetView.classList.add('active');
   if (btn) btn.classList.add('active');
+  const coachView = document.getElementById('view-coach');
+  if (coachView) coachView.classList.toggle('nutrition-mode', name === 'nutrition');
   const appHeader = document.getElementById('app-header');
   if (appHeader) appHeader.style.display = name === 'log' ? '' : 'none';
   // Hide muscle history panel when leaving LOG tab
@@ -7204,6 +7206,41 @@ function renderCoachNutrition() {
     c: pctOf(mealTotals.c, Math.max(0, carbG)),
     f: pctOf(mealTotals.f, fatG)
   };
+  const allMealDays = Object.keys(mealsLog || {}).filter(k => _isIsoDateKey(k) && Array.isArray(mealsLog[k]) && mealsLog[k].length > 0).sort();
+  const nowDay = new Date();
+  nowDay.setHours(0, 0, 0, 0);
+  const weekStart = new Date(nowDay);
+  weekStart.setDate(nowDay.getDate() - 6);
+  const weekStartKey = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
+  const loggedDays7 = allMealDays.filter(k => k >= weekStartKey).length;
+  let bestMealName = tx('No meal yet', 'لا يوجد وجبة بعد');
+  let bestMealStreak = 0;
+  Object.keys(mealStreakMap).forEach(k => {
+    const s = mealStreakMap[k] || 0;
+    if (s > bestMealStreak) {
+      bestMealStreak = s;
+      bestMealName = (mealLibrary?.[k]?.name) || k;
+    }
+  });
+  const todayAdherence = Math.round(((mealPct.kcal * 0.35) + (mealPct.p * 0.45) + (mealPct.c * 0.10) + (mealPct.f * 0.10)));
+  const nutritionInsightsHtml = `
+    <div class="nutri-focus-grid">
+      <div class="nutri-focus-card">
+        <span>${tx('Today Adherence','التزام اليوم')}</span>
+        <strong>${todayAdherence}%</strong>
+        <em>${Math.round(mealTotals.kcal)} / ${targetCal} kcal</em>
+      </div>
+      <div class="nutri-focus-card">
+        <span>${tx('7D Logging','تسجيل 7 أيام')}</span>
+        <strong>${loggedDays7}<small>/7</small></strong>
+        <em>${tx('days with meals logged','أيام فيها وجبات مسجلة')}</em>
+      </div>
+      <div class="nutri-focus-card">
+        <span>${tx('Top Meal Streak','أعلى سلسلة وجبة')}</span>
+        <strong>${bestMealStreak}d</strong>
+        <em>${esc(bestMealName)}</em>
+      </div>
+    </div>`;
   const mealsHtml = todayMeals.length
     ? todayMeals.map(m => {
       const nm = _normalizeMealName(m?.name || '');
@@ -7228,24 +7265,12 @@ function renderCoachNutrition() {
   }).join('');
   const savedOptionsHtml = savedMeals.map(m => `<option value="${esc(m.name)}"></option>`).join('');
 
-  const hasTargets = tgWtKg || tgBF || tgMM || tgMuscle;
-  const targetBlockHtml = hasTargets ? `
-    <div style="margin:12px 16px 4px;background:rgba(57,255,143,.04);border:1px solid rgba(57,255,143,.15);border-radius:12px;padding:12px 14px;">
-      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:10px;">${tx('Your Goals','������')}</div>
-      ${goalRow(tx('Weight','�����'), wtKg, tgWtKg, tgWtKg < wtKg, 'kg', 'var(--accent)')}
-      ${goalRow(tx('Body Fat','���� ������'), curBF, tgBF, true, '%', '#f97316')}
-      ${goalRow(tx('Muscle Mass','������ �������'), curMM, tgMM, false, 'kg', '#60a5fa')}
-      ${tgMuscle ? `<div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);">${tx('Priority Muscle','������ ��� ��������')}: <strong style="color:var(--text2);">${tgMuscle}</strong></div>` : ''}
-    </div>` : '';
-
   el.innerHTML = `
-    ${cycleBanner}
-    ${targetBlockHtml}
-    <div style="padding:12px 16px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;display:flex;align-items:center;gap:8px;">
-      <span>${goalLabel} - ${Math.round(wtKg)}kg${tgBF ? tx(' - BF target ',' - ��� ���� ') + fmt(tgBF) + '%' : ''}</span>
-      ${isFemale ? `<span style="color:#ff69b4;font-size:11px;letter-spacing:1px;">${tx('Female-optimised','���� ������')}</span>` : ''}
+    <div style="padding:12px 16px 4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.2px;color:var(--text2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span>${tx('Nutrition Control Center','مركز التحكم الغذائي')}</span>
+      <span style="color:var(--accent);">${tx('Live','مباشر')}</span>
     </div>
-    <div style="padding:0 16px 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);">${bmrSourceLabel} � ${tx('BMR','BMR')}: ${Math.round(bmr)} ${tx('kcal','����')}</div>
+    ${nutritionInsightsHtml}
     <div class="nutrition-grid">
       <div class="nutr-card">
         <div class="nutr-val">${targetCal}</div>
@@ -7322,14 +7347,8 @@ function renderCoachNutrition() {
     </div>
     <div style="padding:0 16px 14px;">
       <div class="coach-bubble" style="margin:0;">
-        <strong>${tx('Hydration','�������')}: ${waterL}${tx('L / day','��� / ���')} (${Math.round(parseFloat(waterL) * 4)} ${tx('cups','�����')})</strong><br>
-        ${curBF !== null ? `${tx('Body fat','���� �����')} ${fmt(curBF)}% | ` : ''}${tx('TDEE estimate','����� ��������� ������')}: ${tdee} ${tx('kcal','����')}. ${tdeeNote}
-      </div>
-      <div class="coach-bubble" style="margin-top:8px;">
-        <strong>${tx('Weekly Adjustment Rule','����� ������� ���������')}</strong><br>
-        ${weightTrendAdvice.line1}<br>
-        ${weightTrendAdvice.line2}<br>
-        <span style="color:var(--accent);">${weightTrendAdvice.action}</span>
+        <strong>${tx('Hydration','الترطيب')}: ${waterL}${tx('L / day','لتر / يوم')} (${Math.round(parseFloat(waterL) * 4)} ${tx('cups','أكواب')})</strong><br>
+        ${tx('Protein target','هدف البروتين')}: ${proteinG}g • ${tx('Calories target','هدف السعرات')}: ${targetCal} kcal
       </div>
     </div>`;
 }
