@@ -107,6 +107,7 @@
         position: absolute;
         top: 10px;
         right: 10px;
+        z-index: 4;
         height: 30px;
         min-width: 30px;
         padding: 0 8px;
@@ -130,6 +131,7 @@
       }
       .auth-lang-float {
         position: fixed;
+        top: 10px;
         top: calc(env(safe-area-inset-top, 0px) + 10px);
         right: 12px;
         z-index: 10002;
@@ -146,10 +148,34 @@
         font-weight: 700;
         box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(57,255,143,.14) inset;
         cursor: pointer;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        opacity: 1 !important;
+        visibility: visible !important;
       }
       [dir="rtl"] #forge-auth .auth-lang-float {
         right: auto;
         left: 12px;
+      }
+      .auth-lang-inline-wrap {
+        display: flex;
+        justify-content: center;
+        margin: -4px 0 14px;
+      }
+      .auth-lang-inline-btn {
+        height: 34px;
+        min-width: 54px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(57,255,143,.45);
+        background: rgba(57,255,143,.12);
+        color: #d7ffea;
+        font-family: 'DM Mono', monospace;
+        font-size: .75rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        cursor: pointer;
       }
       @keyframes authCardIn {
         from { opacity:0; transform: translateY(28px) scale(.97); }
@@ -443,6 +469,9 @@
         <span>FORGE</span>
         <div class="auth-logo-sub" id="auth-logo-sub">Gym Tracker</div>
       </div>
+      <div class="auth-lang-inline-wrap">
+        <button class="auth-lang-inline-btn" id="auth-lang-inline-btn" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
+      </div>
 
       <!-- LOGIN FORM -->
       <div id="auth-form-login">
@@ -651,6 +680,12 @@
       langFloatBtn.textContent = isAr ? 'EN' : 'AR';
       langFloatBtn.title = _authT('langTitle');
       langFloatBtn.setAttribute('aria-label', _authT('langTitle'));
+    }
+    const langInlineBtn = document.getElementById('auth-lang-inline-btn');
+    if (langInlineBtn) {
+      langInlineBtn.textContent = isAr ? 'EN' : 'AR';
+      langInlineBtn.title = _authT('langTitle');
+      langInlineBtn.setAttribute('aria-label', _authT('langTitle'));
     }
 
     const emailL = document.getElementById('auth-email-l');
