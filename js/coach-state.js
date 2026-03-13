@@ -88,6 +88,31 @@
     })).filter(e => !!e.date);
   }
 
+  function _nutritionTargets() {
+    const wtRaw = _toNum(window.userProfile?.weight, 75);
+    const wtKg = (window.userProfile?.bwUnit === 'lbs' || window.userProfile?.weightUnit === 'lbs') ? wtRaw * 0.453592 : wtRaw;
+    const goal = window.userProfile?.goal || 'muscle';
+    const pfMap = { muscle: 2.0, strength: 1.8, fat_loss: 2.2, endurance: 1.6, recomp: 2.2 };
+    const proteinTarget = Math.max(90, Math.round(wtKg * (pfMap[goal] || 2.0)));
+    const kcalTarget = Math.max(1500, Math.round((wtKg * 30) + (goal === 'fat_loss' ? -350 : goal === 'muscle' ? 250 : 0)));
+    return { proteinTarget, kcalTarget };
+  }
+
+  function _nutritionTodayStats() {
+    const mealsLog = window.mealsLog || {};
+    const todayKey = (typeof window._mealTodayKey === 'function') ? window._mealTodayKey() : _iso(new Date());
+    const meals = _arr(mealsLog[todayKey]);
+    const p = _sum(meals, m => _toNum(m?.p, 0));
+    const kcal = _sum(meals, m => _toNum(m?.kcal, 0));
+    const targets = _nutritionTargets();
+    const proteinPct = Math.min(140, Math.round((p / Math.max(1, targets.proteinTarget)) * 100));
+    const kcalPct = Math.min(140, Math.round((kcal / Math.max(1, targets.kcalTarget)) * 100));
+    const proteinComponent = Math.max(0, 100 - Math.abs(100 - proteinPct));
+    const kcalComponent = Math.max(0, 100 - Math.abs(100 - kcalPct));
+    const score = Math.round((proteinComponent * 0.65) + (kcalComponent * 0.35));
+    return { hasTodayMeals: meals.length > 0, mealCount: meals.length, p, kcal, proteinPct, kcalPct, score };
+  }
+
   function _nutritionAdherence() {
     const mealsLog = window.mealsLog || {};
     const todayKey = (typeof window._mealTodayKey === 'function') ? window._mealTodayKey() : _iso(new Date());
@@ -109,12 +134,9 @@
     const p = _sum(meals, m => _toNum(m?.p, 0));
     const kcal = _sum(meals, m => _toNum(m?.kcal, 0));
 
-    const wtRaw = _toNum(window.userProfile?.weight, 75);
-    const wtKg = (window.userProfile?.bwUnit === 'lbs' || window.userProfile?.weightUnit === 'lbs') ? wtRaw * 0.453592 : wtRaw;
-    const goal = window.userProfile?.goal || 'muscle';
-    const pfMap = { muscle: 2.0, strength: 1.8, fat_loss: 2.2, endurance: 1.6, recomp: 2.2 };
-    const proteinTarget = Math.max(90, Math.round(wtKg * (pfMap[goal] || 2.0)));
-    const kcalTarget = Math.max(1500, Math.round((wtKg * 30) + (goal === 'fat_loss' ? -350 : goal === 'muscle' ? 250 : 0)));
+    const targets = _nutritionTargets();
+    const proteinTarget = targets.proteinTarget;
+    const kcalTarget = targets.kcalTarget;
 
     const proteinPct = Math.min(140, Math.round((p / Math.max(1, proteinTarget)) * 100));
     const kcalPct = Math.min(140, Math.round((kcal / Math.max(1, kcalTarget)) * 100));
@@ -427,15 +449,19 @@
     const host = document.getElementById('coach-tab-nutrition');
     if (!host) return;
     const s = buildCoachUnifiedState();
-    const p = s.nutrition.proteinPct || 0;
-    const k = s.nutrition.kcalPct || 0;
+    const tn = _nutritionTodayStats();
+    const p = tn.proteinPct || 0;
+    const k = tn.kcalPct || 0;
+    const guidance = tn.hasTodayMeals
+      ? ((p < 85 ? 'Increase protein feeding across next meals.' : 'Protein pacing is on track.') + ' ' +
+        (k < 80 ? 'You are under target calories today.' : k > 120 ? 'You are above target calories today.' : 'Calories are in range.'))
+      : 'No meals logged today yet. Log your first meal to activate today actions.';
     const card =
       '<div class="coach-bubble coach-integration-nutrition">' +
         '<strong>Today Nutrition Actions</strong><br>' +
-        'Protein ' + p + '% · Calories ' + k + '% · Readiness ' + s.readiness.score + '/100' +
+        'Protein ' + p + '% · Calories ' + k + '% · Meals ' + (tn.mealCount || 0) + ' · Readiness ' + s.readiness.score + '/100' +
         '<div style="margin-top:8px;">' +
-          (p < 85 ? 'Increase protein feeding across next meals.' : 'Protein pacing is on track.') + ' ' +
-          (k < 80 ? 'You are under target calories today.' : k > 120 ? 'You are above target calories today.' : 'Calories are in range.') +
+          guidance +
         '</div>' +
       '</div>';
     _replaceCoachInject(host, 'coach-integration-nutrition', card, 'prepend');
@@ -624,3 +650,4 @@
     } catch (_) {}
   });
 })();
+
