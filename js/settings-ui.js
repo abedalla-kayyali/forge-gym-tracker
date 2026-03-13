@@ -39,3 +39,33 @@ function toggleLightMode(on) {
     ? (_ar ? '��� ������ �����' : 'Light mode on � SOLAR theme applied')
     : (_ar ? '��� ����� �����' : 'Dark mode restored'));
 }
+
+async function forceUpdateApp() {
+  const btn = document.getElementById('force-update-btn');
+  if (btn) btn.disabled = true;
+
+  try {
+    if (typeof showToast === 'function') showToast('Updating app cache...');
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+      } catch (_) {}
+    }
+
+    if ('caches' in window) {
+      try {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      } catch (_) {}
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('updated', Date.now().toString());
+    window.location.replace(url.toString());
+  } catch (_) {
+    if (btn) btn.disabled = false;
+    if (typeof showToast === 'function') showToast('Force update failed. Please refresh manually.');
+  }
+}

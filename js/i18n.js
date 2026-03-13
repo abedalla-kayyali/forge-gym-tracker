@@ -173,6 +173,7 @@ const LANGS = {
     'data.export': 'Export Workouts (CSV)',
     'data.backup': 'Backup All Data (JSON)',
     'data.restore': 'Restore from Backup',
+    'data.forceUpdate': 'Force Update App',
     'data.clear': 'Clear All Data',
 
     // Install
