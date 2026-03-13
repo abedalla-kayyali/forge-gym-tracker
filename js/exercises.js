@@ -762,27 +762,43 @@ function renderBWChart() {
 }
 
 function renderBWHistory() {
-  const list = [...bodyWeight].reverse().slice(0,15);
+  const list = [...bodyWeight].reverse().slice(0, 15);
   const el = document.getElementById('bw-history-list');
   if (!el) return;
+  const isAr = typeof currentLang !== 'undefined' && currentLang === 'ar';
+  const toKg = (n, unit) => String(unit || 'kg').toLowerCase() === 'lbs' ? (+n * 0.453592) : +n;
+  const fmt = (d) => new Date(d).toLocaleDateString(isAr ? 'ar-SA' : 'en-GB', { month: 'short', day: 'numeric' });
+  const txt = {
+    latest: isAr ? 'أحدث قياس' : 'Latest check-in',
+    bodyFat: isAr ? 'دهون' : 'Body Fat',
+    muscle: isAr ? 'عضلات' : 'Muscle'
+  };
   if (!list.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="empty-title">${t('bcomp.noEntries')}</div></div>`;
     return;
   }
   el.innerHTML = '<div style="padding:4px 0;">' + list.map((e,i) => {
-    const prev = list[i+1];
+    const prev = list[i + 1];
     let dc = 'same', dt = '';
     if (prev) {
-      const diff = (e.weight - prev.weight).toFixed(1);
-      if (diff > 0) { dc = 'up'; dt = '+' + diff; }
-      else if (diff < 0) { dc = 'down'; dt = diff; }
+      const diffKg = toKg(e.weight, e.unit) - toKg(prev.weight, prev.unit);
+      const diff = diffKg.toFixed(1);
+      if (diffKg > 0) { dc = 'up'; dt = '+' + diff + ' kg'; }
+      else if (diffKg < 0) { dc = 'down'; dt = diff + ' kg'; }
       else { dt = '—'; }
     }
-    const bfStr = e.bodyFat    ? '<span style="color:#f39c12;"> · ' + e.bodyFat + '% BF</span>' : '';
-    const mmStr = e.muscleMass ? '<span style="color:var(--green);"> · ' + e.muscleMass + 'kg MM</span>' : '';
+    const bfStr = Number.isFinite(parseFloat(e.bodyFat))
+      ? `<span class="bw-meta-chip bf">${txt.bodyFat}: ${(+e.bodyFat).toFixed(1).replace(/\.0$/, '')}%</span>`
+      : '';
+    const mmStr = Number.isFinite(parseFloat(e.muscleMass))
+      ? `<span class="bw-meta-chip mm">${txt.muscle}: ${(+e.muscleMass).toFixed(1).replace(/\.0$/, '')} ${e.unit || 'kg'}</span>`
+      : '';
+    const latestChip = i === 0 ? `<span class="bw-meta-chip">${txt.latest}</span>` : '';
     return '<div class="bw-row">'
-      + '<div class="bw-date">' + new Date(e.date).toLocaleDateString('en-GB',{month:'short',day:'numeric'}) + '</div>'
-      + '<div class="bw-val" style="flex:1;">' + e.weight + ' <span style="font-family:\'DM Mono\';font-size:10px;color:var(--text3);">' + e.unit + '</span>' + bfStr + mmStr + '</div>'
+      + '<div class="bw-date">' + fmt(e.date) + '</div>'
+      + '<div class="bw-val" style="flex:1;">' + (+e.weight).toFixed(1).replace(/\.0$/, '') + ' <span style="font-family:\'DM Mono\';font-size:10px;color:var(--text3);">' + (e.unit || 'kg') + '</span>'
+      + ((bfStr || mmStr || latestChip) ? `<div class="bw-meta-row">${latestChip}${bfStr}${mmStr}</div>` : '')
+      + '</div>'
       + (prev ? '<div class="bw-delta ' + dc + '">' + dt + '</div>' : '')
       + '</div>';
   }).join('') + '</div>';
