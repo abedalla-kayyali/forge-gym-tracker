@@ -36,7 +36,7 @@ Redesign the Cardio Log and Cardio Stats experiences with an "Arcade Energy" aes
 
 ## State Handling
 - Empty all-time cardio log: motivational empty state.
-- Empty selected period: explicit ìno workouts in periodî card.
+- Empty selected period: explicit ‚Äúno workouts in period‚Äù card.
 - No HR zone: chart replaced with informative text panel.
 - Legacy entries: normalized before rendering.
 
