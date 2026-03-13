@@ -6854,6 +6854,8 @@ function _buildMealStreakMap() {
 }
 
 let _nutriFocusMetric = 'protein';
+let _nutriTargetsSyncState = 'idle'; // idle | saving | saved | pending
+let _nutriTargetsSyncAt = 0;
 
 function _nutriSetMetric(metric) {
   const allowed = ['protein', 'kcal', 'carbs', 'fats'];
@@ -6863,14 +6865,28 @@ function _nutriSetMetric(metric) {
 
 function _getNutriCustomTargets() {
   const raw = userProfile?.customNutritionTargets;
-  if (!raw || typeof raw !== 'object') return { enabled: false, kcal: 0, p: 0, c: 0, f: 0 };
+  if (!raw || typeof raw !== 'object') return { enabled: false, kcal: 0, p: 0, c: 0, f: 0, updatedAt: 0 };
   return {
     enabled: !!raw.enabled,
     kcal: Math.max(0, parseFloat(raw.kcal) || 0),
     p: Math.max(0, parseFloat(raw.p) || 0),
     c: Math.max(0, parseFloat(raw.c) || 0),
-    f: Math.max(0, parseFloat(raw.f) || 0)
+    f: Math.max(0, parseFloat(raw.f) || 0),
+    updatedAt: Math.max(0, parseInt(raw.updatedAt, 10) || 0)
   };
+}
+
+function _fmtNutriTargetsSavedAt(ts) {
+  const time = parseInt(ts, 10);
+  const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
+  if (!Number.isFinite(time) || time <= 0) return isAr ? 'لم يتم الحفظ بعد' : 'Not saved yet';
+  try {
+    return new Date(time).toLocaleString(isAr ? 'ar-SA' : 'en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  } catch (_e) {
+    return isAr ? 'الآن' : 'Just now';
+  }
 }
 
 function _nutriSaveCustomTargets() {
@@ -6886,7 +6902,27 @@ function _nutriSaveCustomTargets() {
   }
   if (typeof userProfile !== 'object' || !userProfile) userProfile = {};
   userProfile.customNutritionTargets = { enabled, kcal, p, c, f, updatedAt: Date.now() };
+  _nutriTargetsSyncState = 'saving';
+  _nutriTargetsSyncAt = Date.now();
   try { localStorage.setItem('forge_profile', JSON.stringify(userProfile)); } catch(_e) {}
+  // Persist immediately to cloud so values survive logout/login across devices.
+  (async () => {
+    try {
+      if (typeof _syncPushDebounced === 'function') _syncPushDebounced();
+      if (typeof _syncPushProfile === 'function' && window._sb?.auth?.getSession) {
+        const { data } = await window._sb.auth.getSession();
+        const uid = data?.session?.user?.id;
+        if (uid) await _syncPushProfile(uid);
+      }
+      _nutriTargetsSyncState = 'saved';
+      _nutriTargetsSyncAt = Date.now();
+      renderCoachNutrition();
+    } catch (_err) {
+      _nutriTargetsSyncState = 'pending';
+      _nutriTargetsSyncAt = Date.now();
+      renderCoachNutrition();
+    }
+  })();
   if (typeof showToast === 'function') showToast('Nutrition targets saved', 'success');
   renderCoachNutrition();
 }
@@ -7150,6 +7186,17 @@ function renderCoachNutrition() {
   }
 
   const customTargets = _getNutriCustomTargets();
+  const customSavedAtLabel = _fmtNutriTargetsSavedAt(customTargets.updatedAt);
+  const customSyncText = _nutriTargetsSyncState === 'saving'
+    ? tx('Saving to cloud...', 'جارٍ الحفظ على السحابة...')
+    : _nutriTargetsSyncState === 'pending'
+    ? tx('Saved locally. Cloud sync pending.', 'تم الحفظ محليًا. مزامنة السحابة معلقة.')
+    : _nutriTargetsSyncState === 'saved'
+    ? tx('Saved across devices', 'تم الحفظ والمزامنة عبر الأجهزة')
+    : tx('Ready to save', 'جاهز للحفظ');
+  const customSyncClass = _nutriTargetsSyncState === 'pending' ? 'pending'
+    : _nutriTargetsSyncState === 'saved' ? 'saved'
+    : _nutriTargetsSyncState === 'saving' ? 'saving' : '';
   if (customTargets.enabled) {
     const kcalFromMacros = Math.round((customTargets.p * 4) + (customTargets.c * 4) + (customTargets.f * 9));
     const finalKcal = customTargets.kcal > 0 ? customTargets.kcal : (kcalFromMacros > 0 ? kcalFromMacros : 0);
@@ -7516,9 +7563,13 @@ function renderCoachNutrition() {
       </div>
       <div class="nutri-custom-grid">
         <input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}" ${customTargets.enabled ? '' : 'disabled'}>
-        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="Protein (g)" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
-        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="Carbs (g)" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
-        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="Fats (g)" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Protein (g)','البروتين (غ)')}" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Carbs (g)','الكربوهيدرات (غ)')}" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Fats (g)','الدهون (غ)')}" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+      </div>
+      <div class="nutri-custom-meta ${customSyncClass}">
+        <span>${tx('Last saved','آخر حفظ')}: <strong>${customSavedAtLabel}</strong></span>
+        <span>${customSyncText}</span>
       </div>
     </div>
     <div class="nutrition-grid">

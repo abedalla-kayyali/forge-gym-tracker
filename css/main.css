@@ -4068,6 +4068,33 @@ body[data-theme="solar"] .xp-fill {
   grid-template-columns:repeat(4,1fr);
   gap:8px;
 }
+.nutri-custom-meta{
+  margin-top:8px;
+  border-top:1px dashed var(--border2);
+  padding-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:.4px;
+  color:var(--text3);
+}
+.nutri-custom-meta strong{
+  color:var(--text2);
+  font-weight:700;
+}
+.nutri-custom-meta.saved{
+  color:color-mix(in srgb,var(--accent) 65%,var(--text3));
+}
+.nutri-custom-meta.pending{
+  color:color-mix(in srgb,var(--warn) 70%,var(--text3));
+}
+.nutri-custom-meta.saving{
+  color:color-mix(in srgb,var(--accent) 70%,var(--text3));
+}
 .nutr-val {
   font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--accent);
   line-height:1; letter-spacing:1px;
@@ -7317,6 +7344,42 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .cardio-kpi-value { font-family:'Bebas Neue',sans-serif; font-size:30px; line-height:1; color:#cbffe6; margin-top:2px; }
 .cardio-kpi-sub { font-size:9px; color:#7ea692; margin-top:3px; }
 
+.cardio-insight-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:0 0 10px;
+}
+.cardio-insight-card {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(98,220,178,.14), rgba(98,220,178,0) 55%),
+    linear-gradient(180deg, rgba(10,24,20,.95), rgba(6,16,13,.98));
+  border:1px solid rgba(86,163,129,.35);
+  border-radius:12px;
+  padding:10px;
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+.cardio-insight-icon { width:18px; height:18px; margin-top:2px; flex:0 0 18px; display:inline-flex; }
+.cardio-insight-icon svg { width:18px; height:18px; fill:none; stroke:#8effca; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 0 7px rgba(67,255,153,.22)); }
+.cardio-insight-label { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:1.3px; color:#89c9a9; text-transform:uppercase; }
+.cardio-insight-value { font-family:'Bebas Neue',sans-serif; font-size:28px; line-height:1; color:#d5ffe9; margin-top:2px; }
+.cardio-insight-sub { font-family:'DM Mono',monospace; font-size:9px; color:#86ab9a; margin-top:3px; line-height:1.35; }
+.cardio-coach-tip {
+  grid-column:1 / -1;
+  border:1px solid rgba(104,245,182,.32);
+  border-left:3px solid rgba(104,245,182,.7);
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(12,29,23,.94), rgba(8,19,16,.98));
+  padding:10px 11px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#b8f1d2;
+  line-height:1.5;
+}
+.cardio-coach-tip strong { color:#d7ffe9; }
+
 .cardio-chart-deck { display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:10px; }
 .cardio-chart-card {
   border:1px solid rgba(66,129,104,.36);
@@ -7366,6 +7429,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 
 @media (max-width: 420px) {
   .cardio-kpi-grid { grid-template-columns:1fr; }
+  .cardio-insight-grid { grid-template-columns:1fr; }
   .cardio-badge-grid { grid-template-columns:1fr; }
 }
 

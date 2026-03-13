@@ -28,6 +28,31 @@
     try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
   }
 
+  function _profileTargetsUpdatedAt(profile) {
+    const rawTs = profile?.customNutritionTargets?.updatedAt;
+    const ts = parseInt(rawTs, 10);
+    return Number.isFinite(ts) ? ts : 0;
+  }
+
+  function _mergeProfileData(localProfile, remoteProfile) {
+    const local = (localProfile && typeof localProfile === 'object') ? localProfile : {};
+    const remote = (remoteProfile && typeof remoteProfile === 'object') ? remoteProfile : {};
+    const merged = { ...local, ...remote };
+
+    const localTargets = local.customNutritionTargets;
+    const remoteTargets = remote.customNutritionTargets;
+    const localTs = _profileTargetsUpdatedAt(local);
+    const remoteTs = _profileTargetsUpdatedAt(remote);
+
+    if (localTargets && typeof localTargets === 'object' && (!remoteTargets || localTs > remoteTs)) {
+      merged.customNutritionTargets = localTargets;
+    } else if (remoteTargets && typeof remoteTargets === 'object') {
+      merged.customNutritionTargets = remoteTargets;
+    }
+
+    return merged;
+  }
+
   async function _upsert(table, rows) {
     if (!window._sb || !rows) return;
     if (!Array.isArray(rows)) rows = [rows];
@@ -238,8 +263,11 @@
         window._sb.from('steps').select('date,steps').eq('user_id', userId)
       ]);
 
-      // Profiles
-      if (profileRes.data?.data) _lsSet('forge_profile', profileRes.data.data);
+      // Profiles (preserve freshest nutrition target overrides by timestamp)
+      if (profileRes.data?.data) {
+        const localProfile = _ls('forge_profile') || {};
+        _lsSet('forge_profile', _mergeProfileData(localProfile, profileRes.data.data));
+      }
 
       // Arrays
       if (workoutsRes.data?.length) _lsSet('forge_workouts', workoutsRes.data.map(r => r.data));
