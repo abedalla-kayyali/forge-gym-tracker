@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v63';
-window.FORGE_BUILD   = '2026-03-13 (coach unified state + integrated cardio tab)';
+window.FORGE_VERSION = 'v64';
+window.FORGE_BUILD   = '2026-03-13 (coach phase-2 tab revamp + integrated actions)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

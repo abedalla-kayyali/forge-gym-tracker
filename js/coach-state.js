@@ -301,6 +301,125 @@
     }
   }
 
+  function _coachStartWeightedFromCoach() {
+    if (typeof window.switchView === 'function') window.switchView('log', document.getElementById('bnav-log'));
+    if (typeof window.setWorkoutMode === 'function') window.setWorkoutMode('weighted');
+  }
+
+  function _coachStartBodyweightFromCoach() {
+    if (typeof window.switchView === 'function') window.switchView('log', document.getElementById('bnav-log'));
+    if (typeof window.setWorkoutMode === 'function') window.setWorkoutMode('bodyweight');
+  }
+
+  function _replaceCoachInject(host, cls, html, mode) {
+    if (!host) return;
+    const old = host.querySelector('.' + cls);
+    if (old) old.remove();
+    if (mode === 'append') host.insertAdjacentHTML('beforeend', html);
+    else host.insertAdjacentHTML('afterbegin', html);
+  }
+
+  function _enhanceInsightsTab() {
+    const host = document.getElementById('coach-tab-insights');
+    if (!host) return;
+    const s = buildCoachUnifiedState();
+    const cDiff = s.trends.cardioMins14 - s.trends.cardioMinsPrev14;
+    const wDiff = s.trends.weightedVol14 - s.trends.weightedVolPrev14;
+    const card =
+      '<div class="coach-bubble coach-integration-insights">' +
+        '<strong>Performance Snapshot</strong><br>' +
+        'Readiness ' + s.readiness.score + '/100 · Nutrition ' + s.nutrition.score + '/100 · Active days(7d): ' + s.consistency.activeDays7 +
+        '<div class="coach-kpi-grid" style="margin-top:10px;">' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio Trend (14d)</div><div class="coach-kpi-value">' + (cDiff >= 0 ? '+' : '') + cDiff + '</div><div class="coach-kpi-sub">minutes vs prior 14d</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Lift Volume Trend (14d)</div><div class="coach-kpi-value">' + (wDiff >= 0 ? '+' : '') + Math.round(wDiff) + '</div><div class="coach-kpi-sub">volume vs prior 14d</div></div>' +
+        '</div>' +
+      '</div>';
+    const wrap = host.querySelector('.coach-chat-wrap');
+    if (!wrap) return;
+    const old = host.querySelector('.coach-integration-insights');
+    if (old) old.remove();
+    wrap.insertAdjacentHTML('afterbegin', card);
+  }
+
+  function _enhanceTrainTab() {
+    const host = document.getElementById('coach-tab-train');
+    if (!host) return;
+    const s = buildCoachUnifiedState();
+    const card =
+      '<div class="coach-bubble coach-integration-train">' +
+        '<strong>Mode Launcher</strong><br>' +
+        'Pick your session type directly from Coach. Weekly mix: W ' + s.weekly.weightedSessions + ' · BW ' + s.weekly.bwSessions + ' · Cardio ' + s.weekly.cardioSessions +
+        '<div class="coach-dual-actions" style="margin-top:10px;">' +
+          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">Start Weighted</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">Start Bodyweight</button>' +
+        '</div>' +
+        '<div class="coach-dual-actions" style="margin-top:8px;">' +
+          '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">Start Cardio</button>' +
+          '<button class="coach-action-btn" onclick="_coachOpenCardioAnalytics()">Cardio Analytics</button>' +
+        '</div>' +
+      '</div>';
+    _replaceCoachInject(host, 'coach-integration-train', card, 'prepend');
+  }
+
+  function _enhancePlanTab() {
+    const host = document.getElementById('coach-tab-plan');
+    if (!host) return;
+    const s = buildCoachUnifiedState();
+    const wTarget = 4;
+    const bwTarget = 2;
+    const cTarget = 3;
+    const wp = Math.min(100, Math.round((s.weekly.weightedSessions / wTarget) * 100));
+    const bp = Math.min(100, Math.round((s.weekly.bwSessions / bwTarget) * 100));
+    const cp = Math.min(100, Math.round((s.weekly.cardioSessions / cTarget) * 100));
+    const card =
+      '<div class="coach-bubble coach-integration-plan">' +
+        '<strong>Integrated Weekly Targets</strong><br>' +
+        '<div class="coach-kpi-grid" style="margin-top:10px;">' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Weighted</div><div class="coach-kpi-value">' + s.weekly.weightedSessions + '/' + wTarget + '</div><div class="coach-kpi-sub">' + wp + '% complete</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Bodyweight</div><div class="coach-kpi-value">' + s.weekly.bwSessions + '/' + bwTarget + '</div><div class="coach-kpi-sub">' + bp + '% complete</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio</div><div class="coach-kpi-value">' + s.weekly.cardioSessions + '/' + cTarget + '</div><div class="coach-kpi-sub">' + cp + '% complete</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio Minutes</div><div class="coach-kpi-value">' + s.weekly.cardioMins + '</div><div class="coach-kpi-sub">target 120 min</div></div>' +
+        '</div>' +
+      '</div>';
+    _replaceCoachInject(host, 'coach-integration-plan', card, 'prepend');
+  }
+
+  function _enhanceNutritionTab() {
+    const host = document.getElementById('coach-tab-nutrition');
+    if (!host) return;
+    const s = buildCoachUnifiedState();
+    const p = s.nutrition.proteinPct || 0;
+    const k = s.nutrition.kcalPct || 0;
+    const card =
+      '<div class="coach-bubble coach-integration-nutrition">' +
+        '<strong>Today Nutrition Actions</strong><br>' +
+        'Protein ' + p + '% · Calories ' + k + '% · Readiness ' + s.readiness.score + '/100' +
+        '<div style="margin-top:8px;">' +
+          (p < 85 ? 'Increase protein feeding across next meals.' : 'Protein pacing is on track.') + ' ' +
+          (k < 80 ? 'You are under target calories today.' : k > 120 ? 'You are above target calories today.' : 'Calories are in range.') +
+        '</div>' +
+      '</div>';
+    _replaceCoachInject(host, 'coach-integration-nutrition', card, 'prepend');
+  }
+
+  function _enhanceCaliTab() {
+    const host = document.getElementById('coach-tab-cali');
+    if (!host) return;
+    const s = buildCoachUnifiedState();
+    const goal = 2;
+    const pct = Math.min(100, Math.round((s.weekly.bwSessions / goal) * 100));
+    const card =
+      '<div class="coach-bubble coach-integration-cali">' +
+        '<strong>Calisthenics Weekly Focus</strong><br>' +
+        'BW sessions this week: ' + s.weekly.bwSessions + '/' + goal + ' (' + pct + '%)' +
+        '<div class="coach-dual-actions" style="margin-top:10px;">' +
+          '<button class="coach-action-btn primary" onclick="_coachStartBodyweightFromCoach()">Start BW Session</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">Add Cardio Finish</button>' +
+        '</div>' +
+      '</div>';
+    _replaceCoachInject(host, 'coach-integration-cali', card, 'prepend');
+  }
+
   function renderCoachCardio() {
     const el = document.getElementById('coach-tab-cardio');
     if (!el) return;
@@ -383,12 +502,50 @@
   window.renderCoachCardio = renderCoachCardio;
   window._coachStartCardioFromCoach = _coachStartCardioFromCoach;
   window._coachOpenCardioAnalytics = _coachOpenCardioAnalytics;
+  window._coachStartWeightedFromCoach = _coachStartWeightedFromCoach;
+  window._coachStartBodyweightFromCoach = _coachStartBodyweightFromCoach;
 
   const _origRenderCoachToday = window.renderCoachToday;
+  const _origRenderCoachTrain = window.renderCoachTrain;
+  const _origRenderCoachPlan = window.renderCoachPlan;
+  const _origRenderCoachNutrition = window.renderCoachNutrition;
+  const _origRenderCoachCali = window.renderCoachCali;
+  const _origRenderCoach = window.renderCoach;
+
   if (typeof _origRenderCoachToday === 'function') {
     window.renderCoachToday = function () {
       _origRenderCoachToday();
       _injectTodayBriefCard();
+    };
+  }
+  if (typeof _origRenderCoachTrain === 'function') {
+    window.renderCoachTrain = function () {
+      _origRenderCoachTrain();
+      _enhanceTrainTab();
+    };
+  }
+  if (typeof _origRenderCoachPlan === 'function') {
+    window.renderCoachPlan = function () {
+      _origRenderCoachPlan();
+      _enhancePlanTab();
+    };
+  }
+  if (typeof _origRenderCoachNutrition === 'function') {
+    window.renderCoachNutrition = function () {
+      _origRenderCoachNutrition();
+      _enhanceNutritionTab();
+    };
+  }
+  if (typeof _origRenderCoachCali === 'function') {
+    window.renderCoachCali = function () {
+      _origRenderCoachCali();
+      _enhanceCaliTab();
+    };
+  }
+  if (typeof _origRenderCoach === 'function') {
+    window.renderCoach = function () {
+      _origRenderCoach();
+      _enhanceInsightsTab();
     };
   }
 
