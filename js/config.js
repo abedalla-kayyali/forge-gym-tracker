@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v93';
-window.FORGE_BUILD   = '2026-03-14 (progress tab mobile accordion UX optimization)';
+window.FORGE_VERSION = 'v94';
+window.FORGE_BUILD   = '2026-03-14 (progress mobile compact toolbar + unobstructed collapse controls)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

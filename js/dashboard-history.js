@@ -678,7 +678,7 @@ function _ensureProgressAccordion() {
       btn.onclick = (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
-        _progressAccordionOpenIndex = idx;
+        _progressAccordionOpenIndex = (_progressAccordionOpenIndex === idx) ? -1 : idx;
         _applyProgressAccordion();
       };
       header.appendChild(btn);
@@ -686,6 +686,49 @@ function _ensureProgressAccordion() {
     const title = (header.querySelector('.panel-title')?.textContent || `Panel ${idx + 1}`).trim();
     btn.setAttribute('aria-label', (isAr ? 'فتح أو طي: ' : 'Expand or collapse: ') + title);
   });
+
+  let tools = document.getElementById('progress-compact-tools');
+  if (!tools) {
+    tools = document.createElement('div');
+    tools.id = 'progress-compact-tools';
+    tools.className = 'progress-compact-tools';
+    tools.innerHTML = `
+      <select id="progress-compact-select" class="progress-compact-select" aria-label="Progress section"></select>
+      <button type="button" id="progress-compact-collapse-btn" class="progress-compact-collapse-btn">Collapse</button>
+    `;
+    const periodStrip = document.getElementById('dash-period-strip');
+    if (periodStrip && periodStrip.parentNode) {
+      periodStrip.parentNode.insertBefore(tools, periodStrip.nextSibling);
+    } else {
+      const view = document.getElementById('view-dashboard');
+      if (view) view.insertBefore(tools, view.firstChild);
+    }
+  }
+
+  const sel = document.getElementById('progress-compact-select');
+  if (sel) {
+    sel.innerHTML = panels.map((panel, idx) => {
+      const tEl = panel.querySelector('.panel-title');
+      const title = (tEl ? tEl.textContent : '').trim() || `Panel ${idx + 1}`;
+      return `<option value="${idx}">${title}</option>`;
+    }).join('');
+    sel.onchange = () => {
+      _progressAccordionOpenIndex = parseInt(sel.value, 10);
+      _applyProgressAccordion();
+      const activePanel = panels[_progressAccordionOpenIndex];
+      if (activePanel) activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  }
+
+  const colBtn = document.getElementById('progress-compact-collapse-btn');
+  if (colBtn) {
+    colBtn.textContent = isAr ? 'طي الكل' : 'Collapse all';
+    colBtn.onclick = () => {
+      if (_progressAccordionOpenIndex === -1) _progressAccordionOpenIndex = 0;
+      else _progressAccordionOpenIndex = -1;
+      _applyProgressAccordion();
+    };
+  }
 
   if (!_progressAccordionInit) {
     window.addEventListener('resize', () => {
@@ -701,9 +744,24 @@ function _applyProgressAccordion() {
   const panels = _getProgressPanels();
   const useCompact = _dashActiveTab === 'progress' && _isProgressCompactMobile();
   view.classList.toggle('progress-compact-mode', useCompact);
+  document.body.classList.toggle('progress-compact-active', useCompact);
+
+  const tools = document.getElementById('progress-compact-tools');
+  if (tools) tools.style.display = useCompact ? 'flex' : 'none';
 
   if (!panels.length) return;
-  if (_progressAccordionOpenIndex < 0 || _progressAccordionOpenIndex >= panels.length) _progressAccordionOpenIndex = 0;
+  if (_progressAccordionOpenIndex < -1 || _progressAccordionOpenIndex >= panels.length) _progressAccordionOpenIndex = 0;
+
+  const sel = document.getElementById('progress-compact-select');
+  if (sel && _progressAccordionOpenIndex >= 0) sel.value = String(_progressAccordionOpenIndex);
+
+  const colBtn = document.getElementById('progress-compact-collapse-btn');
+  const isAr = (typeof currentLang !== 'undefined' && currentLang === 'ar');
+  if (colBtn) {
+    colBtn.textContent = _progressAccordionOpenIndex === -1
+      ? (isAr ? 'فتح الأول' : 'Open first')
+      : (isAr ? 'طي الكل' : 'Collapse all');
+  }
 
   panels.forEach((panel, idx) => {
     const btn = panel.querySelector('.prog-acc-toggle');
