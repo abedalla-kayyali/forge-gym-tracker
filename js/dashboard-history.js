@@ -1143,6 +1143,146 @@ function renderMuscleFreshness() {
 // â”€â”€ Volume Panel State + Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let _volRange = '3m', _volMuscle = '';
 let _nutCalChart = null, _nutMacroChart = null, _nutWeekChart = null, _nutScoreChart = null, _nutProteinChart = null;
+let _nutChartModal = null, _nutChartModalTitle = null, _nutChartModalCanvas = null, _nutChartModalChart = null;
+let _nutChartZoomRegistered = false;
+
+function _cloneChartConfigValue(v) {
+  if (Array.isArray(v)) return v.map(_cloneChartConfigValue);
+  if (!v || typeof v !== 'object') return v;
+  const out = {};
+  Object.keys(v).forEach((k) => { out[k] = _cloneChartConfigValue(v[k]); });
+  return out;
+}
+
+function _registerChartZoomPlugin() {
+  if (_nutChartZoomRegistered || !window.Chart || typeof window.Chart.register !== 'function') return;
+  const plugin = window.ChartZoom || window['chartjs-plugin-zoom'];
+  if (!plugin) return;
+  try {
+    window.Chart.register(plugin);
+    _nutChartZoomRegistered = true;
+  } catch (_err) {}
+}
+
+function _ensureNutChartModal() {
+  if (_nutChartModal) return;
+  const modal = document.createElement('div');
+  modal.className = 'nut-chart-modal';
+  modal.innerHTML = `
+    <div class="nut-chart-modal-backdrop" data-close="1"></div>
+    <div class="nut-chart-modal-dialog" role="dialog" aria-modal="true" aria-label="Chart zoom view">
+      <div class="nut-chart-modal-head">
+        <div class="nut-chart-modal-title"></div>
+        <div class="nut-chart-modal-actions">
+          <button class="nut-chart-action" type="button" data-action="zoom-in">+</button>
+          <button class="nut-chart-action" type="button" data-action="zoom-out">-</button>
+          <button class="nut-chart-action" type="button" data-action="reset">Reset</button>
+          <button class="nut-chart-action close" type="button" data-close="1">Close</button>
+        </div>
+      </div>
+      <div class="nut-chart-modal-body"><canvas id="nut-chart-modal-canvas"></canvas></div>
+      <div class="nut-chart-modal-hint">Pinch/wheel to zoom. Drag to pan.</div>
+    </div>`;
+  document.body.appendChild(modal);
+  _nutChartModal = modal;
+  _nutChartModalTitle = modal.querySelector('.nut-chart-modal-title');
+  _nutChartModalCanvas = modal.querySelector('#nut-chart-modal-canvas');
+
+  modal.addEventListener('click', (ev) => {
+    const target = ev.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.dataset.close === '1') {
+      _closeNutChartModal();
+      return;
+    }
+    const action = target.dataset.action;
+    if (!action || !_nutChartModalChart) return;
+    if (action === 'zoom-in' && typeof _nutChartModalChart.zoom === 'function') _nutChartModalChart.zoom(1.2);
+    if (action === 'zoom-out' && typeof _nutChartModalChart.zoom === 'function') _nutChartModalChart.zoom(0.85);
+    if (action === 'reset' && typeof _nutChartModalChart.resetZoom === 'function') _nutChartModalChart.resetZoom();
+  });
+
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && _nutChartModal?.classList.contains('show')) _closeNutChartModal();
+  });
+}
+
+function _closeNutChartModal() {
+  if (_nutChartModalChart) {
+    _nutChartModalChart.destroy();
+    _nutChartModalChart = null;
+  }
+  if (_nutChartModal) _nutChartModal.classList.remove('show');
+}
+
+function _openNutChartModal(sourceChart, titleText) {
+  if (!sourceChart || !window.Chart) return;
+  _registerChartZoomPlugin();
+  _ensureNutChartModal();
+  if (!_nutChartModal || !_nutChartModalCanvas || !_nutChartModalTitle) return;
+
+  if (_nutChartModalChart) {
+    _nutChartModalChart.destroy();
+    _nutChartModalChart = null;
+  }
+  _nutChartModalTitle.textContent = titleText || 'Chart';
+
+  const clonedData = _cloneChartConfigValue(sourceChart.config.data);
+  const clonedOptions = _cloneChartConfigValue(sourceChart.config.options || {});
+  clonedOptions.responsive = true;
+  clonedOptions.maintainAspectRatio = false;
+  clonedOptions.animation = false;
+  clonedOptions.plugins = clonedOptions.plugins || {};
+  clonedOptions.plugins.zoom = {
+    pan: { enabled: true, mode: 'x', modifierKey: null },
+    zoom: {
+      wheel: { enabled: true },
+      pinch: { enabled: true },
+      drag: { enabled: false },
+      mode: 'x'
+    }
+  };
+
+  const clonedPlugins = Array.isArray(sourceChart.config.plugins)
+    ? _cloneChartConfigValue(sourceChart.config.plugins)
+    : [];
+
+  _nutChartModalChart = new Chart(_nutChartModalCanvas.getContext('2d'), {
+    type: sourceChart.config.type,
+    data: clonedData,
+    options: clonedOptions,
+    plugins: clonedPlugins
+  });
+  _nutChartModal.classList.add('show');
+}
+
+function _bindNutritionChartExpanders() {
+  const defs = [
+    { id: 'nut-protein-chart', title: 'Protein Trend (Daily g)', getChart: () => _nutProteinChart },
+    { id: 'nut-cal-chart', title: 'Calorie Trend', getChart: () => _nutCalChart },
+    { id: 'nut-macro-chart', title: 'Macro Split', getChart: () => _nutMacroChart },
+    { id: 'nut-week-chart', title: 'Weekly Calories', getChart: () => _nutWeekChart },
+    { id: 'nut-score-chart', title: 'Day Score', getChart: () => _nutScoreChart }
+  ];
+  defs.forEach((def) => {
+    const canvas = document.getElementById(def.id);
+    if (!canvas || canvas.dataset.zoomBound === '1') return;
+    canvas.dataset.zoomBound = '1';
+    canvas.classList.add('nut-chart-tap-zoom');
+    canvas.title = 'Tap to expand';
+    const card = canvas.closest('.nut-chart-card');
+    if (card && !card.querySelector('.nut-chart-tap-hint')) {
+      const hint = document.createElement('div');
+      hint.className = 'nut-chart-tap-hint';
+      hint.textContent = 'Tap chart to expand';
+      card.appendChild(hint);
+    }
+    canvas.addEventListener('click', () => {
+      const chart = def.getChart();
+      _openNutChartModal(chart, def.title);
+    });
+  });
+}
 
 function setVolRange(r) {
   _volRange = r;
@@ -1817,6 +1957,7 @@ function renderNutritionAnalyticsPanel() {
     _renderMacroDonutChart(avgP, avgC, avgF, compliance, 'nut-macro-chart');
     _renderWeeklyBarChart(targets.targetCal, 'nut-week-chart');
     _renderDayScoreChart(dayScores, 'nut-score-chart');
+    requestAnimationFrame(_bindNutritionChartExpanders);
   });
 
   // Zone 3: Insights
