@@ -9314,13 +9314,13 @@ if (document.readyState === 'loading') {
   </div>
 </div>
 
-<!-- ?? Muscle Detail Modal ?? -->
+<!-- Muscle Detail Modal -->
 <div id="muscle-detail-modal" role="dialog" aria-modal="true">
   <div class="mdc-overlay" onclick="_closeMuscleDetail()"></div>
   <div class="mdc-card">
     <div class="mdc-drag-handle"></div>
     <div class="mdc-header">
-      <div class="mdc-muscle-icon" id="mdc-icon">??</div>
+      <div class="mdc-muscle-icon" id="mdc-icon"></div>
       <div>
         <div class="mdc-muscle-name" id="mdc-name">CHEST</div>
         <div class="mdc-status-badge" id="mdc-badge">Ready</div>
@@ -9331,16 +9331,17 @@ if (document.readyState === 'loading') {
     <div class="mdc-section-lbl">LAST SESSION EXERCISES</div>
     <div id="mdc-exercises"><!-- filled by JS --></div>
     <div class="mdc-stats-row" id="mdc-stats-row">
-      <div class="mdc-stat-item"><div class="mdc-stat-val" id="mdc-vol">?</div><div class="mdc-stat-lbl">Volume kg</div></div>
-      <div class="mdc-stat-item"><div class="mdc-stat-val" id="mdc-sets">?</div><div class="mdc-stat-lbl">Total Sets</div></div>
-      <div class="mdc-stat-item"><div class="mdc-stat-val" id="mdc-excount">?</div><div class="mdc-stat-lbl">Exercises</div></div>
+      <div class="mdc-stat-item"><div class="mdc-stat-val" id="mdc-vol">-</div><div class="mdc-stat-lbl">Volume kg</div></div>
+      <div class="mdc-stat-item"><div class="mdc-stat-val" id="mdc-sets">-</div><div class="mdc-stat-lbl">Total Sets</div></div>
+      <div class="mdc-stat-item"><div class="mdc-stat-val" id="mdc-excount">-</div><div class="mdc-stat-lbl">Exercises</div></div>
     </div>
     <div class="mdc-delta" id="mdc-delta"></div>
     <div class="mdc-actions">
       <button class="mdc-train-btn" id="mdc-train-btn" onclick="_mdcTrainNow()">TRAIN NOW</button>
+      <button class="mdc-download-btn" onclick="_downloadMuscleCard()">DOWNLOAD</button>
       <button class="mdc-share-btn" onclick="_shareMuscleCard()">SHARE</button>
     </div>
-    <div class="mdc-forge-brand">? FORGE GYM TRACKER</div>
+    <div class="mdc-forge-brand">FORGE GYM TRACKER</div>
   </div>
 </div>
 
