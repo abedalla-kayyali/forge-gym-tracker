@@ -88,6 +88,11 @@
     })).filter(e => !!e.date);
   }
 
+  function _mealsLogRef() {
+    if (typeof mealsLog !== 'undefined' && mealsLog && typeof mealsLog === 'object') return mealsLog;
+    return (window.mealsLog && typeof window.mealsLog === 'object') ? window.mealsLog : {};
+  }
+
   function _nutritionTargets() {
     const wtRaw = _toNum(window.userProfile?.weight, 75);
     const wtKg = (window.userProfile?.bwUnit === 'lbs' || window.userProfile?.weightUnit === 'lbs') ? wtRaw * 0.453592 : wtRaw;
@@ -99,7 +104,7 @@
   }
 
   function _nutritionTodayStats() {
-    const mealsLog = window.mealsLog || {};
+    const mealsLog = _mealsLogRef();
     const todayKey = (typeof window._mealTodayKey === 'function') ? window._mealTodayKey() : _iso(new Date());
     const meals = _arr(mealsLog[todayKey]);
     const p = _sum(meals, m => _toNum(m?.p, 0));
@@ -110,11 +115,21 @@
     const proteinComponent = Math.max(0, 100 - Math.abs(100 - proteinPct));
     const kcalComponent = Math.max(0, 100 - Math.abs(100 - kcalPct));
     const score = Math.round((proteinComponent * 0.65) + (kcalComponent * 0.35));
-    return { hasTodayMeals: meals.length > 0, mealCount: meals.length, p, kcal, proteinPct, kcalPct, score };
+    return {
+      hasTodayMeals: meals.length > 0,
+      mealCount: meals.length,
+      p,
+      kcal,
+      proteinPct,
+      kcalPct,
+      score,
+      proteinTarget: targets.proteinTarget,
+      kcalTarget: targets.kcalTarget
+    };
   }
 
   function _nutritionAdherence() {
-    const mealsLog = window.mealsLog || {};
+    const mealsLog = _mealsLogRef();
     const todayKey = (typeof window._mealTodayKey === 'function') ? window._mealTodayKey() : _iso(new Date());
     const todayMeals = _arr(mealsLog[todayKey]);
     let usedKey = todayKey;
@@ -452,15 +467,35 @@
     const tn = _nutritionTodayStats();
     const p = tn.proteinPct || 0;
     const k = tn.kcalPct || 0;
+    const proteinRemain = Math.max(0, Math.round((tn.proteinTarget || 0) - (tn.p || 0)));
+    const kcalRemain = Math.max(0, Math.round((tn.kcalTarget || 0) - (tn.kcal || 0)));
     const guidance = tn.hasTodayMeals
       ? ((p < 85 ? 'Increase protein feeding across next meals.' : 'Protein pacing is on track.') + ' ' +
         (k < 80 ? 'You are under target calories today.' : k > 120 ? 'You are above target calories today.' : 'Calories are in range.'))
       : 'No meals logged today yet. Log your first meal to activate today actions.';
     const card =
       '<div class="coach-bubble coach-integration-nutrition">' +
-        '<strong>Today Nutrition Actions</strong><br>' +
-        'Protein ' + p + '% · Calories ' + k + '% · Meals ' + (tn.mealCount || 0) + ' · Readiness ' + s.readiness.score + '/100' +
-        '<div style="margin-top:8px;">' +
+        '<strong>Today Nutrition Actions</strong>' +
+        '<div class="coach-kpi-grid" style="margin-top:10px;">' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Meals</div><div class="coach-kpi-value">' + (tn.mealCount || 0) + '</div><div class="coach-kpi-sub">logged today</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Protein</div><div class="coach-kpi-value">' + Math.round(tn.p || 0) + 'g</div><div class="coach-kpi-sub">' + p + '% of target</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Calories</div><div class="coach-kpi-value">' + Math.round(tn.kcal || 0) + '</div><div class="coach-kpi-sub">' + k + '% of target</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">Readiness</div><div class="coach-kpi-value">' + s.readiness.score + '/100</div><div class="coach-kpi-sub">training context</div></div>' +
+        '</div>' +
+        '<div style="margin-top:10px;">' +
+          '<div class="coach-kpi-sub" style="margin-bottom:5px;">Protein progress (' + Math.round(tn.p || 0) + '/' + Math.round(tn.proteinTarget || 0) + 'g)</div>' +
+          '<div style="height:7px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;"><div style="height:7px;background:linear-gradient(90deg,#4ade80,var(--accent));width:' + Math.min(100, p) + '%;"></div></div>' +
+          '<div class="coach-kpi-sub" style="margin-top:8px;margin-bottom:5px;">Calorie progress (' + Math.round(tn.kcal || 0) + '/' + Math.round(tn.kcalTarget || 0) + ')</div>' +
+          '<div style="height:7px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;"><div style="height:7px;background:linear-gradient(90deg,#5b8dee,var(--accent));width:' + Math.min(100, k) + '%;"></div></div>' +
+        '</div>' +
+        '<div class="coach-dual-actions" style="margin-top:10px;">' +
+          '<button class="coach-action-btn primary" onclick="switchCoachTab&&switchCoachTab(\'nutrition\')">Log Meal</button>' +
+          '<button class="coach-action-btn" onclick="switchView&&switchView(\'dashboard\',document.getElementById(\'bnav-dashboard\'));switchDashTab&&switchDashTab(\'nutrition\',document.querySelector(\'.dash-tab[data-tab=\\\'nutrition\\\']\'));">Open Nutrition Stats</button>' +
+        '</div>' +
+        '<div style="margin-top:8px;" class="coach-kpi-sub">' +
+          'Remaining today: ' + proteinRemain + 'g protein � ' + kcalRemain + ' kcal' +
+        '</div>' +
+        '<div style="margin-top:6px;">' +
           guidance +
         '</div>' +
       '</div>';
@@ -650,4 +685,5 @@
     } catch (_) {}
   });
 })();
+
 
