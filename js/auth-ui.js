@@ -128,6 +128,29 @@
         left: 10px;
         right: auto;
       }
+      .auth-lang-float {
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 0px) + 10px);
+        right: 12px;
+        z-index: 10002;
+        height: 34px;
+        min-width: 34px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(57,255,143,.42);
+        background: rgba(6,16,12,.85);
+        color: #baffdb;
+        font-family: 'DM Mono', monospace;
+        font-size: .74rem;
+        letter-spacing: 1px;
+        font-weight: 700;
+        box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(57,255,143,.14) inset;
+        cursor: pointer;
+      }
+      [dir="rtl"] #forge-auth .auth-lang-float {
+        right: auto;
+        left: 12px;
+      }
       @keyframes authCardIn {
         from { opacity:0; transform: translateY(28px) scale(.97); }
         to   { opacity:1; transform: translateY(0) scale(1); }
@@ -407,6 +430,7 @@
     <div class="auth-glow-1"></div>
     <div class="auth-glow-2"></div>
     <div class="auth-particles" id="auth-particles"></div>
+    <button class="auth-lang-float" id="auth-lang-float" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
 
     <div class="auth-card">
       <button class="auth-lang-btn" id="auth-lang-btn" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
@@ -621,6 +645,12 @@
       langBtn.textContent = isAr ? 'EN' : 'AR';
       langBtn.title = _authT('langTitle');
       langBtn.setAttribute('aria-label', _authT('langTitle'));
+    }
+    const langFloatBtn = document.getElementById('auth-lang-float');
+    if (langFloatBtn) {
+      langFloatBtn.textContent = isAr ? 'EN' : 'AR';
+      langFloatBtn.title = _authT('langTitle');
+      langFloatBtn.setAttribute('aria-label', _authT('langTitle'));
     }
 
     const emailL = document.getElementById('auth-email-l');
