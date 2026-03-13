@@ -1,9 +1,9 @@
-// FORGE Gym Tracker — i18n / Multilingual System
-// Auto-extracted from index.html — edit here for future translation changes.
+﻿// FORGE Gym Tracker â€” i18n / Multilingual System
+// Auto-extracted from index.html â€” edit here for future translation changes.
 
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  TRANSLATION DICTIONARY
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const LANGS = {
   en: {
     // Header
@@ -12,7 +12,7 @@ const LANGS = {
     'header.edit': 'Edit',
     'header.done': 'DONE',
     'header.editLayout': 'EDIT LAYOUT',
-    'header.editHint': '↑↓ reorder · toggle visibility',
+    'header.editHint': 'â†‘â†“ reorder آ· toggle visibility',
 
     // Mode toggle
     'mode.weighted': 'Weighted',
@@ -38,8 +38,8 @@ const LANGS = {
 
     // Timer
     'timer.title': 'Rest Timer',
-    'timer.start': '▶ Start',
-    'timer.reset': '■ Reset',
+    'timer.start': 'â–¶ Start',
+    'timer.reset': 'â–  Reset',
     'timer.go': 'GO!',
 
     // Indicators
@@ -61,7 +61,7 @@ const LANGS = {
     // Workout form
     'form.muscle': 'Muscle Group',
     'form.exercise': 'Exercise Name',
-    'form.exercisePlaceholder': 'e.g. Bench Press, Squat…',
+    'form.exercisePlaceholder': 'e.g. Bench Press, Squatâ€¦',
     'form.set': 'SET',
     'form.sets': 'Sets',
     'form.weight': 'WEIGHT',
@@ -110,6 +110,16 @@ const LANGS = {
     'history.sessions': 'Sessions',
     'history.totalReps': 'Total Reps',
     'history.bestSet': 'Best Set',
+    'history.entries': 'entries',
+    'history.gamify.currentStreak': 'Current Streak',
+    'history.gamify.days': 'days',
+    'history.gamify.best': 'Best',
+    'history.gamify.prHits': 'PR Hits',
+    'history.gamify.records': 'records',
+    'history.gamify.visibleSessions': 'of all visible sessions',
+    'history.gamify.level': 'History Level',
+    'history.gamify.volumeBank': 'Volume Bank',
+    'history.gamify.activeDays': 'active days',
 
     // PRs
     'prs.title': 'PERSONAL RECORDS',
@@ -178,9 +188,9 @@ const LANGS = {
 
     // Install
     'install.android': 'Android (Chrome)',
-    'install.androidText': 'Tap the three-dot menu → "Add to Home screen" → Install.',
+    'install.androidText': 'Tap the three-dot menu â†’ "Add to Home screen" â†’ Install.',
     'install.ios': 'iPhone (Safari)',
-    'install.iosText': 'Tap the Share button → "Add to Home Screen" → Add.',
+    'install.iosText': 'Tap the Share button â†’ "Add to Home Screen" â†’ Add.',
     'install.apk': 'Get a Real APK',
     'install.apkText': 'Host on GitHub Pages, then use pwabuilder.com for an APK.',
 
@@ -209,15 +219,15 @@ const LANGS = {
     'coach.tab.plan':      'Week Plan',
     'coach.tab.nutrition': 'Nutrition',
     'coach.tab.prs':       'PRs',
-    'coach.status.init':   'Analysing your training…',
+    'coach.status.init':   'Analysing your trainingâ€¦',
 
     // Smart Tips
     'section.tips': 'Smart Tips',
     'section.tipsbadge': 'HINTS',
     'tip.overload.title': 'Progressive Overload',
-    'tip.overload.text': 'Aim to add 2.5–5 kg every 2 weeks. Small gains compound into massive results.',
+    'tip.overload.text': 'Aim to add 2.5â€“5 kg every 2 weeks. Small gains compound into massive results.',
     'tip.timer.title': 'Use the Rest Timer',
-    'tip.timer.text': 'Consistent rest periods (60–120s) lead to better strength performance across sets.',
+    'tip.timer.text': 'Consistent rest periods (60â€“120s) lead to better strength performance across sets.',
 
     // Dashboard stats bar
     'dash.statVol': 'Total Volume',
@@ -241,7 +251,7 @@ const LANGS = {
     'dash.weekly': 'WEEKLY',
     'dash.weightProgress': 'Weight Progress',
     'dash.exercise': 'EXERCISE',
-    'dash.selectExercise': '— Select exercise —',
+    'dash.selectExercise': 'â€” Select exercise â€”',
     'dash.volByMuscle': 'Volume by Muscle',
     'dash.muscleFreq': 'Muscle Frequency',
     'dash.sessions': 'SESSIONS',
@@ -302,7 +312,7 @@ const LANGS = {
     'btn.confirm': 'Confirm',
     'btn.delete': 'Delete',
     'btn.edit': 'Edit',
-    'btn.close': '✕',
+    'btn.close': 'âœ•',
     'lbl.kg': 'kg',
     'lbl.lbs': 'lbs',
     'lbl.days': 'd',
@@ -332,7 +342,7 @@ const LANGS = {
     // Mission banner
     'mission.banner.title': "TODAY'S MISSION",
     'mission.banner.done': 'DONE',
-    'mission.banner.allDone': 'ALL DONE! 🎉',
+    'mission.banner.allDone': 'ALL DONE! ًںژ‰',
 
     // Muscle balance
     'balance.score': 'BALANCE SCORE',
@@ -344,7 +354,7 @@ const LANGS = {
     'balance.msg.excellent': 'Excellent balance! All muscle groups well trained.',
     'balance.msg.good': 'Good balance. Push the weaker muscles harder.',
     'balance.msg.some': 'Some muscles are being neglected. Diversify!',
-    'balance.msg.focus': "Focus needed — you're overtraining some muscles.",
+    'balance.msg.focus': "Focus needed â€” you're overtraining some muscles.",
     'balance.empty': 'Log workouts to see muscle balance',
 
     // Muscle names (translated labels in radar)
@@ -388,7 +398,7 @@ const LANGS = {
     'muscle.map':         '\u{1F5FA} Map',
     'muscle.mapHide':     '\u{1F5FA} Hide',
 
-    // Form — missing orphan key
+    // Form â€” missing orphan key
     'form.noSetsYet':     'Add your first set!',
     'form.browse':        '\uD83D\uDD0D Browse',
     'form.plates':        '\uD83C\uDFCB Plates',
@@ -397,19 +407,19 @@ const LANGS = {
     'form.med':           '\uD83D\uDE24 MED',
     'form.hard':          '\uD83D\uDCAA HARD',
     'form.fail':          '\uD83D\uDE2B FAIL',
-    'form.endSession':    '⚡ END SESSION',
+    'form.endSession':    'âڑ، END SESSION',
     'form.endSessionHint': 'Tap twice to end your workout session',
     'form.selectMuscleBegin': 'select a muscle to begin',
     'form.liveSession':   'LIVE SESSION',
     'form.done':          '\u2714\uFE0F DONE',
 
-    // Stats inner tabs (new — from plan Change 6)
+    // Stats inner tabs (new â€” from plan Change 6)
     'dash.tab.overview':  'Overview',
     'dash.tab.progress':  'Progress',
     'dash.tab.muscles':   'Muscles',
     'dash.tab.body':      'Body',
 
-    // Stats period selector (new — from plan Change 7)
+    // Stats period selector (new â€” from plan Change 7)
     'dash.period.7d':     '7D',
     'dash.period.1m':     '1M',
     'dash.period.3m':     '3M',
@@ -444,7 +454,7 @@ const LANGS = {
     'dash.progHighlights.top':  'TOP LIFT',
     'dash.new':                 'New',
 
-    // Nav — Coach tab (new — from plan Change 1)
+    // Nav â€” Coach tab (new â€” from plan Change 1)
     'nav.coach':          'Coach',
 
     // History filter
@@ -561,18 +571,18 @@ const LANGS = {
   'chip.fresh':      'Fresh',
 
   // Heatmap legend tiers
-  'heat.tier1': 'Trained 0–1d',
-  'heat.tier2': 'Recovering 2–3d',
-  'heat.tier3': 'Ready 4–6d',
-  'heat.tier4': 'Primed 7–13d',
+  'heat.tier1': 'Trained 0â€“1d',
+  'heat.tier2': 'Recovering 2â€“3d',
+  'heat.tier3': 'Ready 4â€“6d',
+  'heat.tier4': 'Primed 7â€“13d',
   'heat.tier5': 'Rested 14+d / never',
 
   // Recovery detail badge
-  'recovery.tier1': '🔴 Trained (0–1d)',
-  'recovery.tier2': '🟠 Recovering (2–3d)',
-  'recovery.tier3': '🟡 Ready (4–6d)',
-  'recovery.tier4': '🟢 Primed (7–13d)',
-  'recovery.tier5': '⚪ Rested (14+d)',
+  'recovery.tier1': 'ًں”´ Trained (0â€“1d)',
+  'recovery.tier2': 'ًںں  Recovering (2â€“3d)',
+  'recovery.tier3': 'ًںں، Ready (4â€“6d)',
+  'recovery.tier4': 'ًںں¢ Primed (7â€“13d)',
+  'recovery.tier5': 'âڑھ Rested (14+d)',
 
   // History / session
   'hist.noWorkouts':      'No workouts yet',
@@ -581,13 +591,13 @@ const LANGS = {
   // Onboarding
   'onb.back':              'Back',
   'onb.skip':              'Skip',
-  'onb.next':              'Next →',
+  'onb.next':              'Next â†’',
   'onb.step':              'STEP',
   'onb.of':                'OF',
   'onb.welcome.title':     'Welcome to FORGE',
   'onb.welcome.sub':       'Your gym. Your rules.',
   'onb.welcome.desc':      'Set up your profile in under a minute and get a personalised training experience.',
-  'onb.welcome.cta':       'Get Started →',
+  'onb.welcome.cta':       'Get Started â†’',
   'onb.name.title':        "What's your name?",
   'onb.name.sub':          "We'll use this to personalise your experience.",
   'onb.name.placeholder':  'e.g. Alex',
@@ -616,26 +626,26 @@ const LANGS = {
   'onb.goal.active.sub':   'Health & wellness',
   'onb.done.title':        "You're all set!",
   'onb.done.sub':          "FORGE is personalised to you. Let's build something.",
-  'onb.done.cta':          "Let's FORGE! 🔥",
-  'onb.toast':             'Welcome to FORGE, {name}! 🔥',
+  'onb.done.cta':          "Let's FORGE! ًں”¥",
+  'onb.toast':             'Welcome to FORGE, {name}! ًں”¥',
   'onb.toast.athlete':     'athlete',
 
-  // ── APP TOUR ──
+  // â”€â”€ APP TOUR â”€â”€
   'tour.back':       'Back',
   'tour.skip':       'Skip',
-  'tour.next':       'Next →',
-  'tour.cta':        "Let's FORGE! 🔥",
+  'tour.next':       'Next â†’',
+  'tour.cta':        "Let's FORGE! ًں”¥",
   'tour.more.title': 'App Tour',
-  'tour.more.sub':   'Replay the feature walkthrough · 60 sec',
+  'tour.more.sub':   'Replay the feature walkthrough آ· 60 sec',
   'tour.s0.tag':     'FORGE GYM OS',
   'tour.s0.title':   'Your Gym OS is Live',
   'tour.s0.sub':     'A 60-second tour of everything FORGE can do for you.',
-  'tour.s1.tag':     'STEP 1 · LOG',
+  'tour.s1.tag':     'STEP 1 آ· LOG',
   'tour.s1.title':   'Log Every Rep',
   'tour.s1.sub':     'Pick a muscle group, find your exercise, track your sets.',
   'tour.s1.f0':      '100+ exercises built-in',
   'tour.s1.f0s':     'Across 9 muscle groups with smart search',
-  'tour.s1.f1':      'Sets · Reps · Weight · Notes',
+  'tour.s1.f1':      'Sets آ· Reps آ· Weight آ· Notes',
   'tour.s1.f1s':     'Plus dropset, warmup & AMRAP markers',
   'tour.s1.f2':      'Last session hint',
   'tour.s1.f2s':     'See what you lifted last time, inline',
@@ -650,7 +660,7 @@ const LANGS = {
   'tour.s2.f2s':     'Every exercise, every milestone',
   'tour.s3.tag':     'RECOVERY',
   'tour.s3.title':   'Rest Like a Pro',
-  'tour.s3.sub':     'The floating ⏱ button sits bottom-right on every screen.',
+  'tour.s3.sub':     'The floating âڈ± button sits bottom-right on every screen.',
   'tour.s3.f0':      'Tap after each set',
   'tour.s3.f0s':     'Start your rest countdown instantly',
   'tour.s3.f1':      'Vibration + audio alert',
@@ -669,7 +679,7 @@ const LANGS = {
   'tour.s5.tag':     'GAMIFICATION',
   'tour.s5.title':   'Level Up Daily',
   'tour.s5.sub':     'Every rep earns XP. Missions push you past your limits.',
-  'tour.s5.f0':      'Rookie → Veteran → Legend',
+  'tour.s5.f0':      'Rookie â†’ Veteran â†’ Legend',
   'tour.s5.f0s':     '10 ranks to climb, each one harder',
   'tour.s5.f1':      'Daily & weekly missions',
   'tour.s5.f1s':     'Fresh challenges every single day',
@@ -680,7 +690,7 @@ const LANGS = {
   'tour.s6.sub':     'FORGE reads your training data and adapts to you daily.',
   'tour.s6.f0':      'Daily readiness score',
   'tour.s6.f0s':     'Know when to push hard or recover',
-  'tour.s6.f1':      'PPL, 5/3/1, 5×5 programs',
+  'tour.s6.f1':      'PPL, 5/3/1, 5أ—5 programs',
   'tour.s6.f1s':     'Science-based templates, one tap to start',
   'tour.s6.f2':      'Nutrition & macro targets',
   'tour.s6.f2s':     'Calories & protein tailored to your goal',
@@ -698,11 +708,11 @@ const LANGS = {
 
   // B1: RPE
   'settings.rpe':    'Show RPE per Set',
-  'settings.rpeSub': 'Rate of Perceived Exertion (1–10)',
+  'settings.rpeSub': 'Rate of Perceived Exertion (1â€“10)',
   'form.rpe':        'RPE',
 
   // B2: Swap
-  'form.swap':       '↔ Swap',
+  'form.swap':       'â†” Swap',
   'swap.sub':        'Pick an alternative for the same muscle:',
   'swap.cancel':     'Cancel',
 
@@ -715,385 +725,395 @@ const LANGS = {
 
   ar: {
     // Header
-    'app.title': 'فورج',
-    'app.subtitle': '// تتبع التمارين',
-    'header.edit': 'تعديل',
-    'header.done': 'تم',
-    'header.editLayout': 'تعديل التخطيط',
-    'header.editHint': '↑↓ إعادة ترتيب · إخفاء/إظهار',
+    'app.title': 'ظپظˆط±ط¬',
+    'app.subtitle': '// طھطھط¨ط¹ ط§ظ„طھظ…ط§ط±ظٹظ†',
+    'header.edit': 'طھط¹ط¯ظٹظ„',
+    'header.done': 'طھظ…',
+    'header.editLayout': 'طھط¹ط¯ظٹظ„ ط§ظ„طھط®ط·ظٹط·',
+    'header.editHint': 'â†‘â†“ ط¥ط¹ط§ط¯ط© طھط±طھظٹط¨ آ· ط¥ط®ظپط§ط،/ط¥ط¸ظ‡ط§ط±',
 
     // Mode toggle
-    'mode.weighted': 'أوزان',
-    'mode.bodyweight': 'وزن الجسم',
+    'mode.weighted': 'ط£ظˆط²ط§ظ†',
+    'mode.bodyweight': 'ظˆط²ظ† ط§ظ„ط¬ط³ظ…',
 
     // Sections
-    'section.steps': 'الخطوات',
-    'section.timer': 'مؤقت الراحة',
-    'section.indicators': 'الإحصائيات',
-    'section.mission': 'مهمة اليوم',
-    'section.templates': 'القوالب',
-    'section.bodymap': 'خريطة الجسم',
-    'section.coach': 'المدرب الذكي',
+    'section.steps': 'ط§ظ„ط®ط·ظˆط§طھ',
+    'section.timer': 'ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©',
+    'section.indicators': 'ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ',
+    'section.mission': 'ظ…ظ‡ظ…ط© ط§ظ„ظٹظˆظ…',
+    'section.templates': 'ط§ظ„ظ‚ظˆط§ظ„ط¨',
+    'section.bodymap': 'ط®ط±ظٹط·ط© ط§ظ„ط¬ط³ظ…',
+    'section.coach': 'ط§ظ„ظ…ط¯ط±ط¨ ط§ظ„ط°ظƒظٹ',
 
     // Steps panel
-    'steps.title': 'خطوات اليوم',
-    'steps.goal': 'الهدف',
-    'steps.add': '+ إضافة خطوات',
-    'steps.addBtn': 'إضافة',
-    'steps.streak': 'أيام متتالية',
-    'steps.today': 'اليوم',
-    'steps.placeholder': 'أدخل عدد الخطوات...',
+    'steps.title': 'ط®ط·ظˆط§طھ ط§ظ„ظٹظˆظ…',
+    'steps.goal': 'ط§ظ„ظ‡ط¯ظپ',
+    'steps.add': '+ ط¥ط¶ط§ظپط© ط®ط·ظˆط§طھ',
+    'steps.addBtn': 'ط¥ط¶ط§ظپط©',
+    'steps.streak': 'ط£ظٹط§ظ… ظ…طھطھط§ظ„ظٹط©',
+    'steps.today': 'ط§ظ„ظٹظˆظ…',
+    'steps.placeholder': 'ط£ط¯ط®ظ„ ط¹ط¯ط¯ ط§ظ„ط®ط·ظˆط§طھ...',
 
     // Timer
-    'timer.title': 'مؤقت الراحة',
-    'timer.start': '▶ بدء',
-    'timer.reset': '■ إعادة',
-    'timer.go': 'انطلق!',
+    'timer.title': 'ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©',
+    'timer.start': 'â–¶ ط¨ط¯ط،',
+    'timer.reset': 'â–  ط¥ط¹ط§ط¯ط©',
+    'timer.go': 'ط§ظ†ط·ظ„ظ‚!',
 
     // Indicators
-    'ind.volume': 'حجم تمارين اليوم',
-    'ind.streak': 'أيام متتالية',
-    'ind.prs': 'إجمالي الأرقام القياسية',
-    'ind.week': 'هذا الأسبوع',
-    'ind.allTime': 'كل الوقت',
-    'ind.sessions': 'جلسات',
-    'ind.start': 'ابدأ التسجيل',
-    'ind.keepGoing': 'استمر!',
+    'ind.volume': 'ط­ط¬ظ… طھظ…ط§ط±ظٹظ† ط§ظ„ظٹظˆظ…',
+    'ind.streak': 'ط£ظٹط§ظ… ظ…طھطھط§ظ„ظٹط©',
+    'ind.prs': 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'ind.week': 'ظ‡ط°ط§ ط§ظ„ط£ط³ط¨ظˆط¹',
+    'ind.allTime': 'ظƒظ„ ط§ظ„ظˆظ‚طھ',
+    'ind.sessions': 'ط¬ظ„ط³ط§طھ',
+    'ind.start': 'ط§ط¨ط¯ط£ ط§ظ„طھط³ط¬ظٹظ„',
+    'ind.keepGoing': 'ط§ط³طھظ…ط±!',
 
     // Mission
-    'mission.title': 'مهمة اليوم',
-    'mission.complete': 'مكتملة',
-    'mission.locked': 'مقفلة',
-    'mission.reward': 'المكافأة',
+    'mission.title': 'ظ…ظ‡ظ…ط© ط§ظ„ظٹظˆظ…',
+    'mission.complete': 'ظ…ظƒطھظ…ظ„ط©',
+    'mission.locked': 'ظ…ظ‚ظپظ„ط©',
+    'mission.reward': 'ط§ظ„ظ…ظƒط§ظپط£ط©',
 
     // Workout form
-    'form.muscle': 'مجموعة العضلات',
-    'form.exercise': 'اسم التمرين',
-    'form.exercisePlaceholder': 'مثال: ضغط الصدر، القرفصاء…',
-    'form.set': 'مجموعة',
-    'form.sets': 'المجموعات',
-    'form.weight': 'الوزن',
-    'form.reps': 'التكرارات',
-    'form.addSet': '+ إضافة مجموعة',
-    'form.save': 'تسجيل التمرين',
-    'form.lastHint': 'الجلسة السابقة',
-    'form.unit': 'الوحدة',
-    'form.notes': 'ملاحظات',
-    'form.notesOptional': 'ملاحظات (اختياري)',
-    'form.notesPlaceholder': 'كيف شعرت؟ أي أرقام قياسية؟',
-    'form.selectMuscle': 'اختر العضلة',
-    'form.selectExercise': 'اختر التمرين',
-    'form.quickSelect': 'اختيار سريع',
-    'form.recent': 'الأخيرة',
-    'form.targeting': 'استهداف',
+    'form.muscle': 'ظ…ط¬ظ…ظˆط¹ط© ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'form.exercise': 'ط§ط³ظ… ط§ظ„طھظ…ط±ظٹظ†',
+    'form.exercisePlaceholder': 'ظ…ط«ط§ظ„: ط¶ط؛ط· ط§ظ„طµط¯ط±طŒ ط§ظ„ظ‚ط±ظپطµط§ط،â€¦',
+    'form.set': 'ظ…ط¬ظ…ظˆط¹ط©',
+    'form.sets': 'ط§ظ„ظ…ط¬ظ…ظˆط¹ط§طھ',
+    'form.weight': 'ط§ظ„ظˆط²ظ†',
+    'form.reps': 'ط§ظ„طھظƒط±ط§ط±ط§طھ',
+    'form.addSet': '+ ط¥ط¶ط§ظپط© ظ…ط¬ظ…ظˆط¹ط©',
+    'form.save': 'طھط³ط¬ظٹظ„ ط§ظ„طھظ…ط±ظٹظ†',
+    'form.lastHint': 'ط§ظ„ط¬ظ„ط³ط© ط§ظ„ط³ط§ط¨ظ‚ط©',
+    'form.unit': 'ط§ظ„ظˆط­ط¯ط©',
+    'form.notes': 'ظ…ظ„ط§ط­ط¸ط§طھ',
+    'form.notesOptional': 'ظ…ظ„ط§ط­ط¸ط§طھ (ط§ط®طھظٹط§ط±ظٹ)',
+    'form.notesPlaceholder': 'ظƒظٹظپ ط´ط¹ط±طھطں ط£ظٹ ط£ط±ظ‚ط§ظ… ظ‚ظٹط§ط³ظٹط©طں',
+    'form.selectMuscle': 'ط§ط®طھط± ط§ظ„ط¹ط¶ظ„ط©',
+    'form.selectExercise': 'ط§ط®طھط± ط§ظ„طھظ…ط±ظٹظ†',
+    'form.quickSelect': 'ط§ط®طھظٹط§ط± ط³ط±ظٹط¹',
+    'form.recent': 'ط§ظ„ط£ط®ظٹط±ط©',
+    'form.targeting': 'ط§ط³طھظ‡ط¯ط§ظپ',
 
     // BW workout
-    'bw.title': 'تمرين وزن الجسم',
-    'bw.exercise': 'التمرين',
-    'bw.effort': 'الجهد',
-    'bw.reps': 'تكرارات',
-    'bw.sets': 'مجموعات',
-    'bw.save': 'حفظ التمرين',
-    'bw.easy': 'سهل',
-    'bw.medium': 'متوسط',
-    'bw.hard': 'صعب',
-    'bw.max': 'أقصى',
-    'bw.addSet': '+ إضافة مجموعة',
-    'bw.selectExercise': 'اختر التمرين',
+    'bw.title': 'طھظ…ط±ظٹظ† ظˆط²ظ† ط§ظ„ط¬ط³ظ…',
+    'bw.exercise': 'ط§ظ„طھظ…ط±ظٹظ†',
+    'bw.effort': 'ط§ظ„ط¬ظ‡ط¯',
+    'bw.reps': 'طھظƒط±ط§ط±ط§طھ',
+    'bw.sets': 'ظ…ط¬ظ…ظˆط¹ط§طھ',
+    'bw.save': 'ط­ظپط¸ ط§ظ„طھظ…ط±ظٹظ†',
+    'bw.easy': 'ط³ظ‡ظ„',
+    'bw.medium': 'ظ…طھظˆط³ط·',
+    'bw.hard': 'طµط¹ط¨',
+    'bw.max': 'ط£ظ‚طµظ‰',
+    'bw.addSet': '+ ط¥ط¶ط§ظپط© ظ…ط¬ظ…ظˆط¹ط©',
+    'bw.selectExercise': 'ط§ط®طھط± ط§ظ„طھظ…ط±ظٹظ†',
 
     // History
-    'history.title': 'سجل التمارين',
-    'history.filter.muscle': 'كل العضلات',
-    'history.filter.exercise': 'ابحث عن تمرين...',
-    'history.filter.newest': 'الأحدث أولاً',
-    'history.filter.oldest': 'الأقدم أولاً',
-    'history.filter.volume': 'الأعلى حجماً',
-    'history.empty': 'لا توجد تمارين بعد',
-    'history.emptyHint': 'سجّل جلستك الأولى!',
-    'history.set': 'مجموعة',
-    'history.sets': 'مجموعات',
-    'history.reps': 'تكرار',
-    'history.vol': 'حجم',
-    'history.pr': 'رقم قياسي',
-    'history.sessions': 'جلسات',
-    'history.totalReps': 'إجمالي التكرارات',
-    'history.bestSet': 'أفضل مجموعة',
+    'history.title': 'ط³ط¬ظ„ ط§ظ„طھظ…ط§ط±ظٹظ†',
+    'history.filter.muscle': 'ظƒظ„ ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'history.filter.exercise': 'ط§ط¨ط­ط« ط¹ظ† طھظ…ط±ظٹظ†...',
+    'history.filter.newest': 'ط§ظ„ط£ط­ط¯ط« ط£ظˆظ„ط§ظ‹',
+    'history.filter.oldest': 'ط§ظ„ط£ظ‚ط¯ظ… ط£ظˆظ„ط§ظ‹',
+    'history.filter.volume': 'ط§ظ„ط£ط¹ظ„ظ‰ ط­ط¬ظ…ط§ظ‹',
+    'history.empty': 'ظ„ط§ طھظˆط¬ط¯ طھظ…ط§ط±ظٹظ† ط¨ط¹ط¯',
+    'history.emptyHint': 'ط³ط¬ظ‘ظ„ ط¬ظ„ط³طھظƒ ط§ظ„ط£ظˆظ„ظ‰!',
+    'history.set': 'ظ…ط¬ظ…ظˆط¹ط©',
+    'history.sets': 'ظ…ط¬ظ…ظˆط¹ط§طھ',
+    'history.reps': 'طھظƒط±ط§ط±',
+    'history.vol': 'ط­ط¬ظ…',
+    'history.pr': 'ط±ظ‚ظ… ظ‚ظٹط§ط³ظٹ',
+    'history.sessions': 'ط¬ظ„ط³ط§طھ',
+    'history.totalReps': 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„طھظƒط±ط§ط±ط§طھ',
+    'history.bestSet': 'ط£ظپط¶ظ„ ظ…ط¬ظ…ظˆط¹ط©',
+    'history.entries': 'ط¥ط¯ط®ط§ظ„',
+    'history.gamify.currentStreak': 'ط§ظ„طھطھط§ظ„ظٹ ط§ظ„ط­ط§ظ„ظٹ',
+    'history.gamify.days': 'ظٹظˆظ…',
+    'history.gamify.best': 'ط§ظ„ط£ظپط¶ظ„',
+    'history.gamify.prHits': 'ط¥ظ†ط¬ط§ط²ط§طھ PR',
+    'history.gamify.records': 'ط¥ظ†ط¬ط§ط²',
+    'history.gamify.visibleSessions': 'ظ…ظ† ظƒظ„ ط§ظ„ط¬ظ„ط³ط§طھ ط§ظ„ظ…ط¹ط±ظˆط¶ط©',
+    'history.gamify.level': 'ظ…ط³طھظˆظ‰ ط§ظ„ط³ط¬ظ„',
+    'history.gamify.volumeBank': 'ظ…ط®ط²ظˆظ† ط§ظ„ط­ط¬ظ…',
+    'history.gamify.activeDays': 'ط£ظٹط§ظ… ظ†ط´ط·ط©',
 
     // PRs
-    'prs.title': 'الأرقام القياسية',
-    'prs.weighted': 'أرقام الأوزان',
-    'prs.bodyweight': 'أرقام وزن الجسم',
-    'prs.empty': 'لا توجد أرقام قياسية بعد',
-    'prs.emptyHint': 'ابدأ التسجيل لتسجيل الأرقام!',
-    'prs.best': 'الأفضل',
-    'prs.reps': 'تكرار',
+    'prs.title': 'ط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'prs.weighted': 'ط£ط±ظ‚ط§ظ… ط§ظ„ط£ظˆط²ط§ظ†',
+    'prs.bodyweight': 'ط£ط±ظ‚ط§ظ… ظˆط²ظ† ط§ظ„ط¬ط³ظ…',
+    'prs.empty': 'ظ„ط§ طھظˆط¬ط¯ ط£ط±ظ‚ط§ظ… ظ‚ظٹط§ط³ظٹط© ط¨ط¹ط¯',
+    'prs.emptyHint': 'ط§ط¨ط¯ط£ ط§ظ„طھط³ط¬ظٹظ„ ظ„طھط³ط¬ظٹظ„ ط§ظ„ط£ط±ظ‚ط§ظ…!',
+    'prs.best': 'ط§ظ„ط£ظپط¶ظ„',
+    'prs.reps': 'طھظƒط±ط§ط±',
 
     // Dashboard
-    'dash.title': 'الإحصائيات',
-    'dash.volume': 'توزيع الحجم',
-    'dash.frequency': 'التكرار',
-    'dash.water': 'متتبع الماء',
-    'dash.body': 'تكوين الجسم',
-    'dash.today': 'اليوم',
-    'dash.week': 'هذا الأسبوع',
-    'dash.month': 'هذا الشهر',
-    'dash.addWater': '+ كوب',
-    'dash.waterGoal': 'الهدف اليومي',
-    'dash.glasses': 'أكواب',
+    'dash.title': 'ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ',
+    'dash.volume': 'طھظˆط²ظٹط¹ ط§ظ„ط­ط¬ظ…',
+    'dash.frequency': 'ط§ظ„طھظƒط±ط§ط±',
+    'dash.water': 'ظ…طھطھط¨ط¹ ط§ظ„ظ…ط§ط،',
+    'dash.body': 'طھظƒظˆظٹظ† ط§ظ„ط¬ط³ظ…',
+    'dash.today': 'ط§ظ„ظٹظˆظ…',
+    'dash.week': 'ظ‡ط°ط§ ط§ظ„ط£ط³ط¨ظˆط¹',
+    'dash.month': 'ظ‡ط°ط§ ط§ظ„ط´ظ‡ط±',
+    'dash.addWater': '+ ظƒظˆط¨',
+    'dash.waterGoal': 'ط§ظ„ظ‡ط¯ظپ ط§ظ„ظٹظˆظ…ظٹ',
+    'dash.glasses': 'ط£ظƒظˆط§ط¨',
 
     // More view
-    'more.profile': 'الملف الشخصي',
-    'more.settings': 'الإعدادات',
-    'more.templates': 'قوالبي',
-    'more.data': 'البيانات والتصدير',
-    'more.install': 'التثبيت على الهاتف',
-    'more.bwHistory': 'سجل وزن الجسم',
-    'more.bodyComp': 'تكوين الجسم',
-    'more.guide': 'دليل المستخدم',
+    'more.profile': 'ط§ظ„ظ…ظ„ظپ ط§ظ„ط´ط®طµظٹ',
+    'more.settings': 'ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ',
+    'more.templates': 'ظ‚ظˆط§ظ„ط¨ظٹ',
+    'more.data': 'ط§ظ„ط¨ظٹط§ظ†ط§طھ ظˆط§ظ„طھطµط¯ظٹط±',
+    'more.install': 'ط§ظ„طھط«ط¨ظٹطھ ط¹ظ„ظ‰ ط§ظ„ظ‡ط§طھظپ',
+    'more.bwHistory': 'ط³ط¬ظ„ ظˆط²ظ† ط§ظ„ط¬ط³ظ…',
+    'more.bodyComp': 'طھظƒظˆظٹظ† ط§ظ„ط¬ط³ظ…',
+    'more.guide': 'ط¯ظ„ظٹظ„ ط§ظ„ظ…ط³طھط®ط¯ظ…',
 
     // Guide
-    'guide.title': 'دليل المستخدم',
-    'guide.badge': 'شامل',
-    'guide.tab.start': 'البداية',
-    'guide.tab.log': 'التسجيل',
-    'guide.tab.score': 'التقييم',
-    'guide.tab.features': 'المميزات',
+    'guide.title': 'ط¯ظ„ظٹظ„ ط§ظ„ظ…ط³طھط®ط¯ظ…',
+    'guide.badge': 'ط´ط§ظ…ظ„',
+    'guide.tab.start': 'ط§ظ„ط¨ط¯ط§ظٹط©',
+    'guide.tab.log': 'ط§ظ„طھط³ط¬ظٹظ„',
+    'guide.tab.score': 'ط§ظ„طھظ‚ظٹظٹظ…',
+    'guide.tab.features': 'ط§ظ„ظ…ظ…ظٹط²ط§طھ',
 
     // Profile
-    'profile.level': 'المستوى',
-    'profile.xp': 'نقاط الخبرة',
-    'profile.workouts': 'التمارين',
-    'profile.streak': 'التتالي',
-    'profile.prs': 'الأرقام القياسية',
-    'profile.editName': 'تعديل الاسم',
+    'profile.level': 'ط§ظ„ظ…ط³طھظˆظ‰',
+    'profile.xp': 'ظ†ظ‚ط§ط· ط§ظ„ط®ط¨ط±ط©',
+    'profile.workouts': 'ط§ظ„طھظ…ط§ط±ظٹظ†',
+    'profile.streak': 'ط§ظ„طھطھط§ظ„ظٹ',
+    'profile.prs': 'ط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'profile.editName': 'طھط¹ط¯ظٹظ„ ط§ظ„ط§ط³ظ…',
 
     // Settings
-    'settings.title': 'الإعدادات',
-    'settings.unit': 'وحدة الوزن',
-    'settings.sound': 'صوت مؤقت الراحة',
-    'settings.soundHint': 'اهتزاز وصوت تنبيه عند انتهاء الراحة',
-    'settings.hint': 'عرض تلميح الجلسة السابقة',
-    'settings.hintHint': 'يعرض المجموعات السابقة عند التسجيل',
-    'settings.language': 'اللغة',
-    'settings.theme': 'المظهر',
+    'settings.title': 'ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ',
+    'settings.unit': 'ظˆط­ط¯ط© ط§ظ„ظˆط²ظ†',
+    'settings.sound': 'طµظˆطھ ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©',
+    'settings.soundHint': 'ط§ظ‡طھط²ط§ط² ظˆطµظˆطھ طھظ†ط¨ظٹظ‡ ط¹ظ†ط¯ ط§ظ†طھظ‡ط§ط، ط§ظ„ط±ط§ط­ط©',
+    'settings.hint': 'ط¹ط±ط¶ طھظ„ظ…ظٹط­ ط§ظ„ط¬ظ„ط³ط© ط§ظ„ط³ط§ط¨ظ‚ط©',
+    'settings.hintHint': 'ظٹط¹ط±ط¶ ط§ظ„ظ…ط¬ظ…ظˆط¹ط§طھ ط§ظ„ط³ط§ط¨ظ‚ط© ط¹ظ†ط¯ ط§ظ„طھط³ط¬ظٹظ„',
+    'settings.language': 'ط§ظ„ظ„ط؛ط©',
+    'settings.theme': 'ط§ظ„ظ…ط¸ظ‡ط±',
 
     // Data
-    'data.export': 'تصدير التمارين (CSV)',
-    'data.backup': 'نسخ احتياطي للبيانات (JSON)',
-    'data.restore': 'استعادة من النسخة الاحتياطية',
-    'data.clear': 'مسح جميع البيانات',
+    'data.export': 'طھطµط¯ظٹط± ط§ظ„طھظ…ط§ط±ظٹظ† (CSV)',
+    'data.backup': 'ظ†ط³ط® ط§ط­طھظٹط§ط·ظٹ ظ„ظ„ط¨ظٹط§ظ†ط§طھ (JSON)',
+    'data.restore': 'ط§ط³طھط¹ط§ط¯ط© ظ…ظ† ط§ظ„ظ†ط³ط®ط© ط§ظ„ط§ط­طھظٹط§ط·ظٹط©',
+    'data.clear': 'ظ…ط³ط­ ط¬ظ…ظٹط¹ ط§ظ„ط¨ظٹط§ظ†ط§طھ',
 
     // Install
-    'install.android': 'أندرويد (Chrome)',
-    'install.androidText': 'اضغط القائمة ← "إضافة إلى الشاشة الرئيسية" ← تثبيت.',
-    'install.ios': 'آيفون (Safari)',
-    'install.iosText': 'اضغط مشاركة ← "إضافة إلى الشاشة الرئيسية" ← إضافة.',
-    'install.apk': 'الحصول على APK',
-    'install.apkText': 'استضف التطبيق على GitHub Pages ثم استخدم pwabuilder.com للحصول على APK.',
+    'install.android': 'ط£ظ†ط¯ط±ظˆظٹط¯ (Chrome)',
+    'install.androidText': 'ط§ط¶ط؛ط· ط§ظ„ظ‚ط§ط¦ظ…ط© â†گ "ط¥ط¶ط§ظپط© ط¥ظ„ظ‰ ط§ظ„ط´ط§ط´ط© ط§ظ„ط±ط¦ظٹط³ظٹط©" â†گ طھط«ط¨ظٹطھ.',
+    'install.ios': 'ط¢ظٹظپظˆظ† (Safari)',
+    'install.iosText': 'ط§ط¶ط؛ط· ظ…ط´ط§ط±ظƒط© â†گ "ط¥ط¶ط§ظپط© ط¥ظ„ظ‰ ط§ظ„ط´ط§ط´ط© ط§ظ„ط±ط¦ظٹط³ظٹط©" â†گ ط¥ط¶ط§ظپط©.',
+    'install.apk': 'ط§ظ„ط­طµظˆظ„ ط¹ظ„ظ‰ APK',
+    'install.apkText': 'ط§ط³طھط¶ظپ ط§ظ„طھط·ط¨ظٹظ‚ ط¹ظ„ظ‰ GitHub Pages ط«ظ… ط§ط³طھط®ط¯ظ… pwabuilder.com ظ„ظ„ط­طµظˆظ„ ط¹ظ„ظ‰ APK.',
 
     // Body map
-    'bodymap.title': 'خريطة الجسم',
-    'bodymap.front': 'أمامي',
-    'bodymap.back': 'خلفي',
-    'bodymap.tap': 'اضغط على عضلة للتسجيل',
-    'bodymap.selected': 'المختار',
-    'bodymap.train': 'تدريب هذه العضلة',
-    'bodymap.muscleGroup': 'مجموعة العضلات',
-    'bodymap.tapBody': 'اضغط الجسم',
+    'bodymap.title': 'ط®ط±ظٹط·ط© ط§ظ„ط¬ط³ظ…',
+    'bodymap.front': 'ط£ظ…ط§ظ…ظٹ',
+    'bodymap.back': 'ط®ظ„ظپظٹ',
+    'bodymap.tap': 'ط§ط¶ط؛ط· ط¹ظ„ظ‰ ط¹ط¶ظ„ط© ظ„ظ„طھط³ط¬ظٹظ„',
+    'bodymap.selected': 'ط§ظ„ظ…ط®طھط§ط±',
+    'bodymap.train': 'طھط¯ط±ظٹط¨ ظ‡ط°ظ‡ ط§ظ„ط¹ط¶ظ„ط©',
+    'bodymap.muscleGroup': 'ظ…ط¬ظ…ظˆط¹ط© ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'bodymap.tapBody': 'ط§ط¶ط؛ط· ط§ظ„ط¬ط³ظ…',
 
     // Muscle overlay
-    'overlay.history': 'السجل',
-    'overlay.tips': 'نصائح',
-    'overlay.exercises': 'التمارين',
-    'overlay.sessions': 'جلسات مسجلة',
-    'overlay.totalVol': 'إجمالي الحجم',
-    'overlay.bestPR': 'أفضل رقم',
-    'overlay.lastTrained': 'آخر تدريب',
-    'overlay.noWorkouts': 'لا توجد تمارين بعد',
+    'overlay.history': 'ط§ظ„ط³ط¬ظ„',
+    'overlay.tips': 'ظ†طµط§ط¦ط­',
+    'overlay.exercises': 'ط§ظ„طھظ…ط§ط±ظٹظ†',
+    'overlay.sessions': 'ط¬ظ„ط³ط§طھ ظ…ط³ط¬ظ„ط©',
+    'overlay.totalVol': 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط­ط¬ظ…',
+    'overlay.bestPR': 'ط£ظپط¶ظ„ ط±ظ‚ظ…',
+    'overlay.lastTrained': 'ط¢ط®ط± طھط¯ط±ظٹط¨',
+    'overlay.noWorkouts': 'ظ„ط§ طھظˆط¬ط¯ طھظ…ط§ط±ظٹظ† ط¨ط¹ط¯',
 
     // Coach tabs & status
-    'coach.tab.insights':  'التحليلات',
-    'coach.tab.plan':      'الخطة الأسبوعية',
-    'coach.tab.nutrition': 'التغذية',
-    'coach.tab.prs':       'الأرقام القياسية',
-    'coach.status.init':   'جارٍ تحليل تدريبك…',
+    'coach.tab.insights':  'ط§ظ„طھط­ظ„ظٹظ„ط§طھ',
+    'coach.tab.plan':      'ط§ظ„ط®ط·ط© ط§ظ„ط£ط³ط¨ظˆط¹ظٹط©',
+    'coach.tab.nutrition': 'ط§ظ„طھط؛ط°ظٹط©',
+    'coach.tab.prs':       'ط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'coach.status.init':   'ط¬ط§ط±ظچ طھط­ظ„ظٹظ„ طھط¯ط±ظٹط¨ظƒâ€¦',
 
     // Smart Tips
-    'section.tips': 'نصائح ذكية',
-    'section.tipsbadge': 'تلميحات',
-    'tip.overload.title': 'التحميل التدريجي',
-    'tip.overload.text': 'استهدف إضافة 2.5–5 كغ كل أسبوعين. المكاسب الصغيرة تتراكم لنتائج ضخمة.',
-    'tip.timer.title': 'استخدم مؤقت الراحة',
-    'tip.timer.text': 'فترات راحة منتظمة (60–120 ثانية) تؤدي إلى أداء قوة أفضل عبر المجموعات.',
+    'section.tips': 'ظ†طµط§ط¦ط­ ط°ظƒظٹط©',
+    'section.tipsbadge': 'طھظ„ظ…ظٹط­ط§طھ',
+    'tip.overload.title': 'ط§ظ„طھط­ظ…ظٹظ„ ط§ظ„طھط¯ط±ظٹط¬ظٹ',
+    'tip.overload.text': 'ط§ط³طھظ‡ط¯ظپ ط¥ط¶ط§ظپط© 2.5â€“5 ظƒط؛ ظƒظ„ ط£ط³ط¨ظˆط¹ظٹظ†. ط§ظ„ظ…ظƒط§ط³ط¨ ط§ظ„طµط؛ظٹط±ط© طھطھط±ط§ظƒظ… ظ„ظ†طھط§ط¦ط¬ ط¶ط®ظ…ط©.',
+    'tip.timer.title': 'ط§ط³طھط®ط¯ظ… ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©',
+    'tip.timer.text': 'ظپطھط±ط§طھ ط±ط§ط­ط© ظ…ظ†طھط¸ظ…ط© (60â€“120 ط«ط§ظ†ظٹط©) طھط¤ط¯ظٹ ط¥ظ„ظ‰ ط£ط¯ط§ط، ظ‚ظˆط© ط£ظپط¶ظ„ ط¹ط¨ط± ط§ظ„ظ…ط¬ظ…ظˆط¹ط§طھ.',
 
     // Dashboard stats bar
-    'dash.statVol': 'إجمالي الحجم',
-    'dash.statSessions': 'الجلسات',
-    'dash.statSets': 'إجمالي المجموعات',
-    'dash.statPR': 'أفضل رقم قياسي',
-    'dash.allTime': 'كل الوقت',
+    'dash.statVol': 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط­ط¬ظ…',
+    'dash.statSessions': 'ط§ظ„ط¬ظ„ط³ط§طھ',
+    'dash.statSets': 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ظ…ط¬ظ…ظˆط¹ط§طھ',
+    'dash.statPR': 'ط£ظپط¶ظ„ ط±ظ‚ظ… ظ‚ظٹط§ط³ظٹ',
+    'dash.allTime': 'ظƒظ„ ط§ظ„ظˆظ‚طھ',
     // Dashboard section headers
-    'dash.wgtSection': 'رفع الأثقال',
-    'dash.bwSection': 'تمارين الجسم',
+    'dash.wgtSection': 'ط±ظپط¹ ط§ظ„ط£ط«ظ‚ط§ظ„',
+    'dash.bwSection': 'طھظ…ط§ط±ظٹظ† ط§ظ„ط¬ط³ظ…',
     // BW stat cards
-    'dash.bwSessions': 'جلسات الجسم',
-    'dash.bwSets': 'مجموعات الجسم',
-    'dash.bwTopEx': 'أفضل تمرين',
-    'dash.bwStreak': 'التسلسل',
+    'dash.bwSessions': 'ط¬ظ„ط³ط§طھ ط§ظ„ط¬ط³ظ…',
+    'dash.bwSets': 'ظ…ط¬ظ…ظˆط¹ط§طھ ط§ظ„ط¬ط³ظ…',
+    'dash.bwTopEx': 'ط£ظپط¶ظ„ طھظ…ط±ظٹظ†',
+    'dash.bwStreak': 'ط§ظ„طھط³ظ„ط³ظ„',
     // Stats panel titles & badges
-    'dash.muscleBalance': 'نقاط توازن العضلات',
-    'dash.bodyComp': 'تكوين الجسم',
-    'dash.log': 'سجّل',
-    'dash.trainingVolume': 'حجم التدريب',
-    'dash.weekly': 'أسبوعي',
-    'dash.weightProgress': 'تقدم الوزن',
-    'dash.exercise': 'تمرين',
-    'dash.selectExercise': '— اختر التمرين —',
-    'dash.volByMuscle': 'الحجم حسب العضلة',
-    'dash.muscleFreq': 'تكرار العضلات',
-    'dash.sessions': 'الجلسات',
+    'dash.muscleBalance': 'ظ†ظ‚ط§ط· طھظˆط§ط²ظ† ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'dash.bodyComp': 'طھظƒظˆظٹظ† ط§ظ„ط¬ط³ظ…',
+    'dash.log': 'ط³ط¬ظ‘ظ„',
+    'dash.trainingVolume': 'ط­ط¬ظ… ط§ظ„طھط¯ط±ظٹط¨',
+    'dash.weekly': 'ط£ط³ط¨ظˆط¹ظٹ',
+    'dash.weightProgress': 'طھظ‚ط¯ظ… ط§ظ„ظˆط²ظ†',
+    'dash.exercise': 'طھظ…ط±ظٹظ†',
+    'dash.selectExercise': 'â€” ط§ط®طھط± ط§ظ„طھظ…ط±ظٹظ† â€”',
+    'dash.volByMuscle': 'ط§ظ„ط­ط¬ظ… ط­ط³ط¨ ط§ظ„ط¹ط¶ظ„ط©',
+    'dash.muscleFreq': 'طھظƒط±ط§ط± ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'dash.sessions': 'ط§ظ„ط¬ظ„ط³ط§طھ',
     // History view
-    'hist.title': 'سجل التمارين',
-    'hist.sub': 'جميع الجلسات والأرقام القياسية',
-    'hist.prs': 'الأرقام القياسية',
-    'hist.filter': 'تصفية وبحث',
-    'hist.filterMuscle': 'العضلة',
-    'hist.filterEx': 'التمرين',
-    'hist.filterSort': 'ترتيب',
-    'hist.log': 'سجل التمارين',
+    'hist.title': 'ط³ط¬ظ„ ط§ظ„طھظ…ط§ط±ظٹظ†',
+    'hist.sub': 'ط¬ظ…ظٹط¹ ط§ظ„ط¬ظ„ط³ط§طھ ظˆط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'hist.prs': 'ط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'hist.filter': 'طھطµظپظٹط© ظˆط¨ط­ط«',
+    'hist.filterMuscle': 'ط§ظ„ط¹ط¶ظ„ط©',
+    'hist.filterEx': 'ط§ظ„طھظ…ط±ظٹظ†',
+    'hist.filterSort': 'طھط±طھظٹط¨',
+    'hist.log': 'ط³ط¬ظ„ ط§ظ„طھظ…ط§ط±ظٹظ†',
     // More/Settings view
-    'more.title': 'الإعدادات والأدوات',
-    'more.sub': 'الملف الشخصي والسمات والبيانات',
-    'more.profile': 'ملفي الشخصي',
-    'more.templates': 'القوالب',
-    'more.bodyComp': 'تكوين الجسم',
-    'more.settings': 'الإعدادات',
-    'more.data': 'البيانات والتصدير',
+    'more.title': 'ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ ظˆط§ظ„ط£ط¯ظˆط§طھ',
+    'more.sub': 'ط§ظ„ظ…ظ„ظپ ط§ظ„ط´ط®طµظٹ ظˆط§ظ„ط³ظ…ط§طھ ظˆط§ظ„ط¨ظٹط§ظ†ط§طھ',
+    'more.profile': 'ظ…ظ„ظپظٹ ط§ظ„ط´ط®طµظٹ',
+    'more.templates': 'ط§ظ„ظ‚ظˆط§ظ„ط¨',
+    'more.bodyComp': 'طھظƒظˆظٹظ† ط§ظ„ط¬ط³ظ…',
+    'more.settings': 'ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ',
+    'more.data': 'ط§ظ„ط¨ظٹط§ظ†ط§طھ ظˆط§ظ„طھطµط¯ظٹط±',
     // Settings toggles
-    'settings.lightMode': 'الوضع النهاري',
-    'settings.lightModeSub': 'التبديل إلى سمة SOLAR الدافئة',
-    'settings.unit': 'وحدة الوزن الافتراضية',
-    'settings.unitSub': 'ستكون هذه الوحدة افتراضية للمجموعات',
-    'settings.sound': 'صوت مؤقت الراحة',
-    'settings.soundSub': 'اهتزاز وصوت تنبيه عند انتهاء الراحة',
-    'settings.hint': 'إظهار تلميح الجلسة الأخيرة',
-    'settings.hintSub': 'يعرض المجموعات السابقة عند التسجيل',
+    'settings.lightMode': 'ط§ظ„ظˆط¶ط¹ ط§ظ„ظ†ظ‡ط§ط±ظٹ',
+    'settings.lightModeSub': 'ط§ظ„طھط¨ط¯ظٹظ„ ط¥ظ„ظ‰ ط³ظ…ط© SOLAR ط§ظ„ط¯ط§ظپط¦ط©',
+    'settings.unit': 'ظˆط­ط¯ط© ط§ظ„ظˆط²ظ† ط§ظ„ط§ظپطھط±ط§ط¶ظٹط©',
+    'settings.unitSub': 'ط³طھظƒظˆظ† ظ‡ط°ظ‡ ط§ظ„ظˆط­ط¯ط© ط§ظپطھط±ط§ط¶ظٹط© ظ„ظ„ظ…ط¬ظ…ظˆط¹ط§طھ',
+    'settings.sound': 'طµظˆطھ ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©',
+    'settings.soundSub': 'ط§ظ‡طھط²ط§ط² ظˆطµظˆطھ طھظ†ط¨ظٹظ‡ ط¹ظ†ط¯ ط§ظ†طھظ‡ط§ط، ط§ظ„ط±ط§ط­ط©',
+    'settings.hint': 'ط¥ط¸ظ‡ط§ط± طھظ„ظ…ظٹط­ ط§ظ„ط¬ظ„ط³ط© ط§ظ„ط£ط®ظٹط±ط©',
+    'settings.hintSub': 'ظٹط¹ط±ط¶ ط§ظ„ظ…ط¬ظ…ظˆط¹ط§طھ ط§ظ„ط³ط§ط¨ظ‚ط© ط¹ظ†ط¯ ط§ظ„طھط³ط¬ظٹظ„',
 
     // Toasts
-    'toast.saved': 'تم حفظ التمرين!',
-    'toast.deleted': 'تم الحذف',
-    'toast.pr': 'رقم قياسي جديد!',
-    'toast.cleared': 'تم مسح جميع البيانات',
-    'toast.imported': 'تم استيراد البيانات!',
-    'toast.exported': 'تم التصدير!',
-    'toast.stepsSaved': 'تم حفظ الخطوات!',
-    'toast.noSteps': 'أدخل عدد الخطوات أولاً',
+    'toast.saved': 'طھظ… ط­ظپط¸ ط§ظ„طھظ…ط±ظٹظ†!',
+    'toast.deleted': 'طھظ… ط§ظ„ط­ط°ظپ',
+    'toast.pr': 'ط±ظ‚ظ… ظ‚ظٹط§ط³ظٹ ط¬ط¯ظٹط¯!',
+    'toast.cleared': 'طھظ… ظ…ط³ط­ ط¬ظ…ظٹط¹ ط§ظ„ط¨ظٹط§ظ†ط§طھ',
+    'toast.imported': 'طھظ… ط§ط³طھظٹط±ط§ط¯ ط§ظ„ط¨ظٹط§ظ†ط§طھ!',
+    'toast.exported': 'طھظ… ط§ظ„طھطµط¯ظٹط±!',
+    'toast.stepsSaved': 'طھظ… ط­ظپط¸ ط§ظ„ط®ط·ظˆط§طھ!',
+    'toast.noSteps': 'ط£ط¯ط®ظ„ ط¹ط¯ط¯ ط§ظ„ط®ط·ظˆط§طھ ط£ظˆظ„ط§ظ‹',
 
     // Achievements
-    'ach.title': 'إنجاز جديد!',
+    'ach.title': 'ط¥ظ†ط¬ط§ط² ط¬ط¯ظٹط¯!',
 
     // Templates
-    'tmpl.name': 'اسم القالب',
-    'tmpl.muscle': 'مجموعة العضلات',
-    'tmpl.exercises': 'التمارين (مفصولة بفاصلة)',
-    'tmpl.icon': 'أيقونة',
-    'tmpl.save': 'حفظ القالب',
-    'tmpl.new': 'قالب جديد',
-    'tmpl.load': 'تحميل',
-    'tmpl.delete': 'حذف',
-    'tmpl.placeholder': 'مثال: يوم الدفع A',
-    'tmpl.exPlaceholder': 'ضغط صدر، دمبل مائل، كيبل',
+    'tmpl.name': 'ط§ط³ظ… ط§ظ„ظ‚ط§ظ„ط¨',
+    'tmpl.muscle': 'ظ…ط¬ظ…ظˆط¹ط© ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'tmpl.exercises': 'ط§ظ„طھظ…ط§ط±ظٹظ† (ظ…ظپطµظˆظ„ط© ط¨ظپط§طµظ„ط©)',
+    'tmpl.icon': 'ط£ظٹظ‚ظˆظ†ط©',
+    'tmpl.save': 'ط­ظپط¸ ط§ظ„ظ‚ط§ظ„ط¨',
+    'tmpl.new': 'ظ‚ط§ظ„ط¨ ط¬ط¯ظٹط¯',
+    'tmpl.load': 'طھط­ظ…ظٹظ„',
+    'tmpl.delete': 'ط­ط°ظپ',
+    'tmpl.placeholder': 'ظ…ط«ط§ظ„: ظٹظˆظ… ط§ظ„ط¯ظپط¹ A',
+    'tmpl.exPlaceholder': 'ط¶ط؛ط· طµط¯ط±طŒ ط¯ظ…ط¨ظ„ ظ…ط§ط¦ظ„طŒ ظƒظٹط¨ظ„',
 
     // Nav
-    'nav.log': 'تسجيل',
-    'nav.stats': 'إحصاء',
-    'nav.history': 'السجل',
-    'nav.nutrition': 'التغذية',
-    'nav.more': 'المزيد',
+    'nav.log': 'طھط³ط¬ظٹظ„',
+    'nav.stats': 'ط¥ط­طµط§ط،',
+    'nav.history': 'ط§ظ„ط³ط¬ظ„',
+    'nav.nutrition': 'ط§ظ„طھط؛ط°ظٹط©',
+    'nav.more': 'ط§ظ„ظ…ط²ظٹط¯',
 
     // General
-    'btn.save': 'حفظ',
-    'btn.cancel': 'إلغاء',
-    'btn.confirm': 'تأكيد',
-    'btn.delete': 'حذف',
-    'btn.edit': 'تعديل',
-    'btn.close': '✕',
-    'lbl.kg': 'كغ',
-    'lbl.lbs': 'رطل',
-    'lbl.days': 'ي',
+    'btn.save': 'ط­ظپط¸',
+    'btn.cancel': 'ط¥ظ„ط؛ط§ط،',
+    'btn.confirm': 'طھط£ظƒظٹط¯',
+    'btn.delete': 'ط­ط°ظپ',
+    'btn.edit': 'طھط¹ط¯ظٹظ„',
+    'btn.close': 'âœ•',
+    'lbl.kg': 'ظƒط؛',
+    'lbl.lbs': 'ط±ط·ظ„',
+    'lbl.days': 'ظٹ',
 
     // Header bio cards
-    'hdr.weight': 'الوزن',
-    'hdr.bodyfat': 'دهون الجسم',
-    'hdr.muscle': 'كتلة عضلية',
-    'hdr.tapToLog': 'اضغط للتسجيل',
+    'hdr.weight': 'ط§ظ„ظˆط²ظ†',
+    'hdr.bodyfat': 'ط¯ظ‡ظˆظ† ط§ظ„ط¬ط³ظ…',
+    'hdr.muscle': 'ظƒطھظ„ط© ط¹ط¶ظ„ظٹط©',
+    'hdr.tapToLog': 'ط§ط¶ط؛ط· ظ„ظ„طھط³ط¬ظٹظ„',
 
     // Bio log modal
-    'bio.logWeight': 'تسجيل الوزن',
-    'bio.logBodyFat': 'تسجيل دهون الجسم',
-    'bio.logMuscle': 'تسجيل الكتلة العضلية',
-    'bio.last': 'آخر',
-    'bio.save': 'حفظ',
+    'bio.logWeight': 'طھط³ط¬ظٹظ„ ط§ظ„ظˆط²ظ†',
+    'bio.logBodyFat': 'طھط³ط¬ظٹظ„ ط¯ظ‡ظˆظ† ط§ظ„ط¬ط³ظ…',
+    'bio.logMuscle': 'طھط³ط¬ظٹظ„ ط§ظ„ظƒطھظ„ط© ط§ظ„ط¹ط¶ظ„ظٹط©',
+    'bio.last': 'ط¢ط®ط±',
+    'bio.save': 'ط­ظپط¸',
 
     // Header status bar pills
-    'hdr.streak': 'التسلسل',
-    'hdr.water': 'ماء',
-    'hdr.rest': 'راحة',
+    'hdr.streak': 'ط§ظ„طھط³ظ„ط³ظ„',
+    'hdr.water': 'ظ…ط§ط،',
+    'hdr.rest': 'ط±ط§ط­ط©',
 
     // Header coach ticker
-    'hdr.coach': 'المدرب',
-    'hdr.score': 'النقاط',
+    'hdr.coach': 'ط§ظ„ظ…ط¯ط±ط¨',
+    'hdr.score': 'ط§ظ„ظ†ظ‚ط§ط·',
 
     // Mission banner
-    'mission.banner.title': 'مهمة اليوم',
-    'mission.banner.done': 'تم',
-    'mission.banner.allDone': 'أحسنت! 🎉',
+    'mission.banner.title': 'ظ…ظ‡ظ…ط© ط§ظ„ظٹظˆظ…',
+    'mission.banner.done': 'طھظ…',
+    'mission.banner.allDone': 'ط£ط­ط³ظ†طھ! ًںژ‰',
 
     // Muscle balance
-    'balance.score': 'نقاط التوازن',
-    'balance.center': 'توازن',
-    'balance.frequency': 'التكرار',
-    'balance.strength': 'أقصى قوة',
-    'balance.trained': 'مجموعات عضلية مدربة',
-    'balance.notTrained': 'لم يُدرَّب',
-    'balance.msg.excellent': 'توازن ممتاز! جميع العضلات مدربة جيداً.',
-    'balance.msg.good': 'توازن جيد. اضغط على العضلات الأضعف.',
-    'balance.msg.some': 'بعض العضلات مهملة. نوّع تمارينك!',
-    'balance.msg.focus': 'تحتاج تركيزاً — تدرب على عضلات أخرى.',
-    'balance.empty': 'سجّل تمارين لرؤية التوازن العضلي',
+    'balance.score': 'ظ†ظ‚ط§ط· ط§ظ„طھظˆط§ط²ظ†',
+    'balance.center': 'طھظˆط§ط²ظ†',
+    'balance.frequency': 'ط§ظ„طھظƒط±ط§ط±',
+    'balance.strength': 'ط£ظ‚طµظ‰ ظ‚ظˆط©',
+    'balance.trained': 'ظ…ط¬ظ…ظˆط¹ط§طھ ط¹ط¶ظ„ظٹط© ظ…ط¯ط±ط¨ط©',
+    'balance.notTrained': 'ظ„ظ… ظٹظڈط¯ط±ظژظ‘ط¨',
+    'balance.msg.excellent': 'طھظˆط§ط²ظ† ظ…ظ…طھط§ط²! ط¬ظ…ظٹط¹ ط§ظ„ط¹ط¶ظ„ط§طھ ظ…ط¯ط±ط¨ط© ط¬ظٹط¯ط§ظ‹.',
+    'balance.msg.good': 'طھظˆط§ط²ظ† ط¬ظٹط¯. ط§ط¶ط؛ط· ط¹ظ„ظ‰ ط§ظ„ط¹ط¶ظ„ط§طھ ط§ظ„ط£ط¶ط¹ظپ.',
+    'balance.msg.some': 'ط¨ط¹ط¶ ط§ظ„ط¹ط¶ظ„ط§طھ ظ…ظ‡ظ…ظ„ط©. ظ†ظˆظ‘ط¹ طھظ…ط§ط±ظٹظ†ظƒ!',
+    'balance.msg.focus': 'طھط­طھط§ط¬ طھط±ظƒظٹط²ط§ظ‹ â€” طھط¯ط±ط¨ ط¹ظ„ظ‰ ط¹ط¶ظ„ط§طھ ط£ط®ط±ظ‰.',
+    'balance.empty': 'ط³ط¬ظ‘ظ„ طھظ…ط§ط±ظٹظ† ظ„ط±ط¤ظٹط© ط§ظ„طھظˆط§ط²ظ† ط§ظ„ط¹ط¶ظ„ظٹ',
 
     // Muscle names
-    'muscle.Chest': 'الصدر',
-    'muscle.Back': 'الظهر',
-    'muscle.Shoulders': 'الأكتاف',
-    'muscle.Legs': 'الأرجل',
-    'muscle.Core': 'الجذع',
-    'muscle.Biceps': 'العضلة ذات الرأسين',
-    'muscle.Triceps': 'خلفية الذراع',
-    'muscle.Forearms': 'عضلة الساعد',
-    'muscle.Glutes': 'الأرداف',
-    'muscle.Calves': 'الساق',
+    'muscle.Chest': 'ط§ظ„طµط¯ط±',
+    'muscle.Back': 'ط§ظ„ط¸ظ‡ط±',
+    'muscle.Shoulders': 'ط§ظ„ط£ظƒطھط§ظپ',
+    'muscle.Legs': 'ط§ظ„ط£ط±ط¬ظ„',
+    'muscle.Core': 'ط§ظ„ط¬ط°ط¹',
+    'muscle.Biceps': 'ط§ظ„ط¹ط¶ظ„ط© ط°ط§طھ ط§ظ„ط±ط£ط³ظٹظ†',
+    'muscle.Triceps': 'ط®ظ„ظپظٹط© ط§ظ„ط°ط±ط§ط¹',
+    'muscle.Forearms': 'ط¹ط¶ظ„ط© ط§ظ„ط³ط§ط¹ط¯',
+    'muscle.Glutes': 'ط§ظ„ط£ط±ط¯ط§ظپ',
+    'muscle.Calves': 'ط§ظ„ط³ط§ظ‚',
 
     // Body comp panel
-    'bcomp.logToggle': '+ تسجيل إدخال جديد',
-    'bcomp.recentEntries': 'الإدخالات الأخيرة',
-    'bcomp.bodyWeight': 'وزن الجسم',
-    'bcomp.bodyFat': 'نسبة الدهون %',
-    'bcomp.muscleMass': 'الكتلة العضلية',
-    'bcomp.logEntry': 'تسجيل',
-    'bcomp.noEntries': 'لا توجد إدخالات بعد',
-    'bcomp.tab.weight': 'الوزن',
-    'bcomp.tab.bodyfat': 'الدهون',
-    'bcomp.tab.muscle': 'العضلات',
+    'bcomp.logToggle': '+ طھط³ط¬ظٹظ„ ط¥ط¯ط®ط§ظ„ ط¬ط¯ظٹط¯',
+    'bcomp.recentEntries': 'ط§ظ„ط¥ط¯ط®ط§ظ„ط§طھ ط§ظ„ط£ط®ظٹط±ط©',
+    'bcomp.bodyWeight': 'ظˆط²ظ† ط§ظ„ط¬ط³ظ…',
+    'bcomp.bodyFat': 'ظ†ط³ط¨ط© ط§ظ„ط¯ظ‡ظˆظ† %',
+    'bcomp.muscleMass': 'ط§ظ„ظƒطھظ„ط© ط§ظ„ط¹ط¶ظ„ظٹط©',
+    'bcomp.logEntry': 'طھط³ط¬ظٹظ„',
+    'bcomp.noEntries': 'ظ„ط§ طھظˆط¬ط¯ ط¥ط¯ط®ط§ظ„ط§طھ ط¨ط¹ط¯',
+    'bcomp.tab.weight': 'ط§ظ„ظˆط²ظ†',
+    'bcomp.tab.bodyfat': 'ط§ظ„ط¯ظ‡ظˆظ†',
+    'bcomp.tab.muscle': 'ط§ظ„ط¹ط¶ظ„ط§طھ',
 
     // Mascot buddy suffix
-    'mascot.buddy': 'صديقي',
+    'mascot.buddy': 'طµط¯ظٹظ‚ظٹ',
 
     // Last-hit relative times
-    'time.today': 'اليوم',
-    'time.yesterday': 'أمس',
-    'time.dAgo': 'ي مضت',
-    'time.wAgo': 'أسابيع',
+    'time.today': 'ط§ظ„ظٹظˆظ…',
+    'time.yesterday': 'ط£ظ…ط³',
+    'time.dAgo': 'ظٹ ظ…ط¶طھ',
+    'time.wAgo': 'ط£ط³ط§ط¨ظٹط¹',
 
     // Muscle chip extras
     'muscle.Traps':       '\u0627\u0644\u062A\u0631\u0627\u0628\u064A\u0632',
@@ -1112,8 +1132,8 @@ const LANGS = {
     'form.med':           '\uD83D\uDE24 \u0645\u062A\u0648\u0633\u0637',
     'form.hard':          '\uD83D\uDCAA \u0635\u0639\u0628',
     'form.fail':          '\uD83D\uDE2B \u0641\u0634\u0644\u062A',
-    'form.endSession':    '⚡ إنهاء الجلسة',
-    'form.endSessionHint': 'انقر مرتين لإنهاء جلسة التمرين',
+    'form.endSession':    'âڑ، ط¥ظ†ظ‡ط§ط، ط§ظ„ط¬ظ„ط³ط©',
+    'form.endSessionHint': 'ط§ظ†ظ‚ط± ظ…ط±طھظٹظ† ظ„ط¥ظ†ظ‡ط§ط، ط¬ظ„ط³ط© ط§ظ„طھظ…ط±ظٹظ†',
     'form.selectMuscleBegin': '\u0627\u062E\u062A\u0631 \u0639\u0636\u0644\u0629 \u0644\u0644\u0628\u062F\u0621',
     'form.liveSession':   '\u062C\u0644\u0633\u0629 \u0645\u0628\u0627\u0634\u0631\u0629',
     'form.done':          '\u2714\uFE0F \u062A\u0645',
@@ -1262,179 +1282,179 @@ const LANGS = {
     'mo.sets.vol':          '\u062D\u062C\u0645',
 
     // Recovery / dash
-    'dash.recoveryStatus':  'حالة التعافي',
+    'dash.recoveryStatus':  'ط­ط§ظ„ط© ط§ظ„طھط¹ط§ظپظٹ',
 
     // Session hero + repeat button
-    'sh.brand':   'جلسة فورج',
-    'sh.start':   'ابدأ الجلسة',
-    'sh.repeat':  'كرّر آخر تمرين',
+    'sh.brand':   'ط¬ظ„ط³ط© ظپظˆط±ط¬',
+    'sh.start':   'ط§ط¨ط¯ط£ ط§ظ„ط¬ظ„ط³ط©',
+    'sh.repeat':  'ظƒط±ظ‘ط± ط¢ط®ط± طھظ…ط±ظٹظ†',
 
     // Chip recovery legend
-    'chip.sore':       'مؤلم',
-    'chip.recovering': 'يتعافى',
-    'chip.ready':      'جاهز',
-    'chip.fresh':      'نشيط',
+    'chip.sore':       'ظ…ط¤ظ„ظ…',
+    'chip.recovering': 'ظٹطھط¹ط§ظپظ‰',
+    'chip.ready':      'ط¬ط§ظ‡ط²',
+    'chip.fresh':      'ظ†ط´ظٹط·',
 
     // Heatmap legend tiers
-    'heat.tier1': 'مُدرَّب 0–1 يوم',
-    'heat.tier2': 'يتعافى 2–3 أيام',
-    'heat.tier3': 'جاهز 4–6 أيام',
-    'heat.tier4': 'مستعد 7–13 يوم',
-    'heat.tier5': 'راحة 14+ يوم / غير مُدرَّب',
+    'heat.tier1': 'ظ…ظڈط¯ط±ظژظ‘ط¨ 0â€“1 ظٹظˆظ…',
+    'heat.tier2': 'ظٹطھط¹ط§ظپظ‰ 2â€“3 ط£ظٹط§ظ…',
+    'heat.tier3': 'ط¬ط§ظ‡ط² 4â€“6 ط£ظٹط§ظ…',
+    'heat.tier4': 'ظ…ط³طھط¹ط¯ 7â€“13 ظٹظˆظ…',
+    'heat.tier5': 'ط±ط§ط­ط© 14+ ظٹظˆظ… / ط؛ظٹط± ظ…ظڈط¯ط±ظژظ‘ط¨',
 
     // Recovery detail badge
-    'recovery.tier1': '🔴 مُدرَّب (0–1 يوم)',
-    'recovery.tier2': '🟠 يتعافى (2–3 أيام)',
-    'recovery.tier3': '🟡 جاهز (4–6 أيام)',
-    'recovery.tier4': '🟢 مستعد (7–13 يوم)',
-    'recovery.tier5': '⚪ راحة (14+ يوم)',
+    'recovery.tier1': 'ًں”´ ظ…ظڈط¯ط±ظژظ‘ط¨ (0â€“1 ظٹظˆظ…)',
+    'recovery.tier2': 'ًںں  ظٹطھط¹ط§ظپظ‰ (2â€“3 ط£ظٹط§ظ…)',
+    'recovery.tier3': 'ًںں، ط¬ط§ظ‡ط² (4â€“6 ط£ظٹط§ظ…)',
+    'recovery.tier4': 'ًںں¢ ظ…ط³طھط¹ط¯ (7â€“13 ظٹظˆظ…)',
+    'recovery.tier5': 'âڑھ ط±ط§ط­ط© (14+ ظٹظˆظ…)',
 
     // History / session
-    'hist.noWorkouts':      'لا تمارين بعد',
-    'hist.emptyTitle':      'لم تُسجَّل أي تمارين في هذه الجلسة',
+    'hist.noWorkouts':      'ظ„ط§ طھظ…ط§ط±ظٹظ† ط¨ط¹ط¯',
+    'hist.emptyTitle':      'ظ„ظ… طھظڈط³ط¬ظژظ‘ظ„ ط£ظٹ طھظ…ط§ط±ظٹظ† ظپظٹ ظ‡ط°ظ‡ ط§ظ„ط¬ظ„ط³ط©',
 
     // Onboarding
-    'onb.back':              'رجوع',
-    'onb.skip':              'تخطّي',
-    'onb.next':              'التالي ←',
-    'onb.step':              'خطوة',
-    'onb.of':                'من',
-    'onb.welcome.title':     'مرحباً بك في فورج',
-    'onb.welcome.sub':       'صالتك. قواعدك.',
-    'onb.welcome.desc':      'أعدّ ملفك الشخصي في أقل من دقيقة واحصل على تجربة تدريب مخصصة.',
-    'onb.welcome.cta':       'ابدأ الآن ←',
-    'onb.name.title':        'ما اسمك؟',
-    'onb.name.sub':          'سنستخدمه لتخصيص تجربتك.',
-    'onb.name.placeholder':  'مثال: أحمد',
-    'onb.lbl.name':          'الاسم',
-    'onb.about.title':       'عنك',
-    'onb.about.sub':         'يساعدنا في حساب إحصائياتك بدقة.',
-    'onb.about.gender':      'أنا',
-    'onb.about.male':        'ذكر',
-    'onb.about.female':      'أنثى',
-    'onb.about.other':       'أفضّل عدم الإفصاح',
-    'onb.about.dob':         'تاريخ الميلاد',
-    'onb.measure.title':     'مقاساتك',
-    'onb.measure.sub':       'تُستخدم لحساب مؤشر كتلة الجسم واستهلاك الطاقة.',
-    'onb.measure.weight':    'الوزن الحالي',
-    'onb.measure.height':    'الطول',
-    'onb.goal.title':        'هدفك الرئيسي',
-    'onb.goal.title2':       'الهدف',
-    'onb.goal.sub':          'سنضبط التدريب والمهام حول هذا الهدف.',
-    'onb.goal.muscle':       'بناء العضلات',
-    'onb.goal.muscle.sub':   'ضخامة وحجم',
-    'onb.goal.fat':          'حرق الدهون',
-    'onb.goal.fat.sub':      'تنشيف وكارديو',
-    'onb.goal.strength':     'بناء القوة',
-    'onb.goal.strength.sub': 'قوة أقصى وأوزان',
-    'onb.goal.active':       'البقاء نشيطاً',
-    'onb.goal.active.sub':   'صحة وعافية',
-    'onb.done.title':        'أنت جاهز!',
-    'onb.done.sub':          'فورج مخصص لك. لنبنِ شيئاً معاً.',
-    'onb.done.cta':          'هيا نبدأ! 🔥',
-    'onb.toast':             'مرحباً بك في فورج، {name}! 🔥',
-    'onb.toast.athlete':     'رياضي',
+    'onb.back':              'ط±ط¬ظˆط¹',
+    'onb.skip':              'طھط®ط·ظ‘ظٹ',
+    'onb.next':              'ط§ظ„طھط§ظ„ظٹ â†گ',
+    'onb.step':              'ط®ط·ظˆط©',
+    'onb.of':                'ظ…ظ†',
+    'onb.welcome.title':     'ظ…ط±ط­ط¨ط§ظ‹ ط¨ظƒ ظپظٹ ظپظˆط±ط¬',
+    'onb.welcome.sub':       'طµط§ظ„طھظƒ. ظ‚ظˆط§ط¹ط¯ظƒ.',
+    'onb.welcome.desc':      'ط£ط¹ط¯ظ‘ ظ…ظ„ظپظƒ ط§ظ„ط´ط®طµظٹ ظپظٹ ط£ظ‚ظ„ ظ…ظ† ط¯ظ‚ظٹظ‚ط© ظˆط§ط­طµظ„ ط¹ظ„ظ‰ طھط¬ط±ط¨ط© طھط¯ط±ظٹط¨ ظ…ط®طµطµط©.',
+    'onb.welcome.cta':       'ط§ط¨ط¯ط£ ط§ظ„ط¢ظ† â†گ',
+    'onb.name.title':        'ظ…ط§ ط§ط³ظ…ظƒطں',
+    'onb.name.sub':          'ط³ظ†ط³طھط®ط¯ظ…ظ‡ ظ„طھط®طµظٹطµ طھط¬ط±ط¨طھظƒ.',
+    'onb.name.placeholder':  'ظ…ط«ط§ظ„: ط£ط­ظ…ط¯',
+    'onb.lbl.name':          'ط§ظ„ط§ط³ظ…',
+    'onb.about.title':       'ط¹ظ†ظƒ',
+    'onb.about.sub':         'ظٹط³ط§ط¹ط¯ظ†ط§ ظپظٹ ط­ط³ط§ط¨ ط¥ط­طµط§ط¦ظٹط§طھظƒ ط¨ط¯ظ‚ط©.',
+    'onb.about.gender':      'ط£ظ†ط§',
+    'onb.about.male':        'ط°ظƒط±',
+    'onb.about.female':      'ط£ظ†ط«ظ‰',
+    'onb.about.other':       'ط£ظپط¶ظ‘ظ„ ط¹ط¯ظ… ط§ظ„ط¥ظپطµط§ط­',
+    'onb.about.dob':         'طھط§ط±ظٹط® ط§ظ„ظ…ظٹظ„ط§ط¯',
+    'onb.measure.title':     'ظ…ظ‚ط§ط³ط§طھظƒ',
+    'onb.measure.sub':       'طھظڈط³طھط®ط¯ظ… ظ„ط­ط³ط§ط¨ ظ…ط¤ط´ط± ظƒطھظ„ط© ط§ظ„ط¬ط³ظ… ظˆط§ط³طھظ‡ظ„ط§ظƒ ط§ظ„ط·ط§ظ‚ط©.',
+    'onb.measure.weight':    'ط§ظ„ظˆط²ظ† ط§ظ„ط­ط§ظ„ظٹ',
+    'onb.measure.height':    'ط§ظ„ط·ظˆظ„',
+    'onb.goal.title':        'ظ‡ط¯ظپظƒ ط§ظ„ط±ط¦ظٹط³ظٹ',
+    'onb.goal.title2':       'ط§ظ„ظ‡ط¯ظپ',
+    'onb.goal.sub':          'ط³ظ†ط¶ط¨ط· ط§ظ„طھط¯ط±ظٹط¨ ظˆط§ظ„ظ…ظ‡ط§ظ… ط­ظˆظ„ ظ‡ط°ط§ ط§ظ„ظ‡ط¯ظپ.',
+    'onb.goal.muscle':       'ط¨ظ†ط§ط، ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'onb.goal.muscle.sub':   'ط¶ط®ط§ظ…ط© ظˆط­ط¬ظ…',
+    'onb.goal.fat':          'ط­ط±ظ‚ ط§ظ„ط¯ظ‡ظˆظ†',
+    'onb.goal.fat.sub':      'طھظ†ط´ظٹظپ ظˆظƒط§ط±ط¯ظٹظˆ',
+    'onb.goal.strength':     'ط¨ظ†ط§ط، ط§ظ„ظ‚ظˆط©',
+    'onb.goal.strength.sub': 'ظ‚ظˆط© ط£ظ‚طµظ‰ ظˆط£ظˆط²ط§ظ†',
+    'onb.goal.active':       'ط§ظ„ط¨ظ‚ط§ط، ظ†ط´ظٹط·ط§ظ‹',
+    'onb.goal.active.sub':   'طµط­ط© ظˆط¹ط§ظپظٹط©',
+    'onb.done.title':        'ط£ظ†طھ ط¬ط§ظ‡ط²!',
+    'onb.done.sub':          'ظپظˆط±ط¬ ظ…ط®طµطµ ظ„ظƒ. ظ„ظ†ط¨ظ†ظگ ط´ظٹط¦ط§ظ‹ ظ…ط¹ط§ظ‹.',
+    'onb.done.cta':          'ظ‡ظٹط§ ظ†ط¨ط¯ط£! ًں”¥',
+    'onb.toast':             'ظ…ط±ط­ط¨ط§ظ‹ ط¨ظƒ ظپظٹ ظپظˆط±ط¬طŒ {name}! ًں”¥',
+    'onb.toast.athlete':     'ط±ظٹط§ط¶ظٹ',
 
-    // ── APP TOUR ──
-    'tour.back':       'رجوع',
-    'tour.skip':       'تخطي',
-    'tour.next':       'التالي →',
-    'tour.cta':        'هيا نبدأ! 🔥',
-    'tour.more.title': 'جولة التطبيق',
-    'tour.more.sub':   'إعادة جولة الميزات · 60 ثانية',
-    'tour.s0.tag':     'فورج جيم',
-    'tour.s0.title':   'نظام الجيم الخاص بك جاهز',
-    'tour.s0.sub':     'جولة 60 ثانية لكل ما يمكن لفورج فعله من أجلك.',
-    'tour.s1.tag':     'الخطوة 1 · التسجيل',
-    'tour.s1.title':   'سجّل كل تكرار',
-    'tour.s1.sub':     'اختر مجموعة عضلية، ابحث عن تمرينك، وتتبع مجموعاتك.',
-    'tour.s1.f0':      'أكثر من 100 تمرين مدمج',
-    'tour.s1.f0s':     'عبر 9 مجموعات عضلية مع بحث ذكي',
-    'tour.s1.f1':      'مجموعات · تكرارات · وزن · ملاحظات',
-    'tour.s1.f1s':     'بالإضافة إلى علامات الدروب ست والإحماء و AMRAP',
-    'tour.s1.f2':      'تلميح الجلسة الأخيرة',
-    'tour.s1.f2s':     'شاهد ما رفعته في المرة الأخيرة، مباشرةً',
-    'tour.s2.tag':     'الأداء',
-    'tour.s2.title':   'اطرد أرقامك القياسية',
-    'tour.s2.sub':     'في كل مرة تتجاوز رقمك القياسي، يُطلق فورج تنبيه الإنجاز.',
-    'tour.s2.f0':      'شارة الرقم القياسي الفوري',
-    'tour.s2.f0s':     'تضيء لحظة تحقيق رقم قياسي جديد',
-    'tour.s2.f1':      'سجلات الحجم و 1RM',
-    'tour.s2.f1s':     'لكل تمرين، يتتبعها تلقائياً',
-    'tour.s2.f2':      'سجل الأرقام القياسية في الإحصائيات',
-    'tour.s2.f2s':     'كل تمرين، كل إنجاز',
-    'tour.s3.tag':     'الاسترداد',
-    'tour.s3.title':   'ارتَح كالمحترفين',
-    'tour.s3.sub':     'زر ⏱ العائم موجود في الزاوية اليمنى السفلى على كل شاشة.',
-    'tour.s3.f0':      'اضغط بعد كل مجموعة',
-    'tour.s3.f0s':     'ابدأ العد التنازلي للراحة فوراً',
-    'tour.s3.f1':      'اهتزاز + تنبيه صوتي',
-    'tour.s3.f1s':     'لا تفوّت نهاية الراحة أبداً',
-    'tour.s3.f2':      'ضبط مسبق: 60 / 90 / 120 / 180 ثانية',
-    'tour.s3.f2s':     'ضغطة واحدة لتحديد وقت راحتك',
-    'tour.s4.tag':     'التحليلات',
-    'tour.s4.title':   'شاهد تقدمك',
-    'tour.s4.sub':     'مخططات وخرائط حرارة واتجاهات. شاهد نفسك تتحول.',
-    'tour.s4.f0':      'مخططات الحجم والقوة',
-    'tour.s4.f0s':     'لكل تمرين ولكل مجموعة عضلية',
-    'tour.s4.f1':      'رادار توازن العضلات',
-    'tour.s4.f1s':     'اكتشف العضلات التي تهملها',
-    'tour.s4.f2':      'وزن الجسم والتقويم',
-    'tour.s4.f2s':     'سجلات يومية، اتجاهات أسبوعية، خريطة حرارية',
-    'tour.s5.tag':     'التحدي',
-    'tour.s5.title':   'ارفع مستواك يومياً',
-    'tour.s5.sub':     'كل تكرار يكسبك XP. المهام تدفعك لتجاوز حدودك.',
-    'tour.s5.f0':      'مبتدئ → محترف → أسطورة',
-    'tour.s5.f0s':     '10 رتب لتتسلقها، كل رتبة أصعب',
-    'tour.s5.f1':      'مهام يومية وأسبوعية',
-    'tour.s5.f1s':     'تحديات جديدة كل يوم',
-    'tour.s5.f2':      'مكافآت التسلسل والشارات',
-    'tour.s5.f2s':     'لا تكسر السلسلة',
-    'tour.s6.tag':     'المدرب الذكي',
-    'tour.s6.title':   'مدربك الشخصي',
-    'tour.s6.sub':     'يقرأ فورج بياناتك التدريبية ويتكيف معك يومياً.',
-    'tour.s6.f0':      'درجة الاستعداد اليومية',
-    'tour.s6.f0s':     'اعرف متى تدفع بقوة أو تتعافى',
-    'tour.s6.f1':      'برامج PPL و 5/3/1 و 5×5',
-    'tour.s6.f1s':     'قوالب علمية، ضغطة واحدة للبدء',
-    'tour.s6.f2':      'أهداف التغذية والماكرو',
-    'tour.s6.f2s':     'سعرات حرارية وبروتين مخصصة لهدفك',
-    'tour.s7.tag':     'أنت مستعد',
-    'tour.s7.title':   'هيا فورج',
-    'tour.s7.sub':     'الحديد ينتظر. جلستك الأولى تبدأ الآن.',
-    'tour.s7.t0':      'سجّل',
-    'tour.s7.t1':      'الأرقام',
-    'tour.s7.t2':      'إحصائيات',
-    'tour.s7.t3':      'ارتقِ',
+    // â”€â”€ APP TOUR â”€â”€
+    'tour.back':       'ط±ط¬ظˆط¹',
+    'tour.skip':       'طھط®ط·ظٹ',
+    'tour.next':       'ط§ظ„طھط§ظ„ظٹ â†’',
+    'tour.cta':        'ظ‡ظٹط§ ظ†ط¨ط¯ط£! ًں”¥',
+    'tour.more.title': 'ط¬ظˆظ„ط© ط§ظ„طھط·ط¨ظٹظ‚',
+    'tour.more.sub':   'ط¥ط¹ط§ط¯ط© ط¬ظˆظ„ط© ط§ظ„ظ…ظٹط²ط§طھ آ· 60 ط«ط§ظ†ظٹط©',
+    'tour.s0.tag':     'ظپظˆط±ط¬ ط¬ظٹظ…',
+    'tour.s0.title':   'ظ†ط¸ط§ظ… ط§ظ„ط¬ظٹظ… ط§ظ„ط®ط§طµ ط¨ظƒ ط¬ط§ظ‡ط²',
+    'tour.s0.sub':     'ط¬ظˆظ„ط© 60 ط«ط§ظ†ظٹط© ظ„ظƒظ„ ظ…ط§ ظٹظ…ظƒظ† ظ„ظپظˆط±ط¬ ظپط¹ظ„ظ‡ ظ…ظ† ط£ط¬ظ„ظƒ.',
+    'tour.s1.tag':     'ط§ظ„ط®ط·ظˆط© 1 آ· ط§ظ„طھط³ط¬ظٹظ„',
+    'tour.s1.title':   'ط³ط¬ظ‘ظ„ ظƒظ„ طھظƒط±ط§ط±',
+    'tour.s1.sub':     'ط§ط®طھط± ظ…ط¬ظ…ظˆط¹ط© ط¹ط¶ظ„ظٹط©طŒ ط§ط¨ط­ط« ط¹ظ† طھظ…ط±ظٹظ†ظƒطŒ ظˆطھطھط¨ط¹ ظ…ط¬ظ…ظˆط¹ط§طھظƒ.',
+    'tour.s1.f0':      'ط£ظƒط«ط± ظ…ظ† 100 طھظ…ط±ظٹظ† ظ…ط¯ظ…ط¬',
+    'tour.s1.f0s':     'ط¹ط¨ط± 9 ظ…ط¬ظ…ظˆط¹ط§طھ ط¹ط¶ظ„ظٹط© ظ…ط¹ ط¨ط­ط« ط°ظƒظٹ',
+    'tour.s1.f1':      'ظ…ط¬ظ…ظˆط¹ط§طھ آ· طھظƒط±ط§ط±ط§طھ آ· ظˆط²ظ† آ· ظ…ظ„ط§ط­ط¸ط§طھ',
+    'tour.s1.f1s':     'ط¨ط§ظ„ط¥ط¶ط§ظپط© ط¥ظ„ظ‰ ط¹ظ„ط§ظ…ط§طھ ط§ظ„ط¯ط±ظˆط¨ ط³طھ ظˆط§ظ„ط¥ط­ظ…ط§ط، ظˆ AMRAP',
+    'tour.s1.f2':      'طھظ„ظ…ظٹط­ ط§ظ„ط¬ظ„ط³ط© ط§ظ„ط£ط®ظٹط±ط©',
+    'tour.s1.f2s':     'ط´ط§ظ‡ط¯ ظ…ط§ ط±ظپط¹طھظ‡ ظپظٹ ط§ظ„ظ…ط±ط© ط§ظ„ط£ط®ظٹط±ط©طŒ ظ…ط¨ط§ط´ط±ط©ظ‹',
+    'tour.s2.tag':     'ط§ظ„ط£ط¯ط§ط،',
+    'tour.s2.title':   'ط§ط·ط±ط¯ ط£ط±ظ‚ط§ظ…ظƒ ط§ظ„ظ‚ظٹط§ط³ظٹط©',
+    'tour.s2.sub':     'ظپظٹ ظƒظ„ ظ…ط±ط© طھطھط¬ط§ظˆط² ط±ظ‚ظ…ظƒ ط§ظ„ظ‚ظٹط§ط³ظٹطŒ ظٹظڈط·ظ„ظ‚ ظپظˆط±ط¬ طھظ†ط¨ظٹظ‡ ط§ظ„ط¥ظ†ط¬ط§ط².',
+    'tour.s2.f0':      'ط´ط§ط±ط© ط§ظ„ط±ظ‚ظ… ط§ظ„ظ‚ظٹط§ط³ظٹ ط§ظ„ظپظˆط±ظٹ',
+    'tour.s2.f0s':     'طھط¶ظٹط، ظ„ط­ط¸ط© طھط­ظ‚ظٹظ‚ ط±ظ‚ظ… ظ‚ظٹط§ط³ظٹ ط¬ط¯ظٹط¯',
+    'tour.s2.f1':      'ط³ط¬ظ„ط§طھ ط§ظ„ط­ط¬ظ… ظˆ 1RM',
+    'tour.s2.f1s':     'ظ„ظƒظ„ طھظ…ط±ظٹظ†طŒ ظٹطھطھط¨ط¹ظ‡ط§ طھظ„ظ‚ط§ط¦ظٹط§ظ‹',
+    'tour.s2.f2':      'ط³ط¬ظ„ ط§ظ„ط£ط±ظ‚ط§ظ… ط§ظ„ظ‚ظٹط§ط³ظٹط© ظپظٹ ط§ظ„ط¥ط­طµط§ط¦ظٹط§طھ',
+    'tour.s2.f2s':     'ظƒظ„ طھظ…ط±ظٹظ†طŒ ظƒظ„ ط¥ظ†ط¬ط§ط²',
+    'tour.s3.tag':     'ط§ظ„ط§ط³طھط±ط¯ط§ط¯',
+    'tour.s3.title':   'ط§ط±طھظژط­ ظƒط§ظ„ظ…ط­طھط±ظپظٹظ†',
+    'tour.s3.sub':     'ط²ط± âڈ± ط§ظ„ط¹ط§ط¦ظ… ظ…ظˆط¬ظˆط¯ ظپظٹ ط§ظ„ط²ط§ظˆظٹط© ط§ظ„ظٹظ…ظ†ظ‰ ط§ظ„ط³ظپظ„ظ‰ ط¹ظ„ظ‰ ظƒظ„ ط´ط§ط´ط©.',
+    'tour.s3.f0':      'ط§ط¶ط؛ط· ط¨ط¹ط¯ ظƒظ„ ظ…ط¬ظ…ظˆط¹ط©',
+    'tour.s3.f0s':     'ط§ط¨ط¯ط£ ط§ظ„ط¹ط¯ ط§ظ„طھظ†ط§ط²ظ„ظٹ ظ„ظ„ط±ط§ط­ط© ظپظˆط±ط§ظ‹',
+    'tour.s3.f1':      'ط§ظ‡طھط²ط§ط² + طھظ†ط¨ظٹظ‡ طµظˆطھظٹ',
+    'tour.s3.f1s':     'ظ„ط§ طھظپظˆظ‘طھ ظ†ظ‡ط§ظٹط© ط§ظ„ط±ط§ط­ط© ط£ط¨ط¯ط§ظ‹',
+    'tour.s3.f2':      'ط¶ط¨ط· ظ…ط³ط¨ظ‚: 60 / 90 / 120 / 180 ط«ط§ظ†ظٹط©',
+    'tour.s3.f2s':     'ط¶ط؛ط·ط© ظˆط§ط­ط¯ط© ظ„طھط­ط¯ظٹط¯ ظˆظ‚طھ ط±ط§ط­طھظƒ',
+    'tour.s4.tag':     'ط§ظ„طھط­ظ„ظٹظ„ط§طھ',
+    'tour.s4.title':   'ط´ط§ظ‡ط¯ طھظ‚ط¯ظ…ظƒ',
+    'tour.s4.sub':     'ظ…ط®ط·ط·ط§طھ ظˆط®ط±ط§ط¦ط· ط­ط±ط§ط±ط© ظˆط§طھط¬ط§ظ‡ط§طھ. ط´ط§ظ‡ط¯ ظ†ظپط³ظƒ طھطھط­ظˆظ„.',
+    'tour.s4.f0':      'ظ…ط®ط·ط·ط§طھ ط§ظ„ط­ط¬ظ… ظˆط§ظ„ظ‚ظˆط©',
+    'tour.s4.f0s':     'ظ„ظƒظ„ طھظ…ط±ظٹظ† ظˆظ„ظƒظ„ ظ…ط¬ظ…ظˆط¹ط© ط¹ط¶ظ„ظٹط©',
+    'tour.s4.f1':      'ط±ط§ط¯ط§ط± طھظˆط§ط²ظ† ط§ظ„ط¹ط¶ظ„ط§طھ',
+    'tour.s4.f1s':     'ط§ظƒطھط´ظپ ط§ظ„ط¹ط¶ظ„ط§طھ ط§ظ„طھظٹ طھظ‡ظ…ظ„ظ‡ط§',
+    'tour.s4.f2':      'ظˆط²ظ† ط§ظ„ط¬ط³ظ… ظˆط§ظ„طھظ‚ظˆظٹظ…',
+    'tour.s4.f2s':     'ط³ط¬ظ„ط§طھ ظٹظˆظ…ظٹط©طŒ ط§طھط¬ط§ظ‡ط§طھ ط£ط³ط¨ظˆط¹ظٹط©طŒ ط®ط±ظٹط·ط© ط­ط±ط§ط±ظٹط©',
+    'tour.s5.tag':     'ط§ظ„طھط­ط¯ظٹ',
+    'tour.s5.title':   'ط§ط±ظپط¹ ظ…ط³طھظˆط§ظƒ ظٹظˆظ…ظٹط§ظ‹',
+    'tour.s5.sub':     'ظƒظ„ طھظƒط±ط§ط± ظٹظƒط³ط¨ظƒ XP. ط§ظ„ظ…ظ‡ط§ظ… طھط¯ظپط¹ظƒ ظ„طھط¬ط§ظˆط² ط­ط¯ظˆط¯ظƒ.',
+    'tour.s5.f0':      'ظ…ط¨طھط¯ط¦ â†’ ظ…ط­طھط±ظپ â†’ ط£ط³ط·ظˆط±ط©',
+    'tour.s5.f0s':     '10 ط±طھط¨ ظ„طھطھط³ظ„ظ‚ظ‡ط§طŒ ظƒظ„ ط±طھط¨ط© ط£طµط¹ط¨',
+    'tour.s5.f1':      'ظ…ظ‡ط§ظ… ظٹظˆظ…ظٹط© ظˆط£ط³ط¨ظˆط¹ظٹط©',
+    'tour.s5.f1s':     'طھط­ط¯ظٹط§طھ ط¬ط¯ظٹط¯ط© ظƒظ„ ظٹظˆظ…',
+    'tour.s5.f2':      'ظ…ظƒط§ظپط¢طھ ط§ظ„طھط³ظ„ط³ظ„ ظˆط§ظ„ط´ط§ط±ط§طھ',
+    'tour.s5.f2s':     'ظ„ط§ طھظƒط³ط± ط§ظ„ط³ظ„ط³ظ„ط©',
+    'tour.s6.tag':     'ط§ظ„ظ…ط¯ط±ط¨ ط§ظ„ط°ظƒظٹ',
+    'tour.s6.title':   'ظ…ط¯ط±ط¨ظƒ ط§ظ„ط´ط®طµظٹ',
+    'tour.s6.sub':     'ظٹظ‚ط±ط£ ظپظˆط±ط¬ ط¨ظٹط§ظ†ط§طھظƒ ط§ظ„طھط¯ط±ظٹط¨ظٹط© ظˆظٹطھظƒظٹظپ ظ…ط¹ظƒ ظٹظˆظ…ظٹط§ظ‹.',
+    'tour.s6.f0':      'ط¯ط±ط¬ط© ط§ظ„ط§ط³طھط¹ط¯ط§ط¯ ط§ظ„ظٹظˆظ…ظٹط©',
+    'tour.s6.f0s':     'ط§ط¹ط±ظپ ظ…طھظ‰ طھط¯ظپط¹ ط¨ظ‚ظˆط© ط£ظˆ طھطھط¹ط§ظپظ‰',
+    'tour.s6.f1':      'ط¨ط±ط§ظ…ط¬ PPL ظˆ 5/3/1 ظˆ 5أ—5',
+    'tour.s6.f1s':     'ظ‚ظˆط§ظ„ط¨ ط¹ظ„ظ…ظٹط©طŒ ط¶ط؛ط·ط© ظˆط§ط­ط¯ط© ظ„ظ„ط¨ط¯ط،',
+    'tour.s6.f2':      'ط£ظ‡ط¯ط§ظپ ط§ظ„طھط؛ط°ظٹط© ظˆط§ظ„ظ…ط§ظƒط±ظˆ',
+    'tour.s6.f2s':     'ط³ط¹ط±ط§طھ ط­ط±ط§ط±ظٹط© ظˆط¨ط±ظˆطھظٹظ† ظ…ط®طµطµط© ظ„ظ‡ط¯ظپظƒ',
+    'tour.s7.tag':     'ط£ظ†طھ ظ…ط³طھط¹ط¯',
+    'tour.s7.title':   'ظ‡ظٹط§ ظپظˆط±ط¬',
+    'tour.s7.sub':     'ط§ظ„ط­ط¯ظٹط¯ ظٹظ†طھط¸ط±. ط¬ظ„ط³طھظƒ ط§ظ„ط£ظˆظ„ظ‰ طھط¨ط¯ط£ ط§ظ„ط¢ظ†.',
+    'tour.s7.t0':      'ط³ط¬ظ‘ظ„',
+    'tour.s7.t1':      'ط§ظ„ط£ط±ظ‚ط§ظ…',
+    'tour.s7.t2':      'ط¥ط­طµط§ط¦ظٹط§طھ',
+    'tour.s7.t3':      'ط§ط±طھظ‚ظگ',
 
     // A2: Auto-rest
-    'settings.autoRest':    'بدء مؤقت الراحة تلقائياً',
-    'settings.autoRestSub': 'يبدأ مؤقت الراحة بعد كل مجموعة مسجّلة',
+    'settings.autoRest':    'ط¨ط¯ط، ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط© طھظ„ظ‚ط§ط¦ظٹط§ظ‹',
+    'settings.autoRestSub': 'ظٹط¨ط¯ط£ ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط© ط¨ط¹ط¯ ظƒظ„ ظ…ط¬ظ…ظˆط¹ط© ظ…ط³ط¬ظ‘ظ„ط©',
 
     // B1: RPE
-    'settings.rpe':    'عرض RPE لكل مجموعة',
-    'settings.rpeSub': 'معدل الجهد المبذول (1–10)',
+    'settings.rpe':    'ط¹ط±ط¶ RPE ظ„ظƒظ„ ظ…ط¬ظ…ظˆط¹ط©',
+    'settings.rpeSub': 'ظ…ط¹ط¯ظ„ ط§ظ„ط¬ظ‡ط¯ ط§ظ„ظ…ط¨ط°ظˆظ„ (1â€“10)',
     'form.rpe':        'RPE',
 
     // B2: Swap
-    'form.swap':       '↔ بديل',
-    'swap.sub':        'اختر بديلاً لنفس المجموعة العضلية:',
-    'swap.cancel':     'إلغاء',
+    'form.swap':       'â†” ط¨ط¯ظٹظ„',
+    'swap.sub':        'ط§ط®طھط± ط¨ط¯ظٹظ„ط§ظ‹ ظ„ظ†ظپط³ ط§ظ„ظ…ط¬ظ…ظˆط¹ط© ط§ظ„ط¹ط¶ظ„ظٹط©:',
+    'swap.cancel':     'ط¥ظ„ط؛ط§ط،',
 
     // C2: Photos
-    'photos.title':    'صور التقدم',
-    'photos.add':      '+ إضافة',
-    'photos.empty':    'لا توجد صور بعد. أضف أولى صور تقدمك!',
+    'photos.title':    'طµظˆط± ط§ظ„طھظ‚ط¯ظ…',
+    'photos.add':      '+ ط¥ط¶ط§ظپط©',
+    'photos.empty':    'ظ„ط§ طھظˆط¬ط¯ طµظˆط± ط¨ط¹ط¯. ط£ط¶ظپ ط£ظˆظ„ظ‰ طµظˆط± طھظ‚ط¯ظ…ظƒ!',
 
   }
 };
 
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  TRANSLATION ENGINE
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let currentLang = localStorage.getItem('forge_lang') || 'en';
 
-/** Translate a key — falls back to English if key missing in Arabic */
+/** Translate a key â€” falls back to English if key missing in Arabic */
 function t(key) {
   return (LANGS[currentLang] && LANGS[currentLang][key]) || LANGS.en[key] || key;
 }
@@ -1456,9 +1476,10 @@ function applyLanguage() {
   // Update language buttons (header + floating)
   const btn = document.getElementById('lang-toggle-btn');
   const floatBtn = document.getElementById('lang-toggle-float');
-  const langLabel = isAr ? 'EN' : 'ع';
+  const langLabel = isAr ? 'EN' : 'AR';
   if (btn) btn.textContent = langLabel;
   if (floatBtn) floatBtn.textContent = langLabel;
+  if (typeof window._authApplyLanguage === 'function') window._authApplyLanguage();
 
   // Translate all static data-i18n elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -1603,7 +1624,7 @@ function translateDynamicElements() {
   // App subtitle
   const tag = document.getElementById('header-greeting');
   // only update if it still shows the default subtitle (don't overwrite greeting)
-  if (tag && (tag.textContent === '// Gym OS' || tag.textContent === '// تتبع التمارين')) {
+  if (tag && (tag.textContent === '// Gym OS' || tag.textContent === '// طھطھط¨ط¹ ط§ظ„طھظ…ط§ط±ظٹظ†')) {
     tag.textContent = t('app.subtitle');
   }
 
@@ -1716,13 +1737,13 @@ function translateDynamicElements() {
   const pwaBannerSub   = document.getElementById('pwa-banner-sub');
   const pwaInstallBtn  = document.getElementById('pwa-install-btn');
   const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
-  if (pwaBannerTitle) pwaBannerTitle.textContent = isAr ? 'تثبيت فورج' : 'Install FORGE';
-  if (pwaBannerSub)   pwaBannerSub.textContent   = isAr ? 'أضف إلى الشاشة الرئيسية للحصول على تجربة التطبيق الكاملة' : 'Add to home screen for the full app experience';
-  if (pwaInstallBtn)  pwaInstallBtn.textContent   = isAr ? 'تثبيت' : 'INSTALL';
+  if (pwaBannerTitle) pwaBannerTitle.textContent = isAr ? 'طھط«ط¨ظٹطھ ظپظˆط±ط¬' : 'Install FORGE';
+  if (pwaBannerSub)   pwaBannerSub.textContent   = isAr ? 'ط£ط¶ظپ ط¥ظ„ظ‰ ط§ظ„ط´ط§ط´ط© ط§ظ„ط±ط¦ظٹط³ظٹط© ظ„ظ„ط­طµظˆظ„ ط¹ظ„ظ‰ طھط¬ط±ط¨ط© ط§ظ„طھط·ط¨ظٹظ‚ ط§ظ„ظƒط§ظ…ظ„ط©' : 'Add to home screen for the full app experience';
+  if (pwaInstallBtn)  pwaInstallBtn.textContent   = isAr ? 'طھط«ط¨ظٹطھ' : 'INSTALL';
 }
 
 function updateNavLabels() {
-  // Nav labels now use data-i18n spans — handled by the main applyLanguage scan.
+  // Nav labels now use data-i18n spans â€” handled by the main applyLanguage scan.
   // This function is kept for legacy compatibility but the spans are the source of truth.
   const navMap = {
     'bnav-log': 'nav.log',
@@ -1764,22 +1785,22 @@ function updateFormLabels() {
   const exerciseLabel = document.querySelector('label[for="exercise-select"]');
   if (exerciseLabel) exerciseLabel.textContent = t('form.exercise');
 
-  // Save button — update only the text span, not the SVG icon
+  // Save button â€” update only the text span, not the SVG icon
   const saveBtnSpan = document.querySelector('[onclick="saveWorkout()"] span[data-i18n="form.save"]');
   if (saveBtnSpan) saveBtnSpan.textContent = t('form.save');
   const saveBwBtn = document.querySelector('[onclick="saveBwWorkout()"]');
   if (saveBwBtn) saveBwBtn.textContent = t('bw.save');
 
-  // Add set buttons — use data-i18n so applyLanguage handles them, but also update here for instant refresh
+  // Add set buttons â€” use data-i18n so applyLanguage handles them, but also update here for instant refresh
   document.querySelectorAll('[onclick="addSet()"][data-i18n]').forEach(btn => btn.textContent = t('form.addSet'));
   document.querySelectorAll('[onclick="addBwSet()"][data-i18n]').forEach(btn => btn.textContent = t('bw.addSet'));
 
-  // "Recent —" heading (has a child span — update text node only)
+  // "Recent â€”" heading (has a child span â€” update text node only)
   const recentHeading = document.getElementById('wgt-muscle-history-heading');
   if (recentHeading) {
     const _fAr2 = (typeof currentLang !== 'undefined') && currentLang === 'ar';
     const span = recentHeading.querySelector('#wgt-muscle-history-label');
-    recentHeading.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = _fAr2 ? 'الأخيرة — ' : 'Recent — '; });
+    recentHeading.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = _fAr2 ? 'ط§ظ„ط£ط®ظٹط±ط© â€” ' : 'Recent â€” '; });
     if (span && !recentHeading.contains(span)) recentHeading.appendChild(span);
   }
 
@@ -1789,8 +1810,8 @@ function updateFormLabels() {
     const _fAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
     const _isWgt = (typeof workoutMode === 'undefined') || workoutMode === 'weighted';
     exPanelTitle.textContent = _isWgt
-      ? (_fAr ? 'إدخال التمرين' : 'Exercise Entry')
-      : (_fAr ? 'تمرين وزن الجسم' : 'Bodyweight Exercise');
+      ? (_fAr ? 'ط¥ط¯ط®ط§ظ„ ط§ظ„طھظ…ط±ظٹظ†' : 'Exercise Entry')
+      : (_fAr ? 'طھظ…ط±ظٹظ† ظˆط²ظ† ط§ظ„ط¬ط³ظ…' : 'Bodyweight Exercise');
   }
 
   // Exercise name placeholder
@@ -1799,15 +1820,15 @@ function updateFormLabels() {
     const _fAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
     const _isWgt = (typeof workoutMode === 'undefined') || workoutMode === 'weighted';
     exInput.placeholder = _isWgt
-      ? (_fAr ? 'مثال: ضغط الصدر، القرفصاء…' : 'e.g. Bench Press, Squat…')
-      : (_fAr ? 'مثال: ضغط، بيربي…' : 'e.g. Push-Ups, Burpees…');
+      ? (_fAr ? 'ظ…ط«ط§ظ„: ط¶ط؛ط· ط§ظ„طµط¯ط±طŒ ط§ظ„ظ‚ط±ظپطµط§ط،â€¦' : 'e.g. Bench Press, Squatâ€¦')
+      : (_fAr ? 'ظ…ط«ط§ظ„: ط¶ط؛ط·طŒ ط¨ظٹط±ط¨ظٹâ€¦' : 'e.g. Push-Ups, Burpeesâ€¦');
   }
 
   // Notes placeholder
   const notesInput = document.getElementById('session-notes');
   if (notesInput) {
     const _fAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
-    notesInput.placeholder = _fAr ? 'كيف شعرت؟ أي أرقام قياسية؟' : 'How did it feel? Any PRs?';
+    notesInput.placeholder = _fAr ? 'ظƒظٹظپ ط´ط¹ط±طھطں ط£ظٹ ط£ط±ظ‚ط§ظ… ظ‚ظٹط§ط³ظٹط©طں' : 'How did it feel? Any PRs?';
   }
 }
 
@@ -1815,8 +1836,8 @@ function updateStaticLabels() {
   // Section labels (Rest Timer title, etc.)
   document.querySelectorAll('.section-label').forEach(el => {
     const txt = el.textContent.trim();
-    if (txt === 'Rest Timer' || txt === 'مؤقت الراحة') el.textContent = t('timer.title');
-    if (txt === 'EDIT LAYOUT' || txt === 'تعديل التخطيط') return; // handled elsewhere
+    if (txt === 'Rest Timer' || txt === 'ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©') el.textContent = t('timer.title');
+    if (txt === 'EDIT LAYOUT' || txt === 'طھط¹ط¯ظٹظ„ ط§ظ„طھط®ط·ظٹط·') return; // handled elsewhere
   });
 }
 
@@ -1826,19 +1847,19 @@ function translateMoreView() {
     const txt = el.textContent.trim();
     const map = {
       'My Profile': t('more.profile'),
-      'الملف الشخصي': t('more.profile'),
+      'ط§ظ„ظ…ظ„ظپ ط§ظ„ط´ط®طµظٹ': t('more.profile'),
       'Settings': t('more.settings'),
-      'الإعدادات': t('more.settings'),
+      'ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ': t('more.settings'),
       'My Templates': t('more.templates'),
-      'قوالبي': t('more.templates'),
+      'ظ‚ظˆط§ظ„ط¨ظٹ': t('more.templates'),
       'Data & Export': t('more.data'),
-      'البيانات والتصدير': t('more.data'),
+      'ط§ظ„ط¨ظٹط§ظ†ط§طھ ظˆط§ظ„طھطµط¯ظٹط±': t('more.data'),
       'Install on Phone': t('more.install'),
-      'التثبيت على الهاتف': t('more.install'),
+      'ط§ظ„طھط«ط¨ظٹطھ ط¹ظ„ظ‰ ط§ظ„ظ‡ط§طھظپ': t('more.install'),
       'Bodyweight History': t('more.bwHistory'),
-      'سجل وزن الجسم': t('more.bwHistory'),
+      'ط³ط¬ظ„ ظˆط²ظ† ط§ظ„ط¬ط³ظ…': t('more.bwHistory'),
       'Body Composition': t('more.bodyComp'),
-      'تكوين الجسم': t('more.bodyComp'),
+      'طھظƒظˆظٹظ† ط§ظ„ط¬ط³ظ…': t('more.bodyComp'),
     };
     if (map[txt]) el.textContent = map[txt];
   });
@@ -1852,9 +1873,9 @@ function translateSettings() {
     const txt = el.textContent.trim();
     const map = {
       'Rest Timer Sound': t('settings.sound'),
-      'صوت مؤقت الراحة': t('settings.sound'),
+      'طµظˆطھ ظ…ط¤ظ‚طھ ط§ظ„ط±ط§ط­ط©': t('settings.sound'),
       'Show Last Session Hint': t('settings.hint'),
-      'عرض تلميح الجلسة السابقة': t('settings.hint'),
+      'ط¹ط±ط¶ طھظ„ظ…ظٹط­ ط§ظ„ط¬ظ„ط³ط© ط§ظ„ط³ط§ط¨ظ‚ط©': t('settings.hint'),
     };
     if (map[txt]) el.textContent = map[txt];
   });
@@ -1863,9 +1884,9 @@ function translateSettings() {
     const txt = el.textContent.trim();
     const map = {
       'Vibrate & beep when rest ends': t('settings.soundHint'),
-      'اهتزاز وصوت تنبيه عند انتهاء الراحة': t('settings.soundHint'),
+      'ط§ظ‡طھط²ط§ط² ظˆطµظˆطھ طھظ†ط¨ظٹظ‡ ط¹ظ†ط¯ ط§ظ†طھظ‡ط§ط، ط§ظ„ط±ط§ط­ط©': t('settings.soundHint'),
       'Shows previous sets when logging': t('settings.hintHint'),
-      'يعرض المجموعات السابقة عند التسجيل': t('settings.hintHint'),
+      'ظٹط¹ط±ط¶ ط§ظ„ظ…ط¬ظ…ظˆط¹ط§طھ ط§ظ„ط³ط§ط¨ظ‚ط© ط¹ظ†ط¯ ط§ظ„طھط³ط¬ظٹظ„': t('settings.hintHint'),
     };
     if (map[txt]) el.textContent = map[txt];
   });
@@ -1881,14 +1902,14 @@ function translateDataPanel() {
       Array.from(el.childNodes).forEach(n => { if (n.nodeType === 3) n.remove(); });
       el.appendChild(document.createTextNode(newTxt));
     };
-    if (txt.includes('Export') || txt.includes('تصدير')) {
+    if (txt.includes('Export') || txt.includes('طھطµط¯ظٹط±')) {
       replaceText(t('data.export'));
-    } else if (txt.includes('Backup') || txt.includes('نسخ احتياطي')) {
+    } else if (txt.includes('Backup') || txt.includes('ظ†ط³ط® ط§ط­طھظٹط§ط·ظٹ')) {
       replaceText(t('data.backup'));
-    } else if (txt.includes('Clear') || txt.includes('مسح')) {
+    } else if (txt.includes('Clear') || txt.includes('ظ…ط³ط­')) {
       replaceText(t('data.clear'));
-    } else if (txt.includes('Restore') || txt.includes('استعادة')) {
-      // label has hidden file input — preserve it
+    } else if (txt.includes('Restore') || txt.includes('ط§ط³طھط¹ط§ط¯ط©')) {
+      // label has hidden file input â€” preserve it
       const input = el.querySelector('input');
       Array.from(el.childNodes).forEach(n => { if (n.nodeType === 3) n.remove(); });
       el.appendChild(document.createTextNode(t('data.restore')));
@@ -1906,11 +1927,11 @@ function translateInstallGuide() {
     const title = titleEl.textContent.trim();
     const map = {
       'Android (Chrome)':   { title: t('install.android'), text: t('install.androidText') },
-      'أندرويد (Chrome)':   { title: t('install.android'), text: t('install.androidText') },
+      'ط£ظ†ط¯ط±ظˆظٹط¯ (Chrome)':   { title: t('install.android'), text: t('install.androidText') },
       'iPhone (Safari)':    { title: t('install.ios'),     text: t('install.iosText') },
-      'آيفون (Safari)':     { title: t('install.ios'),     text: t('install.iosText') },
+      'ط¢ظٹظپظˆظ† (Safari)':     { title: t('install.ios'),     text: t('install.iosText') },
       'Get a Real APK':     { title: t('install.apk'),     text: t('install.apkText') },
-      'الحصول على APK':     { title: t('install.apk'),     text: t('install.apkText') },
+      'ط§ظ„ط­طµظˆظ„ ط¹ظ„ظ‰ APK':     { title: t('install.apk'),     text: t('install.apkText') },
     };
     if (map[title]) {
       titleEl.textContent = map[title].title;
@@ -1919,14 +1940,14 @@ function translateInstallGuide() {
   });
 }
 
-// renderStepsPanel already handles Arabic internally — no patch needed.
+// renderStepsPanel already handles Arabic internally â€” no patch needed.
 
-// showToast is defined in the main script — no override needed.
+// showToast is defined in the main script â€” no override needed.
 // Use the global t() function to translate strings before passing to showToast().
 
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  ANDROID / MOBILE FIXES
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // 1. Fast tap on buttons (removes 300ms delay on Android)
 // Only preventDefault on non-scrollable button elements to avoid scroll interference
@@ -1951,7 +1972,7 @@ window.addEventListener('orientationchange', () => setTimeout(setVh, 300), { pas
 function lockBodyScroll()   { document.body.style.overflow = 'hidden'; }
 function unlockBodyScroll() { document.body.style.overflow = ''; }
 
-// 4. Fix input zoom on Android — ensure all number inputs have inputmode
+// 4. Fix input zoom on Android â€” ensure all number inputs have inputmode
 function fixMobileInputs() {
   document.querySelectorAll('input[type="number"]').forEach(inp => {
     if (!inp.getAttribute('inputmode')) inp.setAttribute('inputmode', 'numeric');
@@ -1969,7 +1990,7 @@ if (document.readyState === 'loading') {
 setTimeout(fixMobileInputs, 1500);
 
 // 5. Smooth scroll: webkit momentum for elements that already need to scroll
-// NOTE: do NOT set overflowY='auto' here — it traps touch-scroll on iOS/Android
+// NOTE: do NOT set overflowY='auto' here â€” it traps touch-scroll on iOS/Android
 // for elements that don't have a height constraint, blocking page scroll.
 
 // 6. Add active state visual feedback for touch (Android doesn't show :hover)
@@ -2092,9 +2113,9 @@ document.addEventListener('wheel', function(e) {
   }
 })();
 
-// ─────────────────────────────────────────────────────────
-//  INIT — Apply saved language on page load
-// ─────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//  INIT â€” Apply saved language on page load
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 (function initLanguage() {
   // Always apply language on load (for both Arabic and English)
   // so all JS-rendered content (muscle balance, vol list, etc.) uses the correct language
@@ -2106,3 +2127,4 @@ document.addEventListener('wheel', function(e) {
     doApply();
   }
 })();
+

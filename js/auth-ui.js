@@ -1,4 +1,4 @@
-// FORGE Auth UI
+﻿// FORGE Auth UI
 // Injects #forge-auth overlay into <body> and handles login / sign-up / forgot password.
 // Calls window._authSuccess(session) on successful auth (defined in index.html boot block).
 // Must load after supabase-client.js.
@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  // ── Inject overlay HTML ──────────────────────────────────────────────────
+  // â”€â”€ Inject overlay HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const overlay = document.createElement('div');
   overlay.id = 'forge-auth';
   overlay.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;';
@@ -102,6 +102,31 @@
           0 0 60px rgba(57,255,143,.06);
         animation: authCardIn .5s cubic-bezier(.22,1,.36,1) both;
         backdrop-filter: blur(12px);
+      }
+      .auth-lang-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        height: 30px;
+        min-width: 30px;
+        padding: 0 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(57,255,143,.28);
+        background: rgba(57,255,143,.1);
+        color: rgba(171,255,216,.95);
+        font-family: 'DM Mono', monospace;
+        font-size: .72rem;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+      }
+      .auth-lang-btn:hover {
+        border-color: rgba(57,255,143,.5);
+        background: rgba(57,255,143,.18);
+      }
+      [dir="rtl"] #forge-auth .auth-lang-btn {
+        left: 10px;
+        right: auto;
       }
       @keyframes authCardIn {
         from { opacity:0; transform: translateY(28px) scale(.97); }
@@ -203,6 +228,14 @@
       .auth-field input:focus {
         border-color: rgba(57,255,143,.5);
         box-shadow: 0 0 0 3px rgba(57,255,143,.08);
+      }
+      [dir="rtl"] #forge-auth .auth-field label,
+      [dir="rtl"] #forge-auth .auth-logo,
+      [dir="rtl"] #forge-auth .auth-version {
+        text-align: right;
+      }
+      [dir="rtl"] #forge-auth .auth-forgot {
+        text-align: left;
       }
 
       /* Forgot password link */
@@ -376,6 +409,7 @@
     <div class="auth-particles" id="auth-particles"></div>
 
     <div class="auth-card">
+      <button class="auth-lang-btn" id="auth-lang-btn" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
       <div class="auth-logo">
         <div class="auth-logo-icon">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39ff8f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -383,7 +417,7 @@
           </svg>
         </div>
         <span>FORGE</span>
-        <div class="auth-logo-sub">Gym Tracker</div>
+        <div class="auth-logo-sub" id="auth-logo-sub">Gym Tracker</div>
       </div>
 
       <!-- LOGIN FORM -->
@@ -393,18 +427,18 @@
           <button class="auth-tab" id="auth-tab-signup" onclick="_authSwitchTab('signup')">Sign Up</button>
         </div>
         <div class="auth-field">
-          <label for="auth-email-l">Email</label>
+          <label for="auth-email-l" id="auth-label-email-l">Email</label>
           <input type="email" id="auth-email-l" autocomplete="email" placeholder="you@example.com">
         </div>
         <div class="auth-field">
-          <label for="auth-pass-l">Password</label>
-          <input type="password" id="auth-pass-l" autocomplete="current-password" placeholder="••••••••">
+          <label for="auth-pass-l" id="auth-label-pass-l">Password</label>
+          <input type="password" id="auth-pass-l" autocomplete="current-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
         </div>
-        <button class="auth-forgot" onclick="_authSwitchTab('forgot')">Forgot password?</button>
+        <button class="auth-forgot" id="auth-forgot-btn" onclick="_authSwitchTab('forgot')">Forgot password?</button>
         <button class="auth-submit" id="auth-btn-login" onclick="_authLogin()">LOGIN</button>
         <div class="auth-error" id="auth-error-login"></div>
-        <div class="auth-divider">or</div>
-        <button class="auth-guest-btn" onclick="window._authGuestMode()">Continue as Guest</button>
+        <div class="auth-divider" id="auth-divider-login">or</div>
+        <button class="auth-guest-btn" id="auth-guest-login" onclick="window._authGuestMode()">Continue as Guest</button>
         <button class="auth-update-btn" id="auth-btn-force-update" onclick="window._authForceUpdate()">Force Update App</button>
       </div>
 
@@ -415,28 +449,28 @@
           <button class="auth-tab active" id="auth-tab-signup2" onclick="_authSwitchTab('signup')">Sign Up</button>
         </div>
         <div class="auth-field">
-          <label for="auth-email-s">Email</label>
+          <label for="auth-email-s" id="auth-label-email-s">Email</label>
           <input type="email" id="auth-email-s" autocomplete="email" placeholder="you@example.com">
         </div>
         <div class="auth-field">
-          <label for="auth-pass-s">Password</label>
+          <label for="auth-pass-s" id="auth-label-pass-s">Password</label>
           <input type="password" id="auth-pass-s" autocomplete="new-password" placeholder="Min 6 characters">
         </div>
         <button class="auth-submit" id="auth-btn-signup" onclick="_authSignup()">CREATE ACCOUNT</button>
         <div class="auth-error" id="auth-error-signup"></div>
-        <div class="auth-divider">or</div>
-        <button class="auth-guest-btn" onclick="window._authGuestMode()">Continue as Guest</button>
-        <button class="auth-update-btn" onclick="window._authForceUpdate()">Force Update App</button>
+        <div class="auth-divider" id="auth-divider-signup">or</div>
+        <button class="auth-guest-btn" id="auth-guest-signup" onclick="window._authGuestMode()">Continue as Guest</button>
+        <button class="auth-update-btn" id="auth-btn-force-update-2" onclick="window._authForceUpdate()">Force Update App</button>
       </div>
 
       <!-- FORGOT PASSWORD FORM -->
       <div id="auth-form-forgot" style="display:none;">
-        <button class="auth-back" onclick="_authSwitchTab('login')">
+        <button class="auth-back" id="auth-back-btn" onclick="_authSwitchTab('login')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to Login
+          <span id="auth-back-text">Back to Login</span>
         </button>
         <div class="auth-field">
-          <label for="auth-email-r">Email address</label>
+          <label for="auth-email-r" id="auth-label-email-r">Email address</label>
           <input type="email" id="auth-email-r" autocomplete="email" placeholder="you@example.com">
         </div>
         <button class="auth-submit" id="auth-btn-reset" onclick="_authResetPassword()">SEND RESET LINK</button>
@@ -449,7 +483,7 @@
   `;
   document.body.insertBefore(overlay, document.body.firstChild);
 
-  // ── Floating particles ───────────────────────────────────────────────────
+  // â”€â”€ Floating particles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   (function _spawnParticles() {
     const container = document.getElementById('auth-particles');
     if (!container) return;
@@ -470,15 +504,159 @@
     }
   })();
 
-  // ── Tab switching ────────────────────────────────────────────────────────
+  const _AUTH_I18N = {
+    en: {
+      logoSub: 'Gym Tracker',
+      tabLogin: 'Login',
+      tabSignup: 'Sign Up',
+      email: 'Email',
+      password: 'Password',
+      passwordMin: 'Min 6 characters',
+      forgot: 'Forgot password?',
+      loginBtn: 'LOGIN',
+      createBtn: 'CREATE ACCOUNT',
+      divider: 'or',
+      guest: 'Continue as Guest',
+      update: 'Force Update App',
+      backToLogin: 'Back to Login',
+      emailAddress: 'Email address',
+      resetBtn: 'SEND RESET LINK',
+      langTitle: 'Switch language',
+      langLabel: 'EN',
+      passMask: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+      errSupabase: 'Supabase not configured.',
+      errFill: 'Please fill in email and password.',
+      errLogin: 'Login failed.',
+      errPassLen: 'Password must be at least 6 characters.',
+      errSignup: 'Sign up failed.',
+      msgConfirmEmail: 'Check your email to confirm your account, then log in.',
+      errEnterEmail: 'Please enter your email address.',
+      msgResetSent: 'Reset link sent! Check your inbox (and spam folder).',
+      errReset: 'Could not send reset email.',
+      msgUpdating: 'Updating app... one moment.',
+      errUpdate: 'Update failed. Please refresh browser.'
+    },
+    ar: {
+      logoSub: 'ظ…طھطھط¨ط¹ ط§ظ„ط¬ظٹظ…',
+      tabLogin: 'طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„',
+      tabSignup: 'ط¥ظ†ط´ط§ط، ط­ط³ط§ط¨',
+      email: 'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ',
+      password: 'ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±',
+      passwordMin: '6 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„',
+      forgot: 'ظ‡ظ„ ظ†ط³ظٹطھ ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±طں',
+      loginBtn: 'ط¯ط®ظˆظ„',
+      createBtn: 'ط¥ظ†ط´ط§ط، ط­ط³ط§ط¨',
+      divider: 'ط£ظˆ',
+      guest: 'ط§ظ„ط¯ط®ظˆظ„ ظƒط²ط§ط¦ط±',
+      update: 'طھط­ط¯ظٹط« ط§ظ„طھط·ط¨ظٹظ‚',
+      backToLogin: 'ط§ظ„ط¹ظˆط¯ط© ظ„طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„',
+      emailAddress: 'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ',
+      resetBtn: 'ط¥ط±ط³ط§ظ„ ط±ط§ط¨ط· ط§ظ„ط§ط³طھط¹ط§ط¯ط©',
+      langTitle: 'طھط¨ط¯ظٹظ„ ط§ظ„ظ„ط؛ط©',
+      langLabel: 'ط¹',
+      passMask: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+      errSupabase: 'ط¥ط¹ط¯ط§ط¯ Supabase ط؛ظٹط± ظ…ظƒطھظ…ظ„.',
+      errFill: 'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±.',
+      errLogin: 'ظپط´ظ„ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„.',
+      errPassLen: 'ظٹط¬ط¨ ط£ظ† طھظƒظˆظ† ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± 6 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„.',
+      errSignup: 'ظپط´ظ„ ط¥ظ†ط´ط§ط، ط§ظ„ط­ط³ط§ط¨.',
+      msgConfirmEmail: 'طھط­ظ‚ظ‚ ظ…ظ† ط¨ط±ظٹط¯ظƒ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ ظ„طھط£ظƒظٹط¯ ط§ظ„ط­ط³ط§ط¨ ط«ظ… ط³ط¬ظ‘ظ„ ط§ظ„ط¯ط®ظˆظ„.',
+      errEnterEmail: 'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ.',
+      msgResetSent: 'طھظ… ط¥ط±ط³ط§ظ„ ط±ط§ط¨ط· ط§ظ„ط§ط³طھط¹ط§ط¯ط©. طھط­ظ‚ظ‚ ظ…ظ† ط¨ط±ظٹط¯ظƒ ط§ظ„ظˆط§ط±ط¯.',
+      errReset: 'طھط¹ط°ظ‘ط± ط¥ط±ط³ط§ظ„ ط±ط§ط¨ط· ط§ظ„ط§ط³طھط¹ط§ط¯ط©.',
+      msgUpdating: 'ط¬ط§ط±ظچ طھط­ط¯ظٹط« ط§ظ„طھط·ط¨ظٹظ‚... ظ„ط­ط¸ط©.',
+      errUpdate: 'ظپط´ظ„ ط§ظ„طھط­ط¯ظٹط«. ظٹط±ط¬ظ‰ ط¥ط¹ط§ط¯ط© طھط­ظ…ظٹظ„ ط§ظ„طµظپط­ط©.'
+    }
+  };
+
+  function _authLang() {
+    if (typeof currentLang !== 'undefined') return currentLang;
+    return localStorage.getItem('forge_lang') || 'en';
+  }
+
+  function _authT(k) {
+    const lang = _authLang() === 'ar' ? 'ar' : 'en';
+    return (_AUTH_I18N[lang] && _AUTH_I18N[lang][k]) || _AUTH_I18N.en[k] || '';
+  }
+
+  window._authApplyLanguage = function () {
+    const lang = _authLang() === 'ar' ? 'ar' : 'en';
+    const isAr = lang === 'ar';
+    const root = document.getElementById('forge-auth');
+    if (!root) return;
+    root.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+    root.setAttribute('lang', isAr ? 'ar' : 'en');
+
+    const mapText = {
+      'auth-logo-sub': 'logoSub',
+      'auth-tab-login': 'tabLogin',
+      'auth-tab-login2': 'tabLogin',
+      'auth-tab-signup': 'tabSignup',
+      'auth-tab-signup2': 'tabSignup',
+      'auth-label-email-l': 'email',
+      'auth-label-email-s': 'email',
+      'auth-label-pass-l': 'password',
+      'auth-label-pass-s': 'password',
+      'auth-forgot-btn': 'forgot',
+      'auth-btn-login': 'loginBtn',
+      'auth-btn-signup': 'createBtn',
+      'auth-divider-login': 'divider',
+      'auth-divider-signup': 'divider',
+      'auth-guest-login': 'guest',
+      'auth-guest-signup': 'guest',
+      'auth-btn-force-update': 'update',
+      'auth-btn-force-update-2': 'update',
+      'auth-back-text': 'backToLogin',
+      'auth-label-email-r': 'emailAddress',
+      'auth-btn-reset': 'resetBtn'
+    };
+
+    Object.entries(mapText).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = _authT(key);
+    });
+
+    const langBtn = document.getElementById('auth-lang-btn');
+    if (langBtn) {
+      langBtn.textContent = isAr ? 'EN' : 'AR';
+      langBtn.title = _authT('langTitle');
+      langBtn.setAttribute('aria-label', _authT('langTitle'));
+    }
+
+    const emailL = document.getElementById('auth-email-l');
+    const passL = document.getElementById('auth-pass-l');
+    const emailS = document.getElementById('auth-email-s');
+    const passS = document.getElementById('auth-pass-s');
+    const emailR = document.getElementById('auth-email-r');
+    if (emailL) emailL.placeholder = 'you@example.com';
+    if (passL) passL.placeholder = _authT('passMask');
+    if (emailS) emailS.placeholder = 'you@example.com';
+    if (passS) passS.placeholder = _authT('passwordMin');
+    if (emailR) emailR.placeholder = 'you@example.com';
+  };
+
+  window._authToggleLanguage = function () {
+    if (typeof toggleLanguage === 'function') {
+      toggleLanguage();
+      return;
+    }
+    const next = _authLang() === 'ar' ? 'en' : 'ar';
+    localStorage.setItem('forge_lang', next);
+    window._authApplyLanguage();
+  };
+
+  window._authApplyLanguage();
+
+  // â”€â”€ Tab switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authSwitchTab = function (tab) {
     document.getElementById('auth-form-login').style.display  = tab === 'login'  ? '' : 'none';
     document.getElementById('auth-form-signup').style.display = tab === 'signup' ? '' : 'none';
     document.getElementById('auth-form-forgot').style.display = tab === 'forgot' ? '' : 'none';
+    if (typeof window._authApplyLanguage === 'function') window._authApplyLanguage();
     _authClearAllErrors();
   };
 
-  // ── Error / success helpers ───────────────────────────────────────────────
+  // â”€â”€ Error / success helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function _authClearAllErrors() {
     ['auth-error-login','auth-error-signup','auth-error-forgot','auth-success-forgot'].forEach(id => {
       const el = document.getElementById(id);
@@ -501,7 +679,7 @@
     document.querySelectorAll('.auth-update-btn').forEach(btn => { btn.disabled = loading; });
   }
 
-  // ── Show / Hide overlay ──────────────────────────────────────────────────
+  // â”€â”€ Show / Hide overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authShowOverlay = function () {
     const el = document.getElementById('forge-auth');
     if (el) el.style.removeProperty('display');
@@ -511,12 +689,12 @@
     if (el) el.style.setProperty('display', 'none', 'important');
   };
 
-  // ── Login ────────────────────────────────────────────────────────────────
+  // â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authLogin = async function () {
-    if (!window._sb) { _authShowError('auth-error-login', 'Supabase not configured.'); return; }
+    if (!window._sb) { _authShowError('auth-error-login', _authT('errSupabase')); return; }
     const email = document.getElementById('auth-email-l')?.value.trim();
     const pass  = document.getElementById('auth-pass-l')?.value;
-    if (!email || !pass) { _authShowError('auth-error-login', 'Please fill in email and password.'); return; }
+    if (!email || !pass) { _authShowError('auth-error-login', _authT('errFill')); return; }
     _authClearAllErrors();
     _authSetLoading('auth-btn-login', true);
     try {
@@ -525,19 +703,19 @@
       _authHideOverlay();
       if (typeof window._authSuccess === 'function') window._authSuccess(data.session);
     } catch (e) {
-      _authShowError('auth-error-login', e.message || 'Login failed.');
+      _authShowError('auth-error-login', e.message || _authT('errLogin'));
     } finally {
       _authSetLoading('auth-btn-login', false);
     }
   };
 
-  // ── Sign Up ──────────────────────────────────────────────────────────────
+  // â”€â”€ Sign Up â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authSignup = async function () {
-    if (!window._sb) { _authShowError('auth-error-signup', 'Supabase not configured.'); return; }
+    if (!window._sb) { _authShowError('auth-error-signup', _authT('errSupabase')); return; }
     const email = document.getElementById('auth-email-s')?.value.trim();
     const pass  = document.getElementById('auth-pass-s')?.value;
-    if (!email || !pass) { _authShowError('auth-error-signup', 'Please fill in email and password.'); return; }
-    if (pass.length < 6) { _authShowError('auth-error-signup', 'Password must be at least 6 characters.'); return; }
+    if (!email || !pass) { _authShowError('auth-error-signup', _authT('errFill')); return; }
+    if (pass.length < 6) { _authShowError('auth-error-signup', _authT('errPassLen')); return; }
     _authClearAllErrors();
     _authSetLoading('auth-btn-signup', true);
     try {
@@ -547,21 +725,21 @@
         _authHideOverlay();
         if (typeof window._authSuccess === 'function') window._authSuccess(data.session, true);
       } else {
-        _authShowError('auth-error-signup', 'Check your email to confirm your account, then log in.');
+        _authShowError('auth-error-signup', _authT('msgConfirmEmail'));
         _authSwitchTab('login');
       }
     } catch (e) {
-      _authShowError('auth-error-signup', e.message || 'Sign up failed.');
+      _authShowError('auth-error-signup', e.message || _authT('errSignup'));
     } finally {
       _authSetLoading('auth-btn-signup', false);
     }
   };
 
-  // ── Forgot Password ──────────────────────────────────────────────────────
+  // â”€â”€ Forgot Password â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authResetPassword = async function () {
-    if (!window._sb) { _authShowError('auth-error-forgot', 'Supabase not configured.'); return; }
+    if (!window._sb) { _authShowError('auth-error-forgot', _authT('errSupabase')); return; }
     const email = document.getElementById('auth-email-r')?.value.trim();
-    if (!email) { _authShowError('auth-error-forgot', 'Please enter your email address.'); return; }
+    if (!email) { _authShowError('auth-error-forgot', _authT('errEnterEmail')); return; }
     _authClearAllErrors();
     _authSetLoading('auth-btn-reset', true);
     try {
@@ -569,16 +747,16 @@
         redirectTo: window.location.origin + window.location.pathname
       });
       if (error) throw error;
-      _authShowSuccess('auth-success-forgot', 'Reset link sent! Check your inbox (and spam folder).');
+      _authShowSuccess('auth-success-forgot', _authT('msgResetSent'));
       document.getElementById('auth-email-r').value = '';
     } catch (e) {
-      _authShowError('auth-error-forgot', e.message || 'Could not send reset email.');
+      _authShowError('auth-error-forgot', e.message || _authT('errReset'));
     } finally {
       _authSetLoading('auth-btn-reset', false);
     }
   };
 
-  // ── Guest mode ───────────────────────────────────────────────────────────
+  // â”€â”€ Guest mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authGuestMode = function () {
     localStorage.setItem('forge_guest', '1');
     _authHideOverlay();
@@ -588,7 +766,7 @@
   // Force-update helper for stale mobile PWA caches before login
   window._authForceUpdate = async function () {
     _authClearAllErrors();
-    _authShowSuccess('auth-success-forgot', 'Updating app... one moment.');
+    _authShowSuccess('auth-success-forgot', _authT('msgUpdating'));
     _authSetUpdateLoading(true);
     try {
       if ('serviceWorker' in navigator) {
@@ -606,12 +784,12 @@
       next.searchParams.set('update', '1');
       window.location.replace(next.toString());
     } catch (e) {
-      _authShowError('auth-error-login', (e && e.message) ? e.message : 'Update failed. Please refresh browser.');
+      _authShowError('auth-error-login', (e && e.message) ? e.message : _authT('errUpdate'));
       _authSetUpdateLoading(false);
     }
   };
 
-  // ── Enter key support ────────────────────────────────────────────────────
+  // â”€â”€ Enter key support â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   overlay.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     if (document.getElementById('auth-form-signup').style.display !== 'none') {
@@ -624,3 +802,4 @@
   });
 
 })();
+
