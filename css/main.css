@@ -6809,6 +6809,35 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   background:rgba(90,210,150,.38);
   border-radius:9px;
 }
+@media (max-width:700px){
+  #view-log.bw-clean-mode #section-exercise .panel{
+    border:none;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+    margin:0 -10px 10px;
+    overflow:visible;
+  }
+  #view-log.bw-clean-mode #section-exercise .panel-header{
+    border-bottom:none;
+    background:transparent;
+    padding:8px 12px 6px;
+  }
+  #view-log.bw-clean-mode #section-exercise .panel-body{
+    padding:0;
+  }
+  #view-log.bw-clean-mode #bw-exercise-picker,
+  #view-log.bw-clean-mode #bw-arcade-zone.bw-arcade-zone{
+    margin-left:0;
+    margin-right:0;
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+  }
+  #view-log.bw-clean-mode #bw-sets-section{
+    margin:0;
+  }
+}
 /* Custom cardio cards */
 .cardio-custom-block { margin-top:8px; }
 .cardio-add-custom-btn {
