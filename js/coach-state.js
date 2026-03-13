@@ -383,11 +383,20 @@
   }
   function _coachFocusNutritionLog() {
     if (typeof window.switchView === 'function') {
-      window.switchView('coach', document.querySelector('.bnav-btn[data-view="coach"]'));
+      window.switchView('coach', document.getElementById('bnav-coach'));
     }
-    if (typeof window.switchCoachTab === 'function') {
-      const btn = document.querySelector('.coach-tab-btn[data-tab="nutrition"]');
-      window.switchCoachTab('nutrition', btn || null);
+    const nutritionBtn =
+      document.querySelector('.coach-tab[data-tab="nutrition"]') ||
+      document.querySelector('.coach-tab[onclick*="coachSwitchTab(\'nutrition\'"]') ||
+      null;
+    if (typeof window.coachSwitchTab === 'function') {
+      window.coachSwitchTab('nutrition', nutritionBtn);
+    } else if (typeof window.switchCoachTab === 'function') {
+      window.switchCoachTab('nutrition', nutritionBtn);
+    } else if (typeof window.renderCoachNutrition === 'function') {
+      const tab = document.getElementById('coach-tab-nutrition');
+      if (tab) tab.style.display = '';
+      window.renderCoachNutrition();
     }
     setTimeout(() => {
       const nameInput = document.getElementById('meal-name-input');
