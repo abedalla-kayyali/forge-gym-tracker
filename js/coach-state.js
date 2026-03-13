@@ -301,6 +301,27 @@
     }
   }
 
+  function _coachBuild7DayCardioPulse(entries) {
+    const byDay = {};
+    entries.forEach(e => { byDay[e.date] = (byDay[e.date] || 0) + (e.durationMins || 0); });
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = _iso(d);
+      days.push({ key, mins: byDay[key] || 0 });
+    }
+    const max = Math.max(1, ...days.map(d => d.mins));
+    return days.map(d => {
+      const h = Math.max(8, Math.round((d.mins / max) * 42));
+      const lbl = new Date(d.key + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 1);
+      return '<div class="coach-pulse-col" title="' + d.key + ': ' + d.mins + ' min">' +
+        '<div class="coach-pulse-bar" style="height:' + h + 'px;"></div>' +
+        '<div class="coach-pulse-day">' + lbl + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
   function _coachStartWeightedFromCoach() {
     if (typeof window.switchView === 'function') window.switchView('log', document.getElementById('bnav-log'));
     if (typeof window.setWorkoutMode === 'function') window.setWorkoutMode('weighted');
@@ -329,6 +350,11 @@
       '<div class="coach-bubble coach-integration-insights">' +
         '<strong>Performance Snapshot</strong><br>' +
         'Readiness ' + s.readiness.score + '/100 · Nutrition ' + s.nutrition.score + '/100 · Active days(7d): ' + s.consistency.activeDays7 +
+        '<div class="coach-mini-tags">' +
+          '<span class="coach-mini-tag ' + (s.readiness.score >= 70 ? 'good' : s.readiness.score >= 55 ? 'warn' : 'alert') + '">Readiness</span>' +
+          '<span class="coach-mini-tag ' + (s.nutrition.score >= 70 ? 'good' : s.nutrition.score >= 55 ? 'warn' : 'alert') + '">Nutrition</span>' +
+          '<span class="coach-mini-tag ' + ((cDiff >= 0 && wDiff >= 0) ? 'good' : 'warn') + '">Momentum</span>' +
+        '</div>' +
         '<div class="coach-kpi-grid" style="margin-top:10px;">' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio Trend (14d)</div><div class="coach-kpi-value">' + (cDiff >= 0 ? '+' : '') + cDiff + '</div><div class="coach-kpi-sub">minutes vs prior 14d</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">Lift Volume Trend (14d)</div><div class="coach-kpi-value">' + (wDiff >= 0 ? '+' : '') + Math.round(wDiff) + '</div><div class="coach-kpi-sub">volume vs prior 14d</div></div>' +
@@ -447,6 +473,7 @@
     const weekTarget = 120;
     const weekPct = Math.min(100, Math.round((s.weekly.cardioMins / weekTarget) * 100));
     const latest = cardio.slice().sort((a, b) => _dayMs(b.date) - _dayMs(a.date))[0];
+    const pulse = _coachBuild7DayCardioPulse(cardio);
 
     el.innerHTML =
       '<div class="coach-cardio-wrap">' +
@@ -460,6 +487,10 @@
           '<div class="coach-kpi-card"><div class="coach-kpi-label">Weekly Target</div><div class="coach-kpi-value">' + weekPct + '%</div><div class="coach-kpi-sub">' + s.weekly.cardioMins + ' / ' + weekTarget + ' min</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">Top Modality</div><div class="coach-kpi-value">' + topAct + '</div><div class="coach-kpi-sub">' + (topActMap[topAct] || 0) + ' sessions</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">Average Duration</div><div class="coach-kpi-value">' + avgDur + 'm</div><div class="coach-kpi-sub">latest: ' + (latest ? latest.date : '--') + '</div></div>' +
+        '</div>' +
+        '<div class="coach-pulse-wrap">' +
+          '<div class="coach-pulse-head">7-Day Cardio Pulse</div>' +
+          '<div class="coach-pulse-row">' + pulse + '</div>' +
         '</div>' +
         '<div class="coach-bubble">' +
           '<strong>Suggested next cardio:</strong><br>' +
@@ -491,6 +522,11 @@
         '<div class="ctoday-plan-note"><strong>Today sessions:</strong> ' + sessionsToday + ' (W:' + Number(s.today.weighted) + ' BW:' + Number(s.today.bw) + ' C:' + Number(s.today.cardio) + ')</div>' +
         '<div class="ctoday-plan-note"><strong>Cardio week:</strong> ' + s.weekly.cardioMins + ' min</div>' +
         '<div class="ctoday-plan-note"><strong>Nutrition:</strong> ' + s.nutrition.note + '</div>' +
+        '<div class="coach-dual-actions" style="margin-top:10px;">' +
+          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">Weighted</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">Bodyweight</button>' +
+        '</div>' +
+        '<div style="margin-top:8px;"><button class="coach-action-btn" style="width:100%;" onclick="_coachStartCardioFromCoach()">Cardio</button></div>' +
       '</div>';
     const greeting = host.querySelector('.ctoday-greeting');
     if (greeting) greeting.insertAdjacentHTML('afterend', brief);
