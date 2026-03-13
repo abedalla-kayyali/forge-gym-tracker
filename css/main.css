@@ -6555,8 +6555,27 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .nut-charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 14px; }
 .nut-chart-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:12px 14px; }
 .nut-chart-card.wide { grid-column: span 2; }
+.nut-chart-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
 .nut-chart-label { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; margin-bottom:8px; }
 .nut-chart-card canvas { width:100% !important; }
+.nut-chart-expand-btn{
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  color:var(--text2);
+  border-radius:7px;
+  padding:4px 8px;
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+}
+.nut-chart-expand-btn:active{transform:scale(.98);}
 .nut-chart-tap-hint{
   margin-top:6px;
   font-family:'DM Mono',monospace;
@@ -6571,6 +6590,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .nut-macro-legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
 .nut-chart-label .nutri-icon{width:13px;height:13px;opacity:.9;margin-right:5px;}
 .sg-label .nutri-icon{width:12px;height:12px;opacity:.92;margin-right:5px;}
+.nut-chart-head .nut-chart-label{margin-bottom:0;}
 @media (max-width:720px){
   .nut-chart-card.wide { grid-column: span 1; }
 }
@@ -6663,6 +6683,10 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
     font-size:9px;
   }
   .nut-chart-modal-title{
+    font-size:9px;
+  }
+  .nut-chart-expand-btn{
+    padding:5px 8px;
     font-size:9px;
   }
 }

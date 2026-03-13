@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v68';
-window.FORGE_BUILD   = '2026-03-13 (chart expand + zoom/pan for mobile nutrition stats)';
+window.FORGE_VERSION = 'v69';
+window.FORGE_BUILD   = '2026-03-13 (fix chart zoom feature + add explicit expand buttons)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

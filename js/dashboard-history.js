@@ -1257,6 +1257,35 @@ function _openNutChartModal(sourceChart, titleText) {
 }
 
 function _bindNutritionChartExpanders() {
+  const byId = {
+    'nut-protein-chart': { title: 'Protein Trend (Daily g)', getChart: () => _nutProteinChart },
+    'nut-cal-chart': { title: 'Calorie Trend', getChart: () => _nutCalChart },
+    'nut-macro-chart': { title: 'Macro Split', getChart: () => _nutMacroChart },
+    'nut-week-chart': { title: 'Weekly Calories', getChart: () => _nutWeekChart },
+    'nut-score-chart': { title: 'Day Score', getChart: () => _nutScoreChart }
+  };
+
+  function _openById(id) {
+    const def = byId[id];
+    if (!def) return;
+    const chart = def.getChart();
+    if (!chart) {
+      if (typeof showToast === 'function') showToast('Chart not ready yet', 'warn');
+      return;
+    }
+    _openNutChartModal(chart, def.title);
+  }
+
+  document.querySelectorAll('.nut-chart-expand-btn').forEach((btn) => {
+    if (!(btn instanceof HTMLElement) || btn.dataset.zoomBound === '1') return;
+    btn.dataset.zoomBound = '1';
+    btn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      const id = btn.dataset.chart || '';
+      _openById(id);
+    });
+  });
+
   const defs = [
     { id: 'nut-protein-chart', title: 'Protein Trend (Daily g)', getChart: () => _nutProteinChart },
     { id: 'nut-cal-chart', title: 'Calorie Trend', getChart: () => _nutCalChart },
@@ -1277,11 +1306,26 @@ function _bindNutritionChartExpanders() {
       hint.textContent = 'Tap chart to expand';
       card.appendChild(hint);
     }
-    canvas.addEventListener('click', () => {
-      const chart = def.getChart();
-      _openNutChartModal(chart, def.title);
-    });
+    const open = () => _openById(def.id);
+    canvas.addEventListener('click', open);
+    canvas.addEventListener('pointerup', open);
+    canvas.addEventListener('touchend', open, { passive: true });
+    canvas.addEventListener('dblclick', open);
   });
+}
+
+function _nutChartHead(labelHtml, chartId) {
+  return `
+    <div class="nut-chart-head">
+      <div class="nut-chart-label">${labelHtml}</div>
+      <button type="button" class="nut-chart-expand-btn" data-chart="${chartId}" aria-label="Expand chart">Expand</button>
+    </div>`;
+}
+
+function _bindNutritionChartExpandersReliable() {
+  _bindNutritionChartExpanders();
+  setTimeout(_bindNutritionChartExpanders, 180);
+  setTimeout(_bindNutritionChartExpanders, 420);
 }
 
 function setVolRange(r) {
@@ -1928,24 +1972,24 @@ function renderNutritionAnalyticsPanel() {
   if (chartsZone) chartsZone.innerHTML = `
 <div class="nut-charts-grid">
   <div class="nut-chart-card wide">
-    <div class="nut-chart-label">${_nutriIcon('protein')} ${tx('Protein Trend (Daily g)','اتجاه البروتين (غ يومي)')}</div>
+    ${_nutChartHead(`${_nutriIcon('protein')} ${tx('Protein Trend (Daily g)','اتجاه البروتين (غ يومي)')}`, 'nut-protein-chart')}
     <div style="height:150px"><canvas id="nut-protein-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">${_nutriIcon('trend')} ${tx('Calorie Trend','ظ…ظ†ط­ظ†ظ‰ ط§ظ„ط³ط¹ط±ط§طھ')}</div>
+    ${_nutChartHead(`${_nutriIcon('trend')} ${tx('Calorie Trend','ظ…ظ†ط­ظ†ظ‰ ط§ظ„ط³ط¹ط±ط§طھ')}`, 'nut-cal-chart')}
     <div style="height:140px"><canvas id="nut-cal-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">${_nutriIcon('macro')} ${tx('Macro Split','طھظˆط²ظٹط¹ ط§ظ„ظ…ط§ظƒط±ظˆ')}</div>
+    ${_nutChartHead(`${_nutriIcon('macro')} ${tx('Macro Split','طھظˆط²ظٹط¹ ط§ظ„ظ…ط§ظƒط±ظˆ')}`, 'nut-macro-chart')}
     <div style="height:140px"><canvas id="nut-macro-chart"></canvas></div>
     <div class="nut-macro-legend" id="nut-macro-chart-legend"></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">${_nutriIcon('week')} ${tx('Weekly Calories','ط§ظ„ط³ط¹ط±ط§طھ ط§ظ„ط£ط³ط¨ظˆط¹ظٹط©')}</div>
+    ${_nutChartHead(`${_nutriIcon('week')} ${tx('Weekly Calories','ط§ظ„ط³ط¹ط±ط§طھ ط§ظ„ط£ط³ط¨ظˆط¹ظٹط©')}`, 'nut-week-chart')}
     <div style="height:140px"><canvas id="nut-week-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">${_nutriIcon('score')} ${tx('Day Score','ظ†ظ‚ط§ط· ط§ظ„ظٹظˆظ…')}</div>
+    ${_nutChartHead(`${_nutriIcon('score')} ${tx('Day Score','ظ†ظ‚ط§ط· ط§ظ„ظٹظˆظ…')}`, 'nut-score-chart')}
     <div style="height:140px"><canvas id="nut-score-chart"></canvas></div>
   </div>
 </div>`;
@@ -1957,7 +2001,7 @@ function renderNutritionAnalyticsPanel() {
     _renderMacroDonutChart(avgP, avgC, avgF, compliance, 'nut-macro-chart');
     _renderWeeklyBarChart(targets.targetCal, 'nut-week-chart');
     _renderDayScoreChart(dayScores, 'nut-score-chart');
-    requestAnimationFrame(_bindNutritionChartExpanders);
+    requestAnimationFrame(_bindNutritionChartExpandersReliable);
   });
 
   // Zone 3: Insights
