@@ -3873,6 +3873,33 @@ body[data-theme="solar"] .xp-fill {
   font-size:10px;
   color:var(--text2);
 }
+.nutri-custom-box{
+  margin:10px 16px 2px;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid var(--border2);
+  background:var(--bg2);
+}
+.nutri-custom-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:8px;
+}
+.nutri-custom-head label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text2);
+}
+.nutri-custom-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
 .nutr-val {
   font-family:'Bebas Neue',sans-serif; font-size:28px; color:var(--accent);
   line-height:1; letter-spacing:1px;
@@ -4165,6 +4192,7 @@ body[data-theme="solar"] .xp-fill {
 
 @media (max-width: 680px) {
   .nutri-focus-grid { grid-template-columns:1fr; gap:8px; }
+  .nutri-custom-grid { grid-template-columns:repeat(2,1fr); }
   .nutrition-grid { grid-template-columns:1fr; gap:8px; }
   .nutr-val { font-size:24px; }
   .meal-datetime-row { grid-template-columns:1fr; }

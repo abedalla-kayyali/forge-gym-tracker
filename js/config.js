@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v75';
-window.FORGE_BUILD   = '2026-03-13 (nutrition standalone UX + coach score consistency fix)';
+window.FORGE_VERSION = 'v76';
+window.FORGE_BUILD   = '2026-03-13 (coach balance fix + editable nutrition targets + meal kcal auto-calc)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

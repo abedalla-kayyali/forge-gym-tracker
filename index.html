@@ -6828,6 +6828,48 @@ function _buildMealStreakMap() {
   return out;
 }
 
+function _getNutriCustomTargets() {
+  const raw = userProfile?.customNutritionTargets;
+  if (!raw || typeof raw !== 'object') return { enabled: false, kcal: 0, p: 0, c: 0, f: 0 };
+  return {
+    enabled: !!raw.enabled,
+    kcal: Math.max(0, parseFloat(raw.kcal) || 0),
+    p: Math.max(0, parseFloat(raw.p) || 0),
+    c: Math.max(0, parseFloat(raw.c) || 0),
+    f: Math.max(0, parseFloat(raw.f) || 0)
+  };
+}
+
+function _nutriSaveCustomTargets() {
+  const enabled = !!document.getElementById('nutri-custom-enable')?.checked;
+  const kcal = Math.max(0, parseFloat(document.getElementById('nutri-target-kcal')?.value) || 0);
+  const p = Math.max(0, parseFloat(document.getElementById('nutri-target-p')?.value) || 0);
+  const c = Math.max(0, parseFloat(document.getElementById('nutri-target-c')?.value) || 0);
+  const f = Math.max(0, parseFloat(document.getElementById('nutri-target-f')?.value) || 0);
+  if (enabled && kcal <= 0 && p <= 0 && c <= 0 && f <= 0) {
+    if (typeof showToast === 'function') showToast('Set at least one custom target before enabling', 'warn');
+    return;
+  }
+  if (typeof userProfile !== 'object' || !userProfile) userProfile = {};
+  userProfile.customNutritionTargets = { enabled, kcal, p, c, f, updatedAt: Date.now() };
+  try { localStorage.setItem('forge_profile', JSON.stringify(userProfile)); } catch(_e) {}
+  if (typeof showToast === 'function') showToast('Nutrition targets saved', 'success');
+  renderCoachNutrition();
+}
+
+function _cnRecalcMealCaloriesFromMacros() {
+  const pEl = document.getElementById('meal-p-input');
+  const cEl = document.getElementById('meal-c-input');
+  const fEl = document.getElementById('meal-f-input');
+  const kcalEl = document.getElementById('meal-kcal-input');
+  if (!pEl || !cEl || !fEl || !kcalEl) return;
+  const p = Math.max(0, parseFloat(pEl.value) || 0);
+  const c = Math.max(0, parseFloat(cEl.value) || 0);
+  const f = Math.max(0, parseFloat(fEl.value) || 0);
+  const kcal = Math.round((p * 4) + (c * 4) + (f * 9));
+  if (kcal > 0) kcalEl.value = String(kcal);
+}
+
 function _cnApplySavedMeal(encodedName) {
   const rawName = decodeURIComponent(String(encodedName || ''));
   const saved = _findSavedMealByName(rawName);
@@ -6923,10 +6965,13 @@ function _cnAddMeal() {
     return;
   }
   const qty = Math.max(0.25, parseFloat(document.getElementById('meal-qty-input')?.value) || 1);
-  const kcal = Math.max(0, parseFloat(document.getElementById('meal-kcal-input')?.value) || 0);
+  let kcal = Math.max(0, parseFloat(document.getElementById('meal-kcal-input')?.value) || 0);
   const p = Math.max(0, parseFloat(document.getElementById('meal-p-input')?.value) || 0);
   const c = Math.max(0, parseFloat(document.getElementById('meal-c-input')?.value) || 0);
   const f = Math.max(0, parseFloat(document.getElementById('meal-f-input')?.value) || 0);
+  if (kcal <= 0 && (p > 0 || c > 0 || f > 0)) {
+    kcal = Math.round((p * 4) + (c * 4) + (f * 9));
+  }
   if (kcal <= 0 && p <= 0 && c <= 0 && f <= 0) {
     if (typeof showToast === 'function') showToast('Estimate or enter macros before adding', 'warn');
     return;
@@ -7047,6 +7092,14 @@ function renderCoachNutrition() {
       <span class="recomp-day-badge ${cycleType}">${cycleType === 'training' ? tx('Training Day','��� �����') : tx('Rest Day','��� ����')}</span>
       <span class="recomp-cycle-tip">${cycleType === 'training' ? tx('Higher carbs for training performance','���������� ���� ����� ����') : tx('Lower carbs, higher fats on rest days','���������� ��� ����� ���� �� ���� ������')}</span>
     </div>`;
+  }
+
+  const customTargets = _getNutriCustomTargets();
+  if (customTargets.enabled) {
+    if (customTargets.kcal > 0) targetCal = Math.round(customTargets.kcal);
+    if (customTargets.p > 0) proteinG = Math.round(customTargets.p);
+    if (customTargets.c > 0) carbG = Math.round(customTargets.c);
+    if (customTargets.f > 0) fatG = Math.round(customTargets.f);
   }
 
   const macroCals = proteinG * 4 + carbG * 4 + fatG * 9;
@@ -7271,6 +7324,18 @@ function renderCoachNutrition() {
       <span style="color:var(--accent);">${tx('Live','مباشر')}</span>
     </div>
     ${nutritionInsightsHtml}
+    <div class="nutri-custom-box">
+      <div class="nutri-custom-head">
+        <label><input type="checkbox" id="nutri-custom-enable" ${customTargets.enabled ? 'checked' : ''}> ${tx('Use custom targets','استخدم أهداف مخصصة')}</label>
+        <button class="meal-btn meal-btn-ghost" onclick="_nutriSaveCustomTargets()">${tx('Save Targets','حفظ الأهداف')}</button>
+      </div>
+      <div class="nutri-custom-grid">
+        <input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}">
+        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="Protein (g)" value="${customTargets.p || ''}">
+        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="Carbs (g)" value="${customTargets.c || ''}">
+        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="Fats (g)" value="${customTargets.f || ''}">
+      </div>
+    </div>
     <div class="nutrition-grid">
       <div class="nutr-card">
         <div class="nutr-val">${targetCal}</div>
@@ -7330,9 +7395,9 @@ function renderCoachNutrition() {
       </div>
       <div class="meal-macro-edit">
         <input id="meal-kcal-input" class="meal-input" type="number" min="0" placeholder="kcal">
-        <input id="meal-p-input" class="meal-input" type="number" min="0" step="0.1" placeholder="P (g)">
-        <input id="meal-c-input" class="meal-input" type="number" min="0" step="0.1" placeholder="C (g)">
-        <input id="meal-f-input" class="meal-input" type="number" min="0" step="0.1" placeholder="F (g)">
+        <input id="meal-p-input" class="meal-input" type="number" min="0" step="0.1" placeholder="P (g)" oninput="_cnRecalcMealCaloriesFromMacros()">
+        <input id="meal-c-input" class="meal-input" type="number" min="0" step="0.1" placeholder="C (g)" oninput="_cnRecalcMealCaloriesFromMacros()">
+        <input id="meal-f-input" class="meal-input" type="number" min="0" step="0.1" placeholder="F (g)" oninput="_cnRecalcMealCaloriesFromMacros()">
       </div>
       <div id="meal-estimate-note" class="meal-est-note"></div>
 

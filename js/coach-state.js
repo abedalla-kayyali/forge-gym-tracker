@@ -83,9 +83,26 @@
     return _arr(_bwWorkoutsRef()).map(w => ({
       date: _asDateKey(w?.date),
       exercise: String(w?.exercise || ''),
+      muscle: String(w?.muscle || ''),
       totalReps: _toNum(w?.totalReps, 0),
       sets: _arr(w?.sets)
     })).filter(e => !!e.date);
+  }
+
+  function _canonMuscleName(raw) {
+    const m = String(raw || '').trim().toLowerCase();
+    if (!m) return '';
+    if (m.includes('chest') || m.includes('pec')) return 'Chest';
+    if (m.includes('back') || m.includes('lat')) return 'Back';
+    if (m.includes('shoulder') || m.includes('delt')) return 'Shoulders';
+    if (m.includes('leg') || m.includes('quad') || m.includes('hamstring')) return 'Legs';
+    if (m.includes('core') || m.includes('abs') || m.includes('abdom')) return 'Core';
+    if (m.includes('bicep')) return 'Biceps';
+    if (m.includes('tricep')) return 'Triceps';
+    if (m.includes('forearm') || m.includes('grip')) return 'Forearms';
+    if (m.includes('glute') || m.includes('hip')) return 'Glutes';
+    if (m.includes('calf')) return 'Calves';
+    return '';
   }
 
   function _mealsLogRef() {
@@ -287,9 +304,17 @@
   function calcTrainingScoreUnified() {
     const state = buildCoachUnifiedState();
     const weighted = state.weighted;
-    const allMuscles = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Forearms', 'Glutes', 'Calves'];
-    const trained = new Set(weighted.map(w => w.muscle).filter(Boolean));
-    const muscleCoverage = Math.round((trained.size / allMuscles.length) * 100);
+    const balanceMuscles = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Glutes'];
+    const trained = new Set();
+    weighted.forEach(w => {
+      const c = _canonMuscleName(w.muscle);
+      if (c) trained.add(c);
+    });
+    state.bw.forEach(w => {
+      const c = _canonMuscleName(w.muscle);
+      if (c) trained.add(c);
+    });
+    const muscleCoverage = Math.round((trained.size / balanceMuscles.length) * 100);
 
     const hasW = state.weighted.length >= 2;
     const hasB = state.bw.length >= 2;
