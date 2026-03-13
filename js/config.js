@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v82';
-window.FORGE_BUILD   = '2026-03-13 (history revamp: gamified insights + SVG icons)';
+window.FORGE_VERSION = 'v84';
+window.FORGE_BUILD   = '2026-03-13 (arabic localization + ui text cleanup pass)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
