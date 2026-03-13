@@ -504,7 +504,7 @@
   <!-- ????????????????????????????????????
        LOG VIEW
   ???????????????????????????????????? -->
-  <div id="view-log" class="view active">
+  <div id="view-log" class="view active mode-unselected">
 
     <!-- EDIT MODE BAR -->
     <div class="edit-mode-bar" id="edit-mode-bar">
@@ -563,7 +563,7 @@
 
     <!-- WORKOUT MODE TOGGLE -->
     <div class="mode-toggle-row">
-      <button class="mode-toggle-btn active" id="mode-btn-weighted" onclick="setWorkoutMode('weighted')">
+      <button class="mode-toggle-btn" id="mode-btn-weighted" onclick="setWorkoutMode('weighted')">
         <svg class="mode-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5v14M18 5v14"/><path d="M2 9h4M18 9h4M2 15h4M18 15h4"/><rect x="6" y="8" width="12" height="8" rx="1"/></svg> Weighted
       </button>
       <button class="mode-toggle-btn" id="mode-btn-bodyweight" onclick="setWorkoutMode('bodyweight')">
@@ -574,8 +574,13 @@
       </button>
     </div>
 
+    <div id="log-mode-prompt" class="log-mode-prompt">
+      <div class="log-mode-prompt-title">Select Workout Type</div>
+      <div class="log-mode-prompt-sub">Choose Weighted, Bodyweight, or Cardio to start logging.</div>
+    </div>
+
     <!-- STEP TRACKER SECTION -->
-    <div class="log-section" id="section-steps" data-section="steps">
+    <div class="log-section" id="section-steps" data-section="steps" style="display:none;">
       <div class="section-edit-controls">
         <button class="sec-ctrl-btn sec-ctrl-up" onclick="moveSectionUp('section-steps')" title="Move up">?</button>
         <button class="sec-ctrl-btn sec-ctrl-down" onclick="moveSectionDown('section-steps')" title="Move down">?</button>
@@ -8901,9 +8906,9 @@ if (document.readyState === 'loading') {
     <div class="wend-share-preview-wrap">
       <canvas id="session-share-preview" width="1080" height="1350"></canvas>
     </div>
-    <div class="wend-stats" id="wend-stats"></div>
-    <div class="wend-bodymap-row" id="wend-bodymap"></div>
-    <div class="wend-ex-section" id="wend-ex-section"></div>
+    <div class="wend-stats" id="wend-stats" style="display:none;"></div>
+    <div class="wend-bodymap-row" id="wend-bodymap" style="display:none;"></div>
+    <div class="wend-ex-section" id="wend-ex-section" style="display:none;"></div>
     <div class="wend-footer">
       <button class="btn-wend-share" onclick="shareSession()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>

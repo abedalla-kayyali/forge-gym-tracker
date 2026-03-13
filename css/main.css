@@ -6723,3 +6723,55 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   color:#042316;
   box-shadow: 0 8px 22px rgba(67,255,153,.25);
 }
+
+/* Log view clean state before mode selection */
+#view-log .log-mode-prompt{
+  display:none;
+  margin:10px 4px 14px;
+  padding:16px 14px;
+  border:1px solid var(--border2);
+  border-radius:14px;
+  background:linear-gradient(145deg, rgba(20,34,26,.9), rgba(13,22,17,.85));
+}
+#view-log.mode-unselected .log-mode-prompt{ display:block; }
+#view-log.mode-unselected #template-strip-wrap,
+#view-log.mode-unselected #section-bodymap,
+#view-log.mode-unselected #section-exercise,
+#view-log.mode-unselected #muscle-history-panel{
+  display:none !important;
+}
+.log-mode-prompt-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:25px;
+  letter-spacing:.8px;
+  color:#d8ffeb;
+}
+.log-mode-prompt-sub{
+  margin-top:6px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#98c5ad;
+  line-height:1.55;
+}
+
+/* Keep steps section hidden in log view */
+#section-steps{ display:none !important; }
+
+/* Bodyweight compact mode: reduce long-page scroll pressure */
+#view-log.bw-clean-mode #template-strip-wrap,
+#view-log.bw-clean-mode #muscle-history-panel,
+#view-log.bw-clean-mode #wgt-muscle-history,
+#view-log.bw-clean-mode #last-session-hint,
+#view-log.bw-clean-mode #pr-path-banner{
+  display:none !important;
+}
+#view-log.bw-clean-mode #bw-rpg-trees{
+  max-height:48vh;
+  overflow:auto;
+  padding-right:4px;
+}
+#view-log.bw-clean-mode #bw-rpg-trees::-webkit-scrollbar{ width:6px; }
+#view-log.bw-clean-mode #bw-rpg-trees::-webkit-scrollbar-thumb{
+  background:rgba(90,210,150,.38);
+  border-radius:9px;
+}

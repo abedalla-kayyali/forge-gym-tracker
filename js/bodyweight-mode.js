@@ -489,3 +489,66 @@ function _renderBwActiveDot() {
   `;
   container.appendChild(ph);
 }
+
+// Clean log mode UX override: keep page minimal until user picks a workout type.
+(function () {
+  function _setLogModeSelectionState(selected) {
+    const logView = document.getElementById('view-log');
+    const prompt = document.getElementById('log-mode-prompt');
+    if (logView) {
+      logView.classList.toggle('mode-unselected', !selected);
+      if (!selected) logView.classList.remove('bw-clean-mode');
+    }
+    if (prompt) prompt.style.display = selected ? 'none' : '';
+  }
+
+  function _hideModeSpecificSections() {
+    const weighted = document.getElementById('weighted-sets-section');
+    const bwSets = document.getElementById('bw-sets-section');
+    const bwPicker = document.getElementById('bw-exercise-picker');
+    const cardio = document.getElementById('cardio-zone');
+    if (weighted) weighted.style.display = 'none';
+    if (bwSets) bwSets.style.display = 'none';
+    if (bwPicker) bwPicker.style.display = 'none';
+    if (cardio) cardio.style.display = 'none';
+
+    const bodyMap = document.getElementById('section-bodymap');
+    if (bodyMap) bodyMap.classList.add('bw-mode-hidden');
+
+    const exInput = document.getElementById('exercise-name');
+    const exInputGroup = exInput ? exInput.closest('.form-group') : null;
+    if (exInputGroup) exInputGroup.style.display = 'none';
+  }
+
+  const _origSetWorkoutMode = window.setWorkoutMode;
+  if (typeof _origSetWorkoutMode === 'function') {
+    window.setWorkoutMode = function patchedSetWorkoutMode(mode) {
+      _origSetWorkoutMode(mode);
+      _setLogModeSelectionState(true);
+
+      const logView = document.getElementById('view-log');
+      if (logView) logView.classList.toggle('bw-clean-mode', mode === 'bodyweight');
+
+      const exInput = document.getElementById('exercise-name');
+      const exInputGroup = exInput ? exInput.closest('.form-group') : null;
+      if (exInputGroup) exInputGroup.style.display = mode === 'weighted' ? '' : 'none';
+    };
+  }
+
+  function resetWorkoutModeSelection() {
+    _setLogModeSelectionState(false);
+    const btnW = document.getElementById('mode-btn-weighted');
+    const btnB = document.getElementById('mode-btn-bodyweight');
+    const btnC = document.getElementById('mode-btn-cardio');
+    if (btnW) btnW.classList.remove('active');
+    if (btnB) btnB.classList.remove('active');
+    if (btnC) btnC.classList.remove('active');
+    _hideModeSpecificSections();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', resetWorkoutModeSelection);
+  } else {
+    resetWorkoutModeSelection();
+  }
+})();
