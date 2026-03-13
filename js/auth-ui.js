@@ -627,9 +627,40 @@
     return localStorage.getItem('forge_lang') || 'en';
   }
 
+  function _authFixArabicMojibake(input) {
+    if (typeof input !== 'string') return input;
+    if (!/[طظØÙ]/.test(input)) return input;
+    try {
+      const dec1256 = new TextDecoder('windows-1256');
+      const rev = {};
+      for (let i = 0; i < 256; i++) {
+        const ch = dec1256.decode(new Uint8Array([i]));
+        if (rev[ch] === undefined) rev[ch] = i;
+      }
+      const bytes = [];
+      for (const ch of input) {
+        const code = ch.charCodeAt(0);
+        if (code <= 0x7f) {
+          bytes.push(code);
+          continue;
+        }
+        const b = rev[ch];
+        if (typeof b === 'number') bytes.push(b);
+        else return input;
+      }
+      const out = new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+      return /[\u0600-\u06FF]/.test(out) ? out : input;
+    } catch (e) {
+      return input;
+    }
+  }
+
   function _authT(k) {
     const lang = _authLang() === 'ar' ? 'ar' : 'en';
-    return (_AUTH_I18N[lang] && _AUTH_I18N[lang][k]) || _AUTH_I18N.en[k] || '';
+    const raw = (_AUTH_I18N[lang] && _AUTH_I18N[lang][k]) || _AUTH_I18N.en[k] || '';
+    if (lang !== 'ar') return raw;
+    if (typeof window._forgeFixArabicText === 'function') return window._forgeFixArabicText(raw);
+    return _authFixArabicMojibake(raw);
   }
 
   window._authApplyLanguage = function () {

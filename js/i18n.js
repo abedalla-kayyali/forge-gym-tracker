@@ -1454,9 +1454,54 @@ const LANGS = {
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let currentLang = localStorage.getItem('forge_lang') || 'en';
 
-/** Translate a key â€” falls back to English if key missing in Arabic */
+let _forgeCp1256ReverseMap = null;
+function _forgeGetCp1256ReverseMap() {
+  if (_forgeCp1256ReverseMap) return _forgeCp1256ReverseMap;
+  try {
+    const dec1256 = new TextDecoder('windows-1256');
+    const map = {};
+    for (let i = 0; i < 256; i++) {
+      const ch = dec1256.decode(new Uint8Array([i]));
+      if (map[ch] === undefined) map[ch] = i;
+    }
+    _forgeCp1256ReverseMap = map;
+  } catch (e) {
+    _forgeCp1256ReverseMap = {};
+  }
+  return _forgeCp1256ReverseMap;
+}
+
+function _forgeFixArabicMojibake(input) {
+  if (typeof input !== 'string') return input;
+  if (!/[طظØÙ]/.test(input)) return input;
+  const rev = _forgeGetCp1256ReverseMap();
+  try {
+    const bytes = [];
+    for (const ch of input) {
+      const code = ch.charCodeAt(0);
+      if (code <= 0x7f) {
+        bytes.push(code);
+        continue;
+      }
+      const b = rev[ch];
+      if (typeof b === 'number') {
+        bytes.push(b);
+      } else {
+        return input;
+      }
+    }
+    const decoded = new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+    return /[\u0600-\u06FF]/.test(decoded) ? decoded : input;
+  } catch (e) {
+    return input;
+  }
+}
+window._forgeFixArabicText = _forgeFixArabicMojibake;
+
+/** Translate a key - falls back to English if key missing in Arabic */
 function t(key) {
-  return (LANGS[currentLang] && LANGS[currentLang][key]) || LANGS.en[key] || key;
+  const raw = (LANGS[currentLang] && LANGS[currentLang][key]) || LANGS.en[key] || key;
+  return currentLang === 'ar' ? _forgeFixArabicMojibake(raw) : raw;
 }
 
 function toggleLanguage() {
