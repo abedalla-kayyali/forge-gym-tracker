@@ -1420,7 +1420,13 @@ body[data-theme="solar"] .lmb-sub{color:#b06020;}
   display:grid;
   place-items:center;
   background:rgba(255,255,255,.04);
-  font-size:12px;
+  color:var(--text1);
+}
+.nutri-insight-icon .nutri-icon{
+  width:13px;
+  height:13px;
+  margin-right:0;
+  vertical-align:0;
 }
 .nutri-insight-title{
   font-family:'DM Mono',monospace;
@@ -1506,11 +1512,22 @@ body[data-theme="solar"] .lmb-sub{color:#b06020;}
   font-size:10px;
   color:var(--text2);
 }
+.nutri-pill .nutri-icon{
+  width:12px;
+  height:12px;
+  margin-right:5px;
+  color:var(--accent);
+}
+.nutri-quick-pills{
+  margin-top:2px;
+  margin-bottom:10px;
+}
 @media (max-width:720px){
   .nutri-ana-grid{grid-template-columns:1fr;}
   .nutri-deep-grid{grid-template-columns:1fr;}
   .nutri-insight-body{font-size:12px;}
   .nutri-deep-line{font-size:11px;}
+  .nutri-pill{font-size:9px;padding:4px 8px;}
 }
 /* ── Volume range pills ── */
 .vol-range-pills{display:flex;gap:4px;}
@@ -6504,6 +6521,17 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .cali-journey-bar-fill { height:4px; background:var(--accent); border-radius:2px; transition:width .4s ease; }
 
 /* ── NUTRITION DASHBOARD (v44) ── */
+.nutri-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:14px;
+  height:14px;
+  vertical-align:-2px;
+  margin-right:4px;
+  color:currentColor;
+}
+.nutri-icon svg{width:100%;height:100%;}
 /* Today zone */
 .nut-today-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:14px; margin:0 14px 14px; }
 .nut-today-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
@@ -6522,14 +6550,21 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .nut-macro-val { width:72px; text-align:right; color:var(--text1); }
 .nut-today-empty { text-align:center; padding:18px 0; color:var(--text3); font-size:12px; }
 .nut-today-empty a { color:var(--accent); text-decoration:none; cursor:pointer; }
+.nut-today-empty .nutri-icon{width:16px;height:16px;margin-right:6px;vertical-align:-3px;color:var(--accent);}
 /* Charts grid */
 .nut-charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 14px 14px; }
 .nut-chart-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:12px 14px; }
+.nut-chart-card.wide { grid-column: span 2; }
 .nut-chart-label { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; margin-bottom:8px; }
 .nut-chart-card canvas { width:100% !important; }
 .nut-macro-legend { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
 .nut-macro-legend-item { font-family:'DM Mono',monospace; font-size:8px; color:var(--text3); display:flex; align-items:center; gap:3px; }
 .nut-macro-legend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+.nut-chart-label .nutri-icon{width:13px;height:13px;opacity:.9;margin-right:5px;}
+.sg-label .nutri-icon{width:12px;height:12px;opacity:.92;margin-right:5px;}
+@media (max-width:720px){
+  .nut-chart-card.wide { grid-column: span 1; }
+}
 
 
 /* ── CARDIO / RECOVERY (v46) ── */

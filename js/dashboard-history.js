@@ -1142,7 +1142,7 @@ function renderMuscleFreshness() {
 
 // â”€â”€ Volume Panel State + Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let _volRange = '3m', _volMuscle = '';
-let _nutCalChart = null, _nutMacroChart = null, _nutWeekChart = null, _nutScoreChart = null;
+let _nutCalChart = null, _nutMacroChart = null, _nutWeekChart = null, _nutScoreChart = null, _nutProteinChart = null;
 
 function setVolRange(r) {
   _volRange = r;
@@ -1372,6 +1372,58 @@ function _flattenMealsByPeriod() {
   return dayMap;
 }
 
+function _calcMealRepeatStreaks(dayMap) {
+  const byMeal = new Map(); // normalized name -> { label, days:Set<YYYY-MM-DD> }
+  const dayKeys = Object.keys(dayMap || {});
+  dayKeys.forEach((dayKey) => {
+    const meals = Array.isArray(dayMap[dayKey]) ? dayMap[dayKey] : [];
+    meals.forEach((m) => {
+      const rawName = String(m?.name || '').trim();
+      if (!rawName) return;
+      const key = rawName.toLowerCase().replace(/\s+/g, ' ');
+      if (!key) return;
+      if (!byMeal.has(key)) byMeal.set(key, { label: rawName, days: new Set() });
+      byMeal.get(key).days.add(dayKey);
+    });
+  });
+
+  function _toDayNum(dateKey) {
+    const ms = Date.parse(dateKey + 'T00:00:00');
+    return Number.isFinite(ms) ? Math.floor(ms / 86400000) : NaN;
+  }
+
+  let best = { name: '', longest: 0, current: 0, lastDate: '' };
+  byMeal.forEach((info) => {
+    const nums = Array.from(info.days).map(_toDayNum).filter(Number.isFinite).sort((a, b) => a - b);
+    if (!nums.length) return;
+
+    let longest = 1;
+    let run = 1;
+    for (let i = 1; i < nums.length; i += 1) {
+      if (nums[i] === nums[i - 1] + 1) run += 1;
+      else run = 1;
+      if (run > longest) longest = run;
+    }
+
+    let current = 1;
+    for (let i = nums.length - 1; i > 0; i -= 1) {
+      if (nums[i] === nums[i - 1] + 1) current += 1;
+      else break;
+    }
+
+    const lastNum = nums[nums.length - 1];
+    const lastDate = new Date(lastNum * 86400000).toISOString().slice(0, 10);
+    if (
+      longest > best.longest ||
+      (longest === best.longest && current > best.current)
+    ) {
+      best = { name: info.label, longest, current, lastDate };
+    }
+  });
+
+  return best;
+}
+
 function _mkNutChartOpts(overrides) {
   const base = {
     responsive: true, maintainAspectRatio: false,
@@ -1397,13 +1449,37 @@ function _mkNutChartOpts(overrides) {
   return base;
 }
 
+function _nutriIcon(name) {
+  const paths = {
+    meal: '<path d="M6 3v7M10 3v7M6 7h4M14 3v18M14 12h4a2 2 0 0 0 2-2V3"/>',
+    chart: '<path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/>',
+    trend: '<path d="M4 16l5-5 3 3 6-8"/><path d="M14 6h4v4"/>',
+    macro: '<circle cx="12" cy="12" r="8"/><path d="M12 12V4"/><path d="M12 12l6 3"/>',
+    week: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M7 3.5v3M17 3.5v3M3.5 9.5h17"/>',
+    score: '<path d="M12 3l7 4v5c0 4.2-2.8 7.6-7 9-4.2-1.4-7-4.8-7-9V7l7-4Z"/><path d="M9 12l2 2 4-4"/>',
+    protein: '<path d="M6 13c0-3 2-5 6-6 0 4-1 6-4 8"/><path d="M8 13c1-1 3-2 5-2"/><path d="M15 6c2 1 3 3 3 5"/>',
+    deficit: '<path d="M4 12h16"/><path d="M4 7h10"/><path d="M4 17h7"/>',
+    streak: '<path d="M12 3c3 3 5 5 5 8a5 5 0 1 1-10 0c0-3 2-5 5-8Z"/>',
+    best: '<path d="M12 4l2.2 4.4L19 9l-3.5 3.4.8 4.8-4.3-2.2-4.3 2.2.8-4.8L5 9l4.8-.6L12 4Z"/>',
+    warn: '<path d="M12 3l9 16H3L12 3Z"/><path d="M12 9v4"/><path d="M12 16h.01"/>',
+    ok: '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.3 2.3 4.7-4.7"/>',
+    balance: '<path d="M12 4v14"/><path d="M6 8h12"/><path d="M7 8l-3 5h6l-3-5Z"/><path d="M17 8l-3 5h6l-3-5Z"/>',
+    day: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M7 3.5v3M17 3.5v3M3.5 9.5h17"/><path d="M8 13h8"/>',
+    timing: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+    consistency: '<path d="M4 15l4-4 3 3 6-6"/><path d="M17 8h3v3"/>',
+    repeat: '<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>'
+  };
+  const shape = paths[name] || paths.chart;
+  return `<span class="nutri-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${shape}</svg></span>`;
+}
+
 function _renderNutTodayZone(zone, targets) {
   if (!zone) return;
   const todayKey = _isoKey(new Date());
   const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
   const todayMeals = Array.isArray(ml[todayKey]) ? ml[todayKey] : [];
   if (!todayMeals.length) {
-    zone.innerHTML = '<div class="nut-today-card"><div class="nut-today-empty">No meals logged today \u2014 <a onclick="switchMainTab(\'coach\');setTimeout(()=>switchCoachTab&&switchCoachTab(\'nutrition\'),120)" style="cursor:pointer">Log your first meal \uD83C\uDF7D\uFE0F</a></div></div>';
+    zone.innerHTML = '<div class="nut-today-card"><div class="nut-today-empty">' + _nutriIcon('meal') + ' No meals logged today - <a onclick="switchMainTab(\'coach\');setTimeout(()=>switchCoachTab&&switchCoachTab(\'nutrition\'),120)" style="cursor:pointer">Log your first meal</a></div></div>';
     return;
   }
   const s = todayMeals.reduce((a, m) => { a.kcal += (+m.kcal||0); a.p += (+m.p||0); a.c += (+m.c||0); a.f += (+m.f||0); return a; }, { kcal:0, p:0, c:0, f:0 });
@@ -1412,11 +1488,11 @@ function _renderNutTodayZone(zone, targets) {
   zone.innerHTML = `
 <div class="nut-today-card">
   <div class="nut-today-header">
-    <span class="nut-today-title">\uD83C\uDF7D\uFE0F TODAY</span>
+    <span class="nut-today-title">${_nutriIcon('meal')} TODAY</span>
     <span class="nut-today-meals-badge">${todayMeals.length} meal${todayMeals.length !== 1 ? 's' : ''}</span>
   </div>
   <div class="nut-today-kcal">${Math.round(s.kcal)}<span class="nut-today-kcal-target"> / ${Math.round(targets.targetCal)} kcal</span></div>
-  <div class="nut-today-remaining">${remaining > 0 ? remaining + ' kcal remaining' : 'Goal reached! \uD83C\uDFAF'}</div>
+  <div class="nut-today-remaining">${remaining > 0 ? remaining + ' kcal remaining' : 'Goal reached'}</div>
   <div class="nut-cal-bar-wrap"><div class="nut-cal-bar-fill" style="width:${pct(s.kcal, targets.targetCal)}%"></div></div>
   <div class="nut-macro-rows">
     <div class="nut-macro-row"><span class="nut-macro-label">P</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.p, targets.proteinG)}%;background:#4ade80"></div></div><span class="nut-macro-val">${Math.round(s.p)}g / ${Math.round(targets.proteinG)}g</span></div>
@@ -1444,6 +1520,57 @@ function _renderCalorieTrendChart(daily, targetCal, canvasId) {
       ]
     },
     options: _mkNutChartOpts({ scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b', maxTicksLimit: 7 } }, y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b' } } } })
+  });
+}
+
+function _renderProteinTrendChart(daily, targetProtein, canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  if (_nutProteinChart) { _nutProteinChart.destroy(); _nutProteinChart = null; }
+  if (daily.length < 3) { if (canvas.parentElement) canvas.parentElement.style.display = 'none'; return; }
+  if (canvas.parentElement) canvas.parentElement.style.display = '';
+  const labels = daily.map(d => { const p = d.key.split('-'); return p[2] + '/' + p[1]; });
+  _nutProteinChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          data: daily.map(d => d.p),
+          borderColor: '#4ade80',
+          backgroundColor: 'rgba(74,222,128,.20)',
+          fill: true,
+          tension: 0.28,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          borderWidth: 2.2
+        },
+        {
+          data: daily.map(() => targetProtein),
+          borderColor: 'rgba(230,184,74,.48)',
+          borderDash: [5, 4],
+          borderWidth: 1.4,
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: _mkNutChartOpts({
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b', maxTicksLimit: 8 } },
+        y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,.04)' }, ticks: { font: { family: "'DM Mono',monospace", size: 8 }, color: '#6b7c6b', callback: v => v + 'g' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,.85)',
+          bodyFont: { family: "'DM Mono',monospace", size: 10 },
+          padding: 8,
+          cornerRadius: 6,
+          callbacks: { label: ctx => (ctx.datasetIndex === 0 ? 'Protein: ' : 'Target: ') + Math.round(ctx.parsed.y) + 'g' }
+        }
+      }
+    })
   });
 }
 
@@ -1536,6 +1663,7 @@ function renderNutritionAnalyticsPanel() {
 
   const ar  = (typeof currentLang !== 'undefined') && currentLang === 'ar';
   const tx  = (en, arTxt) => ar ? arTxt : en;
+  const esc = (v) => (window.FORGE_STORAGE?.esc ? window.FORGE_STORAGE.esc(v) : String(v || '').replace(/[&<>"']/g, ''));
   const pLabel = _dashPeriod === 'ALL' ? tx('ALL TIME','ظƒظ„ ط§ظ„ظˆظ‚طھ')
     : _dashPeriod === '7D' ? tx('LAST 7D','ط¢ط®ط± 7 ط£ظٹط§ظ…')
     : _dashPeriod === '1M' ? tx('LAST 30D','ط¢ط®ط± 30 ظٹظˆظ…')
@@ -1550,13 +1678,14 @@ function renderNutritionAnalyticsPanel() {
 
   const dayMap  = _flattenMealsByPeriod();
   const dayKeys = Object.keys(dayMap).sort();
+  const mealRepeat = _calcMealRepeatStreaks(dayMap);
 
   if (!dayKeys.length) {
     const sz = document.getElementById('nut-stats-zone');
     const cz = document.getElementById('nut-charts-zone');
     if (sz) sz.innerHTML = '';
     if (cz) cz.innerHTML = '';
-    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">\uD83D\uDCCA</div><div class="empty-title">${tx('No nutrition trend data yet.','ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ظ„ط§طھط¬ط§ظ‡ط§طھ ط¨ط¹ط¯.')}</div></div>`;
+    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">${_nutriIcon('chart')}</div><div class="empty-title">${tx('No nutrition trend data yet.','ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ظ„ط§طھط¬ط§ظ‡ط§طھ ط¨ط¹ط¯.')}</div></div>`;
     return;
   }
 
@@ -1628,24 +1757,29 @@ function renderNutritionAnalyticsPanel() {
     <div class="sg-sub">${tx('Targets:','ط£ظ‡ط¯ط§ظپ:')} ${Math.round(targets.proteinG)}P / ${Math.round(targets.carbG)}C / ${Math.round(targets.fatG)}F</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">ًں¥© ${tx('Protein Days','ط£ظٹط§ظ… ط§ظ„ط¨ط±ظˆطھظٹظ†')}</div>
+    <div class="sg-label">${_nutriIcon('protein')} ${tx('Protein Days','ط£ظٹط§ظ… ط§ظ„ط¨ط±ظˆطھظٹظ†')}</div>
     <div class="sg-val sg-neutral">${proteinDays}<span class="sg-unit"> / ${nDays}</span></div>
     <div class="sg-sub">${nDays ? Math.round(proteinDays/nDays*100) : 0}% ${tx('of period','ظ…ظ† ط§ظ„ظپطھط±ط©')}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">ًں“‰ ${tx('Deficit Days','ط£ظٹط§ظ… ط§ظ„ط¹ط¬ط²')}</div>
+    <div class="sg-label">${_nutriIcon('deficit')} ${tx('Deficit Days','ط£ظٹط§ظ… ط§ظ„ط¹ط¬ط²')}</div>
     <div class="sg-val sg-neutral">${deficitDays}<span class="sg-unit"> / ${nDays}</span></div>
     <div class="sg-sub">${nDays ? Math.round(deficitDays/nDays*100) : 0}% ${tx('of period','ظ…ظ† ط§ظ„ظپطھط±ط©')}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">ًں”¥ ${tx('Cur. Streak','ط§ظ„ط¥ظ†ط¬ط§ط² ط§ظ„ط­ط§ظ„ظٹ')}</div>
-    <div class="sg-val${currentStreak >= 3 ? '' : ' sg-neutral'}"${currentStreak >= 3 ? ' style="color:#e6b84a"' : ''}>${currentStreak > 0 ? currentStreak + '<span class="sg-unit"> ' + tx('days','ط£ظٹط§ظ…') + '</span>' : 'â€”'}</div>
+    <div class="sg-label">${_nutriIcon('streak')} ${tx('Cur. Streak','ط§ظ„ط¥ظ†ط¬ط§ط² ط§ظ„ط­ط§ظ„ظٹ')}</div>
+    <div class="sg-val${currentStreak >= 3 ? '' : ' sg-neutral'}"${currentStreak >= 3 ? ' style="color:#e6b84a"' : ''}>${currentStreak > 0 ? currentStreak + '<span class="sg-unit"> ' + tx('days','ط£ظٹط§ظ…') + '</span>' : '--'}</div>
     <div class="sg-sub">${currentStreak > 0 ? tx('protein goal','ظ‡ط¯ظپ ط§ظ„ط¨ط±ظˆطھظٹظ†') : tx('start your streak!','ط§ط¨ط¯ط£ ط¥ظ†ط¬ط§ط²ظƒ!')}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">ًںڈ† ${tx('Best Streak','ط£ظپط¶ظ„ ط¥ظ†ط¬ط§ط²')}</div>
+    <div class="sg-label">${_nutriIcon('best')} ${tx('Best Streak','ط£ظپط¶ظ„ ط¥ظ†ط¬ط§ط²')}</div>
     <div class="sg-val sg-neutral">${bestStreak}<span class="sg-unit"> ${tx('days','ط£ظٹط§ظ…')}</span></div>
     <div class="sg-sub">${tx('this period','ظ‡ط°ظ‡ ط§ظ„ظپطھط±ط©')}</div>
+  </div>
+  <div class="sg-card">
+    <div class="sg-label">${_nutriIcon('repeat')} ${tx('Meal Repeat Streak','إنجاز تكرار الوجبة')}</div>
+    <div class="sg-val sg-neutral">${mealRepeat.longest > 0 ? mealRepeat.longest : '--'}<span class="sg-unit">${mealRepeat.longest > 0 ? ' d' : ''}</span></div>
+    <div class="sg-sub">${mealRepeat.name ? esc(mealRepeat.name) : tx('No repeated meals yet','لا توجد وجبة متكررة بعد')}</div>
   </div>
 </div>`;
 
@@ -1653,27 +1787,32 @@ function renderNutritionAnalyticsPanel() {
   const chartsZone = document.getElementById('nut-charts-zone');
   if (chartsZone) chartsZone.innerHTML = `
 <div class="nut-charts-grid">
+  <div class="nut-chart-card wide">
+    <div class="nut-chart-label">${_nutriIcon('protein')} ${tx('Protein Trend (Daily g)','اتجاه البروتين (غ يومي)')}</div>
+    <div style="height:150px"><canvas id="nut-protein-chart"></canvas></div>
+  </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83D\uDCC8 ${tx('Calorie Trend','ظ…ظ†ط­ظ†ظ‰ ط§ظ„ط³ط¹ط±ط§طھ')}</div>
+    <div class="nut-chart-label">${_nutriIcon('trend')} ${tx('Calorie Trend','ظ…ظ†ط­ظ†ظ‰ ط§ظ„ط³ط¹ط±ط§طھ')}</div>
     <div style="height:140px"><canvas id="nut-cal-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83E\uDD57 ${tx('Macro Split','طھظˆط²ظٹط¹ ط§ظ„ظ…ط§ظƒط±ظˆ')}</div>
+    <div class="nut-chart-label">${_nutriIcon('macro')} ${tx('Macro Split','طھظˆط²ظٹط¹ ط§ظ„ظ…ط§ظƒط±ظˆ')}</div>
     <div style="height:140px"><canvas id="nut-macro-chart"></canvas></div>
     <div class="nut-macro-legend" id="nut-macro-chart-legend"></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83D\uDCC5 ${tx('Weekly Calories','ط§ظ„ط³ط¹ط±ط§طھ ط§ظ„ط£ط³ط¨ظˆط¹ظٹط©')}</div>
+    <div class="nut-chart-label">${_nutriIcon('week')} ${tx('Weekly Calories','ط§ظ„ط³ط¹ط±ط§طھ ط§ظ„ط£ط³ط¨ظˆط¹ظٹط©')}</div>
     <div style="height:140px"><canvas id="nut-week-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83C\uDFAF ${tx('Day Score','ظ†ظ‚ط§ط· ط§ظ„ظٹظˆظ…')}</div>
+    <div class="nut-chart-label">${_nutriIcon('score')} ${tx('Day Score','ظ†ظ‚ط§ط· ط§ظ„ظٹظˆظ…')}</div>
     <div style="height:140px"><canvas id="nut-score-chart"></canvas></div>
   </div>
 </div>`;
 
   // Init charts after DOM settles
   requestAnimationFrame(() => {
+    _renderProteinTrendChart(daily, targets.proteinG, 'nut-protein-chart');
     _renderCalorieTrendChart(daily, targets.targetCal, 'nut-cal-chart');
     _renderMacroDonutChart(avgP, avgC, avgF, compliance, 'nut-macro-chart');
     _renderWeeklyBarChart(targets.targetCal, 'nut-week-chart');
@@ -1700,6 +1839,9 @@ function renderNutritionAnalyticsPanel() {
   })();
 
   const allMeals = daily.flatMap(d => (dayMap[d.key]||[]).map(m=>({...m,dayKey:d.key})));
+  const recoveryFuelDays = daily.filter(d => d.p >= targets.proteinG * 0.9 && d.kcal >= targets.targetCal * 0.85).length;
+  const strongProteinDoseMeals = allMeals.filter(m => (+m.p || 0) >= 25).length;
+  const proteinDosePct = allMeals.length ? Math.round((strongProteinDoseMeals / allMeals.length) * 100) : 0;
   const peakHour = (() => {
     if (!allMeals.length) return null;
     const hours = allMeals.map(m => { const d = new Date(m.ts||m.createdAtIso); return isNaN(d)?-1:d.getHours(); }).filter(h=>h>=0);
@@ -1711,7 +1853,7 @@ function renderNutritionAnalyticsPanel() {
   const insightCards = [
     {
       tone: underProteinDays > 0 ? 'warn' : 'good',
-      icon: underProteinDays > 0 ? '⚠️' : '✅',
+      icon: underProteinDays > 0 ? _nutriIcon('warn') : _nutriIcon('ok'),
       title: tx('Protein Consistency','انتظام البروتين'),
       body: underProteinDays > 0
         ? `${tx('Protein low on','بروتين منخفض في')} ${underProteinDays}/${nDays} ${tx('days','أيام')}`
@@ -1719,23 +1861,51 @@ function renderNutritionAnalyticsPanel() {
     },
     {
       tone: (overCalDays + lowCalDays) > Math.ceil(nDays * 0.5) ? 'warn' : 'info',
-      icon: '⚖️',
+      icon: _nutriIcon('balance'),
       title: tx('Calorie Balance','توازن السعرات'),
       body: `${tx('High-calorie days:','أيام عالية السعرات:')} ${overCalDays} • ${tx('Low-calorie days:','أيام منخفضة السعرات:')} ${lowCalDays}`
     },
     bestDay && worstDay ? {
       tone: 'info',
-      icon: '📅',
+      icon: _nutriIcon('day'),
       title: tx('Best vs Needs Work','أفضل يوم مقابل يوم يحتاج تحسين'),
       body: `${tx('Best day:','أفضل يوم:')} ${fmtDate(bestDay.key)} (${Math.round(bestDay.score*100)}%) • ${tx('Needs work:','يحتاج تحسين:')} ${fmtDate(worstDay.key)} (${Math.round(worstDay.score*100)}%)`
     } : null,
     {
       tone: 'trend',
-      icon: '📈',
+      icon: _nutriIcon('trend'),
       title: tx('Trend Signal','إشارة الاتجاه'),
       body: calTrend
+    },
+    {
+      tone: recoveryFuelDays >= Math.ceil(nDays * 0.5) ? 'good' : 'warn',
+      icon: _nutriIcon('score'),
+      title: tx('Recovery Fueling','التغذية للاستشفاء'),
+      body: `${tx('Recovery-ready days:','أيام جاهزة للاستشفاء:')} ${recoveryFuelDays}/${nDays}`
+    },
+    {
+      tone: proteinDosePct >= 55 ? 'good' : 'info',
+      icon: _nutriIcon('protein'),
+      title: tx('Protein Dose Quality','جودة جرعات البروتين'),
+      body: `${tx('Meals with 25g+ protein:','وجبات تحتوي 25غ+ بروتين:')} ${strongProteinDoseMeals}/${allMeals.length || 0} (${proteinDosePct}%)`
+    },
+    {
+      tone: mealRepeat.longest >= 3 ? 'good' : 'info',
+      icon: _nutriIcon('repeat'),
+      title: tx('Meal Repeat Streak','إنجاز تكرار الوجبة'),
+      body: mealRepeat.longest > 0
+        ? `${tx('Best streak:','أفضل إنجاز:')} ${mealRepeat.longest} ${tx('days','أيام')} (${esc(mealRepeat.name)})`
+        : tx('No consecutive repeated meal streak yet.','لا يوجد إنجاز تكرار متتالي للوجبات بعد.')
     }
   ].filter(Boolean);
+
+  const quickSummaryHtml = `
+<div class="nutri-pill-row nutri-quick-pills">
+  <span class="nutri-pill">${_nutriIcon('protein')} ${tx('Protein hit','تحقيق البروتين')}: ${proteinDays}/${nDays}</span>
+  <span class="nutri-pill">${_nutriIcon('streak')} ${tx('Current streak','الإنجاز الحالي')}: ${currentStreak || 0} ${tx('days','أيام')}</span>
+  <span class="nutri-pill">${_nutriIcon('consistency')} ${tx('Compliance','الالتزام')}: ${compliance}%</span>
+  <span class="nutri-pill">${_nutriIcon('repeat')} ${tx('Meal repeat','تكرار الوجبة')}: ${mealRepeat.current || 0} ${tx('days','أيام')}</span>
+</div>`;
 
   const insightRowsHtml = `
 <div class="nutri-insight-stack">
@@ -1774,9 +1944,28 @@ function renderNutritionAnalyticsPanel() {
       <strong>${Math.round(nDays / Math.max(daily.length,1) * 100)}%</strong>
     </div>
   </div>
+  <div class="nutri-deep-card">
+    <div class="nutri-deep-title">${tx('Athlete Focus','تركيز رياضي')}</div>
+    <div class="nutri-deep-line">
+      <span>${tx('Avg daily protein','متوسط البروتين اليومي')}</span>
+      <strong>${Math.round(avgP)}g</strong>
+    </div>
+    <div class="nutri-deep-line">
+      <span>${tx('Protein target','هدف البروتين')}</span>
+      <strong>${Math.round(targets.proteinG)}g</strong>
+    </div>
+    <div class="nutri-deep-line">
+      <span>${tx('Recovery-ready days','أيام جاهزة للاستشفاء')}</span>
+      <strong>${recoveryFuelDays}/${nDays}</strong>
+    </div>
+    <div class="nutri-deep-line">
+      <span>${tx('Top repeated meal','أكثر وجبة متكررة')}</span>
+      <strong>${mealRepeat.name ? esc(mealRepeat.name) : '--'}</strong>
+    </div>
+  </div>
 </div>`;
 
-  if (insightsEl) insightsEl.innerHTML = insightRowsHtml + mealTimingHtml;
+  if (insightsEl) insightsEl.innerHTML = quickSummaryHtml + insightRowsHtml + mealTimingHtml;
 }
 
 function renderDashboard() {
