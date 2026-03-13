@@ -6896,6 +6896,14 @@ function _nutriRecalcTargetCalories() {
   if (kcal > 0) kcalEl.value = String(kcal);
 }
 
+function _nutriOnCustomToggle() {
+  const enabled = !!document.getElementById('nutri-custom-enable')?.checked;
+  ['nutri-target-kcal', 'nutri-target-p', 'nutri-target-c', 'nutri-target-f'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !enabled;
+  });
+}
+
 function _cnRecalcMealCaloriesFromMacros() {
   const pEl = document.getElementById('meal-p-input');
   const cEl = document.getElementById('meal-c-input');
@@ -7135,7 +7143,9 @@ function renderCoachNutrition() {
 
   const customTargets = _getNutriCustomTargets();
   if (customTargets.enabled) {
-    if (customTargets.kcal > 0) targetCal = Math.round(customTargets.kcal);
+    const kcalFromMacros = Math.round((customTargets.p * 4) + (customTargets.c * 4) + (customTargets.f * 9));
+    const finalKcal = customTargets.kcal > 0 ? customTargets.kcal : (kcalFromMacros > 0 ? kcalFromMacros : 0);
+    if (finalKcal > 0) targetCal = Math.round(finalKcal);
     if (customTargets.p > 0) proteinG = Math.round(customTargets.p);
     if (customTargets.c > 0) carbG = Math.round(customTargets.c);
     if (customTargets.f > 0) fatG = Math.round(customTargets.f);
@@ -7365,14 +7375,14 @@ function renderCoachNutrition() {
     ${nutritionInsightsHtml}
     <div class="nutri-custom-box">
       <div class="nutri-custom-head">
-        <label><input type="checkbox" id="nutri-custom-enable" ${customTargets.enabled ? 'checked' : ''}> ${tx('Use custom targets','استخدم أهداف مخصصة')}</label>
-        <button class="meal-btn meal-btn-ghost" onclick="_nutriSaveCustomTargets()">${tx('Save Targets','حفظ الأهداف')}</button>
+        <label><input type="checkbox" id="nutri-custom-enable" ${customTargets.enabled ? 'checked' : ''} onchange="_nutriOnCustomToggle()"> ${tx('Use custom targets','استخدم أهداف مخصصة')}</label>
+        <button class="nutri-save-btn" onclick="_nutriSaveCustomTargets()">${tx('Save Targets','حفظ الأهداف')}</button>
       </div>
       <div class="nutri-custom-grid">
-        <input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}">
-        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="Protein (g)" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()">
-        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="Carbs (g)" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()">
-        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="Fats (g)" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()">
+        <input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}" ${customTargets.enabled ? '' : 'disabled'}>
+        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="Protein (g)" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="Carbs (g)" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="Fats (g)" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
       </div>
     </div>
     <div class="nutrition-grid">

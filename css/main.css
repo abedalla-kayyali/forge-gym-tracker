@@ -3895,6 +3895,35 @@ body[data-theme="solar"] .xp-fill {
   font-size:10px;
   color:var(--text2);
 }
+.nutri-custom-head input[type="checkbox"]{
+  width:14px;
+  height:14px;
+  accent-color:var(--accent);
+}
+.nutri-save-btn{
+  border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 18%,transparent),rgba(0,0,0,.08));
+  color:var(--accent);
+  border-radius:10px;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  padding:8px 10px;
+  cursor:pointer;
+  transition:all .15s ease;
+  white-space:nowrap;
+}
+.nutri-save-btn:hover{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent) inset;
+  transform:translateY(-1px);
+}
+.nutri-custom-grid .meal-input:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  background:color-mix(in srgb,var(--bg2) 80%,#000);
+}
 .nutri-custom-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
