@@ -479,7 +479,7 @@
         </div>
         <div class="auth-field">
           <label for="auth-pass-l" id="auth-label-pass-l">Password</label>
-          <input type="password" id="auth-pass-l" autocomplete="current-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+          <input type="password" id="auth-pass-l" autocomplete="current-password" placeholder="********">
         </div>
         <button class="auth-forgot" id="auth-forgot-btn" onclick="_authSwitchTab('forgot')">Forgot password?</button>
         <button class="auth-submit" id="auth-btn-login" onclick="_authLogin()">LOGIN</button>
@@ -570,7 +570,7 @@
       resetBtn: 'SEND RESET LINK',
       langTitle: 'Switch language',
       langLabel: 'EN',
-      passMask: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+      passMask: '********',
       errSupabase: 'Supabase not configured.',
       errFill: 'Please fill in email and password.',
       errLogin: 'Login failed.',
@@ -601,7 +601,7 @@
       resetBtn: 'ط¥ط±ط³ط§ظ„ ط±ط§ط¨ط· ط§ظ„ط§ط³طھط¹ط§ط¯ط©',
       langTitle: 'طھط¨ط¯ظٹظ„ ط§ظ„ظ„ط؛ط©',
       langLabel: 'ط¹',
-      passMask: 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢',
+      passMask: '********',
       errSupabase: 'ط¥ط¹ط¯ط§ط¯ Supabase ط؛ظٹط± ظ…ظƒطھظ…ظ„.',
       errFill: 'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ ظˆظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±.',
       errLogin: 'ظپط´ظ„ طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„.',

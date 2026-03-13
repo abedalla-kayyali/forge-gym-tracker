@@ -1755,7 +1755,7 @@ function _renderNutTodayZone(zone, targets) {
   const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
   const todayMeals = Array.isArray(ml[todayKey]) ? ml[todayKey] : [];
   if (!todayMeals.length) {
-    _dhSetHtml(zone, '<div class="nut-today-card"><div class="nut-today-empty">' + _nutriIcon('meal') + ' No meals logged today - <a onclick="if(window.switchView){window.switchView(\'nutrition\',document.getElementById(\'bnav-nutrition\'));}else if(window.switchMainTab){window.switchMainTab(\'nutrition\');}setTimeout(()=>{const n=document.getElementById(\'meal-name-input\');if(n){try{n.focus();}catch(e){} n.scrollIntoView({behavior:\'smooth\',block:\'center\'});}},160)" style="cursor:pointer">Log your first meal</a></div></div>');
+    _dhSetHtml(zone, '<div class="nut-today-card"><div class="nut-today-empty">' + _nutriIcon('meal') + ' No meals logged today - <a onclick="if(window._coachFocusNutritionLog){window._coachFocusNutritionLog();}else{if(window.switchView){window.switchView(\'nutrition\',document.getElementById(\'bnav-nutrition\'));}else if(window.switchMainTab){window.switchMainTab(\'nutrition\');}setTimeout(()=>{const n=document.getElementById(\'meal-name-input\');if(n){try{n.focus();}catch(e){} n.scrollIntoView({behavior:\'smooth\',block:\'center\'});}},220);}" style="cursor:pointer">Log your first meal</a></div></div>');
     return;
   }
   const s = todayMeals.reduce((a, m) => { a.kcal += (+m.kcal||0); a.p += (+m.p||0); a.c += (+m.c||0); a.f += (+m.f||0); return a; }, { kcal:0, p:0, c:0, f:0 });

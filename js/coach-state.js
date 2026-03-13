@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 (function () {
   function _arr(v) { return Array.isArray(v) ? v : []; }
@@ -53,6 +53,12 @@
   }
   function _sessionDays(entries) {
     return new Set(entries.map(e => e.date).filter(Boolean));
+  }
+  function _isAr() {
+    return (typeof currentLang !== 'undefined') && currentLang === 'ar';
+  }
+  function _cx(en, ar) {
+    return _isAr() ? ar : en;
   }
 
   function _normalizedCardio() {
@@ -171,7 +177,7 @@
         usedKey = keys[keys.length - 1];
         meals = _arr(mealsLog[usedKey]);
       } else {
-        return { score: 45, proteinPct: 0, kcalPct: 0, note: 'No meals logged yet' };
+        return { score: 45, proteinPct: 0, kcalPct: 0, note: _cx('No meals logged yet', '\u0644\u0627 \u062a\u0648\u062c\u062f \u0648\u062c\u0628\u0627\u062a \u0645\u0633\u062c\u0644\u0629 \u0628\u0639\u062f') };
       }
     }
 
@@ -188,8 +194,8 @@
     const kcalComponent = Math.max(0, 100 - Math.abs(100 - kcalPct));
     const score = Math.round((proteinComponent * 0.65) + (kcalComponent * 0.35));
 
-    const suffix = (usedKey !== todayKey) ? ` (last logged ${usedKey})` : '';
-    return { score, proteinPct, kcalPct, note: `${p.toFixed(0)}g protein / ${kcal.toFixed(0)} kcal${suffix}` };
+    const suffix = (usedKey !== todayKey) ? _cx(` (last logged ${usedKey})`, ` (\u0622\u062e\u0631 \u062a\u0633\u062c\u064a\u0644 ${usedKey})`) : '';
+    return { score, proteinPct, kcalPct, note: `${p.toFixed(0)}g ${_cx('protein', '\u0628\u0631\u0648\u062a\u064a\u0646')} / ${kcal.toFixed(0)} ${_cx('kcal', '\u0633\u0639\u0631\u0629')}${suffix}` };
   }
 
   function _readinessScore(lastWeightedDate, lastCardioDate) {
@@ -210,7 +216,11 @@
       score,
       checkinScore,
       freshnessScore,
-      message: score >= 75 ? 'Ready for a productive session' : score >= 55 ? 'Moderate readiness, warm up well' : 'Recovery-focused day recommended'
+      message: score >= 75
+        ? _cx('Ready for a productive session', '\u062c\u0627\u0647\u0632 \u0644\u062c\u0644\u0633\u0629 \u0642\u0648\u064a\u0629')
+        : score >= 55
+          ? _cx('Moderate readiness, warm up well', '\u062c\u0627\u0647\u0632\u064a\u0629 \u0645\u062a\u0648\u0633\u0637\u0629\u060c \u0631\u0643\u0651\u0632 \u0639\u0644\u0649 \u0627\u0644\u0625\u062d\u0645\u0627\u0621')
+          : _cx('Recovery-focused day recommended', '\u064a\u064f\u0641\u0636\u0651\u0644 \u064a\u0648\u0645 \u062a\u0639\u0627\u0641\u064d')
     };
   }
 
@@ -391,7 +401,7 @@
     const max = Math.max(1, ...days.map(d => d.mins));
     return days.map(d => {
       const h = Math.max(8, Math.round((d.mins / max) * 42));
-      const lbl = new Date(d.key + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 1);
+      const lbl = new Date(d.key + 'T00:00:00').toLocaleDateString(_isAr() ? 'ar-SA' : 'en-US', { weekday: 'short' }).slice(0, 1);
       return '<div class="coach-pulse-col" title="' + d.key + ': ' + d.mins + ' min">' +
         '<div class="coach-pulse-bar" style="height:' + h + 'px;"></div>' +
         '<div class="coach-pulse-day">' + lbl + '</div>' +
@@ -409,29 +419,34 @@
     if (typeof window.setWorkoutMode === 'function') window.setWorkoutMode('bodyweight');
   }
   function _coachFocusNutritionLog() {
-    if (typeof window.switchView === 'function') {
-      window.switchView('coach', document.getElementById('bnav-coach'));
-    }
-    const nutritionBtn =
-      document.querySelector('.coach-tab[data-tab="nutrition"]') ||
-      document.querySelector('.coach-tab[onclick*="coachSwitchTab(\'nutrition\'"]') ||
-      null;
-    if (typeof window.coachSwitchTab === 'function') {
-      window.coachSwitchTab('nutrition', nutritionBtn);
-    } else if (typeof window.switchCoachTab === 'function') {
-      window.switchCoachTab('nutrition', nutritionBtn);
-    } else if (typeof window.renderCoachNutrition === 'function') {
-      const tab = document.getElementById('coach-tab-nutrition');
-      if (tab) tab.style.display = '';
-      window.renderCoachNutrition();
-    }
-    setTimeout(() => {
-      const nameInput = document.getElementById('meal-name-input');
-      if (nameInput) {
-        try { nameInput.focus(); } catch (_e) {}
-        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const _toNutrition = () => {
+      if (typeof window.switchView === 'function') {
+        window.switchView('nutrition', document.getElementById('bnav-nutrition'));
+        return;
       }
-    }, 140);
+      if (typeof window.switchMainTab === 'function') {
+        window.switchMainTab('nutrition');
+      }
+    };
+    const _focusMealInput = () => {
+      const nameInput = document.getElementById('meal-name-input');
+      if (!nameInput) return false;
+      try { nameInput.focus(); } catch (_e) {}
+      try { nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
+      return true;
+    };
+
+    _toNutrition();
+    if (typeof window.renderCoachNutrition === 'function') window.renderCoachNutrition();
+
+    // Mobile can be slower to mount nutrition DOM; retry focus a few times.
+    [120, 260, 520].forEach(ms => {
+      setTimeout(() => {
+        if (_focusMealInput()) return;
+        if (typeof window.renderCoachNutrition === 'function') window.renderCoachNutrition();
+        _focusMealInput();
+      }, ms);
+    });
   }
 
 
@@ -451,16 +466,18 @@
     const wDiff = s.trends.weightedVol14 - s.trends.weightedVolPrev14;
     const card =
       '<div class="coach-bubble coach-integration-insights">' +
-        '<strong>Performance Snapshot</strong><br>' +
-        'Readiness ' + s.readiness.score + '/100 · Nutrition ' + s.nutrition.score + '/100 · Active days(7d): ' + s.consistency.activeDays7 +
+        '<strong>' + _cx('Performance Snapshot', '\u0644\u0642\u0637\u0629 \u0627\u0644\u0623\u062f\u0627\u0621') + '</strong><br>' +
+        _cx('Readiness', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629') + ' ' + s.readiness.score + '/100 | ' +
+        _cx('Nutrition', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629') + ' ' + s.nutrition.score + '/100 | ' +
+        _cx('Active days (7d):', '\u0627\u0644\u0623\u064a\u0627\u0645 \u0627\u0644\u0646\u0634\u0637\u0629 (7 \u0623\u064a\u0627\u0645):') + ' ' + s.consistency.activeDays7 +
         '<div class="coach-mini-tags">' +
-          '<span class="coach-mini-tag ' + (s.readiness.score >= 70 ? 'good' : s.readiness.score >= 55 ? 'warn' : 'alert') + '">Readiness</span>' +
-          '<span class="coach-mini-tag ' + (s.nutrition.score >= 70 ? 'good' : s.nutrition.score >= 55 ? 'warn' : 'alert') + '">Nutrition</span>' +
-          '<span class="coach-mini-tag ' + ((cDiff >= 0 && wDiff >= 0) ? 'good' : 'warn') + '">Momentum</span>' +
+          '<span class="coach-mini-tag ' + (s.readiness.score >= 70 ? 'good' : s.readiness.score >= 55 ? 'warn' : 'alert') + '">' + _cx('Readiness', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629') + '</span>' +
+          '<span class="coach-mini-tag ' + (s.nutrition.score >= 70 ? 'good' : s.nutrition.score >= 55 ? 'warn' : 'alert') + '">' + _cx('Nutrition', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629') + '</span>' +
+          '<span class="coach-mini-tag ' + ((cDiff >= 0 && wDiff >= 0) ? 'good' : 'warn') + '">' + _cx('Momentum', '\u0627\u0644\u0632\u062e\u0645') + '</span>' +
         '</div>' +
         '<div class="coach-kpi-grid" style="margin-top:10px;">' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio Trend (14d)</div><div class="coach-kpi-value">' + (cDiff >= 0 ? '+' : '') + cDiff + '</div><div class="coach-kpi-sub">minutes vs prior 14d</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Lift Volume Trend (14d)</div><div class="coach-kpi-value">' + (wDiff >= 0 ? '+' : '') + Math.round(wDiff) + '</div><div class="coach-kpi-sub">volume vs prior 14d</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Cardio Trend (14d)', '\u0627\u062a\u062c\u0627\u0647 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648 (14 \u064a\u0648\u0645)') + '</div><div class="coach-kpi-value">' + (cDiff >= 0 ? '+' : '') + cDiff + '</div><div class="coach-kpi-sub">' + _cx('minutes vs prior 14d', '\u062f\u0642\u0627\u0626\u0642 \u0645\u0642\u0627\u0631\u0646\u0629 \u0628\u0640 14 \u064a\u0648\u0645 \u0633\u0627\u0628\u0642\u0629') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Lift Volume Trend (14d)', '\u0627\u062a\u062c\u0627\u0647 \u062d\u062c\u0645 \u0627\u0644\u0623\u0648\u0632\u0627\u0646 (14 \u064a\u0648\u0645)') + '</div><div class="coach-kpi-value">' + (wDiff >= 0 ? '+' : '') + Math.round(wDiff) + '</div><div class="coach-kpi-sub">' + _cx('volume vs prior 14d', '\u062d\u062c\u0645 \u0645\u0642\u0627\u0631\u0646\u0629 \u0628\u0640 14 \u064a\u0648\u0645 \u0633\u0627\u0628\u0642\u0629') + '</div></div>' +
         '</div>' +
       '</div>';
     const wrap = host.querySelector('.coach-chat-wrap');
@@ -469,27 +486,26 @@
     if (old) old.remove();
     wrap.insertAdjacentHTML('afterbegin', card);
   }
-
   function _enhanceTrainTab() {
     const host = document.getElementById('coach-tab-train');
     if (!host) return;
     const s = buildCoachUnifiedState();
     const card =
       '<div class="coach-bubble coach-integration-train">' +
-        '<strong>Mode Launcher</strong><br>' +
-        'Pick your session type directly from Coach. Weekly mix: W ' + s.weekly.weightedSessions + ' · BW ' + s.weekly.bwSessions + ' · Cardio ' + s.weekly.cardioSessions +
+        '<strong>' + _cx('Mode Launcher', '\u0645\u0634\u063a\u0644 \u0627\u0644\u0623\u0646\u0645\u0627\u0637') + '</strong><br>' +
+        _cx('Pick your session type directly from Coach. Weekly mix:', '\u0627\u062e\u062a\u0631 \u0646\u0648\u0639 \u0627\u0644\u062c\u0644\u0633\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 \u0627\u0644\u0645\u062f\u0631\u0628. \u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0623\u0633\u0628\u0648\u0639:') + ' ' +
+        'W ' + s.weekly.weightedSessions + ' | BW ' + s.weekly.bwSessions + ' | ' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + ' ' + s.weekly.cardioSessions +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">Start Weighted</button>' +
-          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">Start Bodyweight</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">' + _cx('Start Weighted', '\u0627\u0628\u062f\u0623 \u0623\u0648\u0632\u0627\u0646') + '</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">' + _cx('Start Bodyweight', '\u0627\u0628\u062f\u0623 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
         '</div>' +
         '<div class="coach-dual-actions" style="margin-top:8px;">' +
-          '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">Start Cardio</button>' +
-          '<button class="coach-action-btn" onclick="_coachOpenCardioAnalytics()">Cardio Analytics</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">' + _cx('Start Cardio', '\u0627\u0628\u062f\u0623 \u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
+          '<button class="coach-action-btn" onclick="_coachOpenCardioAnalytics()">' + _cx('Cardio Analytics', '\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
         '</div>' +
       '</div>';
     _replaceCoachInject(host, 'coach-integration-train', card, 'prepend');
   }
-
   function _enhancePlanTab() {
     const host = document.getElementById('coach-tab-plan');
     if (!host) return;
@@ -502,17 +518,16 @@
     const cp = Math.min(100, Math.round((s.weekly.cardioSessions / cTarget) * 100));
     const card =
       '<div class="coach-bubble coach-integration-plan">' +
-        '<strong>Integrated Weekly Targets</strong><br>' +
+        '<strong>' + _cx('Integrated Weekly Targets', '\u0623\u0647\u062f\u0627\u0641 \u0623\u0633\u0628\u0648\u0639\u064a\u0629 \u0645\u062a\u0643\u0627\u0645\u0644\u0629') + '</strong><br>' +
         '<div class="coach-kpi-grid" style="margin-top:10px;">' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Weighted</div><div class="coach-kpi-value">' + s.weekly.weightedSessions + '/' + wTarget + '</div><div class="coach-kpi-sub">' + wp + '% complete</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Bodyweight</div><div class="coach-kpi-value">' + s.weekly.bwSessions + '/' + bwTarget + '</div><div class="coach-kpi-sub">' + bp + '% complete</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio</div><div class="coach-kpi-value">' + s.weekly.cardioSessions + '/' + cTarget + '</div><div class="coach-kpi-sub">' + cp + '% complete</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Cardio Minutes</div><div class="coach-kpi-value">' + s.weekly.cardioMins + '</div><div class="coach-kpi-sub">target 120 min</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Weighted', '\u0623\u0648\u0632\u0627\u0646') + '</div><div class="coach-kpi-value">' + s.weekly.weightedSessions + '/' + wTarget + '</div><div class="coach-kpi-sub">' + wp + '% ' + _cx('complete', '\u0645\u0643\u062a\u0645\u0644') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Bodyweight', '\u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</div><div class="coach-kpi-value">' + s.weekly.bwSessions + '/' + bwTarget + '</div><div class="coach-kpi-sub">' + bp + '% ' + _cx('complete', '\u0645\u0643\u062a\u0645\u0644') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + '</div><div class="coach-kpi-value">' + s.weekly.cardioSessions + '/' + cTarget + '</div><div class="coach-kpi-sub">' + cp + '% ' + _cx('complete', '\u0645\u0643\u062a\u0645\u0644') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Cardio Minutes', '\u062f\u0642\u0627\u0626\u0642 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</div><div class="coach-kpi-value">' + s.weekly.cardioMins + '</div><div class="coach-kpi-sub">' + _cx('target 120 min', '\u0627\u0644\u0647\u062f\u0641 120 \u062f\u0642\u064a\u0642\u0629') + '</div></div>' +
         '</div>' +
       '</div>';
     _replaceCoachInject(host, 'coach-integration-plan', card, 'prepend');
   }
-
   function _enhanceNutritionTab() {
     const host = document.getElementById('coach-tab-nutrition');
     if (!host) return;
@@ -523,30 +538,36 @@
     const proteinRemain = Math.max(0, Math.round((tn.proteinTarget || 0) - (tn.p || 0)));
     const kcalRemain = Math.max(0, Math.round((tn.kcalTarget || 0) - (tn.kcal || 0)));
     const guidance = tn.hasTodayMeals
-      ? ((p < 85 ? 'Increase protein feeding across next meals.' : 'Protein pacing is on track.') + ' ' +
-        (k < 80 ? 'You are under target calories today.' : k > 120 ? 'You are above target calories today.' : 'Calories are in range.'))
-      : 'No meals logged today yet. Log your first meal to activate today actions.';
+      ? ((p < 85
+          ? _cx('Increase protein feeding across next meals.', '\u0632\u0650\u062f \u0627\u0644\u0628\u0631\u0648\u062a\u064a\u0646 \u0641\u064a \u0627\u0644\u0648\u062c\u0628\u0627\u062a \u0627\u0644\u0642\u0627\u062f\u0645\u0629.')
+          : _cx('Protein pacing is on track.', '\u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0628\u0631\u0648\u062a\u064a\u0646 \u062c\u064a\u062f.')) + ' ' +
+        (k < 80
+          ? _cx('You are under target calories today.', '\u0633\u0639\u0631\u0627\u062a\u0643 \u0623\u0642\u0644 \u0645\u0646 \u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u064a\u0648\u0645.')
+          : k > 120
+            ? _cx('You are above target calories today.', '\u0633\u0639\u0631\u0627\u062a\u0643 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u064a\u0648\u0645.')
+            : _cx('Calories are in range.', '\u0633\u0639\u0631\u0627\u062a\u0643 \u0636\u0645\u0646 \u0627\u0644\u0646\u0637\u0627\u0642.')))
+      : _cx('No meals logged today yet. Log your first meal to activate today actions.', '\u0644\u0627 \u062a\u0648\u062c\u062f \u0648\u062c\u0628\u0627\u062a \u0645\u0633\u062c\u0644\u0629 \u0627\u0644\u064a\u0648\u0645. \u0633\u062c\u0651\u0644 \u0623\u0648\u0644 \u0648\u062c\u0628\u0629 \u0644\u062a\u0641\u0639\u064a\u0644 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u064a\u0648\u0645.');
     const card =
       '<div class="coach-bubble coach-integration-nutrition">' +
-        '<strong>Today Nutrition Actions</strong>' +
+        '<strong>' + _cx('Today Nutrition Actions', '\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u062a\u063a\u0630\u064a\u0629 \u0627\u0644\u064a\u0648\u0645') + '</strong>' +
         '<div class="coach-kpi-grid" style="margin-top:10px;">' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Meals</div><div class="coach-kpi-value">' + (tn.mealCount || 0) + '</div><div class="coach-kpi-sub">logged today</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Protein</div><div class="coach-kpi-value">' + Math.round(tn.p || 0) + 'g</div><div class="coach-kpi-sub">' + p + '% of target</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Calories</div><div class="coach-kpi-value">' + Math.round(tn.kcal || 0) + '</div><div class="coach-kpi-sub">' + k + '% of target</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Readiness</div><div class="coach-kpi-value">' + s.readiness.score + '/100</div><div class="coach-kpi-sub">training context</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Meals', '\u0648\u062c\u0628\u0627\u062a') + '</div><div class="coach-kpi-value">' + (tn.mealCount || 0) + '</div><div class="coach-kpi-sub">' + _cx('logged today', '\u0645\u0633\u062c\u0644\u0629 \u0627\u0644\u064a\u0648\u0645') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('protein', '\u0628\u0631\u0648\u062a\u064a\u0646') + '</div><div class="coach-kpi-value">' + Math.round(tn.p || 0) + 'g</div><div class="coach-kpi-sub">' + p + '% ' + _cx('of target', '\u0645\u0646 \u0627\u0644\u0647\u062f\u0641') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Calories', '\u0633\u0639\u0631\u0627\u062a') + '</div><div class="coach-kpi-value">' + Math.round(tn.kcal || 0) + '</div><div class="coach-kpi-sub">' + k + '% ' + _cx('of target', '\u0645\u0646 \u0627\u0644\u0647\u062f\u0641') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Readiness', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629') + '</div><div class="coach-kpi-value">' + s.readiness.score + '/100</div><div class="coach-kpi-sub">' + _cx('training context', '\u0633\u064a\u0627\u0642 \u0627\u0644\u062a\u062f\u0631\u064a\u0628') + '</div></div>' +
         '</div>' +
         '<div style="margin-top:10px;">' +
-          '<div class="coach-kpi-sub" style="margin-bottom:5px;">Protein progress (' + Math.round(tn.p || 0) + '/' + Math.round(tn.proteinTarget || 0) + 'g)</div>' +
+          '<div class="coach-kpi-sub" style="margin-bottom:5px;">' + _cx('Protein progress', '\u062a\u0642\u062f\u0651\u0645 \u0627\u0644\u0628\u0631\u0648\u062a\u064a\u0646') + ' (' + Math.round(tn.p || 0) + '/' + Math.round(tn.proteinTarget || 0) + 'g)</div>' +
           '<div style="height:7px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;"><div style="height:7px;background:linear-gradient(90deg,#4ade80,var(--accent));width:' + Math.min(100, p) + '%;"></div></div>' +
-          '<div class="coach-kpi-sub" style="margin-top:8px;margin-bottom:5px;">Calorie progress (' + Math.round(tn.kcal || 0) + '/' + Math.round(tn.kcalTarget || 0) + ')</div>' +
+          '<div class="coach-kpi-sub" style="margin-top:8px;margin-bottom:5px;">' + _cx('Calorie progress', '\u062a\u0642\u062f\u0651\u0645 \u0627\u0644\u0633\u0639\u0631\u0627\u062a') + ' (' + Math.round(tn.kcal || 0) + '/' + Math.round(tn.kcalTarget || 0) + ')</div>' +
           '<div style="height:7px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;"><div style="height:7px;background:linear-gradient(90deg,#5b8dee,var(--accent));width:' + Math.min(100, k) + '%;"></div></div>' +
         '</div>' +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="_coachFocusNutritionLog()">Log Meal</button>' +
-          '<button class="coach-action-btn" onclick="switchView&&switchView(\'dashboard\',document.getElementById(\'bnav-dashboard\'));switchDashTab&&switchDashTab(\'nutrition\',document.querySelector(\'.dash-tab[data-tab=\\\'nutrition\\\']\'));">Open Nutrition Stats</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachFocusNutritionLog()">' + _cx('Log Meal', '\u0633\u062c\u0651\u0644 \u0648\u062c\u0628\u0629') + '</button>' +
+          '<button class="coach-action-btn" onclick="switchView&&switchView(\'dashboard\',document.getElementById(\'bnav-dashboard\'));switchDashTab&&switchDashTab(\'nutrition\',document.querySelector(\'.dash-tab[data-tab=\\\'nutrition\\\']\'));">' + _cx('Open Nutrition Stats', '\u0627\u0641\u062a\u062d \u0625\u062d\u0635\u0627\u0621\u0627\u062a \u0627\u0644\u062a\u063a\u0630\u064a\u0629') + '</button>' +
         '</div>' +
         '<div style="margin-top:8px;" class="coach-kpi-sub">' +
-          'Remaining today: ' + proteinRemain + 'g protein � ' + kcalRemain + ' kcal' +
+          _cx('Remaining today:', '\u0627\u0644\u0645\u062a\u0628\u0642\u064a \u0627\u0644\u064a\u0648\u0645:') + ' ' + proteinRemain + 'g ' + _cx('protein', '\u0628\u0631\u0648\u062a\u064a\u0646') + ' | ' + kcalRemain + ' ' + _cx('kcal', '\u0633\u0639\u0631\u0629') +
         '</div>' +
         '<div style="margin-top:6px;">' +
           guidance +
@@ -554,7 +575,6 @@
       '</div>';
     _replaceCoachInject(host, 'coach-integration-nutrition', card, 'prepend');
   }
-
   function _enhanceCaliTab() {
     const host = document.getElementById('coach-tab-cali');
     if (!host) return;
@@ -563,35 +583,32 @@
     const pct = Math.min(100, Math.round((s.weekly.bwSessions / goal) * 100));
     const card =
       '<div class="coach-bubble coach-integration-cali">' +
-        '<strong>Calisthenics Weekly Focus</strong><br>' +
-        'BW sessions this week: ' + s.weekly.bwSessions + '/' + goal + ' (' + pct + '%)' +
+        '<strong>' + _cx('Calisthenics Weekly Focus', '\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u0643\u0627\u0644\u064a\u0633\u062b\u064a\u0646\u0643\u0633 \u0627\u0644\u0623\u0633\u0628\u0648\u0639\u064a') + '</strong><br>' +
+        _cx('BW sessions this week:', '\u062c\u0644\u0633\u0627\u062a \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645 \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639:') + ' ' + s.weekly.bwSessions + '/' + goal + ' (' + pct + '%)' +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="_coachStartBodyweightFromCoach()">Start BW Session</button>' +
-          '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">Add Cardio Finish</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachStartBodyweightFromCoach()">' + _cx('Start BW Session', '\u0627\u0628\u062f\u0623 \u062c\u0644\u0633\u0629 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">' + _cx('Add Cardio Finish', '\u0623\u0636\u0641 \u062e\u0627\u062a\u0645\u0629 \u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
         '</div>' +
       '</div>';
     _replaceCoachInject(host, 'coach-integration-cali', card, 'prepend');
   }
-
   function renderCoachCardio() {
     const el = document.getElementById('coach-tab-cardio');
     if (!el) return;
-
     const s = buildCoachUnifiedState();
     const cardio = s.cardio;
     if (!cardio.length) {
       el.innerHTML =
         '<div class="coach-cardio-wrap">' +
           '<div class="coach-cardio-head">' +
-            '<div class="coach-cardio-kicker">CARDIO COACH</div>' +
-            '<div class="coach-cardio-title">No cardio data yet</div>' +
-            '<div class="coach-cardio-sub">Start one cardio session to unlock pacing, zone, and recovery guidance.</div>' +
+            '<div class="coach-cardio-kicker">' + _cx('CARDIO COACH', '\u0645\u062f\u0631\u0628 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</div>' +
+            '<div class="coach-cardio-title">' + _cx('No cardio data yet', '\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u0643\u0627\u0631\u062f\u064a\u0648 \u0628\u0639\u062f') + '</div>' +
+            '<div class="coach-cardio-sub">' + _cx('Start one cardio session to unlock pacing, zone, and recovery guidance.', '\u0627\u0628\u062f\u0623 \u062c\u0644\u0633\u0629 \u0643\u0627\u0631\u062f\u064a\u0648 \u0648\u0627\u062d\u062f\u0629 \u0644\u0641\u062a\u062d \u062a\u0648\u062c\u064a\u0647 \u0627\u0644\u0625\u064a\u0642\u0627\u0639 \u0648\u0627\u0644\u0646\u0628\u0636 \u0648\u0627\u0644\u062a\u0639\u0627\u0641\u064a.') + '</div>' +
           '</div>' +
-          '<button class="coach-action-btn primary" onclick="_coachStartCardioFromCoach()">Start Cardio Session</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachStartCardioFromCoach()">' + _cx('Start Cardio Session', '\u0627\u0628\u062f\u0623 \u062c\u0644\u0633\u0629 \u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
         '</div>';
       return;
     }
-
     const topActMap = {};
     cardio.forEach(c => { topActMap[c.activity] = (topActMap[c.activity] || 0) + 1; });
     const topAct = Object.keys(topActMap).sort((a, b) => topActMap[b] - topActMap[a])[0] || '--';
@@ -601,65 +618,61 @@
     const weekPct = Math.min(100, Math.round((s.weekly.cardioMins / weekTarget) * 100));
     const latest = cardio.slice().sort((a, b) => _dayMs(b.date) - _dayMs(a.date))[0];
     const pulse = _coachBuild7DayCardioPulse(cardio);
-
     el.innerHTML =
       '<div class="coach-cardio-wrap">' +
         '<div class="coach-cardio-head">' +
-          '<div class="coach-cardio-kicker">CARDIO COACH</div>' +
-          '<div class="coach-cardio-title">' + s.weekly.cardioMins + ' min this week</div>' +
-          '<div class="coach-cardio-sub">Readiness: ' + s.readiness.message + '</div>' +
+          '<div class="coach-cardio-kicker">' + _cx('CARDIO COACH', '\u0645\u062f\u0631\u0628 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</div>' +
+          '<div class="coach-cardio-title">' + s.weekly.cardioMins + ' ' + _cx('min this week', '\u062f\u0642\u064a\u0642\u0629 \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639') + '</div>' +
+          '<div class="coach-cardio-sub">' + _cx('Readiness:', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629:') + ' ' + s.readiness.message + '</div>' +
         '</div>' +
         '<div class="coach-kpi-grid">' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Current Streak</div><div class="coach-kpi-value">' + streak + 'd</div><div class="coach-kpi-sub">consecutive cardio days</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Weekly Target</div><div class="coach-kpi-value">' + weekPct + '%</div><div class="coach-kpi-sub">' + s.weekly.cardioMins + ' / ' + weekTarget + ' min</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Top Modality</div><div class="coach-kpi-value">' + topAct + '</div><div class="coach-kpi-sub">' + (topActMap[topAct] || 0) + ' sessions</div></div>' +
-          '<div class="coach-kpi-card"><div class="coach-kpi-label">Average Duration</div><div class="coach-kpi-value">' + avgDur + 'm</div><div class="coach-kpi-sub">latest: ' + (latest ? latest.date : '--') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Current Streak', '\u0627\u0644\u062a\u062a\u0627\u0644\u064a \u0627\u0644\u062d\u0627\u0644\u064a') + '</div><div class="coach-kpi-value">' + streak + 'd</div><div class="coach-kpi-sub">' + _cx('consecutive cardio days', '\u0623\u064a\u0627\u0645 \u0643\u0627\u0631\u062f\u064a\u0648 \u0645\u062a\u062a\u0627\u0644\u064a\u0629') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Weekly Target', '\u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u0623\u0633\u0628\u0648\u0639\u064a') + '</div><div class="coach-kpi-value">' + weekPct + '%</div><div class="coach-kpi-sub">' + s.weekly.cardioMins + ' / ' + weekTarget + ' ' + _cx('min', '\u062f\u0642\u064a\u0642\u0629') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Top Modality', '\u0623\u0643\u062b\u0631 \u0646\u0648\u0639 \u062a\u062f\u0631\u064a\u0628') + '</div><div class="coach-kpi-value">' + topAct + '</div><div class="coach-kpi-sub">' + (topActMap[topAct] || 0) + ' ' + _cx('sessions', '\u062c\u0644\u0633\u0627\u062a') + '</div></div>' +
+          '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Average Duration', '\u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0645\u062f\u0629') + '</div><div class="coach-kpi-value">' + avgDur + 'm</div><div class="coach-kpi-sub">' + _cx('latest:', '\u0622\u062e\u0631 \u062a\u0633\u062c\u064a\u0644:') + ' ' + (latest ? latest.date : '--') + '</div></div>' +
         '</div>' +
         '<div class="coach-pulse-wrap">' +
-          '<div class="coach-pulse-head">7-Day Cardio Pulse</div>' +
+          '<div class="coach-pulse-head">' + _cx('7-Day Cardio Pulse', '\u0646\u0628\u0636 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648 \u0644\u0640 7 \u0623\u064a\u0627\u0645') + '</div>' +
           '<div class="coach-pulse-row">' + pulse + '</div>' +
         '</div>' +
         '<div class="coach-bubble">' +
-          '<strong>Suggested next cardio:</strong><br>' +
+          '<strong>' + _cx('Suggested next cardio:', '\u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648 \u0627\u0644\u062a\u0627\u0644\u064a:') + '</strong><br>' +
           (s.readiness.score >= 70
-            ? 'Do 25-35 min Zone 2 (steady pace) or one HIIT block (10-15 min).'
+            ? _cx('Do 25-35 min Zone 2 (steady pace) or one HIIT block (10-15 min).', '\u0646\u0641\u0651\u0630 25-35 \u062f\u0642\u064a\u0642\u0629 \u0645\u0646 \u0627\u0644\u0645\u0646\u0637\u0642\u0629 2 (\u0648\u062a\u064a\u0631\u0629 \u062b\u0627\u0628\u062a\u0629) \u0623\u0648 \u0628\u0644\u0648\u0643 HIIT \u0648\u0627\u062d\u062f (10-15 \u062f\u0642\u064a\u0642\u0629).')
             : s.readiness.score >= 55
-            ? 'Keep it moderate: 20-30 min low to mid intensity.'
-            : 'Recovery cardio recommended: 15-20 min light walk or mobility flow.') +
+            ? _cx('Keep it moderate: 20-30 min low to mid intensity.', '\u062d\u0627\u0641\u0638 \u0639\u0644\u0649 \u0634\u062f\u0629 \u0645\u062a\u0648\u0633\u0637\u0629: 20-30 \u062f\u0642\u064a\u0642\u0629 \u0634\u062f\u0629 \u0645\u0646\u062e\u0641\u0636\u0629 \u0625\u0644\u0649 \u0645\u062a\u0648\u0633\u0637\u0629.')
+            : _cx('Recovery cardio recommended: 15-20 min light walk or mobility flow.', '\u064a\u064f\u0646\u0635\u062d \u0628\u0643\u0627\u0631\u062f\u064a\u0648 \u062a\u0639\u0627\u0641\u064a: 15-20 \u062f\u0642\u064a\u0642\u0629 \u0645\u0634\u064a \u062e\u0641\u064a\u0641 \u0623\u0648 \u062d\u0631\u0643\u0629 \u0645\u0631\u0648\u0646\u0629.')) +
         '</div>' +
         '<div class="coach-dual-actions">' +
-          '<button class="coach-action-btn primary" onclick="_coachStartCardioFromCoach()">Start Cardio</button>' +
-          '<button class="coach-action-btn" onclick="_coachOpenCardioAnalytics()">Open Cardio Stats</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachStartCardioFromCoach()">' + _cx('Start Cardio', '\u0627\u0628\u062f\u0623 \u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
+          '<button class="coach-action-btn" onclick="_coachOpenCardioAnalytics()">' + _cx('Open Cardio Stats', '\u0627\u0641\u062a\u062d \u0625\u062d\u0635\u0627\u0621\u0627\u062a \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
         '</div>' +
       '</div>';
   }
-
   function _injectTodayBriefCard() {
     const host = document.querySelector('#coach-tab-today .ctoday-wrap');
     if (!host) return;
     const old = host.querySelector('.ctoday-brief-card');
     if (old) old.remove();
-
     const s = buildCoachUnifiedState();
     const sessionsToday = Number(s.today.weighted) + Number(s.today.bw) + Number(s.today.cardio);
     const brief =
       '<div class="ctoday-card ctoday-brief-card">' +
-        '<div class="ctoday-card-title">Daily Brief</div>' +
-        '<div class="ctoday-plan-note"><strong>Readiness:</strong> ' + s.readiness.score + '/100 - ' + s.readiness.message + '</div>' +
-        '<div class="ctoday-plan-note"><strong>Today sessions:</strong> ' + sessionsToday + ' (W:' + Number(s.today.weighted) + ' BW:' + Number(s.today.bw) + ' C:' + Number(s.today.cardio) + ')</div>' +
-        '<div class="ctoday-plan-note"><strong>Cardio week:</strong> ' + s.weekly.cardioMins + ' min</div>' +
-        '<div class="ctoday-plan-note"><strong>Nutrition:</strong> ' + s.nutrition.note + '</div>' +
+        '<div class="ctoday-card-title">' + _cx('Daily Brief', '\u0627\u0644\u0645\u0644\u062e\u0635 \u0627\u0644\u064a\u0648\u0645\u064a') + '</div>' +
+        '<div class="ctoday-plan-note"><strong>' + _cx('Readiness:', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629:') + '</strong> ' + s.readiness.score + '/100 - ' + s.readiness.message + '</div>' +
+        '<div class="ctoday-plan-note"><strong>' + _cx('Today sessions:', '\u062c\u0644\u0633\u0627\u062a \u0627\u0644\u064a\u0648\u0645:') + '</strong> ' + sessionsToday + ' (W:' + Number(s.today.weighted) + ' BW:' + Number(s.today.bw) + ' C:' + Number(s.today.cardio) + ')</div>' +
+        '<div class="ctoday-plan-note"><strong>' + _cx('Cardio week:', '\u0643\u0627\u0631\u062f\u064a\u0648 \u0627\u0644\u0623\u0633\u0628\u0648\u0639:') + '</strong> ' + s.weekly.cardioMins + ' ' + _cx('min', '\u062f\u0642\u064a\u0642\u0629') + '</div>' +
+        '<div class="ctoday-plan-note"><strong>' + _cx('Nutrition:', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629:') + '</strong> ' + s.nutrition.note + '</div>' +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">Weighted</button>' +
-          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">Bodyweight</button>' +
+          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">' + _cx('Weighted', '\u0623\u0648\u0632\u0627\u0646') + '</button>' +
+          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">' + _cx('Bodyweight', '\u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
         '</div>' +
-        '<div style="margin-top:8px;"><button class="coach-action-btn" style="width:100%;" onclick="_coachStartCardioFromCoach()">Cardio</button></div>' +
+        '<div style="margin-top:8px;"><button class="coach-action-btn" style="width:100%;" onclick="_coachStartCardioFromCoach()">' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + '</button></div>' +
       '</div>';
     const greeting = host.querySelector('.ctoday-greeting');
     if (greeting) greeting.insertAdjacentHTML('afterend', brief);
     else host.insertAdjacentHTML('afterbegin', brief);
   }
-
   window.buildCoachUnifiedState = buildCoachUnifiedState;
   window.calcTrainingScore = calcTrainingScoreUnified;
   window.renderCoachCardio = renderCoachCardio;
@@ -739,5 +752,10 @@
     } catch (_) {}
   });
 })();
+
+
+
+
+
 
 

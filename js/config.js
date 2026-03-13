@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v91';
-window.FORGE_BUILD   = '2026-03-14 (single global language button only + login placement)';
+window.FORGE_VERSION = 'v92';
+window.FORGE_BUILD   = '2026-03-14 (mobile meal routing hardening + auth password placeholder fix)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
