@@ -6784,6 +6784,48 @@ function _saveMealToLibrary(entry) {
   mealLibrary[key] = item;
 }
 
+function _dayNumFromDateKey(key) {
+  if (!_isIsoDateKey(key)) return NaN;
+  return Math.floor(Date.parse(`${key}T00:00:00`) / 86400000);
+}
+
+function _mealStreakFromDates(dateKeys) {
+  if (!Array.isArray(dateKeys) || !dateKeys.length) return 0;
+  const uniq = Array.from(new Set(dateKeys.filter(_isIsoDateKey))).sort();
+  if (!uniq.length) return 0;
+  let streak = 1;
+  for (let i = uniq.length - 1; i > 0; i--) {
+    const cur = _dayNumFromDateKey(uniq[i]);
+    const prev = _dayNumFromDateKey(uniq[i - 1]);
+    if (!Number.isFinite(cur) || !Number.isFinite(prev)) break;
+    if (cur - prev === 1) streak += 1;
+    else break;
+  }
+  return streak;
+}
+
+function _buildMealStreakMap() {
+  const out = {};
+  const byMeal = {};
+  if (!mealsLog || typeof mealsLog !== 'object') return out;
+  Object.keys(mealsLog).forEach(k => {
+    if (!_isIsoDateKey(k)) return;
+    const dayEntries = Array.isArray(mealsLog[k]) ? mealsLog[k] : [];
+    const seen = new Set();
+    dayEntries.forEach(m => {
+      const norm = _normalizeMealName(m?.name || '');
+      if (!norm || seen.has(norm)) return;
+      seen.add(norm);
+      if (!byMeal[norm]) byMeal[norm] = [];
+      byMeal[norm].push(k);
+    });
+  });
+  Object.keys(byMeal).forEach(norm => {
+    out[norm] = _mealStreakFromDates(byMeal[norm]);
+  });
+  return out;
+}
+
 function _cnApplySavedMeal(encodedName) {
   const rawName = decodeURIComponent(String(encodedName || ''));
   const saved = _findSavedMealByName(rawName);
@@ -7141,6 +7183,7 @@ function renderCoachNutrition() {
   const defaultMealTime = _mealLogTime || `${String(nowTime.getHours()).padStart(2,'0')}:${String(nowTime.getMinutes()).padStart(2,'0')}`;
   const todayMeals = Array.isArray(mealsLog?.[mealKey]) ? mealsLog[mealKey] : [];
   const savedMeals = _getSavedMealEntries();
+  const mealStreakMap = _buildMealStreakMap();
   const mealTotals = todayMeals.reduce((acc, m) => {
     acc.kcal += +m.kcal || 0;
     acc.p += +m.p || 0;
@@ -7162,18 +7205,27 @@ function renderCoachNutrition() {
     f: pctOf(mealTotals.f, fatG)
   };
   const mealsHtml = todayMeals.length
-    ? todayMeals.map(m => `<div class="meal-item">
+    ? todayMeals.map(m => {
+      const nm = _normalizeMealName(m?.name || '');
+      const streak = Math.max(0, mealStreakMap[nm] || 0);
+      return `<div class="meal-item">
         <div class="meal-item-main">
-          <div class="meal-item-name">${esc(m.name)}</div>
+          <div class="meal-item-head">
+            <div class="meal-item-name">${esc(m.name)}</div>
+            <span class="meal-streak-badge">${streak}d</span>
+          </div>
           <div class="meal-item-sub">${tx('Qty','������')}: ${fmt2(+m.qty || 1)} � ${Math.round(+m.kcal || 0)} ${tx('kcal','����')} � ${fmtMealTs(m)}</div>
         </div>
         <div class="meal-item-macros">${fmt2(+m.p || 0)}P � ${fmt2(+m.c || 0)}C � ${fmt2(+m.f || 0)}F</div>
         <button class="meal-item-del" onclick="_cnDeleteMeal('${m.id}','${mealKey}')">${tx('Delete','���')}</button>
-      </div>`).join('')
+      </div>`;
+    }).join('')
     : `<div class="meal-empty">${tx('No meals logged today yet.','�� ���� ����� ����� ����� ���.')}</div>`;
-  const savedChipsHtml = savedMeals.slice(0, 8).map(m =>
-    `<button class="meal-saved-chip" onclick="_cnApplySavedMeal('${encodeURIComponent(m.name)}')">${esc(m.name)}</button>`
-  ).join('');
+  const savedChipsHtml = savedMeals.slice(0, 8).map(m => {
+    const nm = _normalizeMealName(m?.name || '');
+    const streak = Math.max(0, mealStreakMap[nm] || 0);
+    return `<button class="meal-saved-chip" onclick="_cnApplySavedMeal('${encodeURIComponent(m.name)}')">${esc(m.name)} <span class="meal-chip-streak">${streak}d</span></button>`;
+  }).join('');
   const savedOptionsHtml = savedMeals.map(m => `<option value="${esc(m.name)}"></option>`).join('');
 
   const hasTargets = tgWtKg || tgBF || tgMM || tgMuscle;

@@ -3909,6 +3909,16 @@ body[data-theme="solar"] .xp-fill {
   cursor:pointer;
   transition:all .15s;
 }
+.meal-chip-streak{
+  margin-left:6px;
+  padding:1px 6px;
+  border-radius:999px;
+  border:1px solid rgba(57,255,143,.35);
+  color:var(--accent);
+  background:rgba(57,255,143,.1);
+  font-size:9px;
+  letter-spacing:.3px;
+}
 .meal-saved-chip:hover{
   border-color:var(--accent);
   color:var(--accent);
@@ -4043,6 +4053,11 @@ body[data-theme="solar"] .xp-fill {
   flex-direction:column;
   gap:2px;
 }
+.meal-item-head{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 .meal-item-name{
   font-family:'Barlow Condensed',sans-serif;
   font-size:14px;
@@ -4061,6 +4076,19 @@ body[data-theme="solar"] .xp-fill {
   color:var(--text2);
   text-align:right;
   white-space:nowrap;
+}
+.meal-streak-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  border:1px solid rgba(57,255,143,.35);
+  background:rgba(57,255,143,.12);
+  color:var(--accent);
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:.4px;
+  padding:1px 7px;
 }
 .meal-item-del{
   border:none;
