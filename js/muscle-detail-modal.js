@@ -23,7 +23,12 @@
 
   function _tt(key, fallback) {
     try {
-      if (typeof t === 'function') return t(key) || fallback;
+      if (typeof t === 'function') {
+        const raw = t(key) || '';
+        const txt = String(raw);
+        // Guard against mojibake text leaking into modal/image labels.
+        if (txt && !/(?:â|Ã|�|ًں)/.test(txt)) return txt;
+      }
     } catch (_) {}
     return fallback;
   }

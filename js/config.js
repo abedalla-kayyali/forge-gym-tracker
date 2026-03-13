@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v96';
-window.FORGE_BUILD   = '2026-03-14 (muscle modal poster download + icon encoding fix)';
+window.FORGE_VERSION = 'v97';
+window.FORGE_BUILD   = '2026-03-14 (recovery status encoding fix in modal/image)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
