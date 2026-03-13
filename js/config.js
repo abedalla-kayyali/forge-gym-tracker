@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v52';
-window.FORGE_BUILD   = '2026-03-13 (session share preview parity polish)';
+window.FORGE_VERSION = 'v53';
+window.FORGE_BUILD   = '2026-03-13 (force update button + mobile cache refresh)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
