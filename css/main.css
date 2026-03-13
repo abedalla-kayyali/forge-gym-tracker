@@ -4334,6 +4334,120 @@ body[data-theme="solar"] .xp-fill {
   font-size:10px;
   color:var(--text3);
 }
+.nutri-cal-wrap{
+  margin:10px 16px 12px;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--border2);
+  background:linear-gradient(160deg,rgba(79,195,247,.07),rgba(57,255,143,.05) 45%,rgba(0,0,0,.08));
+}
+.nutri-cal-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+}
+.nutri-cal-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;
+  letter-spacing:1px;
+  color:var(--white);
+  text-transform:uppercase;
+}
+.nutri-cal-sub{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--text3);
+}
+.nutri-cal-kpis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+  margin:10px 0 9px;
+}
+.nutri-cal-kpi{
+  background:rgba(0,0,0,.16);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:7px 8px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.nutri-cal-kpi span{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  color:var(--text3);
+  letter-spacing:.8px;
+  text-transform:uppercase;
+}
+.nutri-cal-kpi strong{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;
+  line-height:1;
+  color:var(--accent);
+}
+.nutri-cal-weekdays{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+  margin-bottom:6px;
+}
+.nutri-cal-weekdays span{
+  text-align:center;
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  color:var(--text3);
+}
+.nutri-cal-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+.nutri-cal-cell{
+  border:none;
+  height:16px;
+  border-radius:4px;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.nutri-cal-cell:hover{
+  transform:translateY(-1px);
+  box-shadow:0 0 0 1px rgba(255,255,255,.25) inset;
+}
+.nutri-cal-cell.today{
+  box-shadow:0 0 0 1.5px var(--accent) inset;
+}
+.nutri-cal-cell.lvl-0{ background:rgba(255,255,255,.08); }
+.nutri-cal-cell.lvl-1{ background:#3a5f89; }
+.nutri-cal-cell.lvl-2{ background:#2e8bb8; }
+.nutri-cal-cell.lvl-3{ background:#2ab27f; }
+.nutri-cal-cell.lvl-4{ background:#39ff8f; }
+.nutri-cal-legend{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 10px;
+}
+.nutri-cal-legend span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--text2);
+}
+.nutri-cal-legend i{
+  width:10px;
+  height:10px;
+  border-radius:2px;
+  display:inline-block;
+}
+.nutri-cal-legend i.lvl-0{ background:rgba(255,255,255,.18); }
+.nutri-cal-legend i.lvl-1{ background:#3a5f89; }
+.nutri-cal-legend i.lvl-2{ background:#2e8bb8; }
+.nutri-cal-legend i.lvl-3{ background:#2ab27f; }
+.nutri-cal-legend i.lvl-4{ background:#39ff8f; }
 
 @media (max-width: 680px) {
   .nutri-focus-grid { grid-template-columns:1fr; gap:8px; }
@@ -4343,6 +4457,8 @@ body[data-theme="solar"] .xp-fill {
   .nutri-quest-main { font-size:24px; }
   .nutri-metric-tabs { grid-template-columns:repeat(2,1fr); }
   .nutri-custom-grid { grid-template-columns:repeat(2,1fr); }
+  .nutri-cal-kpis { grid-template-columns:repeat(2,1fr); }
+  .nutri-cal-cell { height:14px; }
   .nutrition-grid { grid-template-columns:1fr; gap:8px; }
   .nutr-val { font-size:24px; }
   .meal-datetime-row { grid-template-columns:1fr; }
