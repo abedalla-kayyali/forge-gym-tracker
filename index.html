@@ -2920,6 +2920,9 @@ function _showSessionSummary(duration) {
   }
   const overlay = document.getElementById('wend-overlay');
   if (overlay) { overlay.style.display = 'flex'; document.body.classList.add('scroll-locked'); }
+  if (typeof renderSessionSharePreview === 'function') {
+    requestAnimationFrame(() => renderSessionSharePreview());
+  }
 }
 
 let _hdrRestTarget = 90, _hdrRestSecs = 90, _hdrRestRunning = false, _hdrRestInterval = null;
@@ -8889,6 +8892,9 @@ if (document.readyState === 'loading') {
     <div class="wend-header">
       <div class="wend-title" id="wend-title">SESSION COMPLETE</div>
       <div class="wend-sub" id="wend-sub"></div>
+    </div>
+    <div class="wend-share-preview-wrap">
+      <canvas id="session-share-preview" width="1080" height="1350"></canvas>
     </div>
     <div class="wend-stats" id="wend-stats"></div>
     <div class="wend-bodymap-row" id="wend-bodymap"></div>

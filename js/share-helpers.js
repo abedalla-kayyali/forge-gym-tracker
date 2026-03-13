@@ -1,4 +1,4 @@
-function closeSessionSummary() {
+﻿function closeSessionSummary() {
   const overlay = document.getElementById('wend-overlay');
   if (overlay) {
     overlay.style.display = 'none';
@@ -48,6 +48,12 @@ function _canvasToBlob(canvas) {
   return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
 }
 
+function _getSessionShareCanvas() {
+  const preview = document.getElementById('session-share-preview');
+  if (preview && preview.width > 0 && preview.height > 0) return preview;
+  return null;
+}
+
 function _drawSessionShareCard() {
   const s = (typeof _lastSessionSummary !== 'undefined' && _lastSessionSummary) || null;
   if (!s) return null;
@@ -80,18 +86,20 @@ function _drawSessionShareCard() {
 
   ctx.fillStyle = 'rgba(234,244,235,.72)';
   ctx.font = '500 24px "DM Mono", monospace';
-  ctx.fillText((s.dateStr || '') + '  ·  ' + (s.timeStr || ''), 72, 154);
+  ctx.fillText((s.dateStr || '') + '  آ·  ' + (s.timeStr || ''), 72, 154);
 
+  const streakVal = (typeof calcStreak === 'function') ? calcStreak() : 0;
   const cards = [
     { label: 'DURATION', value: s.durStr || '00:00' },
     { label: 'ENTRIES', value: String((s.logs || []).length) },
     { label: 'SETS', value: String(s.totalSets || 0) },
-    { label: 'PRS', value: String(s.prCount || 0) }
+    { label: 'PRS', value: String(s.prCount || 0) },
+    { label: 'STREAK', value: String(streakVal) + 'D' }
   ];
 
   let x = 72;
   const y = 200;
-  const cw = 220;
+  const cw = 188;
   const ch = 140;
   cards.forEach(card => {
     ctx.fillStyle = 'rgba(20,30,22,.95)';
@@ -130,7 +138,7 @@ function _drawSessionShareCard() {
   ctx.fillText('SESSION OUTPUT', 100, 424);
   ctx.fillStyle = '#c8dcc9';
   ctx.font = '500 28px "Barlow", sans-serif';
-  ctx.fillText(lines.join('  ·  '), 100, 470);
+  ctx.fillText(lines.join('  آ·  '), 100, 470);
   ctx.fillStyle = 'rgba(234,244,235,.78)';
   ctx.font = '500 22px "Barlow", sans-serif';
   ctx.fillText('Muscles: ' + muscles, 100, 512);
@@ -158,15 +166,15 @@ function _drawSessionShareCard() {
       let meta = '';
       if (l.mode === 'weighted') {
         meta = ((l.sets || []).length) + ' sets';
-        if (l.volume > 0) meta += '  ·  ' + Math.round(l.volume).toLocaleString() + ' kg';
+        if (l.volume > 0) meta += '  آ·  ' + Math.round(l.volume).toLocaleString() + ' kg';
       } else if (l.mode === 'bodyweight') {
         meta = ((l.sets || []).length) + ' sets';
-        if (l.totalReps > 0) meta += '  ·  ' + l.totalReps + ' reps';
+        if (l.totalReps > 0) meta += '  آ·  ' + l.totalReps + ' reps';
       } else {
         meta = (l.durationMins || 0) + ' min';
-        if (l.calories) meta += '  ·  ' + l.calories + ' kcal';
+        if (l.calories) meta += '  آ·  ' + l.calories + ' kcal';
       }
-      if (l.isPR) meta += '  ·  PR';
+      if (l.isPR) meta += '  آ·  PR';
 
       ctx.fillStyle = 'rgba(234,244,235,.95)';
       ctx.font = '600 28px "Barlow Condensed", sans-serif';
@@ -181,14 +189,27 @@ function _drawSessionShareCard() {
   ctx.fillStyle = 'rgba(234,244,235,.55)';
   ctx.font = '500 18px "DM Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText('Built with FORGE  ·  ' + new Date().toISOString().slice(0, 10), W - 72, H - 40);
+  ctx.fillText('Built with FORGE  ·  #ForgeSession  ·  ' + new Date().toISOString().slice(0, 10), W - 72, H - 40);
   ctx.textAlign = 'left';
 
   return canvas;
 }
 
+function renderSessionSharePreview() {
+  const source = _drawSessionShareCard();
+  const target = _getSessionShareCanvas();
+  if (!source || !target) return null;
+  const ctx = target.getContext('2d');
+  if (!ctx) return null;
+  target.width = source.width;
+  target.height = source.height;
+  ctx.clearRect(0, 0, target.width, target.height);
+  ctx.drawImage(source, 0, 0);
+  return target;
+}
+
 async function shareSession() {
-  const canvas = _drawSessionShareCard();
+  const canvas = renderSessionSharePreview() || _drawSessionShareCard();
   if (!canvas) {
     if (navigator.share) {
       navigator.share({ title: 'FORGE Session', text: _sessionShareText }).catch(() => {});
@@ -223,7 +244,7 @@ async function shareSession() {
 }
 
 async function downloadSessionCard() {
-  const canvas = _drawSessionShareCard();
+  const canvas = renderSessionSharePreview() || _drawSessionShareCard();
   if (!canvas) {
     if (typeof showToast === 'function') showToast('No session data to export', 'var(--warn)');
     return;
@@ -242,3 +263,4 @@ function downloadShareCard() {
     _downloadBlob(blob, 'my-forge-' + new Date().toISOString().slice(0, 10) + '.png');
   }, 'image/png');
 }
+
