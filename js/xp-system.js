@@ -12,6 +12,8 @@
   if (typeof calcStepXP === 'function') xp += calcStepXP();
   // Daily check-in bonus XP (cumulative, stored in profile)
   try { xp += JSON.parse(localStorage.getItem('forge_profile') || '{}').checkinXP || 0; } catch (e) {}
+  // Cardio XP
+  xp += (typeof cardioLog !== 'undefined' ? cardioLog : []).reduce((a, e) => a + (e.xpEarned || 0), 0);
   return xp;
 }
 
@@ -63,4 +65,3 @@ function updateXPBar() {
     `linear-gradient(90deg, #1a7a3f, ${lvl.color || '#2ecc71'}, #39ff8f)`;
   if (typeof _updateMascot === 'function') _updateMascot();
 }
-

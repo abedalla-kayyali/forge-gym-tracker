@@ -97,7 +97,7 @@ function _setBwStep(n) {
     if (i < n)       el.classList.add('done');
     else if (i === n) el.classList.add('active');
     const numEl = el.querySelector('.bw-step-num');
-    if (numEl) numEl.textContent = i < n ? '✓' : ['①','②','③'][i - 1];
+    if (numEl) numEl.textContent = i < n ? 'OK' : String(i);
   });
 }
 
@@ -140,6 +140,35 @@ function _updateBwPrStrip(name) {
   if (todEl) todEl.textContent = tod > 0 ? `${tod} ${unit}` : '—';
 }
 
+function _bwNormalizeDate(raw) {
+  if (!raw) return '';
+  const m = String(raw).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? '' : _isoKey(d);
+}
+
+function _bwExerciseStreakDays(name) {
+  if (!name) return 0;
+  const target = String(name).toLowerCase();
+  const daySet = new Set((bwWorkouts || []).map(w => {
+    const ex = String(w?.exercise || '').toLowerCase();
+    if (ex !== target) return '';
+    return _bwNormalizeDate(w?.date);
+  }).filter(Boolean));
+  if (!daySet.size) return 0;
+  const todayKey = _isoKey(new Date());
+  if (!daySet.has(todayKey)) return 0;
+  let count = 1;
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  while (daySet.has(_isoKey(d))) {
+    count++;
+    d.setDate(d.getDate() - 1);
+  }
+  return count;
+}
+
 function setBwFilter(btn, muscle) {
   _bwFilterMuscle = muscle;
   document.querySelectorAll('.bw-filter-chip').forEach(c => c.classList.remove('active'));
@@ -177,6 +206,7 @@ function renderBwExercisePicker() {
       </div>`;
 
     tree.levels.forEach((lvl, i) => {
+      const streakDays = _bwExerciseStreakDays(lvl.n);
       // Classify node state by level number vs highest unlocked level
       const isDone    = lvl.l < unlockedLvl;
       const isCurrent = lvl.l === unlockedLvl;
@@ -184,13 +214,13 @@ function renderBwExercisePicker() {
       const isLocked  = lvl.l > unlockedLvl + 1;   // deeper locked levels
 
       // Determine node state
-      let nodeClass = 'locked', lvlClass = 'locked', badge = '🔒';
+      let nodeClass = 'locked', lvlClass = 'locked', badge = 'LOCK';
       if (isDone) {
-        nodeClass = 'done'; lvlClass = 'done'; badge = '✅';
+        nodeClass = 'done'; lvlClass = 'done'; badge = 'DONE';
       } else if (isCurrent) {
-        nodeClass = 'current'; lvlClass = 'current'; badge = '🎯';
+        nodeClass = 'current'; lvlClass = 'current'; badge = 'LIVE';
       } else if (isNextUp) {
-        nodeClass = 'next-up'; lvlClass = 'next-up'; badge = '🔒';
+        nodeClass = 'next-up'; lvlClass = 'next-up'; badge = 'NEXT';
       }
 
       // Progress bar (only for done + current)
@@ -202,8 +232,8 @@ function renderBwExercisePicker() {
         const unit = lvl.t === 'hold' ? 'secs' : 'reps';
         const pctLabel = maxVal > 0
           ? (isDone
-              ? `🏆 ${maxVal} ${unit}  ·  ✓ Unlocked`
-              : `🏆 ${maxVal} ${unit}  ·  ${pct}% to unlock (need ${lvl.target})`)
+              ? `${maxVal} ${unit} - Unlocked`
+              : `${maxVal} ${unit} - ${pct}% to unlock (need ${lvl.target})`)
           : (isDone
               ? `✓ Unlocked`          // valid edge case: unlocked with no local history
               : `${pct}% to unlock (need ${lvl.target} ${unit})`);
@@ -226,10 +256,13 @@ function renderBwExercisePicker() {
         <div class="bw-rpg-icon">${tree.icon}</div>
         <div class="bw-rpg-info">
           <div class="bw-rpg-lvl ${lvlClass}">LVL ${lvl.l} · ${nodeClass.replace('-',' ').toUpperCase()}</div>
-          <div class="bw-rpg-name">${lvl.n}</div>
+          <div class="bw-rpg-name-row">
+            <div class="bw-rpg-name">${lvl.n}</div>
+            <div class="bw-rpg-streak${streakDays > 0 ? ' active' : ''}">${streakDays > 0 ? `${streakDays}d` : '0d'}</div>
+          </div>
           ${barHtml}
         </div>
-        <div class="bw-rpg-badge">${badge}</div>
+        <div class="bw-rpg-badge bw-rpg-badge-text">${badge}</div>
       </div>`;
     });
 
@@ -412,6 +445,7 @@ function addBwSet() {
     if (typeof hapSetLog === 'function') hapSetLog();
   }
   _updateBwPrStrip(exName.trim());
+  renderBwExercisePicker();
 }
 
 function _addBwDot(val, effort) {

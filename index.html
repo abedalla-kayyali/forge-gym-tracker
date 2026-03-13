@@ -885,17 +885,17 @@
           <!-- BW guided-flow step indicator -->
           <div class="bw-step-strip" id="bw-step-strip">
             <div class="bw-step active" id="bw-step-1">
-              <span class="bw-step-num">?</span>
+              <span class="bw-step-num">1</span>
               <span class="bw-step-lbl">MUSCLE</span>
             </div>
-            <div class="bw-step-arrow">??</div>
+            <div class="bw-step-arrow">></div>
             <div class="bw-step" id="bw-step-2">
-              <span class="bw-step-num">?</span>
+              <span class="bw-step-num">2</span>
               <span class="bw-step-lbl">EXERCISE</span>
             </div>
-            <div class="bw-step-arrow">??</div>
+            <div class="bw-step-arrow">></div>
             <div class="bw-step" id="bw-step-3">
-              <span class="bw-step-num">?</span>
+              <span class="bw-step-num">3</span>
               <span class="bw-step-lbl">LOG SETS</span>
             </div>
           </div>
@@ -969,21 +969,21 @@
           <div id="bw-arcade-zone" class="bw-arcade-zone">
             <!-- Top: exercise name + level subtitle -->
             <div class="bw-arcade-top">
-              <div class="bw-arcade-ex-name" id="bw-arcade-ex-name">�</div>
+              <div class="bw-arcade-ex-name" id="bw-arcade-ex-name">--</div>
               <div class="bw-arcade-ex-sub" id="bw-arcade-ex-sub"></div>
             </div>
             <!-- PR strip: all-time record + today best -->
             <div class="bw-pr-strip" id="bw-pr-strip">
               <div class="bw-pr-cell" id="bw-record-cell">
-                <span class="bw-pr-icon">??</span>
+                <span class="bw-pr-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg></span>
                 <span class="bw-pr-label">RECORD</span>
-                <span class="bw-pr-val" id="bw-record-val">�</span>
+                <span class="bw-pr-val" id="bw-record-val">--</span>
               </div>
-              <div class="bw-pr-divider">�</div>
+              <div class="bw-pr-divider">|</div>
               <div class="bw-pr-cell" id="bw-today-cell">
-                <span class="bw-pr-icon">?</span>
+                <span class="bw-pr-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg></span>
                 <span class="bw-pr-label">TODAY</span>
-                <span class="bw-pr-val" id="bw-today-val">�</span>
+                <span class="bw-pr-val" id="bw-today-val">--</span>
               </div>
             </div>
             <!-- Middle: progress ring + set dot timeline -->
@@ -1009,30 +1009,31 @@
             <!-- Reps stepper -->
             <div class="bw-reps-area">
               <div class="bw-reps-stepper">
-                <button class="bw-reps-btn" onclick="adjustBwReps(-1)">?</button>
+                <button class="bw-reps-btn" onclick="adjustBwReps(-1)">-</button>
                 <div class="bw-reps-val" id="bw-reps-val">10</div>
                 <button class="bw-reps-btn" onclick="adjustBwReps(1)">+</button>
               </div>
               <div class="bw-reps-unit" id="bw-reps-unit">reps</div>
-              <button class="bw-ditto-btn" onclick="bwDitto()">? Ditto</button>
+              <button class="bw-ditto-btn" onclick="bwDitto()">Ditto</button>
             </div>
             <!-- Effort buttons -->
             <div class="bw-effort-area">
               <div class="bw-effort-label">How did it feel?</div>
               <div class="bw-effort-buttons">
-                <button class="bw-eff-btn bw-eff-easy" data-effort="easy"    onclick="selectBwEffort(this)">?? Easy</button>
-                <button class="bw-eff-btn bw-eff-med active" data-effort="medium" onclick="selectBwEffort(this)">?? Med</button>
-                <button class="bw-eff-btn bw-eff-hard" data-effort="hard"    onclick="selectBwEffort(this)">?? Hard</button>
-                <button class="bw-eff-btn bw-eff-fail" data-effort="failure" onclick="selectBwEffort(this)">?? Fail</button>
+                <button class="bw-eff-btn bw-eff-easy" data-effort="easy"    onclick="selectBwEffort(this)">Easy</button>
+                <button class="bw-eff-btn bw-eff-med active" data-effort="medium" onclick="selectBwEffort(this)">Med</button>
+                <button class="bw-eff-btn bw-eff-hard" data-effort="hard"    onclick="selectBwEffort(this)">Hard</button>
+                <button class="bw-eff-btn bw-eff-fail" data-effort="failure" onclick="selectBwEffort(this)">Fail</button>
               </div>
             </div>
             <!-- Log set button -->
-            <button class="bw-log-btn" onclick="addBwSet()">? LOG SET</button>
+            <button class="bw-log-btn" onclick="addBwSet()">LOG SET</button>
           </div>
         </div>
 
         <!-- CARDIO / RECOVERY ZONE -->
         <div id="cardio-zone" style="display:none;padding-top:8px;">
+          <div id="cardio-streak-bar" class="cardio-streak-bar"></div>
           <!-- Activity grid -->
           <div class="cardio-cat-block">
             <div class="cardio-cat-label">?? Cardiovascular</div>
@@ -1167,6 +1168,7 @@
       <button class="dash-tab" data-i18n="dash.tab.muscles" onclick="switchDashTab('muscles',this)">Muscles</button>
       <button class="dash-tab" data-i18n="dash.tab.body" onclick="switchDashTab('body',this)">Body</button>
       <button class="dash-tab dash-tab-cali" onclick="switchDashTab('cali',this)">?? Cali</button>
+      <button class="dash-tab" onclick="switchDashTab('cardio', this)">Cardio</button>
     </div>
     <!-- PERIOD SELECTOR -->
     <div class="dash-period-strip" id="dash-period-strip" data-dash-tab="progress">
@@ -1225,6 +1227,9 @@
 
     <!-- ?? CALISTHENICS DASHBOARD TAB -->
     <div id="cali-dash-panel" data-dash-tab="cali" style="display:none;"></div>
+    <div data-dash-tab="cardio" style="display:none">
+      <div id="cardio-stats-zone"></div>
+    </div>
 
     <!-- MUSCLE HEATMAP -->
     <div class="panel" id="muscle-heatmap-panel" data-dash-tab="overview">
@@ -8634,6 +8639,7 @@ if (document.readyState === 'loading') {
 <script src="js/fx-visuals.js"></script>
 <script src="js/bodyweight-mode.js"></script>
 <script src="js/cardio-log.js"></script>
+<script src="js/cardio-stats.js"></script>
 <script src="js/steps-health.js"></script>
 <script src="js/cali-dashboard.js"></script>
 <script src="js/ui-layout-theme.js"></script>

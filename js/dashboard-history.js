@@ -536,6 +536,7 @@ function switchDashTab(name, btn) {
   // Render Calisthenics Dashboard when cali tab opens
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
+  if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
 }
 
 // ── Muscle MVP ─────────────────────────────────────────────
