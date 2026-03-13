@@ -643,6 +643,77 @@ function switchDashTab(name, btn) {
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
+  if (name === 'progress') {
+    _ensureProgressAccordion();
+    _applyProgressAccordion();
+  } else {
+    _applyProgressAccordion();
+  }
+}
+
+let _progressAccordionInit = false;
+let _progressAccordionOpenIndex = 0;
+
+function _getProgressPanels() {
+  return Array.from(document.querySelectorAll('#view-dashboard .panel[data-dash-tab="progress"]'));
+}
+
+function _isProgressCompactMobile() {
+  return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width:700px)').matches;
+}
+
+function _ensureProgressAccordion() {
+  const panels = _getProgressPanels();
+  const isAr = (typeof currentLang !== 'undefined' && currentLang === 'ar');
+
+  panels.forEach((panel, idx) => {
+    const header = panel.querySelector('.panel-header');
+    if (!header) return;
+    let btn = header.querySelector('.prog-acc-toggle');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prog-acc-toggle';
+      btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+      btn.onclick = (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        _progressAccordionOpenIndex = idx;
+        _applyProgressAccordion();
+      };
+      header.appendChild(btn);
+    }
+    const title = (header.querySelector('.panel-title')?.textContent || `Panel ${idx + 1}`).trim();
+    btn.setAttribute('aria-label', (isAr ? 'فتح أو طي: ' : 'Expand or collapse: ') + title);
+  });
+
+  if (!_progressAccordionInit) {
+    window.addEventListener('resize', () => {
+      if (_dashActiveTab === 'progress') _applyProgressAccordion();
+    });
+    _progressAccordionInit = true;
+  }
+}
+
+function _applyProgressAccordion() {
+  const view = document.getElementById('view-dashboard');
+  if (!view) return;
+  const panels = _getProgressPanels();
+  const useCompact = _dashActiveTab === 'progress' && _isProgressCompactMobile();
+  view.classList.toggle('progress-compact-mode', useCompact);
+
+  if (!panels.length) return;
+  if (_progressAccordionOpenIndex < 0 || _progressAccordionOpenIndex >= panels.length) _progressAccordionOpenIndex = 0;
+
+  panels.forEach((panel, idx) => {
+    const btn = panel.querySelector('.prog-acc-toggle');
+    const expanded = !useCompact || idx === _progressAccordionOpenIndex;
+    panel.classList.toggle('progress-collapsed', !expanded);
+    if (btn) {
+      btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      btn.style.display = useCompact ? 'inline-flex' : 'none';
+    }
+  });
 }
 
 // â”€â”€ Muscle MVP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

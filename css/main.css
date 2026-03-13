@@ -1902,6 +1902,46 @@ button:focus:not(:focus-visible){outline:none;}
   font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.8px;
 }
 .dash-period-mobile-select:focus{outline:none;border-color:var(--accent);}
+
+/* Progress tab mobile accordion (reduces long scrolling) */
+.prog-acc-toggle{
+  margin-left:auto;
+  width:26px;
+  height:26px;
+  border-radius:8px;
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  color:var(--text2);
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  display:none;
+}
+.prog-acc-toggle svg{
+  width:14px;
+  height:14px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2.4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:transform .18s ease;
+}
+#view-dashboard.progress-compact-mode .panel[data-dash-tab="progress"]{
+  margin-bottom:8px;
+}
+#view-dashboard.progress-compact-mode .panel[data-dash-tab="progress"] .panel-header{
+  position:relative;
+}
+#view-dashboard.progress-compact-mode .panel[data-dash-tab="progress"] .prog-acc-toggle{
+  display:inline-flex;
+}
+#view-dashboard.progress-compact-mode .panel[data-dash-tab="progress"].progress-collapsed > :not(.panel-header){
+  display:none !important;
+}
+#view-dashboard.progress-compact-mode .panel[data-dash-tab="progress"].progress-collapsed .prog-acc-toggle svg{
+  transform:rotate(-90deg);
+}
 @media (max-width:700px){
   .dash-period-mobile-nav{display:block;}
 }
