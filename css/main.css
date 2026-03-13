@@ -753,6 +753,16 @@ body.deload-active .body-zone.zone-selected{
 .mdc-overlay{position:absolute;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(3px);}
 .mdc-card{position:relative;z-index:1;width:100%;max-width:480px;background:var(--card);border-radius:22px 22px 0 0;padding:20px 18px 32px;max-height:88vh;overflow-y:auto;overscroll-behavior-y:contain;animation:slideUpModal .32s cubic-bezier(.22,1,.36,1);}
 @keyframes slideUpModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mdc-download-fab{
+  position:absolute; top:10px; right:12px; z-index:2;
+  width:40px; height:40px; border-radius:12px;
+  border:1px solid rgba(57,255,143,.35);
+  background:rgba(10,24,17,.88); color:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; backdrop-filter:blur(2px);
+}
+.mdc-download-fab svg{width:20px;height:20px;display:block;}
+.mdc-download-fab:active{transform:scale(.96);}
 .mdc-drag-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:0 auto 16px;}
 .mdc-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
 .mdc-muscle-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
@@ -777,9 +787,8 @@ body.deload-active .body-zone.zone-selected{
 .mdc-delta.up{color:#2ecc71;} .mdc-delta.down{color:#e74c3c;} .mdc-delta.same{color:var(--text3);}
 .mdc-actions{display:flex;gap:10px;margin-top:4px;}
 .mdc-train-btn{flex:1;background:var(--accent);color:#000;border:none;border-radius:14px;padding:14px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
-.mdc-download-btn{flex:1;background:rgba(57,255,143,.10);color:var(--accent);border:1px solid rgba(57,255,143,.35);border-radius:14px;padding:14px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .mdc-share-btn{flex:1;background:rgba(255,255,255,.08);color:var(--text1);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
-.mdc-share-btn:active,.mdc-train-btn:active,.mdc-download-btn:active{transform:scale(.97);}
+.mdc-share-btn:active,.mdc-train-btn:active{transform:scale(.97);}
 .mdc-forge-brand{text-align:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:12px;opacity:.5;}
 
 .mb-radar-wrap{

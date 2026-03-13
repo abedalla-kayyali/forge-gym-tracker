@@ -298,7 +298,13 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    try {
+      if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')) {
+        // Mobile fallback: open image in a tab so user can long-press save.
+        window.open(url, '_blank', 'noopener');
+      }
+    } catch (_) {}
+    setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
   }
 
   function _getAthleteName() {
@@ -655,7 +661,7 @@
     const muscle = _mdcCurrentMuscle;
     if (!muscle) return;
 
-    const btn = document.querySelector('.mdc-download-btn');
+    const btn = document.querySelector('.mdc-download-fab, .mdc-download-btn');
     const release = _setButtonBusy(btn, 'EXPORTING');
 
     try {
@@ -668,6 +674,24 @@
       }
 
       const filename = 'forge-muscle-' + String(muscle || 'report').toLowerCase().replace(/\s+/g, '-') + '-' + _todayIso() + '.png';
+      const file = new File([blob], filename, { type: 'image/png' });
+      const canShareFile = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+
+      // On phones, native share sheet is usually the most reliable way to Save Image.
+      if (navigator.share && canShareFile && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')) {
+        try {
+          await navigator.share({
+            title: 'FORGE Muscle Report',
+            text: 'Save or share your muscle poster.',
+            files: [file]
+          });
+          _setToast('Image ready in share sheet', 'var(--accent)');
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+        }
+      }
+
       _downloadBlobSafe(blob, filename);
       _setToast('Muscle image downloaded', 'var(--accent)');
     } catch (_) {

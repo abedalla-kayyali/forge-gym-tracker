@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v97';
-window.FORGE_BUILD   = '2026-03-14 (recovery status encoding fix in modal/image)';
+window.FORGE_VERSION = 'v98';
+window.FORGE_BUILD   = '2026-03-14 (muscle modal top-right download + mobile save fallback)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

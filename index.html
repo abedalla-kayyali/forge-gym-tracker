@@ -9318,6 +9318,13 @@ if (document.readyState === 'loading') {
 <div id="muscle-detail-modal" role="dialog" aria-modal="true">
   <div class="mdc-overlay" onclick="_closeMuscleDetail()"></div>
   <div class="mdc-card">
+    <button class="mdc-download-fab" aria-label="Download image" onclick="_downloadMuscleCard()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v11"/>
+        <path d="m7.5 10.5 4.5 4.5 4.5-4.5"/>
+        <path d="M4 20h16"/>
+      </svg>
+    </button>
     <div class="mdc-drag-handle"></div>
     <div class="mdc-header">
       <div class="mdc-muscle-icon" id="mdc-icon"></div>
@@ -9338,7 +9345,6 @@ if (document.readyState === 'loading') {
     <div class="mdc-delta" id="mdc-delta"></div>
     <div class="mdc-actions">
       <button class="mdc-train-btn" id="mdc-train-btn" onclick="_mdcTrainNow()">TRAIN NOW</button>
-      <button class="mdc-download-btn" onclick="_downloadMuscleCard()">DOWNLOAD</button>
       <button class="mdc-share-btn" onclick="_shareMuscleCard()">SHARE</button>
     </div>
     <div class="mdc-forge-brand">FORGE GYM TRACKER</div>
