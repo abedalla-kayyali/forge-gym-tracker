@@ -1498,6 +1498,71 @@ function _forgeFixArabicMojibake(input) {
 }
 window._forgeFixArabicText = _forgeFixArabicMojibake;
 
+let _forgeMojibakeObserver = null;
+function _forgeFixArabicAttrs(el) {
+  if (!el || el.nodeType !== 1) return;
+  const attrs = ['placeholder', 'title', 'aria-label'];
+  attrs.forEach(name => {
+    const v = el.getAttribute(name);
+    if (typeof v === 'string' && v) {
+      const fixed = _forgeFixArabicMojibake(v);
+      if (fixed !== v) el.setAttribute(name, fixed);
+    }
+  });
+}
+
+function _forgeFixArabicTree(root) {
+  if (currentLang !== 'ar' || !root) return;
+  const n = root.nodeType;
+  if (n === 3) {
+    const txt = root.nodeValue || '';
+    const fixed = _forgeFixArabicMojibake(txt);
+    if (fixed !== txt) root.nodeValue = fixed;
+    return;
+  }
+  if (n !== 1 && n !== 9 && n !== 11) return;
+
+  if (n === 1) _forgeFixArabicAttrs(root);
+
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  let textNode = walker.nextNode();
+  while (textNode) {
+    const txt = textNode.nodeValue || '';
+    const fixed = _forgeFixArabicMojibake(txt);
+    if (fixed !== txt) textNode.nodeValue = fixed;
+    textNode = walker.nextNode();
+  }
+
+  const elWalker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
+  let elNode = elWalker.nextNode();
+  while (elNode) {
+    _forgeFixArabicAttrs(elNode);
+    elNode = elWalker.nextNode();
+  }
+}
+
+function _forgeStartMojibakeObserver() {
+  if (_forgeMojibakeObserver || !document.body) return;
+  _forgeMojibakeObserver = new MutationObserver((mutations) => {
+    if (currentLang !== 'ar') return;
+    mutations.forEach(m => {
+      if (m.type === 'characterData') {
+        _forgeFixArabicTree(m.target);
+        return;
+      }
+      m.addedNodes && m.addedNodes.forEach(node => _forgeFixArabicTree(node));
+      if (m.target) _forgeFixArabicAttrs(m.target.nodeType === 1 ? m.target : null);
+    });
+  });
+  _forgeMojibakeObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    characterData: true,
+    attributes: true,
+    attributeFilter: ['placeholder', 'title', 'aria-label']
+  });
+}
+
 /** Translate a key - falls back to English if key missing in Arabic */
 function t(key) {
   const raw = (LANGS[currentLang] && LANGS[currentLang][key]) || LANGS.en[key] || key;
@@ -1652,6 +1717,12 @@ function applyLanguage() {
     if (typeof _onbStep !== 'undefined' && _onbStep === 5 && typeof _onbRenderSummary === 'function') {
       _onbRenderSummary();
     }
+  }
+
+  // Final pass: fix any mojibake Arabic text rendered outside t() paths.
+  if (isAr) {
+    _forgeFixArabicTree(document.body);
+    setTimeout(() => _forgeFixArabicTree(document.body), 120);
   }
 }
 
@@ -2164,7 +2235,13 @@ document.addEventListener('wheel', function(e) {
 (function initLanguage() {
   // Always apply language on load (for both Arabic and English)
   // so all JS-rendered content (muscle balance, vol list, etc.) uses the correct language
-  function doApply() { setTimeout(applyLanguage, 400); }
+  function doApply() {
+    _forgeStartMojibakeObserver();
+    setTimeout(() => {
+      applyLanguage();
+      if (currentLang === 'ar') _forgeFixArabicTree(document.body);
+    }, 400);
+  }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', doApply);
