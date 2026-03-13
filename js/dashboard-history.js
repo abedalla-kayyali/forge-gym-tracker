@@ -1,4 +1,4 @@
-// FORGE Gym Tracker - dashboard and history rendering
+﻿// FORGE Gym Tracker - dashboard and history rendering
 // Extracted from index.html to reduce main script size and coupling.
 
 let _calYear = new Date().getFullYear();
@@ -7,7 +7,7 @@ let _calSelectedDate = null;
 let _calMode = 'workout'; // active tracker tab
 let _calDateFilter = null;
 
-// ── Helpers to build per-day data maps ──
+// â”€â”€ Helpers to build per-day data maps â”€â”€
 function _buildWorkoutMap() {
   const allW = [
     ...(typeof workouts !== 'undefined' ? workouts : []),
@@ -57,10 +57,10 @@ function _buildWaterMap() {
   return map;
 }
 
-// ── Feature 2: Muscle Freshness — per-muscle last-trained date map ──
+// â”€â”€ Feature 2: Muscle Freshness â€” per-muscle last-trained date map â”€â”€
 function _buildLastTrainedMap() {
   const w = (typeof workouts !== 'undefined') ? workouts : [];
-  const map = {}; // muscle → Date (most recent training date)
+  const map = {}; // muscle â†’ Date (most recent training date)
   w.forEach(x => {
     const d = new Date(x.date);
     if (isNaN(d) || !x.muscle) return;
@@ -77,7 +77,7 @@ function _muscleFreshnessColor(muscle, onDate, lastTrainedMap) {
   const hoursAgo = (onDate.getTime() - last.getTime()) / 3600000;
   if (hoursAgo >= 72) return '#2ecc71'; // green
   if (hoursAgo >= 48) return '#f39c12'; // amber
-  return '#e74c3c'; // red — still recovering
+  return '#e74c3c'; // red â€” still recovering
 }
 
 function _buildWeightMap() {
@@ -132,7 +132,7 @@ function _isoKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// ── Main calendar renderer ──
+// â”€â”€ Main calendar renderer â”€â”€
 function renderWorkoutCalendar() {
   const wrap = document.getElementById('workout-calendar-wrap');
   if (!wrap) return;
@@ -156,18 +156,18 @@ function renderWorkoutCalendar() {
   const totalDays = lastDay.getDate();
 
   const monthNames = isAr
-    ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
+    ? ['ظٹظ†ط§ظٹط±', 'ظپط¨ط±ط§ظٹط±', 'ظ…ط§ط±ط³', 'ط£ط¨ط±ظٹظ„', 'ظ…ط§ظٹظˆ', 'ظٹظˆظ†ظٹظˆ', 'ظٹظˆظ„ظٹظˆ', 'ط£ط؛ط³ط·ط³', 'ط³ط¨طھظ…ط¨ط±', 'ط£ظƒطھظˆط¨ط±', 'ظ†ظˆظپظ…ط¨ط±', 'ط¯ظٹط³ظ…ط¨ط±']
     : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dowLabels = isAr
-    ? ['أح', 'اث', 'ثل', 'أر', 'خم', 'جم', 'سب']
+    ? ['ط£ط­', 'ط§ط«', 'ط«ظ„', 'ط£ط±', 'ط®ظ…', 'ط¬ظ…', 'ط³ط¨']
     : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-  // ── Tab labels ──
+  // â”€â”€ Tab labels â”€â”€
   const tabs = [
-    { id: 'workout', icon: '🏋️', label: isAr ? 'تمرين' : 'Workout' },
-    { id: 'steps', icon: '👟', label: isAr ? 'خطوات' : 'Steps' },
-    { id: 'water', icon: '💧', label: isAr ? 'ماء' : 'Water' },
-    { id: 'weight', icon: '⚖️', label: isAr ? 'وزن' : 'Weight' }
+    { id: 'workout', icon: 'ًںڈ‹ï¸ڈ', label: isAr ? 'طھظ…ط±ظٹظ†' : 'Workout' },
+    { id: 'steps', icon: 'ًں‘ں', label: isAr ? 'ط®ط·ظˆط§طھ' : 'Steps' },
+    { id: 'water', icon: 'ًں’§', label: isAr ? 'ظ…ط§ط،' : 'Water' },
+    { id: 'weight', icon: 'âڑ–ï¸ڈ', label: isAr ? 'ظˆط²ظ†' : 'Weight' }
   ];
   const tabsHtml = `<div class="cal-track-tabs">${tabs.map(tb =>
     `<button class="cal-track-tab${_calMode === tb.id ? ' active' : ''}" onclick="calSetMode('${tb.id}')">
@@ -175,7 +175,7 @@ function renderWorkoutCalendar() {
     </button>`
   ).join('')}</div>`;
 
-  // ── Day cells ──
+  // â”€â”€ Day cells â”€â”€
   let dayCells = '';
   for (let i = 0; i < startDow; i++) dayCells += '<div class="wk-cal-day empty"></div>';
 
@@ -203,7 +203,7 @@ function renderWorkoutCalendar() {
           }).join('')}</div>`
           : '';
       } else if (isFuture) {
-        // Feature 2: future rest day — show freshness forecast chips for muscles that need it
+        // Feature 2: future rest day â€” show freshness forecast chips for muscles that need it
         extraClass = 'rest';
         const ALL_M = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Forearms', 'Glutes', 'Calves'];
         const freshChips = ALL_M
@@ -239,7 +239,7 @@ function renderWorkoutCalendar() {
       } else { extraClass = 'rest'; }
     }
 
-    // always show micro-dots for ALL trackers (overlay mode — show what was tracked that day)
+    // always show micro-dots for ALL trackers (overlay mode â€” show what was tracked that day)
     const dotWorkout = wkMap[key] ? `<div class="cal-day-dot workout" title="${wkMap[key].count} workout(s)"></div>` : '';
     const dotSteps = stMap[key] && stMap[key].steps > 0 ? `<div class="cal-day-dot steps"  title="${stMap[key].steps} steps"></div>` : '';
     const dotWater = h2oMap[key] && h2oMap[key].cups > 0 ? `<div class="cal-day-dot water" title="${h2oMap[key].cups} cups"></div>` : '';
@@ -261,7 +261,7 @@ function renderWorkoutCalendar() {
 
   const dowCells = dowLabels.map(l => `<div class="wk-cal-dow">${l}</div>`).join('');
 
-  // ── Selected day detail card ──
+  // â”€â”€ Selected day detail card â”€â”€
   let selDetail = '';
   if (_calSelectedDate) {
     const wk = wkMap[_calSelectedDate];
@@ -276,41 +276,41 @@ function renderWorkoutCalendar() {
     const dateLabel = d.toLocaleDateString(isAr ? 'ar-SA' : 'en-GB', { weekday: 'long', month: 'long', day: 'numeric' });
 
     const cellWkt = wk
-      ? `<div class="cal-ddc-label">💪 ${isAr ? 'تمرين' : 'Workout'}</div>
-         <div class="cal-ddc-val">${wk.count}<span class="cal-ddc-unit">${isAr ? 'جلسة' : 'sess'}</span></div>
+      ? `<div class="cal-ddc-label">ًں’ھ ${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</div>
+         <div class="cal-ddc-val">${wk.count}<span class="cal-ddc-unit">${isAr ? 'ط¬ظ„ط³ط©' : 'sess'}</span></div>
          <div class="cal-ddc-sub">${Math.round(wk.vol).toLocaleString()} kg vol</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:100%;background:#2ecc71;"></div></div>`
-      : `<div class="cal-ddc-label">💪 ${isAr ? 'تمرين' : 'Workout'}</div><div class="cal-ddc-empty">${isAr ? 'راحة' : 'Rest day'}</div>`;
+      : `<div class="cal-ddc-label">ًں’ھ ${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</div><div class="cal-ddc-empty">${isAr ? 'ط±ط§ط­ط©' : 'Rest day'}</div>`;
 
     const stPct = st && st.steps ? Math.min(100, Math.round(st.steps / stGoal * 100)) : 0;
     const cellSt = st && st.steps
-      ? `<div class="cal-ddc-label">👟 ${isAr ? 'خطوات' : 'Steps'}</div>
+      ? `<div class="cal-ddc-label">ًں‘ں ${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</div>
          <div class="cal-ddc-val">${(st.steps / 1000).toFixed(1)}<span class="cal-ddc-unit">k</span></div>
-         <div class="cal-ddc-sub">${stPct}% ${isAr ? 'من الهدف' : 'of goal'}</div>
+         <div class="cal-ddc-sub">${stPct}% ${isAr ? 'ظ…ظ† ط§ظ„ظ‡ط¯ظپ' : 'of goal'}</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:${stPct}%;background:#f39c12;"></div></div>`
-      : `<div class="cal-ddc-label">👟 ${isAr ? 'خطوات' : 'Steps'}</div><div class="cal-ddc-empty">${isAr ? 'لا بيانات' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">ًں‘ں ${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     const h2oPct = h2o ? Math.min(100, Math.round(h2o.cups / goal * 100)) : 0;
     const cellH2o = h2o && h2o.cups
-      ? `<div class="cal-ddc-label">💧 ${isAr ? 'ماء' : 'Water'}</div>
+      ? `<div class="cal-ddc-label">ًں’§ ${isAr ? 'ظ…ط§ط،' : 'Water'}</div>
          <div class="cal-ddc-val">${h2o.cups}<span class="cal-ddc-unit">/${goal}</span></div>
-         <div class="cal-ddc-sub">${h2oPct}% ${isAr ? 'من الهدف' : 'of goal'}</div>
+         <div class="cal-ddc-sub">${h2oPct}% ${isAr ? 'ظ…ظ† ط§ظ„ظ‡ط¯ظپ' : 'of goal'}</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:${h2oPct}%;background:#3498db;"></div></div>`
-      : `<div class="cal-ddc-label">💧 ${isAr ? 'ماء' : 'Water'}</div><div class="cal-ddc-empty">${isAr ? 'لا بيانات' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">ًں’§ ${isAr ? 'ظ…ط§ط،' : 'Water'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     const cellWt = wt
-      ? `<div class="cal-ddc-label">⚖️ ${isAr ? 'الوزن' : 'Weight'}</div>
+      ? `<div class="cal-ddc-label">âڑ–ï¸ڈ ${isAr ? 'ط§ظ„ظˆط²ظ†' : 'Weight'}</div>
          <div class="cal-ddc-val">${wt.weight}<span class="cal-ddc-unit">${wt.unit}</span></div>
          <div class="cal-ddc-sub" style="margin-top:4px;">&nbsp;</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:100%;background:#9b59b6;"></div></div>`
-      : `<div class="cal-ddc-label">⚖️ ${isAr ? 'الوزن' : 'Weight'}</div><div class="cal-ddc-empty">${isAr ? 'لا بيانات' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">âڑ–ï¸ڈ ${isAr ? 'ط§ظ„ظˆط²ظ†' : 'Weight'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     const cellMeal = meal && meal.count
-      ? `<div class="cal-ddc-label">🍽️ ${isAr ? 'الوجبات' : 'Meals'}</div>
-         <div class="cal-ddc-val">${meal.count}<span class="cal-ddc-unit">${isAr ? 'وجبة' : 'meal'}</span></div>
-         <div class="cal-ddc-sub">${Math.round(meal.kcal)} ${isAr ? 'سعرة' : 'kcal'} • ${Math.round(meal.p)}P ${Math.round(meal.c)}C ${Math.round(meal.f)}F</div>
+      ? `<div class="cal-ddc-label">ًںچ½ï¸ڈ ${isAr ? 'ط§ظ„ظˆط¬ط¨ط§طھ' : 'Meals'}</div>
+         <div class="cal-ddc-val">${meal.count}<span class="cal-ddc-unit">${isAr ? 'ظˆط¬ط¨ط©' : 'meal'}</span></div>
+         <div class="cal-ddc-sub">${Math.round(meal.kcal)} ${isAr ? 'ط³ط¹ط±ط©' : 'kcal'} â€¢ ${Math.round(meal.p)}P ${Math.round(meal.c)}C ${Math.round(meal.f)}F</div>
          <div class="cal-ddc-bar"><div class="cal-ddc-bar-fill" style="width:${Math.min(100, meal.count * 25)}%;background:#e67e22;"></div></div>`
-      : `<div class="cal-ddc-label">🍽️ ${isAr ? 'الوجبات' : 'Meals'}</div><div class="cal-ddc-empty">${isAr ? 'لا بيانات' : 'Not logged'}</div>`;
+      : `<div class="cal-ddc-label">ًںچ½ï¸ڈ ${isAr ? 'ط§ظ„ظˆط¬ط¨ط§طھ' : 'Meals'}</div><div class="cal-ddc-empty">${isAr ? 'ظ„ط§ ط¨ظٹط§ظ†ط§طھ' : 'Not logged'}</div>`;
 
     selDetail = `<div class="cal-day-detail">
       <div class="cal-day-detail-header">${dateLabel}</div>
@@ -324,31 +324,31 @@ function renderWorkoutCalendar() {
     </div>`;
   }
 
-  // ── Legend per mode ──
+  // â”€â”€ Legend per mode â”€â”€
   const legends = {
     workout: `
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:#3a9e6a;"></div>${isAr ? 'تدريب' : 'Trained'}</div>
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:#00c863;"></div>${isAr ? 'جلستان' : '2+ sessions'}</div>
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:#00ff7f;"></div>${isAr ? 'مكثف' : 'Intense'}</div>`,
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:#3a9e6a;"></div>${isAr ? 'طھط¯ط±ظٹط¨' : 'Trained'}</div>
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:#00c863;"></div>${isAr ? 'ط¬ظ„ط³طھط§ظ†' : '2+ sessions'}</div>
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:#00ff7f;"></div>${isAr ? 'ظ…ظƒط«ظپ' : 'Intense'}</div>`,
     steps: `
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(243,156,18,.3);"></div>${isAr ? 'بداية' : '< 50%'}</div>
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(243,156,18,.6);"></div>${isAr ? 'نصف' : '50–99%'}</div>
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(243,156,18,.9);"></div>${isAr ? 'الهدف' : 'Goal ✓'}</div>`,
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(243,156,18,.3);"></div>${isAr ? 'ط¨ط¯ط§ظٹط©' : '< 50%'}</div>
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(243,156,18,.6);"></div>${isAr ? 'ظ†طµظپ' : '50â€“99%'}</div>
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(243,156,18,.9);"></div>${isAr ? 'ط§ظ„ظ‡ط¯ظپ' : 'Goal âœ“'}</div>`,
     water: `
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(52,152,219,.3);"></div>${isAr ? 'قليل' : '< 50%'}</div>
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(52,152,219,.55);"></div>${isAr ? 'متوسط' : '50–99%'}</div>
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(52,152,219,.85);"></div>${isAr ? 'كامل' : 'Full ✓'}</div>`,
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(52,152,219,.3);"></div>${isAr ? 'ظ‚ظ„ظٹظ„' : '< 50%'}</div>
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(52,152,219,.55);"></div>${isAr ? 'ظ…طھظˆط³ط·' : '50â€“99%'}</div>
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(52,152,219,.85);"></div>${isAr ? 'ظƒط§ظ…ظ„' : 'Full âœ“'}</div>`,
     weight: `
-      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(155,89,182,.5);"></div>${isAr ? 'مسجل' : 'Logged'}</div>`
+      <div class="wk-cal-legend-item"><div class="wk-cal-legend-dot" style="background:rgba(155,89,182,.5);"></div>${isAr ? 'ظ…ط³ط¬ظ„' : 'Logged'}</div>`
   };
   const microLegend = `
     <div class="wk-cal-legend-item" style="margin-top:8px;width:100%;padding-top:8px;border-top:1px solid var(--border);">
-      <span style="color:var(--text3);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;margin-right:6px;">${isAr ? 'نقاط:' : 'DOTS:'}</span>
-      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot workout" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'تمرين' : 'Workout'}</span></span>
-      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot steps" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'خطوات' : 'Steps'}</span></span>
-      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot water" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'ماء' : 'Water'}</span></span>
-      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot weight" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'وزن' : 'Weight'}</span></span>
-      <span style="display:inline-flex;align-items:center;gap:3px;"><div class="cal-day-dot meal" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'وجبات' : 'Meals'}</span></span>
+      <span style="color:var(--text3);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;margin-right:6px;">${isAr ? 'ظ†ظ‚ط§ط·:' : 'DOTS:'}</span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot workout" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'طھظ…ط±ظٹظ†' : 'Workout'}</span></span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot steps" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'ط®ط·ظˆط§طھ' : 'Steps'}</span></span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot water" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'ظ…ط§ط،' : 'Water'}</span></span>
+      <span style="display:inline-flex;align-items:center;gap:3px;margin-right:6px;"><div class="cal-day-dot weight" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'ظˆط²ظ†' : 'Weight'}</span></span>
+      <span style="display:inline-flex;align-items:center;gap:3px;"><div class="cal-day-dot meal" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'ظˆط¬ط¨ط§طھ' : 'Meals'}</span></span>
     </div>`;
 
   wrap.innerHTML = `
@@ -407,7 +407,7 @@ function _filterWorkoutsByPeriod(arr, period) {
   return arr.filter(w => (w.date || '').slice(0, 10) >= cutStr);
 }
 
-// Memoized period filter for the dashboard — reuses result across same-period renders
+// Memoized period filter for the dashboard â€” reuses result across same-period renders
 function _getPw() {
   const k = `${workouts.length}-${_dashPeriod}-${today()}`;
   if (_dashPwCache.key !== k) {
@@ -430,7 +430,7 @@ function _setPeriod(period, btn) {
   renderDashboard();
 }
 
-// Overview Quick Snapshot — period-aware insights bar
+// Overview Quick Snapshot â€” period-aware insights bar
 function _renderOverviewSnapshot() {
   const _pw = _getPw();
 
@@ -446,7 +446,7 @@ function _renderOverviewSnapshot() {
   const elLast = document.getElementById('snap-last');
   if (elLast) {
     if (!workouts.length) {
-      elLast.textContent = '—';
+      elLast.textContent = 'â€”';
       elLast.className = 'snap-val snap-neutral';
     } else {
       const _lastD = new Date(workouts[workouts.length - 1].date);
@@ -480,7 +480,7 @@ function _renderOverviewSnapshot() {
         elTrend.textContent = _s + _d2 + '%';
         elTrend.className = 'snap-val' + (_d2 >= 0 ? ' snap-pos' : ' snap-neg');
       } else {
-        elTrend.textContent = '—';
+        elTrend.textContent = 'â€”';
         elTrend.className = 'snap-val snap-neutral';
       }
       const lbl2 = document.getElementById('snap-trend-lbl');
@@ -553,11 +553,11 @@ function switchDashTab(name, btn) {
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
 }
 
-// ── Muscle MVP ─────────────────────────────────────────────
+// â”€â”€ Muscle MVP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getLastWeekMVP() {
   if (!workouts.length) return null;
   const now = new Date();
-  const dow = (now.getDay() + 6) % 7; // 0=Mon…6=Sun
+  const dow = (now.getDay() + 6) % 7; // 0=Monâ€¦6=Sun
   const thisMonday = new Date(now);
   thisMonday.setDate(now.getDate() - dow);
   thisMonday.setHours(0, 0, 0, 0);
@@ -591,26 +591,26 @@ function renderMVPZone() {
   if (btn) {
     const badge = document.createElement('span');
     badge.className = 'mvp-badge';
-    badge.textContent = '🏆 MVP';
+    badge.textContent = 'ًںڈ† MVP';
     btn.appendChild(badge);
   }
 }
 
-// ── Weak Point Blitz ─────────────────────────────────────────
+// â”€â”€ Weak Point Blitz â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BLITZ_EXERCISES = {
-  Chest: { ex: 'Push-Ups', target: '3 × 15' },
-  Back: { ex: 'Bodyweight Rows', target: '3 × 12' },
-  Shoulders: { ex: 'Pike Push-Ups', target: '3 × 10' },
-  Legs: { ex: 'Bodyweight Squats', target: '3 × 20' },
-  Core: { ex: 'Plank Hold', target: '3 × 30s' },
-  Biceps: { ex: 'Chin-Ups', target: '3 × 8' },
-  Triceps: { ex: 'Diamond Push-Ups', target: '3 × 12' },
-  Forearms: { ex: 'Dead Hangs', target: '3 × 20s' },
-  Glutes: { ex: 'Hip Thrusts', target: '3 × 20' },
+  Chest: { ex: 'Push-Ups', target: '3 أ— 15' },
+  Back: { ex: 'Bodyweight Rows', target: '3 أ— 12' },
+  Shoulders: { ex: 'Pike Push-Ups', target: '3 أ— 10' },
+  Legs: { ex: 'Bodyweight Squats', target: '3 أ— 20' },
+  Core: { ex: 'Plank Hold', target: '3 أ— 30s' },
+  Biceps: { ex: 'Chin-Ups', target: '3 أ— 8' },
+  Triceps: { ex: 'Diamond Push-Ups', target: '3 أ— 12' },
+  Forearms: { ex: 'Dead Hangs', target: '3 أ— 20s' },
+  Glutes: { ex: 'Hip Thrusts', target: '3 أ— 20' },
   Calves: { ex: 'Calf Raises', target: '50 reps' },
-  Neck: { ex: 'Neck Circles', target: '3 × 10 each side' },
-  Traps: { ex: 'Barbell Shrugs', target: '3 × 12' },
-  'Lower Back': { ex: 'Superman Holds', target: '3 × 12' }
+  Neck: { ex: 'Neck Circles', target: '3 أ— 10 each side' },
+  Traps: { ex: 'Barbell Shrugs', target: '3 أ— 12' },
+  'Lower Back': { ex: 'Superman Holds', target: '3 أ— 12' }
 };
 
 function getWeakMuscle() {
@@ -626,7 +626,7 @@ function getWeakMuscle() {
   return sorted[0] && sorted[0].score < 40 ? sorted[0].muscle : null;
 }
 
-// ── Rescue Mission (Feature 5) ──────────────────────────────
+// â”€â”€ Rescue Mission (Feature 5) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _RESCUE_REPS = {
   Chest: 45, Back: 36, Shoulders: 30, Legs: 60, Core: 90,
   Biceps: 24, Triceps: 36, Forearms: 60, Glutes: 60,
@@ -662,7 +662,7 @@ function getRescueMission() {
     .reduce((sum, x) => sum + (x.sets || []).reduce((s, st) => s + (st.reps || 0), 0), 0);
 
   const target = _RESCUE_REPS[worst] || 30;
-  const blitz = BLITZ_EXERCISES[worst] || { ex: worst, target: '3×12' };
+  const blitz = BLITZ_EXERCISES[worst] || { ex: worst, target: '3أ—12' };
   const done = todayReps >= target;
 
   return {
@@ -686,7 +686,7 @@ function renderNeglectedZones() {
   });
 }
 
-// ── Week vs Last Week Comparison ─────────────────────────────
+// â”€â”€ Week vs Last Week Comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderWeekComparison() {
   const now = new Date();
   const dow = (now.getDay() + 6) % 7; // 0=Mon
@@ -703,16 +703,16 @@ function renderWeekComparison() {
   const tw = weekStats(thisMonday, now);
   const lw = weekStats(lastMonday, lastSunday);
 
-  const elTv = document.getElementById('wcmp-this-vol'); if (elTv) elTv.textContent = tw.vol ? tw.vol.toLocaleString() + ' kg' : '—';
+  const elTv = document.getElementById('wcmp-this-vol'); if (elTv) elTv.textContent = tw.vol ? tw.vol.toLocaleString() + ' kg' : 'â€”';
   const elTs = document.getElementById('wcmp-this-sess'); if (elTs) elTs.textContent = tw.sessions || '0';
   const elTst = document.getElementById('wcmp-this-sets'); if (elTst) elTst.textContent = tw.sets || '0';
-  const elLv = document.getElementById('wcmp-last-vol'); if (elLv) elLv.textContent = lw.vol ? lw.vol.toLocaleString() + ' kg' : '—';
+  const elLv = document.getElementById('wcmp-last-vol'); if (elLv) elLv.textContent = lw.vol ? lw.vol.toLocaleString() + ' kg' : 'â€”';
   const elLs = document.getElementById('wcmp-last-sess'); if (elLs) elLs.textContent = lw.sessions || '0';
   const elLst = document.getElementById('wcmp-last-sets'); if (elLst) elLst.textContent = lw.sets || '0';
 
   const badge = document.getElementById('week-compare-badge');
   if (badge) {
-    if (!lw.sessions) { badge.textContent = 'NEW'; badge.style.background = 'var(--accent)'; badge.style.color = '#000'; } else if (tw.vol >= lw.vol) { badge.textContent = '▲ UP'; badge.style.background = 'rgba(46,204,113,.2)'; badge.style.color = '#2ecc71'; } else { badge.textContent = '▼ DOWN'; badge.style.background = 'rgba(231,76,60,.15)'; badge.style.color = '#e74c3c'; }
+    if (!lw.sessions) { badge.textContent = 'NEW'; badge.style.background = 'var(--accent)'; badge.style.color = '#000'; } else if (tw.vol >= lw.vol) { badge.textContent = 'â–² UP'; badge.style.background = 'rgba(46,204,113,.2)'; badge.style.color = '#2ecc71'; } else { badge.textContent = 'â–¼ DOWN'; badge.style.background = 'rgba(231,76,60,.15)'; badge.style.color = '#e74c3c'; }
   }
 
   const deltas = document.getElementById('wcmp-deltas');
@@ -727,7 +727,7 @@ function renderWeekComparison() {
   }
 }
 
-// ── Muscle Recovery Map ───────────────────────────────────────
+// â”€â”€ Muscle Recovery Map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderRecoveryMap() {
   const grid = document.getElementById('recovery-map-grid');
   if (!grid) return;
@@ -743,12 +743,12 @@ function renderRecoveryMap() {
     if (!last) return `<div class="rcv-card never"><div class="rcv-card-name">${m}</div><div class="rcv-card-status" style="color:var(--text3);">Never</div></div>`;
     const hrs = (now - last.getTime()) / 3600000;
     let cls; let statusTxt;
-    if (hrs < 24) { cls = 'tired'; statusTxt = `${Math.round(hrs)}h ago 🔴`; } else if (hrs < 48) { cls = 'recovering'; statusTxt = `${Math.round(hrs)}h ago 🟡`; } else { cls = 'fresh'; statusTxt = `${Math.round(hrs / 24)}d ago ✅`; }
+    if (hrs < 24) { cls = 'tired'; statusTxt = `${Math.round(hrs)}h ago ًں”´`; } else if (hrs < 48) { cls = 'recovering'; statusTxt = `${Math.round(hrs)}h ago ًںں،`; } else { cls = 'fresh'; statusTxt = `${Math.round(hrs / 24)}d ago âœ…`; }
     return `<div class="rcv-card ${cls}"><div class="rcv-card-name">${m}</div><div class="rcv-card-status">${statusTxt}</div></div>`;
   }).join('');
 }
 
-// ── Personal Best Board ───────────────────────────────────────
+// â”€â”€ Personal Best Board â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderPBBoard() {
   const board = document.getElementById('pb-board');
   if (!board) return;
@@ -800,10 +800,10 @@ function renderStrengthStandards() {
     if (!bests[w.muscle] || maxW > bests[w.muscle]) bests[w.muscle] = maxW;
   });
   const _isAr = typeof currentLang !== 'undefined' && currentLang === 'ar';
-  const unit = _isAr ? 'كجم' : 'kg';
+  const unit = _isAr ? 'ظƒط¬ظ…' : 'kg';
   const LVL_COLOR = { untrained: '#888', beginner: '#95a5a6', intermediate: '#3498db', advanced: '#2ecc71', elite: '#ffd700' };
   const LVL_LABEL = { untrained: 'Untrained', beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced', elite: 'Elite' };
-  const ICONS = { Chest: '🏋️', Back: '🔙', Shoulders: '🤷', Legs: '🦵', Biceps: '💪', Triceps: '💪' };
+  const ICONS = { Chest: 'ًںڈ‹ï¸ڈ', Back: 'ًں”™', Shoulders: 'ًں¤·', Legs: 'ًں¦µ', Biceps: 'ًں’ھ', Triceps: 'ًں’ھ' };
 
   // Muscle filter chips
   const chipsEl = document.getElementById('ss-muscle-chips');
@@ -861,14 +861,14 @@ function renderStrengthStandards() {
 
   const rows = stats.map(({ muscle, std, pr, pct, level, nextLevel, nextGoalKg, toGoKg }) => {
     const color = LVL_COLOR[level];
-    const icon = ICONS[muscle] || '💪';
+    const icon = ICONS[muscle] || 'ًں’ھ';
     let insight = '';
     if (pr === 0) {
       insight = `Log <strong>${std.ex}</strong> to track your ${muscle} strength`;
     } else if (level === 'elite') {
-      insight = '🏆 Elite strength — keep it up!';
+      insight = 'ًںڈ† Elite strength â€” keep it up!';
     } else {
-      insight = `<strong style="color:${color};">${toGoKg}${unit}</strong> more to reach <strong>${nextLevel}</strong> &nbsp;·&nbsp; goal: ${nextGoalKg}${unit}`;
+      insight = `<strong style="color:${color};">${toGoKg}${unit}</strong> more to reach <strong>${nextLevel}</strong> &nbsp;آ·&nbsp; goal: ${nextGoalKg}${unit}`;
     }
     return `<div class="ss-row">
       <div class="ss-row-top">
@@ -910,7 +910,7 @@ function populateVelocitySelect() {
   if (!sel) return;
   const cur = sel.value;
   const exercises = [...new Set(workouts.map(w => w.exercise))].sort();
-  sel.innerHTML = '<option value="">— Select exercise —</option>' +
+  sel.innerHTML = '<option value="">â€” Select exercise â€”</option>' +
     exercises.map(ex => `<option value="${ex}"${ex === cur ? ' selected' : ''}>${ex}</option>`).join('');
 }
 
@@ -931,7 +931,7 @@ function renderVelocityChart() {
   const _empty = (msg) => {
     if (badge) badge.textContent = msg || '';
     velChart = new Chart(ctx, {
-      type: 'line', data: { labels: ['—'], datasets: [{ data: [0], borderColor: '#2ecc71', borderWidth: 2, pointRadius: 0 }] },
+      type: 'line', data: { labels: ['â€”'], datasets: [{ data: [0], borderColor: '#2ecc71', borderWidth: 2, pointRadius: 0 }] },
       options: { ...mkChartOpts(), plugins: { legend: { display: false }, tooltip: { enabled: false } } }
     });
   };
@@ -1017,7 +1017,7 @@ function renderPRRoadmap() {
   const wrap = document.getElementById('pr-roadmap-wrap');
   if (!wrap) return;
   if (!workouts.length) {
-    wrap.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="empty-icon">🗺️</div><div class="empty-title">${t('hist.noWorkouts')}</div></div>`;
+    wrap.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="empty-icon">ًں—؛ï¸ڈ</div><div class="empty-title">${t('hist.noWorkouts')}</div></div>`;
     return;
   }
 
@@ -1050,7 +1050,7 @@ function renderPRRoadmap() {
 
   const now = Date.now();
   const MS_WEEK = 604800000;
-  const unit = currentLang === 'ar' ? 'كجم' : 'kg';
+  const unit = currentLang === 'ar' ? 'ظƒط¬ظ…' : 'kg';
 
   wrap.innerHTML = top.map(([ex, pr]) => {
     const history = workouts.filter(w => w.exercise === ex).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -1077,16 +1077,16 @@ function renderPRRoadmap() {
 
     return `<div class="roadmap-lift">
       <div class="roadmap-lift-name">
-        ${MUSCLE_ICONS[pr.muscle] || '💪'} ${ex}
+        ${MUSCLE_ICONS[pr.muscle] || 'ًں’ھ'} ${ex}
         <span class="rm-pr-badge">${cur}${unit}</span>
       </div>
-      <div class="rm-pr-date">PR: ${prDateStr} · ${weeksSincePR > 0 ? weeksSincePR + 'w ago' : 'this week'}</div>
+      <div class="rm-pr-date">PR: ${prDateStr} آ· ${weeksSincePR > 0 ? weeksSincePR + 'w ago' : 'this week'}</div>
       <div class="roadmap-milestones">
         ${milestones.map((m, i) => `<div class="roadmap-ms${m.done ? ' done' : i === nextIdx ? ' next' : ''}">
-          ${m.done ? '✓' : 'W' + m.week}: ${m.target}${unit}</div>`).join('')}
+          ${m.done ? 'âœ“' : 'W' + m.week}: ${m.target}${unit}</div>`).join('')}
       </div>
       <div class="roadmap-bar-wrap"><div class="roadmap-bar-fill" style="width:${progPct}%;"></div></div>
-      <div class="roadmap-pace">+${weeklyGain.toFixed(2)} ${unit}/wk · 12W: ${Math.round((cur + weeklyGain * 12) * 4) / 4}${unit}</div>
+      <div class="roadmap-pace">+${weeklyGain.toFixed(2)} ${unit}/wk آ· 12W: ${Math.round((cur + weeklyGain * 12) * 4) / 4}${unit}</div>
     </div>`;
   }).join('');
 }
@@ -1128,7 +1128,7 @@ function renderMuscleFreshness() {
       <div style="width:8px;height:8px;border-radius:50%;background:${r.color};flex-shrink:0;box-shadow:0 0 5px ${r.color}55;"></div>
       <div style="flex:1;min-width:0;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;color:var(--text1);">${(typeof MUSCLE_ICONS!=='undefined'?MUSCLE_ICONS[r.m]:'')||'💪'} ${r.m}</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;color:var(--text1);">${(typeof MUSCLE_ICONS!=='undefined'?MUSCLE_ICONS[r.m]:'')||'ًں’ھ'} ${r.m}</span>
           <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:${r.color};font-weight:700;">${r.label}</span>
         </div>
         <div style="height:2px;background:var(--border2);border-radius:1px;overflow:hidden;margin-top:3px;">
@@ -1140,7 +1140,7 @@ function renderMuscleFreshness() {
   }).join('');
 }
 
-// ── Volume Panel State + Helpers ──────────────────────────────
+// â”€â”€ Volume Panel State + Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let _volRange = '3m', _volMuscle = '';
 let _nutCalChart = null, _nutMacroChart = null, _nutWeekChart = null, _nutScoreChart = null;
 
@@ -1213,7 +1213,7 @@ function _renderVolPanel() {
     const ar = (typeof currentLang !== 'undefined' && currentLang === 'ar');
     chipsEl.innerHTML = ['', ...muscles].map(m => `
       <button class="vol-muscle-chip${_volMuscle === m ? ' vol-chip-active' : ''}" data-muscle="${m}" onclick="setVolMuscle('${m}')">
-        ${m ? (MUSCLE_ICONS[m]||'💪')+' '+m : (ar?'الكل':'All')}
+        ${m ? (MUSCLE_ICONS[m]||'ًں’ھ')+' '+m : (ar?'ط§ظ„ظƒظ„':'All')}
       </button>`).join('');
   }
   const data = buildVolumeData(_volRange, _volMuscle);
@@ -1223,12 +1223,12 @@ function _renderVolPanel() {
     const ar = (typeof currentLang !== 'undefined' && currentLang === 'ar');
     const tot = Math.round(data.totalVol).toLocaleString();
     insight.textContent = ar
-      ? `الإجمالي: ${tot} كجم · ${data.sessionCount} جلسة`
-      : `Total: ${tot} kg · ${data.sessionCount} sessions`;
+      ? `ط§ظ„ط¥ط¬ظ…ط§ظ„ظٹ: ${tot} ظƒط¬ظ… آ· ${data.sessionCount} ط¬ظ„ط³ط©`
+      : `Total: ${tot} kg آ· ${data.sessionCount} sessions`;
   }
 }
 
-// ── Deload Cycle Engine ───────────────────────────────────────
+// â”€â”€ Deload Cycle Engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function _getWeekKey(d) {
   const dt = d || new Date();
   const jan1 = new Date(dt.getFullYear(), 0, 1);
@@ -1256,7 +1256,7 @@ function checkDeloadNeeded() {
       dl.active = false; dl.startDate = null;
       localStorage.setItem('forge_deload_data', JSON.stringify(dl));
       document.body.classList.remove('deload-active');
-      setTimeout(() => showToast('🎉 Deload complete — recharged & ready!', 'success'), 400);
+      setTimeout(() => showToast('ًںژ‰ Deload complete â€” recharged & ready!', 'success'), 400);
     }
     return dl.active;
   }
@@ -1265,7 +1265,7 @@ function checkDeloadNeeded() {
     dl.active = true; dl.startDate = Date.now();
     localStorage.setItem('forge_deload_data', JSON.stringify(dl));
     document.body.classList.add('deload-active');
-    setTimeout(() => showToast('⚠️ Deload Week triggered — reduce weights 40% for 7 days.', 'warn'), 600);
+    setTimeout(() => showToast('âڑ ï¸ڈ Deload Week triggered â€” reduce weights 40% for 7 days.', 'warn'), 600);
     return true;
   }
   return false;
@@ -1536,11 +1536,11 @@ function renderNutritionAnalyticsPanel() {
 
   const ar  = (typeof currentLang !== 'undefined') && currentLang === 'ar';
   const tx  = (en, arTxt) => ar ? arTxt : en;
-  const pLabel = _dashPeriod === 'ALL' ? tx('ALL TIME','كل الوقت')
-    : _dashPeriod === '7D' ? tx('LAST 7D','آخر 7 أيام')
-    : _dashPeriod === '1M' ? tx('LAST 30D','آخر 30 يوم')
-    : _dashPeriod === '3M' ? tx('LAST 3M','آخر 3 أشهر')
-    : tx('LAST 6M','آخر 6 أشهر');
+  const pLabel = _dashPeriod === 'ALL' ? tx('ALL TIME','ظƒظ„ ط§ظ„ظˆظ‚طھ')
+    : _dashPeriod === '7D' ? tx('LAST 7D','ط¢ط®ط± 7 ط£ظٹط§ظ…')
+    : _dashPeriod === '1M' ? tx('LAST 30D','ط¢ط®ط± 30 ظٹظˆظ…')
+    : _dashPeriod === '3M' ? tx('LAST 3M','ط¢ط®ط± 3 ط£ط´ظ‡ط±')
+    : tx('LAST 6M','ط¢ط®ط± 6 ط£ط´ظ‡ط±');
   if (badgeEl) badgeEl.textContent = pLabel;
 
   const targets = _calcNutritionTargetsForStats();
@@ -1556,7 +1556,7 @@ function renderNutritionAnalyticsPanel() {
     const cz = document.getElementById('nut-charts-zone');
     if (sz) sz.innerHTML = '';
     if (cz) cz.innerHTML = '';
-    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">\uD83D\uDCCA</div><div class="empty-title">${tx('No nutrition trend data yet.','لا توجد بيانات كافية للاتجاهات بعد.')}</div></div>`;
+    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">\uD83D\uDCCA</div><div class="empty-title">${tx('No nutrition trend data yet.','ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ظ„ط§طھط¬ط§ظ‡ط§طھ ط¨ط¹ط¯.')}</div></div>`;
     return;
   }
 
@@ -1608,44 +1608,44 @@ function renderNutritionAnalyticsPanel() {
   if (statsZone) statsZone.innerHTML = `
 <div class="stats-grid" style="margin-bottom:14px">
   <div class="sg-card">
-    <div class="sg-label">${tx('Avg Calories','متوسط السعرات')}</div>
+    <div class="sg-label">${tx('Avg Calories','ظ…طھظˆط³ط· ط§ظ„ط³ط¹ط±ط§طھ')}</div>
     <div class="sg-val">${Math.round(avgKcal)}<span class="sg-unit"> / ${Math.round(targets.targetCal)}</span></div>
     ${mkBar(calPct,'var(--accent)')}
   </div>
   <div class="sg-card">
-    <div class="sg-label">${tx('Macro Compliance','الالتزام بالماكرو')}</div>
+    <div class="sg-label">${tx('Macro Compliance','ط§ظ„ط§ظ„طھط²ط§ظ… ط¨ط§ظ„ظ…ط§ظƒط±ظˆ')}</div>
     <div class="sg-val">${compliance}<span class="sg-unit">%</span></div>
     ${mkBar(compliance,'var(--accent)')}
   </div>
   <div class="sg-card">
-    <div class="sg-label">${tx('Logged Days','أيام مسجلة')}</div>
+    <div class="sg-label">${tx('Logged Days','ط£ظٹط§ظ… ظ…ط³ط¬ظ„ط©')}</div>
     <div class="sg-val sg-neutral">${nDays}<span class="sg-unit">d</span></div>
-    <div class="sg-sub">${tx('Meals:','وجبات:')} ${tot.count}</div>
+    <div class="sg-sub">${tx('Meals:','ظˆط¬ط¨ط§طھ:')} ${tot.count}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">${tx('Avg Macros','متوسط الماكرو')}</div>
+    <div class="sg-label">${tx('Avg Macros','ظ…طھظˆط³ط· ط§ظ„ظ…ط§ظƒط±ظˆ')}</div>
     <div class="sg-val sg-neutral" style="font-size:16px;line-height:1.5">${Math.round(avgP)}P / ${Math.round(avgC)}C / ${Math.round(avgF)}F</div>
-    <div class="sg-sub">${tx('Targets:','أهداف:')} ${Math.round(targets.proteinG)}P / ${Math.round(targets.carbG)}C / ${Math.round(targets.fatG)}F</div>
+    <div class="sg-sub">${tx('Targets:','ط£ظ‡ط¯ط§ظپ:')} ${Math.round(targets.proteinG)}P / ${Math.round(targets.carbG)}C / ${Math.round(targets.fatG)}F</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">🥩 ${tx('Protein Days','أيام البروتين')}</div>
+    <div class="sg-label">ًں¥© ${tx('Protein Days','ط£ظٹط§ظ… ط§ظ„ط¨ط±ظˆطھظٹظ†')}</div>
     <div class="sg-val sg-neutral">${proteinDays}<span class="sg-unit"> / ${nDays}</span></div>
-    <div class="sg-sub">${nDays ? Math.round(proteinDays/nDays*100) : 0}% ${tx('of period','من الفترة')}</div>
+    <div class="sg-sub">${nDays ? Math.round(proteinDays/nDays*100) : 0}% ${tx('of period','ظ…ظ† ط§ظ„ظپطھط±ط©')}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">📉 ${tx('Deficit Days','أيام العجز')}</div>
+    <div class="sg-label">ًں“‰ ${tx('Deficit Days','ط£ظٹط§ظ… ط§ظ„ط¹ط¬ط²')}</div>
     <div class="sg-val sg-neutral">${deficitDays}<span class="sg-unit"> / ${nDays}</span></div>
-    <div class="sg-sub">${nDays ? Math.round(deficitDays/nDays*100) : 0}% ${tx('of period','من الفترة')}</div>
+    <div class="sg-sub">${nDays ? Math.round(deficitDays/nDays*100) : 0}% ${tx('of period','ظ…ظ† ط§ظ„ظپطھط±ط©')}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">🔥 ${tx('Cur. Streak','الإنجاز الحالي')}</div>
-    <div class="sg-val${currentStreak >= 3 ? '' : ' sg-neutral'}"${currentStreak >= 3 ? ' style="color:#e6b84a"' : ''}>${currentStreak > 0 ? currentStreak + '<span class="sg-unit"> ' + tx('days','أيام') + '</span>' : '—'}</div>
-    <div class="sg-sub">${currentStreak > 0 ? tx('protein goal','هدف البروتين') : tx('start your streak!','ابدأ إنجازك!')}</div>
+    <div class="sg-label">ًں”¥ ${tx('Cur. Streak','ط§ظ„ط¥ظ†ط¬ط§ط² ط§ظ„ط­ط§ظ„ظٹ')}</div>
+    <div class="sg-val${currentStreak >= 3 ? '' : ' sg-neutral'}"${currentStreak >= 3 ? ' style="color:#e6b84a"' : ''}>${currentStreak > 0 ? currentStreak + '<span class="sg-unit"> ' + tx('days','ط£ظٹط§ظ…') + '</span>' : 'â€”'}</div>
+    <div class="sg-sub">${currentStreak > 0 ? tx('protein goal','ظ‡ط¯ظپ ط§ظ„ط¨ط±ظˆطھظٹظ†') : tx('start your streak!','ط§ط¨ط¯ط£ ط¥ظ†ط¬ط§ط²ظƒ!')}</div>
   </div>
   <div class="sg-card">
-    <div class="sg-label">🏆 ${tx('Best Streak','أفضل إنجاز')}</div>
-    <div class="sg-val sg-neutral">${bestStreak}<span class="sg-unit"> ${tx('days','أيام')}</span></div>
-    <div class="sg-sub">${tx('this period','هذه الفترة')}</div>
+    <div class="sg-label">ًںڈ† ${tx('Best Streak','ط£ظپط¶ظ„ ط¥ظ†ط¬ط§ط²')}</div>
+    <div class="sg-val sg-neutral">${bestStreak}<span class="sg-unit"> ${tx('days','ط£ظٹط§ظ…')}</span></div>
+    <div class="sg-sub">${tx('this period','ظ‡ط°ظ‡ ط§ظ„ظپطھط±ط©')}</div>
   </div>
 </div>`;
 
@@ -1654,20 +1654,20 @@ function renderNutritionAnalyticsPanel() {
   if (chartsZone) chartsZone.innerHTML = `
 <div class="nut-charts-grid">
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83D\uDCC8 ${tx('Calorie Trend','منحنى السعرات')}</div>
+    <div class="nut-chart-label">\uD83D\uDCC8 ${tx('Calorie Trend','ظ…ظ†ط­ظ†ظ‰ ط§ظ„ط³ط¹ط±ط§طھ')}</div>
     <div style="height:140px"><canvas id="nut-cal-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83E\uDD57 ${tx('Macro Split','توزيع الماكرو')}</div>
+    <div class="nut-chart-label">\uD83E\uDD57 ${tx('Macro Split','طھظˆط²ظٹط¹ ط§ظ„ظ…ط§ظƒط±ظˆ')}</div>
     <div style="height:140px"><canvas id="nut-macro-chart"></canvas></div>
     <div class="nut-macro-legend" id="nut-macro-chart-legend"></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83D\uDCC5 ${tx('Weekly Calories','السعرات الأسبوعية')}</div>
+    <div class="nut-chart-label">\uD83D\uDCC5 ${tx('Weekly Calories','ط§ظ„ط³ط¹ط±ط§طھ ط§ظ„ط£ط³ط¨ظˆط¹ظٹط©')}</div>
     <div style="height:140px"><canvas id="nut-week-chart"></canvas></div>
   </div>
   <div class="nut-chart-card">
-    <div class="nut-chart-label">\uD83C\uDFAF ${tx('Day Score','نقاط اليوم')}</div>
+    <div class="nut-chart-label">\uD83C\uDFAF ${tx('Day Score','ظ†ظ‚ط§ط· ط§ظ„ظٹظˆظ…')}</div>
     <div style="height:140px"><canvas id="nut-score-chart"></canvas></div>
   </div>
 </div>`;
@@ -1690,13 +1690,13 @@ function renderNutritionAnalyticsPanel() {
   const fmtDate  = k => { try { return new Date(k).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); } catch(e){ return k; } };
 
   const calTrend = (() => {
-    if (daily.length < 4) return tx('Not enough data.','بيانات غير كافية.');
+    if (daily.length < 4) return tx('Not enough data.','ط¨ظٹط§ظ†ط§طھ ط؛ظٹط± ظƒط§ظپظٹط©.');
     const half = Math.floor(daily.length/2);
     const firstHalf = daily.slice(0,half).reduce((s,d)=>s+d.kcal,0)/half;
     const secHalf   = daily.slice(half).reduce((s,d)=>s+d.kcal,0)/(daily.length-half);
     const delta = secHalf - firstHalf;
-    if (Math.abs(delta) < 50) return tx('Calories are relatively stable.','السعرات مستقرة نسبياً.');
-    return delta > 0 ? tx('Calorie intake trending up.','السعرات في تزايد.') : tx('Calorie intake trending down.','السعرات في تناقص.');
+    if (Math.abs(delta) < 50) return tx('Calories are relatively stable.','ط§ظ„ط³ط¹ط±ط§طھ ظ…ط³طھظ‚ط±ط© ظ†ط³ط¨ظٹط§ظ‹.');
+    return delta > 0 ? tx('Calorie intake trending up.','ط§ظ„ط³ط¹ط±ط§طھ ظپظٹ طھط²ط§ظٹط¯.') : tx('Calorie intake trending down.','ط§ظ„ط³ط¹ط±ط§طھ ظپظٹ طھظ†ط§ظ‚طµ.');
   })();
 
   const allMeals = daily.flatMap(d => (dayMap[d.key]||[]).map(m=>({...m,dayKey:d.key})));
@@ -1708,26 +1708,71 @@ function renderNutritionAnalyticsPanel() {
     return Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0];
   })();
 
-  const rows = [
-    underProteinDays > 0 ? `\uD83D\uDEA8 ${tx('Protein low on','بروتين منخفض في')} ${underProteinDays}/${nDays} ${tx('days','أيام')}` : null,
-    `${tx('High-calorie days:','أيام عالية السعرات:')} ${overCalDays} \u2022 ${tx('Low-calorie days:','أيام منخفضة السعرات:')} ${lowCalDays}`,
-    bestDay && worstDay ? `${tx('Best day:','أفضل يوم:')} ${fmtDate(bestDay.key)} (${Math.round(bestDay.score*100)}%) \u2022 ${tx('Needs work:','يحتاج تحسين:')} ${fmtDate(worstDay.key)} (${Math.round(worstDay.score*100)}%)` : null,
-    calTrend
+  const insightCards = [
+    {
+      tone: underProteinDays > 0 ? 'warn' : 'good',
+      icon: underProteinDays > 0 ? '⚠️' : '✅',
+      title: tx('Protein Consistency','انتظام البروتين'),
+      body: underProteinDays > 0
+        ? `${tx('Protein low on','بروتين منخفض في')} ${underProteinDays}/${nDays} ${tx('days','أيام')}`
+        : tx('Protein target was hit on all logged days.','تم تحقيق هدف البروتين في كل الأيام المسجلة.')
+    },
+    {
+      tone: (overCalDays + lowCalDays) > Math.ceil(nDays * 0.5) ? 'warn' : 'info',
+      icon: '⚖️',
+      title: tx('Calorie Balance','توازن السعرات'),
+      body: `${tx('High-calorie days:','أيام عالية السعرات:')} ${overCalDays} • ${tx('Low-calorie days:','أيام منخفضة السعرات:')} ${lowCalDays}`
+    },
+    bestDay && worstDay ? {
+      tone: 'info',
+      icon: '📅',
+      title: tx('Best vs Needs Work','أفضل يوم مقابل يوم يحتاج تحسين'),
+      body: `${tx('Best day:','أفضل يوم:')} ${fmtDate(bestDay.key)} (${Math.round(bestDay.score*100)}%) • ${tx('Needs work:','يحتاج تحسين:')} ${fmtDate(worstDay.key)} (${Math.round(worstDay.score*100)}%)`
+    } : null,
+    {
+      tone: 'trend',
+      icon: '📈',
+      title: tx('Trend Signal','إشارة الاتجاه'),
+      body: calTrend
+    }
   ].filter(Boolean);
 
-  const insightRowsHtml = rows.map(r => `<div class="stat-insight-row">${r}</div>`).join('');
+  const insightRowsHtml = `
+<div class="nutri-insight-stack">
+  ${insightCards.map(card => `
+    <div class="nutri-insight-card ${card.tone}">
+      <div class="nutri-insight-head">
+        <span class="nutri-insight-icon">${card.icon}</span>
+        <span class="nutri-insight-title">${card.title}</span>
+      </div>
+      <div class="nutri-insight-body">${card.body}</div>
+    </div>
+  `).join('')}
+</div>`;
 
-  const mealTimingHtml = `
+    const mealTimingHtml = `
 <div class="nutri-deep-grid">
   <div class="nutri-deep-card">
-    <div class="nutri-deep-title">${tx('MEAL TIMING','توقيت الوجبات')}</div>
-    <div class="nutri-deep-line">${tx('Most active meal hour:','أكثر وقت لتناول الوجبات:')} <strong>${peakHour !== null ? peakHour+':00' : '—'}</strong></div>
-    <div class="nutri-deep-line">${tx('Total meals in period:','إجمالي الوجبات:')}<strong>${tot.count}</strong></div>
+    <div class="nutri-deep-title">${tx('Meal Timing','توقيت الوجبات')}</div>
+    <div class="nutri-deep-line">
+      <span>${tx('Most active meal hour','أكثر وقت لتناول الوجبات')}</span>
+      <strong>${peakHour !== null ? peakHour+':00' : '—'}</strong>
+    </div>
+    <div class="nutri-deep-line">
+      <span>${tx('Total meals in period','إجمالي الوجبات في الفترة')}</span>
+      <strong>${tot.count}</strong>
+    </div>
   </div>
   <div class="nutri-deep-card">
-    <div class="nutri-deep-title">${tx('LOGGING CONSISTENCY','انتظام التسجيل')}</div>
-    <div class="nutri-deep-line">${tx('Days with meal logs:','أيام بوجبات مسجلة:')}<strong>${nDays}</strong></div>
-    <div class="nutri-deep-line">${tx('Consistency score:','نقاط الانتظام:')} <strong>${Math.round(nDays / Math.max(daily.length,1) * 100)}%</strong></div>
+    <div class="nutri-deep-title">${tx('Logging Consistency','انتظام التسجيل')}</div>
+    <div class="nutri-deep-line">
+      <span>${tx('Days with meal logs','أيام بوجبات مسجلة')}</span>
+      <strong>${nDays}</strong>
+    </div>
+    <div class="nutri-deep-line">
+      <span>${tx('Consistency score','نقاط الانتظام')}</span>
+      <strong>${Math.round(nDays / Math.max(daily.length,1) * 100)}%</strong>
+    </div>
   </div>
 </div>`;
 
@@ -1739,16 +1784,16 @@ function renderDashboard() {
   const _ndb = document.getElementById('dash-nodata-banner');
   if (_ndb) _ndb.classList.toggle('show', workouts.length === 0);
 
-  // Period-filtered workouts — used by charts below
+  // Period-filtered workouts â€” used by charts below
   const _pw = _getPw();
 
-  // ── All-time weighted stats (v43 stats-grid) ──
+  // â”€â”€ All-time weighted stats (v43 stats-grid) â”€â”€
   const totalSessions = workouts.length;
   const totalVol = workouts.reduce((a,w) => a+(w.totalVolume||0), 0);
 
-  // Best lift — reuse existing _dashPRCache to avoid O(n) scan on every render
+  // Best lift â€” reuse existing _dashPRCache to avoid O(n) scan on every render
   if (!_dashPRCache) {
-    _dashPRCache = { val: 0, ex: '—' };
+    _dashPRCache = { val: 0, ex: 'â€”' };
     workouts.forEach(w => (w.sets||[]).forEach(s => {
       if (s.weight > _dashPRCache.val) { _dashPRCache.val = s.weight; _dashPRCache.ex = w.exercise; }
     }));
@@ -1766,15 +1811,15 @@ function renderDashboard() {
   const _sgEl = id => document.getElementById(id);
   _sgEl('sg-sessions') && (_sgEl('sg-sessions').textContent = totalSessions);
   _sgEl('sg-volume') && (_sgEl('sg-volume').innerHTML = Math.round(totalVol).toLocaleString()+'<span class="sg-unit">kg</span>');
-  _sgEl('sg-best-lift') && (_sgEl('sg-best-lift').textContent = _dashPRCache.val > 0 ? _dashPRCache.val+'kg' : '—');
+  _sgEl('sg-best-lift') && (_sgEl('sg-best-lift').textContent = _dashPRCache.val > 0 ? _dashPRCache.val+'kg' : 'â€”');
   _sgEl('sg-best-lift-sub') && (_sgEl('sg-best-lift-sub').textContent = _dashPRCache.ex);
   _sgEl('sg-streak') && (_sgEl('sg-streak').innerHTML = streak+'<span class="sg-unit">d</span>');
-  _sgEl('sg-streak-sub') && (_sgEl('sg-streak-sub').textContent = streak>=7?'On fire! 🔥':streak>=3?'Building habit':'Train today!');
+  _sgEl('sg-streak-sub') && (_sgEl('sg-streak-sub').textContent = streak>=7?'On fire! ًں”¥':streak>=3?'Building habit':'Train today!');
   _sgEl('sg-prs') && (_sgEl('sg-prs').textContent = totalPRs);
-  _sgEl('sg-last-session') && (_sgEl('sg-last-session').textContent = daysAgo===null?'—':daysAgo===0?'Today':daysAgo+'d ago');
-  _sgEl('sg-last-session-sub') && (_sgEl('sg-last-session-sub').textContent = lastDateStr ? new Date(lastDateStr).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—');
+  _sgEl('sg-last-session') && (_sgEl('sg-last-session').textContent = daysAgo===null?'â€”':daysAgo===0?'Today':daysAgo+'d ago');
+  _sgEl('sg-last-session-sub') && (_sgEl('sg-last-session-sub').textContent = lastDateStr ? new Date(lastDateStr).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : 'â€”');
 
-  // ── CALI row (v43) ──
+  // â”€â”€ CALI row (v43) â”€â”€
   const bwAll = typeof bwWorkouts !== 'undefined' ? bwWorkouts : [];
   let _sgUnlocked = 0, _sgTotal = 0;
   if (bwAll.length && typeof CALISTHENICS_TREES !== 'undefined') {
@@ -1797,7 +1842,7 @@ function renderDashboard() {
 
   _renderVolPanel();
   renderMuscleVol(_pw);
-  renderBodyHeatmap(workouts); // recovery view — always all-time
+  renderBodyHeatmap(workouts); // recovery view â€” always all-time
   renderMuscleBalance(_pw);
   renderFreqChart(_pw);
   populateExerciseSelect();
@@ -1824,7 +1869,7 @@ function renderDashboard() {
   switchDashTab(_dashActiveTab, document.querySelector('.dash-tab.active'));
   // Recomp rest-day mascot nudge
   if ((userProfile?.goal) === 'recomp' && typeof _getRecompDayType === 'function' && _getRecompDayType() === 'rest') {
-    setTimeout(() => { if (typeof setMascotSay === 'function') setMascotSay('Rest day — fuel light, incinerate fat! 🔥', 7000); }, 600);
+    setTimeout(() => { if (typeof setMascotSay === 'function') setMascotSay('Rest day â€” fuel light, incinerate fat! ًں”¥', 7000); }, 600);
   }
 }
 
@@ -1853,13 +1898,13 @@ function renderHistory() {
   const tFn = (typeof t === 'function') ? t : (k => k);
   const lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
   const dateLoc = lang === 'ar' ? 'ar-SA' : 'en-GB';
-  document.getElementById('hist-count-badge').textContent = filtered.length + (lang === 'ar' ? ' إدخال' : ' ENTRIES');
+  document.getElementById('hist-count-badge').textContent = filtered.length + (lang === 'ar' ? ' ط¥ط¯ط®ط§ظ„' : ' ENTRIES');
   if (!filtered.length) {
     document.getElementById('history-list').innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-title">${tFn('history.empty')}</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">${tFn('history.emptyHint')}</div></div>`;
     return;
   }
 
-  // Group by date (YYYY-MM-DD) — same day = same session
+  // Group by date (YYYY-MM-DD) â€” same day = same session
   const sessionMap = {};
   const sessionOrder = [];
   filtered.forEach(w => {
@@ -1881,7 +1926,7 @@ function renderHistory() {
         <div class="hist-muscle-badge">${MUSCLE_ICONS[w.muscle] || MUSCLE_ICONS.Chest}</div>
         <div class="hist-info">
           <div class="hist-name">${w.exercise}${w.isPR ? ' <span class="pr-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px;"><polyline points="6 9 12 4 18 9"/><path d="M6 9v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9"/><line x1="12" y1="4" x2="12" y2="14"/></svg> ' + tFn('history.pr') + '</span>' : ''} <span style="font-size:9px;color:var(--text3);font-family:'DM Mono'">BW</span></div>
-          <div class="hist-meta">${w.muscle || tFn('bw.title')} · ${dStr}${w.notes ? ' · ' + w.notes : ''}</div>
+          <div class="hist-meta">${w.muscle || tFn('bw.title')} آ· ${dStr}${w.notes ? ' آ· ' + w.notes : ''}</div>
         </div>
         <div class="hist-stats">
           <div><div class="hist-stat-val">${(w.sets || []).length}</div><div class="hist-stat-lbl">${tFn('history.sets')}</div></div>
@@ -1895,7 +1940,7 @@ function renderHistory() {
     let trendArrow = ''; let trendClass = 'same';
     if (prev.length) {
       const pm = Math.max(...prev[prev.length - 1].sets.map(s => s.weight));
-      if (maxW > pm) { trendArrow = '↑'; trendClass = 'up'; } else if (maxW < pm) { trendArrow = '↓'; trendClass = 'down'; } else { trendArrow = '→'; trendClass = 'same'; }
+      if (maxW > pm) { trendArrow = 'â†‘'; trendClass = 'up'; } else if (maxW < pm) { trendArrow = 'â†“'; trendClass = 'down'; } else { trendArrow = 'â†’'; trendClass = 'same'; }
     }
     const _eff = w.effort || null;
     const _qScore = (typeof calcQualityScore === 'function' && _eff) ? calcQualityScore(w) : null;
@@ -1904,7 +1949,7 @@ function renderHistory() {
       <div class="hist-muscle-badge">${MUSCLE_ICONS[w.muscle] || MUSCLE_ICONS.Chest}</div>
       <div class="hist-info">
         <div class="hist-name">${w.exercise}${w.isPR ? ' <span class="pr-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px;"><polyline points="6 9 12 4 18 9"/><path d="M6 9v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9"/><line x1="12" y1="4" x2="12" y2="14"/></svg> ' + tFn('history.pr') + '</span>' : ''}</div>
-        <div class="hist-meta">${w.muscle} · ${dStr}${w.notes ? ' · ' + w.notes : ''}</div>
+        <div class="hist-meta">${w.muscle} آ· ${dStr}${w.notes ? ' آ· ' + w.notes : ''}</div>
       </div>
       <div class="hist-stats">
         <div><div class="hist-stat-val">${w.sets.length}</div><div class="hist-stat-lbl">${tFn('history.sets')}</div></div>
@@ -1924,15 +1969,15 @@ function renderHistory() {
     const totalSets = items.reduce((a, w) => a + (w.sets ? w.sets.length : 0), 0);
     const totalVol = items.reduce((a, w) => a + (w.type === 'bodyweight' ? 0 : (w.totalVolume || 0)), 0);
     const prCount = items.filter(w => w.isPR).length;
-    const prBadge = prCount > 0 ? `<span class="session-pr-badge">⭐ ${prCount} PR${prCount > 1 ? 's' : ''}</span>` : '';
-    const volStr = totalVol > 0 ? `${Math.round(totalVol).toLocaleString()} kg · ` : '';
+    const prBadge = prCount > 0 ? `<span class="session-pr-badge">â­گ ${prCount} PR${prCount > 1 ? 's' : ''}</span>` : '';
+    const volStr = totalVol > 0 ? `${Math.round(totalVol).toLocaleString()} kg آ· ` : '';
     const exerciseCards = items.map(_buildExCard).join('');
     return `<div class="session-card">
       <div class="session-header" onclick="this.parentElement.classList.toggle('open')">
         <div class="session-date">${dateStr}</div>
         <div class="session-chips">${muscleChips}</div>
-        <div class="session-summary">${volStr}${totalSets} sets${prBadge ? ' · ' : ' '}${prBadge}</div>
-        <div class="session-arrow">▾</div>
+        <div class="session-summary">${volStr}${totalSets} sets${prBadge ? ' آ· ' : ' '}${prBadge}</div>
+        <div class="session-arrow">â–¾</div>
       </div>
       <div class="session-exs">${exerciseCards}</div>
     </div>`;
@@ -2010,3 +2055,4 @@ function renderPRs() {
     (sorted.length ? `<div style="font-family:'Barlow Condensed',Cairo,sans-serif;font-size:11px;letter-spacing:2px;color:var(--text3);padding:4px 0 4px;">${tFnPR('prs.weighted')}</div>` + wgtHTML : '') +
     bwHTML;
 }
+
