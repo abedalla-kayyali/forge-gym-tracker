@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v72';
-window.FORGE_BUILD   = '2026-03-13 (fix coach nutrition Log Meal action focus/scroll handler)';
+window.FORGE_VERSION = 'v73';
+window.FORGE_BUILD   = '2026-03-13 (split nutrition into dedicated bottom tab + cache bump)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
