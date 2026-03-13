@@ -1162,21 +1162,43 @@
 
     <!-- STATS TAB STRIP -->
     <div class="dash-tab-strip" id="dash-tab-strip">
-      <button class="dash-tab active" data-i18n="dash.tab.overview" onclick="switchDashTab('overview',this)">Overview</button>
-      <button class="dash-tab" data-i18n="dash.tab.progress" onclick="switchDashTab('progress',this)">Progress</button>
-      <button class="dash-tab" onclick="switchDashTab('nutrition',this)">Nutrition</button>
-      <button class="dash-tab" data-i18n="dash.tab.muscles" onclick="switchDashTab('muscles',this)">Muscles</button>
-      <button class="dash-tab" data-i18n="dash.tab.body" onclick="switchDashTab('body',this)">Body</button>
-      <button class="dash-tab dash-tab-cali" onclick="switchDashTab('cali',this)">?? Cali</button>
-      <button class="dash-tab" onclick="switchDashTab('cardio', this)">Cardio</button>
+      <button class="dash-tab active" data-tab="overview" data-i18n="dash.tab.overview" onclick="switchDashTab('overview',this)">Overview</button>
+      <button class="dash-tab" data-tab="progress" data-i18n="dash.tab.progress" onclick="switchDashTab('progress',this)">Progress</button>
+      <button class="dash-tab" data-tab="nutrition" onclick="switchDashTab('nutrition',this)">Nutrition</button>
+      <button class="dash-tab" data-tab="muscles" data-i18n="dash.tab.muscles" onclick="switchDashTab('muscles',this)">Muscles</button>
+      <button class="dash-tab" data-tab="body" data-i18n="dash.tab.body" onclick="switchDashTab('body',this)">Body</button>
+      <button class="dash-tab dash-tab-cali" data-tab="cali" onclick="switchDashTab('cali',this)">?? Cali</button>
+      <button class="dash-tab" data-tab="cardio" onclick="switchDashTab('cardio', this)">Cardio</button>
+    </div>
+    <div class="dash-tab-mobile-nav">
+      <label class="dash-tab-mobile-label" for="dash-tab-select">Section</label>
+      <select id="dash-tab-select" class="dash-tab-mobile-select" onchange="switchDashTab(this.value)">
+        <option value="overview">Overview</option>
+        <option value="progress">Progress</option>
+        <option value="nutrition">Nutrition</option>
+        <option value="muscles">Muscles</option>
+        <option value="body">Body</option>
+        <option value="cali">Cali</option>
+        <option value="cardio">Cardio</option>
+      </select>
     </div>
     <!-- PERIOD SELECTOR -->
     <div class="dash-period-strip" id="dash-period-strip" data-dash-tab="progress">
-      <button class="dash-period active" data-i18n="dash.period.7d" onclick="_setPeriod('7D',this)">7D</button>
-      <button class="dash-period" data-i18n="dash.period.1m" onclick="_setPeriod('1M',this)">1M</button>
-      <button class="dash-period" data-i18n="dash.period.3m" onclick="_setPeriod('3M',this)">3M</button>
-      <button class="dash-period" data-i18n="dash.period.6m" onclick="_setPeriod('6M',this)">6M</button>
-      <button class="dash-period" data-i18n="dash.period.all" onclick="_setPeriod('ALL',this)">ALL</button>
+      <button class="dash-period active" data-period="7D" data-i18n="dash.period.7d" onclick="_setPeriod('7D',this)">7D</button>
+      <button class="dash-period" data-period="1M" data-i18n="dash.period.1m" onclick="_setPeriod('1M',this)">1M</button>
+      <button class="dash-period" data-period="3M" data-i18n="dash.period.3m" onclick="_setPeriod('3M',this)">3M</button>
+      <button class="dash-period" data-period="6M" data-i18n="dash.period.6m" onclick="_setPeriod('6M',this)">6M</button>
+      <button class="dash-period" data-period="ALL" data-i18n="dash.period.all" onclick="_setPeriod('ALL',this)">ALL</button>
+    </div>
+    <div class="dash-period-mobile-nav" data-dash-tab="progress">
+      <label class="dash-period-mobile-label" for="dash-period-select">Range</label>
+      <select id="dash-period-select" class="dash-period-mobile-select" onchange="_setPeriod(this.value)">
+        <option value="7D">7 Days</option>
+        <option value="1M" selected>1 Month</option>
+        <option value="3M">3 Months</option>
+        <option value="6M">6 Months</option>
+        <option value="ALL">All Time</option>
+      </select>
     </div>
 
     <!-- OVERVIEW QUICK SNAPSHOT BAR -->

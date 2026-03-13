@@ -418,8 +418,15 @@ function _getPw() {
 
 function _setPeriod(period, btn) {
   _dashPeriod = period;
-  document.querySelectorAll('.dash-period').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  const allPeriods = Array.from(document.querySelectorAll('.dash-period'));
+  allPeriods.forEach(b => b.classList.remove('active'));
+  const activeBtn = btn || allPeriods.find(b => b.dataset.period === period);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+    activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+  const periodSelect = document.getElementById('dash-period-select');
+  if (periodSelect && periodSelect.value !== period) periodSelect.value = period;
   renderDashboard();
 }
 
@@ -523,8 +530,15 @@ function _renderOverviewSnapshot() {
 
 function switchDashTab(name, btn) {
   _dashActiveTab = name;
-  document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  const allTabs = Array.from(document.querySelectorAll('.dash-tab'));
+  allTabs.forEach(b => b.classList.remove('active'));
+  const activeBtn = btn || allTabs.find(b => b.dataset.tab === name);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+    activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+  const tabSelect = document.getElementById('dash-tab-select');
+  if (tabSelect && tabSelect.value !== name) tabSelect.value = name;
   // Show/hide panels by their data-dash-tab attribute
   document.querySelectorAll('#view-dashboard [data-dash-tab]').forEach(el => {
     el.style.display = el.dataset.dashTab === name ? '' : 'none';
