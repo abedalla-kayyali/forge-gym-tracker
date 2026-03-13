@@ -314,6 +314,30 @@
         border-color: rgba(255,255,255,.18);
         color: rgba(200,220,201,.75);
       }
+      .auth-update-btn {
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px;
+        background: rgba(57,255,143,.08);
+        border: 1px dashed rgba(57,255,143,.35);
+        border-radius: 12px;
+        color: rgba(171,255,216,.9);
+        font-family: 'DM Mono', monospace;
+        font-size: .75rem;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: border-color .2s, background .2s, color .2s;
+      }
+      .auth-update-btn:hover {
+        border-color: rgba(57,255,143,.55);
+        background: rgba(57,255,143,.14);
+        color: #d9ffeb;
+      }
+      .auth-update-btn:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+      }
 
       /* Back link */
       .auth-back {
@@ -381,6 +405,7 @@
         <div class="auth-error" id="auth-error-login"></div>
         <div class="auth-divider">or</div>
         <button class="auth-guest-btn" onclick="window._authGuestMode()">Continue as Guest</button>
+        <button class="auth-update-btn" id="auth-btn-force-update" onclick="window._authForceUpdate()">Force Update App</button>
       </div>
 
       <!-- SIGN UP FORM -->
@@ -401,6 +426,7 @@
         <div class="auth-error" id="auth-error-signup"></div>
         <div class="auth-divider">or</div>
         <button class="auth-guest-btn" onclick="window._authGuestMode()">Continue as Guest</button>
+        <button class="auth-update-btn" onclick="window._authForceUpdate()">Force Update App</button>
       </div>
 
       <!-- FORGOT PASSWORD FORM -->
@@ -470,6 +496,9 @@
   function _authSetLoading(btnId, loading) {
     const btn = document.getElementById(btnId);
     if (btn) btn.disabled = loading;
+  }
+  function _authSetUpdateLoading(loading) {
+    document.querySelectorAll('.auth-update-btn').forEach(btn => { btn.disabled = loading; });
   }
 
   // ── Show / Hide overlay ──────────────────────────────────────────────────
@@ -554,6 +583,32 @@
     localStorage.setItem('forge_guest', '1');
     _authHideOverlay();
     if (typeof _onboardingCheck === 'function') _onboardingCheck();
+  };
+
+  // Force-update helper for stale mobile PWA caches before login
+  window._authForceUpdate = async function () {
+    _authClearAllErrors();
+    _authShowSuccess('auth-success-forgot', 'Updating app... one moment.');
+    _authSetUpdateLoading(true);
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.allSettled(regs.map(r => r.unregister()));
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.allSettled(keys.map(k => caches.delete(k)));
+      }
+      // Keep user data, only force fresh network bootstrap
+      const next = new URL(window.location.href);
+      const stamp = String(Date.now());
+      next.searchParams.set('refresh', stamp);
+      next.searchParams.set('update', '1');
+      window.location.replace(next.toString());
+    } catch (e) {
+      _authShowError('auth-error-login', (e && e.message) ? e.message : 'Update failed. Please refresh browser.');
+      _authSetUpdateLoading(false);
+    }
   };
 
   // ── Enter key support ────────────────────────────────────────────────────
