@@ -1476,22 +1476,43 @@ function _forgeFixArabicMojibake(input) {
   if (!/[طظØÙ]/.test(input)) return input;
   const rev = _forgeGetCp1256ReverseMap();
   try {
-    const bytes = [];
+    const utf8 = new TextDecoder('utf-8');
+    let out = '';
+    let bufOrig = '';
+    let bufBytes = [];
+    let hasMoj = false;
+    const flush = () => {
+      if (!bufOrig) return;
+      if (!hasMoj) {
+        out += bufOrig;
+      } else {
+        let decoded = '';
+        try { decoded = utf8.decode(new Uint8Array(bufBytes)); } catch (e) { decoded = ''; }
+        out += /[\u0600-\u06FF]/.test(decoded) ? decoded : bufOrig;
+      }
+      bufOrig = '';
+      bufBytes = [];
+      hasMoj = false;
+    };
     for (const ch of input) {
       const code = ch.charCodeAt(0);
       if (code <= 0x7f) {
-        bytes.push(code);
+        bufOrig += ch;
+        bufBytes.push(code);
         continue;
       }
       const b = rev[ch];
       if (typeof b === 'number') {
-        bytes.push(b);
-      } else {
-        return input;
+        bufOrig += ch;
+        bufBytes.push(b);
+        if (/[طظØÙ]/.test(ch)) hasMoj = true;
+        continue;
       }
+      flush();
+      out += ch;
     }
-    const decoded = new TextDecoder('utf-8').decode(new Uint8Array(bytes));
-    return /[\u0600-\u06FF]/.test(decoded) ? decoded : input;
+    flush();
+    return out;
   } catch (e) {
     return input;
   }

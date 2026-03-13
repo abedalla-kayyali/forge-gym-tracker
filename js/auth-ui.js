@@ -459,7 +459,6 @@
     <button class="auth-lang-float" id="auth-lang-float" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
 
     <div class="auth-card">
-      <button class="auth-lang-btn" id="auth-lang-btn" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
       <div class="auth-logo">
         <div class="auth-logo-icon">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#39ff8f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -469,10 +468,6 @@
         <span>FORGE</span>
         <div class="auth-logo-sub" id="auth-logo-sub">Gym Tracker</div>
       </div>
-      <div class="auth-lang-inline-wrap">
-        <button class="auth-lang-inline-btn" id="auth-lang-inline-btn" onclick="window._authToggleLanguage()" title="Switch language">EN</button>
-      </div>
-
       <!-- LOGIN FORM -->
       <div id="auth-form-login">
         <div class="auth-tabs">
@@ -700,23 +695,11 @@
       if (el) el.textContent = _authT(key);
     });
 
-    const langBtn = document.getElementById('auth-lang-btn');
-    if (langBtn) {
-      langBtn.textContent = isAr ? 'EN' : 'AR';
-      langBtn.title = _authT('langTitle');
-      langBtn.setAttribute('aria-label', _authT('langTitle'));
-    }
     const langFloatBtn = document.getElementById('auth-lang-float');
     if (langFloatBtn) {
       langFloatBtn.textContent = isAr ? 'EN' : 'AR';
       langFloatBtn.title = _authT('langTitle');
       langFloatBtn.setAttribute('aria-label', _authT('langTitle'));
-    }
-    const langInlineBtn = document.getElementById('auth-lang-inline-btn');
-    if (langInlineBtn) {
-      langInlineBtn.textContent = isAr ? 'EN' : 'AR';
-      langInlineBtn.title = _authT('langTitle');
-      langInlineBtn.setAttribute('aria-label', _authT('langTitle'));
     }
 
     const emailL = document.getElementById('auth-email-l');

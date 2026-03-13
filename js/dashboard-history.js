@@ -7,6 +7,18 @@ let _calSelectedDate = null;
 let _calMode = 'workout'; // active tracker tab
 let _calDateFilter = null;
 
+function _dhFixArText(s) {
+  if (typeof s !== 'string') return s;
+  if (typeof currentLang !== 'undefined' && currentLang === 'ar' && typeof window._forgeFixArabicText === 'function') {
+    return window._forgeFixArabicText(s);
+  }
+  return s;
+}
+function _dhSetHtml(el, html) {
+  if (!el) return;
+  el.innerHTML = _dhFixArText(String(html || ''));
+}
+
 // â”€â”€ Helpers to build per-day data maps â”€â”€
 function _buildWorkoutMap() {
   const allW = [
@@ -431,7 +443,7 @@ function renderWorkoutCalendar() {
       <span style="display:inline-flex;align-items:center;gap:3px;"><div class="cal-day-dot meal" style="display:inline-block;"></div><span style="font-size:8px;">${isAr ? 'ظˆط¬ط¨ط§طھ' : 'Meals'}</span></span>
     </div>`;
 
-  wrap.innerHTML = `
+  _dhSetHtml(wrap, `
     <div class="wk-cal-wrap">
       <div class="wk-cal-nav">
         <button class="wk-cal-btn" onclick="calNav(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -442,7 +454,7 @@ function renderWorkoutCalendar() {
       <div class="wk-cal-grid">${dowCells}${dayCells}</div>
       ${selDetail}
       <div class="wk-cal-legend">${legends[_calMode] || ''}${microLegend}</div>
-    </div>`;
+    </div>`);
 }
 
 function calSetMode(mode) {
@@ -1743,13 +1755,13 @@ function _renderNutTodayZone(zone, targets) {
   const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
   const todayMeals = Array.isArray(ml[todayKey]) ? ml[todayKey] : [];
   if (!todayMeals.length) {
-    zone.innerHTML = '<div class="nut-today-card"><div class="nut-today-empty">' + _nutriIcon('meal') + ' No meals logged today - <a onclick="switchMainTab(\'coach\');setTimeout(()=>switchCoachTab&&switchCoachTab(\'nutrition\'),120)" style="cursor:pointer">Log your first meal</a></div></div>';
+    _dhSetHtml(zone, '<div class="nut-today-card"><div class="nut-today-empty">' + _nutriIcon('meal') + ' No meals logged today - <a onclick="if(window.switchView){window.switchView(\'nutrition\',document.getElementById(\'bnav-nutrition\'));}else if(window.switchMainTab){window.switchMainTab(\'nutrition\');}setTimeout(()=>{const n=document.getElementById(\'meal-name-input\');if(n){try{n.focus();}catch(e){} n.scrollIntoView({behavior:\'smooth\',block:\'center\'});}},160)" style="cursor:pointer">Log your first meal</a></div></div>');
     return;
   }
   const s = todayMeals.reduce((a, m) => { a.kcal += (+m.kcal||0); a.p += (+m.p||0); a.c += (+m.c||0); a.f += (+m.f||0); return a; }, { kcal:0, p:0, c:0, f:0 });
   const pct = (v, t) => Math.min(100, Math.round(v / Math.max(t, 1) * 100));
   const remaining = Math.max(0, Math.round(targets.targetCal - s.kcal));
-  zone.innerHTML = `
+  _dhSetHtml(zone, `
 <div class="nut-today-card">
   <div class="nut-today-header">
     <span class="nut-today-title">${_nutriIcon('meal')} TODAY</span>
@@ -1763,7 +1775,7 @@ function _renderNutTodayZone(zone, targets) {
     <div class="nut-macro-row"><span class="nut-macro-label">C</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.c, targets.carbG)}%;background:#e6b84a"></div></div><span class="nut-macro-val">${Math.round(s.c)}g / ${Math.round(targets.carbG)}g</span></div>
     <div class="nut-macro-row"><span class="nut-macro-label">F</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.f, targets.fatG)}%;background:#5b8dee"></div></div><span class="nut-macro-val">${Math.round(s.f)}g / ${Math.round(targets.fatG)}g</span></div>
   </div>
-</div>`;
+</div>`);
 }
 
 function _renderCalorieTrendChart(daily, targetCal, canvasId) {
@@ -1949,7 +1961,7 @@ function renderNutritionAnalyticsPanel() {
     const cz = document.getElementById('nut-charts-zone');
     if (sz) sz.innerHTML = '';
     if (cz) cz.innerHTML = '';
-    if (insightsEl) insightsEl.innerHTML = `<div class="empty-state"><div class="empty-icon">${_nutriIcon('chart')}</div><div class="empty-title">${tx('No nutrition trend data yet.','ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ظ„ط§طھط¬ط§ظ‡ط§طھ ط¨ط¹ط¯.')}</div></div>`;
+    if (insightsEl) _dhSetHtml(insightsEl, `<div class="empty-state"><div class="empty-icon">${_nutriIcon('chart')}</div><div class="empty-title">${tx('No nutrition trend data yet.','ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ ظƒط§ظپظٹط© ظ„ظ„ط§طھط¬ط§ظ‡ط§طھ ط¨ط¹ط¯.')}</div></div>`);
     return;
   }
 
@@ -1998,7 +2010,7 @@ function renderNutritionAnalyticsPanel() {
 
   // Zone 1: Period stat cards
   const statsZone = document.getElementById('nut-stats-zone');
-  if (statsZone) statsZone.innerHTML = `
+  if (statsZone) _dhSetHtml(statsZone, `
 <div class="stats-grid" style="margin-bottom:14px">
   <div class="sg-card">
     <div class="sg-label">${tx('Avg Calories','ظ…طھظˆط³ط· ط§ظ„ط³ط¹ط±ط§طھ')}</div>
@@ -2045,11 +2057,11 @@ function renderNutritionAnalyticsPanel() {
     <div class="sg-val sg-neutral">${mealRepeat.longest > 0 ? mealRepeat.longest : '--'}<span class="sg-unit">${mealRepeat.longest > 0 ? ' d' : ''}</span></div>
     <div class="sg-sub">${mealRepeat.name ? esc(mealRepeat.name) : tx('No repeated meals yet','لا توجد وجبة متكررة بعد')}</div>
   </div>
-</div>`;
+</div>`);
 
   // Zone 2: Charts HTML scaffold
   const chartsZone = document.getElementById('nut-charts-zone');
-  if (chartsZone) chartsZone.innerHTML = `
+  if (chartsZone) _dhSetHtml(chartsZone, `
 <div class="nut-charts-grid">
   <div class="nut-chart-card wide">
     ${_nutChartHead(`${_nutriIcon('protein')} ${tx('Protein Trend (Daily g)','اتجاه البروتين (غ يومي)')}`, 'nut-protein-chart')}
@@ -2072,7 +2084,7 @@ function renderNutritionAnalyticsPanel() {
     ${_nutChartHead(`${_nutriIcon('score')} ${tx('Day Score','ظ†ظ‚ط§ط· ط§ظ„ظٹظˆظ…')}`, 'nut-score-chart')}
     <div style="height:140px"><canvas id="nut-score-chart"></canvas></div>
   </div>
-</div>`;
+</div>`);
 
   // Init charts after DOM settles
   requestAnimationFrame(() => {
@@ -2230,7 +2242,7 @@ function renderNutritionAnalyticsPanel() {
   </div>
 </div>`;
 
-  if (insightsEl) insightsEl.innerHTML = quickSummaryHtml + insightRowsHtml + mealTimingHtml;
+  if (insightsEl) _dhSetHtml(insightsEl, quickSummaryHtml + insightRowsHtml + mealTimingHtml);
 }
 
 function renderDashboard() {
@@ -2353,7 +2365,7 @@ function renderHistory() {
   const lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
   const dateLoc = lang === 'ar' ? 'ar-SA' : 'en-GB';
   const histCountBadge = document.getElementById('hist-count-badge');
-  if (histCountBadge) histCountBadge.textContent = filtered.length + (lang === 'ar' ? ' ط¥ط¯ط®ط§ظ„' : ' ENTRIES');
+  if (histCountBadge) histCountBadge.textContent = `${filtered.length} ${tFn('history.entries')}`;
 
   const sessionMap = {};
   const sessionOrder = [];
@@ -2375,30 +2387,30 @@ function renderHistory() {
     histInsight.innerHTML = `
       <div class="hist-gamify-grid">
         <div class="hist-gamify-card streak">
-          <div class="hist-gamify-top">${_histSvgIcon('flame')} <span>${lang === 'ar' ? 'ط§ظ„ظ…طھطھط§ظ„ظٹط©' : 'Current Streak'}</span></div>
-          <div class="hist-gamify-val">${streak.current}<small>${lang === 'ar' ? 'ظٹظˆظ…' : 'days'}</small></div>
-          <div class="hist-gamify-sub">${lang === 'ar' ? 'ط£ظپط¶ظ„: ' : 'Best: '}${streak.best} ${lang === 'ar' ? 'ظٹظˆظ…' : 'days'}</div>
+          <div class="hist-gamify-top">${_histSvgIcon('flame')} <span>${tFn('history.gamify.currentStreak')}</span></div>
+          <div class="hist-gamify-val">${streak.current}<small>${tFn('history.gamify.days')}</small></div>
+          <div class="hist-gamify-sub">${tFn('history.gamify.best')}: ${streak.best} ${tFn('history.gamify.days')}</div>
         </div>
         <div class="hist-gamify-card pr">
-          <div class="hist-gamify-top">${_histSvgIcon('star')} <span>${lang === 'ar' ? 'ط¨ط·ط§ظ‚ط§طھ PR' : 'PR Hits'}</span></div>
-          <div class="hist-gamify-val">${prCountTotal}<small>${lang === 'ar' ? 'ط¥ظ†ط¬ط§ط²' : 'records'}</small></div>
-          <div class="hist-gamify-sub">${lang === 'ar' ? 'ظ…ظ† ط§ظ„ط¥ط¬ظ…ط§ظ„ظٹ' : 'of all visible sessions'}</div>
+          <div class="hist-gamify-top">${_histSvgIcon('star')} <span>${tFn('history.gamify.prHits')}</span></div>
+          <div class="hist-gamify-val">${prCountTotal}<small>${tFn('history.gamify.records')}</small></div>
+          <div class="hist-gamify-sub">${tFn('history.gamify.visibleSessions')}</div>
         </div>
         <div class="hist-gamify-card xp">
-          <div class="hist-gamify-top">${_histSvgIcon('bolt')} <span>${lang === 'ar' ? 'ظ„ظٹظپظ„ ظ„ظˆط¬' : 'History Level'}</span></div>
+          <div class="hist-gamify-top">${_histSvgIcon('bolt')} <span>${tFn('history.gamify.level')}</span></div>
           <div class="hist-gamify-val">L${lvl}<small>XP</small></div>
           <div class="hist-gamify-sub">${xp}/${nextXp}</div>
           <div class="hist-gamify-bar"><span style="width:${lvlProgress}%"></span></div>
         </div>
         <div class="hist-gamify-card volume">
-          <div class="hist-gamify-top">${_histSvgIcon('trendup')} <span>${lang === 'ar' ? 'حجم العمل' : 'Volume Bank'}</span></div>
+          <div class="hist-gamify-top">${_histSvgIcon('trendup')} <span>${tFn('history.gamify.volumeBank')}</span></div>
           <div class="hist-gamify-val">${Math.round(totalVolume).toLocaleString()}<small>kg</small></div>
-          <div class="hist-gamify-sub">${dateKeys.length} ${lang === 'ar' ? 'ظٹظˆظ… ظ†ط´ط·' : 'active days'}</div>
+          <div class="hist-gamify-sub">${dateKeys.length} ${tFn('history.gamify.activeDays')}</div>
         </div>
       </div>`;
   }
   if (!filtered.length) {
-    document.getElementById('history-list').innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-title">${tFn('history.empty')}</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">${tFn('history.emptyHint')}</div></div>`;
+    _dhSetHtml(document.getElementById('history-list'), `<div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><div class="empty-title">${tFn('history.empty')}</div><div style="font-size:12px;color:var(--text3);margin-top:4px;">${tFn('history.emptyHint')}</div></div>`);
     return;
   }
 
@@ -2449,7 +2461,7 @@ function renderHistory() {
     </div>`;
   }
 
-  document.getElementById('history-list').innerHTML = sessionOrder.map(dateKey => {
+  _dhSetHtml(document.getElementById('history-list'), sessionOrder.map(dateKey => {
     const items = sessionMap[dateKey];
     const d = new Date(dateKey + 'T12:00:00');
     const dateStr = d.toLocaleDateString(dateLoc, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
@@ -2470,7 +2482,7 @@ function renderHistory() {
       </div>
       <div class="session-exs">${exerciseCards}</div>
     </div>`;
-  }).join('');
+  }).join(''));
 }
 
 function _setHistMuscle(muscle, btn) {
