@@ -274,41 +274,102 @@ function renderGuide() {
 }
 
 function renderCompCards() {
-  if (!bodyWeight.length) return;
-  const last = bodyWeight[bodyWeight.length - 1];
-  const prev = bodyWeight.length > 1 ? bodyWeight[bodyWeight.length - 2] : null;
+  const entries = Array.isArray(bodyWeight) ? bodyWeight : [];
+  const isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
+  const unitOf = (e) => (String(e?.unit || 'kg').toLowerCase() === 'lbs' ? 'lbs' : 'kg');
+  const toKg = (n, unit) => unit === 'lbs' ? n * 0.453592 : n;
+  const pickLatest = (pred) => [...entries].reverse().find(pred);
+  const fmtDate = (v) => {
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString(isAr ? 'ar-SA' : 'en-GB', { day: '2-digit', month: 'short' });
+  };
 
-  // Body weight
   const bwVal = document.getElementById('comp-bw-val');
   const bwTrend = document.getElementById('comp-bw-trend');
-  if (bwVal) bwVal.textContent = last.weight + ' ' + last.unit;
-  if (bwTrend && prev) {
-    const diff = (last.weight - prev.weight).toFixed(1);
-    bwTrend.textContent = diff > 0 ? '+' + diff : diff;
-    bwTrend.style.color = diff > 0 ? 'var(--warn)' : 'var(--green)';
-  }
-
-  // Body fat
   const bfVal = document.getElementById('comp-bf-val');
   const bfTrend = document.getElementById('comp-bf-trend');
-  const lastBF = [...bodyWeight].reverse().find(d => d.bodyFat);
-  const prevBF = bodyWeight.slice(0, -1).reverse().find(d => d.bodyFat);
-  if (bfVal) bfVal.textContent = lastBF ? lastBF.bodyFat + '%' : '—';
-  if (bfTrend && lastBF && prevBF) {
-    const diff = (lastBF.bodyFat - prevBF.bodyFat).toFixed(1);
-    bfTrend.textContent = diff > 0 ? '+' + diff + '%' : diff + '%';
-    bfTrend.style.color = diff > 0 ? 'var(--danger)' : 'var(--green)';
-  }
-
-  // Muscle mass
   const mmVal = document.getElementById('comp-mm-val');
   const mmTrend = document.getElementById('comp-mm-trend');
-  const lastMM = [...bodyWeight].reverse().find(d => d.muscleMass);
-  const prevMM = bodyWeight.slice(0, -1).reverse().find(d => d.muscleMass);
-  if (mmVal) mmVal.textContent = lastMM ? lastMM.muscleMass + ' kg' : '—';
-  if (mmTrend && lastMM && prevMM) {
-    const diff = (lastMM.muscleMass - prevMM.muscleMass).toFixed(1);
-    mmTrend.textContent = diff > 0 ? '+' + diff + ' kg' : diff + ' kg';
-    mmTrend.style.color = diff > 0 ? 'var(--green)' : 'var(--text3)';
+  const badge = document.getElementById('bcomp-last-badge');
+  const insightGrid = document.getElementById('bcomp-insight-grid');
+
+  if (!entries.length) {
+    if (bwVal) bwVal.textContent = '—';
+    if (bfVal) bfVal.textContent = '—';
+    if (mmVal) mmVal.textContent = '—';
+    if (bwTrend) bwTrend.textContent = isAr ? 'أضف أول قياس' : 'Log first entry';
+    if (bfTrend) bfTrend.textContent = isAr ? 'سجّل نسبة الدهون' : 'Log body fat';
+    if (mmTrend) mmTrend.textContent = isAr ? 'سجّل الكتلة العضلية' : 'Log muscle mass';
+    if (badge) badge.textContent = isAr ? 'سجّل' : 'LOG';
+    if (insightGrid) insightGrid.innerHTML = `<div class="bcomp-insight-empty">${isAr ? 'سجل بيانات الجسم لعرض التحليلات.' : 'Log body data to unlock insights.'}</div>`;
+    return;
   }
+
+  const lastWeight = pickLatest(e => Number.isFinite(parseFloat(e.weight)));
+  const lastWeightIdx = lastWeight ? entries.lastIndexOf(lastWeight) : -1;
+  const prevWeight = lastWeightIdx > 0 ? entries.slice(0, lastWeightIdx).reverse().find(e => Number.isFinite(parseFloat(e.weight))) : null;
+
+  const lastBF = pickLatest(e => Number.isFinite(parseFloat(e.bodyFat)));
+  const lastBFIdx = lastBF ? entries.lastIndexOf(lastBF) : -1;
+  const prevBF = lastBFIdx > 0 ? entries.slice(0, lastBFIdx).reverse().find(e => Number.isFinite(parseFloat(e.bodyFat))) : null;
+
+  const lastMM = pickLatest(e => Number.isFinite(parseFloat(e.muscleMass)));
+  const lastMMIdx = lastMM ? entries.lastIndexOf(lastMM) : -1;
+  const prevMM = lastMMIdx > 0 ? entries.slice(0, lastMMIdx).reverse().find(e => Number.isFinite(parseFloat(e.muscleMass))) : null;
+
+  if (bwVal) bwVal.textContent = lastWeight ? `${(+lastWeight.weight).toFixed(1).replace(/\.0$/, '')} ${unitOf(lastWeight)}` : '—';
+  if (bfVal) bfVal.textContent = lastBF ? `${(+lastBF.bodyFat).toFixed(1).replace(/\.0$/, '')}%` : '—';
+  if (mmVal) mmVal.textContent = lastMM ? `${(+lastMM.muscleMass).toFixed(1).replace(/\.0$/, '')} ${unitOf(lastMM || lastWeight)}` : '—';
+
+  const wDiff = (lastWeight && prevWeight) ? toKg(+lastWeight.weight, unitOf(lastWeight)) - toKg(+prevWeight.weight, unitOf(prevWeight)) : null;
+  const bfDiff = (lastBF && prevBF) ? (+lastBF.bodyFat - +prevBF.bodyFat) : null;
+  const mmDiff = (lastMM && prevMM) ? toKg(+lastMM.muscleMass, unitOf(lastMM)) - toKg(+prevMM.muscleMass, unitOf(prevMM)) : null;
+
+  if (bwTrend) {
+    bwTrend.textContent = wDiff === null ? (isAr ? 'لا يوجد مرجع سابق' : 'No previous baseline') : `${wDiff > 0 ? '+' : ''}${wDiff.toFixed(1)} ${isAr ? 'كجم' : 'kg'}`;
+    bwTrend.style.color = wDiff !== null && wDiff > 0 ? 'var(--warn)' : 'var(--green)';
+  }
+  if (bfTrend) {
+    bfTrend.textContent = bfDiff === null ? (isAr ? 'لا يوجد مرجع سابق' : 'No previous baseline') : `${bfDiff > 0 ? '+' : ''}${bfDiff.toFixed(1)}%`;
+    bfTrend.style.color = bfDiff !== null && bfDiff > 0 ? 'var(--danger)' : 'var(--green)';
+  }
+  if (mmTrend) {
+    mmTrend.textContent = mmDiff === null ? (isAr ? 'لا يوجد مرجع سابق' : 'No previous baseline') : `${mmDiff > 0 ? '+' : ''}${mmDiff.toFixed(1)} ${isAr ? 'كجم' : 'kg'}`;
+    mmTrend.style.color = mmDiff !== null && mmDiff > 0 ? 'var(--green)' : 'var(--text3)';
+  }
+
+  if (badge && lastWeight) badge.textContent = isAr ? `آخر تحديث ${fmtDate(lastWeight.date)}` : `Updated ${fmtDate(lastWeight.date)}`;
+  if (!insightGrid) return;
+
+  const now = Date.now();
+  const dayMs = 86400000;
+  const recent30 = entries.filter(e => {
+    const d = new Date(e.date);
+    return !Number.isNaN(d.getTime()) && (now - d.getTime()) <= 30 * dayMs;
+  });
+  const uniqueDays = new Set(recent30.map(e => String(e.date || '').slice(0, 10))).size;
+  const consistency = Math.min(100, Math.round((uniqueDays / 12) * 100));
+  const lbm = (lastWeight && lastBF) ? toKg(+lastWeight.weight, unitOf(lastWeight)) * (1 - (+lastBF.bodyFat / 100)) : null;
+  const recomposition = (bfDiff !== null && mmDiff !== null)
+    ? Math.max(0, Math.min(100, Math.round(((-bfDiff * 14) + (mmDiff * 22) + 50))))
+    : null;
+
+  let tip = isAr
+    ? 'حافظ على 3 قياسات أسبوعيًا بنفس وقت القياس لقراءة اتجاه أوضح.'
+    : 'Keep 3 check-ins weekly at the same time for cleaner trend accuracy.';
+  if (recomposition !== null) {
+    if (recomposition >= 70) tip = isAr ? 'اتجاه ممتاز: دهون أقل وكتلة عضلية أعلى. استمر.' : 'Excellent trend: fat down and muscle up. Keep going.';
+    else if (recomposition < 45) tip = isAr ? 'الاتجاه ضعيف. راجع النوم والبروتين وحمل التدريب.' : 'Trend is weak. Review sleep, protein, and training load.';
+  }
+
+  const cards = [
+    { title: isAr ? 'اتساق القياسات (30 يوم)' : 'Check-in Consistency (30d)', value: `${consistency}%`, sub: isAr ? `${uniqueDays} يوم تسجيل` : `${uniqueDays} logged days` },
+    { title: isAr ? 'الكتلة الخالية من الدهون' : 'Lean Body Mass', value: lbm !== null ? `${lbm.toFixed(1)} ${isAr ? 'كجم' : 'kg'}` : '—', sub: lbm !== null ? (isAr ? 'محسوبة من الوزن + الدهون' : 'calculated from weight + body fat') : (isAr ? 'يتطلب وزن + دهون' : 'requires weight + body fat') },
+    { title: isAr ? 'درجة إعادة التشكيل' : 'Recomp Score', value: recomposition !== null ? `${recomposition}/100` : '—', sub: recomposition !== null ? (isAr ? 'يعتمد على اتجاه الدهون والعضلات' : 'based on fat and muscle direction') : (isAr ? 'يتطلب دهون + عضلات' : 'requires fat + muscle logs') }
+  ];
+
+  insightGrid.innerHTML = cards.map(c =>
+    `<div class="bcomp-insight-card"><div class="bcomp-insight-label">${c.title}</div><div class="bcomp-insight-value">${c.value}</div><div class="bcomp-insight-sub">${c.sub}</div></div>`
+  ).join('') + `<div class="bcomp-insight-tip">${tip}</div>`;
 }

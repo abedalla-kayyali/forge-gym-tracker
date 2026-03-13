@@ -164,6 +164,10 @@ function switchBcompChart(type, btn) {
   renderBcompChart(type);
 }
 
+function _bc(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
+
 function renderBcompChart(type) {
   // Destroy old chart instance before creating new
   if (bwChrt) { bwChrt.destroy(); bwChrt = null; }
@@ -179,21 +183,21 @@ function renderBcompChart(type) {
   if (type === 'weight') {
     values = data.map(d => d.weight);
     color = '#39ff8f';
-    label = 'Body Weight';
+    label = _bc('Body Weight', 'وزن الجسم');
   } else if (type === 'bodyfat') {
     const filtered = data.filter(d => d.bodyFat);
-    if (!filtered.length) { showToast('ℹ️ No body fat data yet'); return; }
+  if (!filtered.length) { showToast(_bc('No body fat data yet', 'لا توجد بيانات دهون جسم بعد')); return; }
     values = filtered.map(d => d.bodyFat);
     color = '#f39c12';
-    label = 'Body Fat %';
+    label = _bc('Body Fat %', 'نسبة الدهون');
     data.length = 0;
     data.push(...filtered);
   } else {
     const filtered = data.filter(d => d.muscleMass);
-    if (!filtered.length) { showToast('ℹ️ No muscle mass data yet'); return; }
+  if (!filtered.length) { showToast(_bc('No muscle mass data yet', 'لا توجد بيانات كتلة عضلية بعد')); return; }
     values = filtered.map(d => d.muscleMass);
     color = '#2ecc71';
-    label = 'Muscle Mass';
+    label = _bc('Muscle Mass', 'الكتلة العضلية');
     data.length = 0;
     data.push(...filtered);
   }
@@ -204,7 +208,7 @@ function renderBcompChart(type) {
   bwChrt = new Chart(c, {
     type: 'line',
     data: {
-      labels: data.map(d => new Date(d.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })),
+      labels: data.map(d => new Date(d.date).toLocaleDateString(((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-SA' : 'en-GB'), { month: 'short', day: 'numeric' })),
       datasets: [{
         label, data: values,
         borderColor: color, borderWidth: 2, backgroundColor: grad,

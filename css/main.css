@@ -2707,6 +2707,14 @@ button:focus:not(:focus-visible){outline:none;}
 .bw-delta.up{color:var(--danger);}
 .bw-delta.down{color:var(--green);}
 .bw-delta.same{color:var(--text3);}
+.bw-meta-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.bw-meta-chip{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3px;
+  border:1px solid var(--border2);border-radius:999px;padding:2px 6px;
+  color:var(--text2);background:rgba(0,0,0,.12);
+}
+.bw-meta-chip.bf{border-color:rgba(243,156,18,.45);color:#f8c47b;}
+.bw-meta-chip.mm{border-color:rgba(46,204,113,.45);color:#9ef0be;}
 
 /* ── MODAL ── */
 .modal-overlay{
@@ -3432,6 +3440,39 @@ header{animation:headerGlow 4s ease-in-out infinite;}
 .comp-card-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:1px;margin-top:4px;text-transform:uppercase;}
 .comp-card-trend{font-family:'DM Mono',monospace;font-size:9px;min-height:12px;margin-top:2px;}
 .bw-history-inner{max-height:300px;overflow-y:auto;}
+.bcomp-insight-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:0;
+}
+.bcomp-insight-card{
+  border:1px solid color-mix(in srgb,var(--accent) 26%,var(--border2));
+  border-radius:10px;
+  background:linear-gradient(180deg,rgba(57,255,143,.08),rgba(57,255,143,0.01));
+  padding:9px 8px;
+}
+.bcomp-insight-label{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.1px;
+  color:var(--text3);text-transform:uppercase;
+}
+.bcomp-insight-value{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;color:var(--white);margin-top:2px;
+}
+.bcomp-insight-sub{
+  font-family:'DM Mono',monospace;font-size:9px;color:var(--text2);margin-top:3px;line-height:1.35;
+}
+.bcomp-insight-tip{
+  grid-column:1/-1;
+  border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--border2));
+  border-radius:10px;
+  padding:9px 10px;
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);line-height:1.45;
+  background:rgba(57,255,143,.05);
+}
+.bcomp-insight-empty{
+  grid-column:1/-1;
+  border:1px dashed var(--border2);border-radius:10px;padding:10px;
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);text-align:center;
+}
 
 /* ══════════════════════════════════════════
    BODY MAP — tap ripple & pulse
@@ -3493,6 +3534,7 @@ header{animation:headerGlow 4s ease-in-out infinite;}
   .mo-stat:nth-child(4){border-top:1px solid var(--border);border-right:none;}
   .profile-computed{grid-template-columns:repeat(3,1fr);}
   .comp-cards{grid-template-columns:repeat(3,1fr);}
+  .bcomp-insight-grid{grid-template-columns:1fr;}
   .bcomp-field-label{flex:0 0 90px;font-size:9px;}
 }
 @media (min-width: 600px) {
