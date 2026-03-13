@@ -293,6 +293,7 @@ const LANGS = {
     'nav.log': 'Log',
     'nav.stats': 'Stats',
     'nav.history': 'History',
+    'nav.nutrition': 'Nutrition',
     'nav.more': 'More',
 
     // General
@@ -1007,6 +1008,7 @@ const LANGS = {
     'nav.log': 'تسجيل',
     'nav.stats': 'إحصاء',
     'nav.history': 'السجل',
+    'nav.nutrition': 'التغذية',
     'nav.more': 'المزيد',
 
     // General
@@ -1726,6 +1728,7 @@ function updateNavLabels() {
     'bnav-log': 'nav.log',
     'bnav-dashboard': 'nav.stats',
     'bnav-history': 'nav.history',
+    'bnav-nutrition': 'nav.nutrition',
     'bnav-more': 'nav.more',
   };
   Object.entries(navMap).forEach(([id, key]) => {
