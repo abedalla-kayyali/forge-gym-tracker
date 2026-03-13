@@ -102,6 +102,7 @@ function _saveWeightedWorkout() {
       if (selectedMuscle) _sessionWkMuscles.add(selectedMuscle);
       const workSetsOnly = sets.filter(s => s.type !== 'warmup');
       _sessionWkLogs.push({
+        mode: 'weighted',
         muscle: selectedMuscle,
         exercise: name,
         sets: workSetsOnly.map(s => ({ reps: s.reps, weight: s.weight, unit: s.unit || 'kg' })),
@@ -227,6 +228,20 @@ function saveBwWorkout() {
       exercise: name, muscle, sets, notes: '',
       totalReps, isPR, type: 'bodyweight', bwType: _currentBwType
     });
+    if (_sessionActive) {
+      if (muscle) _sessionWkMuscles.add(muscle);
+      _sessionWkLogs.push({
+        mode: 'bodyweight',
+        muscle,
+        exercise: name,
+        sets: sets.map(s => ({ reps: s.reps || 0, secs: s.secs || 0 })),
+        totalReps,
+        volume: 0,
+        isPR
+      });
+      if (typeof _updateSessionCard === 'function') _updateSessionCard();
+      if (typeof _checkEndSessionNudge === 'function') _checkEndSessionNudge();
+    }
     saveBwData();
 
     // Fire Skill Unlock overlay if threshold was just crossed

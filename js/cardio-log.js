@@ -93,6 +93,25 @@ function submitCardioLog() {
 
   cardioLog.push(entry);
   localStorage.setItem(STORAGE_KEYS.CARDIO, JSON.stringify(cardioLog));
+  if (typeof _sessionActive !== 'undefined' && _sessionActive) {
+    if (typeof _sessionWkMuscles !== 'undefined') _sessionWkMuscles.add('Cardio');
+    if (typeof _sessionWkLogs !== 'undefined') {
+      _sessionWkLogs.push({
+        mode: 'cardio',
+        muscle: 'Cardio',
+        activity: _selectedCardioAct.act,
+        exercise: _selectedCardioAct.act,
+        durationMins: dur,
+        calories: cal,
+        hrZone: _selectedHRZone,
+        sets: [],
+        volume: 0,
+        isPR: false
+      });
+    }
+    if (typeof _updateSessionCard === 'function') _updateSessionCard();
+    if (typeof _checkEndSessionNudge === 'function') _checkEndSessionNudge();
+  }
 
   // Reset form
   document.getElementById('cardio-dur-input').value  = '';
