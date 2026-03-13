@@ -3744,14 +3744,23 @@ body[data-theme="solar"] .xp-fill {
 .coach-tabs {
   display:flex; border-bottom:1px solid var(--border);
   background:var(--panel2);
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.coach-tabs::-webkit-scrollbar{display:none;}
 .coach-tab {
-  flex:1; padding:10px 4px; border:none; background:transparent;
+  flex:0 0 auto; min-width:94px; padding:10px 8px; border:none; background:transparent;
   font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px;
   text-transform:uppercase; color:var(--text3); cursor:pointer;
   border-bottom:2px solid transparent; transition:all .2s;
 }
 .coach-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+@media (min-width:900px){
+  .coach-tabs{overflow:visible;}
+  .coach-tab{flex:1;min-width:0;}
+}
 
 /* ── COACH WEEKLY PLAN ── */
 .week-plan-grid {
@@ -4424,6 +4433,88 @@ body[data-theme="solar"] .xp-fill {
 .coach-bubble.alert { border-left-color:var(--danger); background:rgba(231,76,60,.05); }
 .coach-bubble.warn { border-left-color:var(--warn); background:rgba(243,156,18,.05); }
 .coach-bubble.good { border-left-color:var(--green); background:rgba(46,204,113,.05); }
+
+/* Coach unified cards */
+.coach-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.coach-kpi-card{
+  background:linear-gradient(180deg,var(--bg3),var(--bg2));
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+}
+.coach-kpi-label{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--text3);
+}
+.coach-kpi-value{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  line-height:1;
+  color:var(--accent);
+  margin-top:4px;
+}
+.coach-kpi-sub{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--text3);
+  margin-top:4px;
+}
+.coach-cardio-wrap{padding:12px 14px 80px;display:flex;flex-direction:column;gap:10px;}
+.coach-cardio-head{
+  background:linear-gradient(180deg,rgba(10,28,22,.94),rgba(6,17,13,.98));
+  border:1px solid rgba(80,180,140,.32);
+  border-radius:12px;
+  padding:12px 14px;
+}
+.coach-cardio-kicker{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  color:#83d3ae;
+}
+.coach-cardio-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:30px;
+  color:#d2ffe9;
+  line-height:1;
+  margin-top:5px;
+}
+.coach-cardio-sub{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#9ac9b3;
+  margin-top:6px;
+}
+.coach-dual-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.coach-action-btn{
+  border:1px solid rgba(98,200,155,.34);
+  border-radius:10px;
+  background:rgba(10,31,24,.86);
+  color:#d8ffed;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1px;
+  padding:10px 8px;
+}
+.coach-action-btn.primary{
+  background:linear-gradient(90deg,#49f5a3,#5ecfff);
+  color:#06271a;
+  border-color:#91ffd0;
+}
+.ctoday-brief-card .ctoday-plan-note strong{color:var(--accent);}
+@media (max-width:680px){
+  .coach-kpi-grid{grid-template-columns:1fr;}
+  .coach-dual-actions{grid-template-columns:1fr;}
+}
 
 /* ── READINESS INDICATORS ── */
 .readiness-grid {

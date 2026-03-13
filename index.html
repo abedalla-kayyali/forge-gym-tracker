@@ -2232,6 +2232,7 @@
           <button class="coach-tab active" onclick="coachSwitchTab('today',this)"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Today</button>
           <button class="coach-tab" onclick="coachSwitchTab('insights',this)" data-i18n="coach.tab.insights"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Insights</button>
           <button class="coach-tab" onclick="coachSwitchTab('train',this)"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg> Train</button>
+          <button class="coach-tab" onclick="coachSwitchTab('cardio',this)"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l2-4 4 8 2-4h6"/></svg> Cardio</button>
           <button class="coach-tab" onclick="coachSwitchTab('plan',this)" data-i18n="coach.tab.plan"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Plan</button>
           <button class="coach-tab" onclick="coachSwitchTab('nutrition',this)" data-i18n="coach.tab.nutrition"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Nutrition</button>
           <button class="coach-tab" onclick="coachSwitchTab('cali',this)">?? Cali</button>
@@ -2241,6 +2242,7 @@
         <div id="coach-tab-today"></div>
         <div id="coach-tab-train" style="display:none;"></div>
         <div id="coach-tab-insights" style="display:none;"><div class="coach-chat-wrap" id="coach-body"></div><div id="coach-tips-wrap" style="padding:0 14px 14px;"><div class="panel-header" style="padding:10px 0 6px;"><span class="panel-title" data-i18n="section.tips">?? Smart Tips</span><span class="panel-badge" data-i18n="install.tips.for">FOR YOU</span></div><div id="tips-container"><div class="tips-list" id="tips-list-dynamic"></div></div></div></div>
+        <div id="coach-tab-cardio" style="display:none;"></div>
         <div id="coach-tab-plan" style="display:none;"></div>
         <div id="coach-tab-nutrition" style="display:none;"></div>
         <div id="coach-tab-cali" style="display:none;"></div>
@@ -8725,6 +8727,7 @@ if (document.readyState === 'loading') {
 <script src="js/bodyweight-mode.js"></script>
 <script src="js/cardio-log.js"></script>
 <script src="js/cardio-stats.js"></script>
+<script src="js/coach-state.js"></script>
 <script src="js/steps-health.js"></script>
 <script src="js/cali-dashboard.js"></script>
 <script src="js/ui-layout-theme.js"></script>

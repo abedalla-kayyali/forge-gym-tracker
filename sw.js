@@ -1,6 +1,6 @@
 // FORGE Gym Tracker - Service Worker
 // Bump version to force cache refresh after updates
-const CACHE_NAME = 'forge-v62';
+const CACHE_NAME = 'forge-v63';
 
 const CORE_ASSETS = [
   './index.html',
@@ -8,6 +8,7 @@ const CORE_ASSETS = [
   './icons/icon.svg',
   './css/main.css',
   './js/config.js',
+  './js/coach-state.js',
   './js/supabase-client.js',
   './js/auth-ui.js',
   './js/sync.js',
@@ -81,6 +82,7 @@ self.addEventListener('fetch', event => {
     path.endsWith('/index.html') ||
     path.endsWith('/manifest.json') ||
     path.endsWith('/js/config.js') ||
+    path.endsWith('/js/coach-state.js') ||
     path.endsWith('/js/bootstrap.js') ||
     path.endsWith('/sw.js');
 
