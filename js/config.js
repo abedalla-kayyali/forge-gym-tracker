@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v53';
-window.FORGE_BUILD   = '2026-03-13 (force update button + mobile cache refresh)';
+window.FORGE_VERSION = 'v55';
+window.FORGE_BUILD   = '2026-03-13 (share poster icon encoding + athlete label fix)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

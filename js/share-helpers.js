@@ -35,7 +35,6 @@ function _downloadBlob(blob, filename) {
   a.click();
   document.body.removeChild(a);
 
-  // iOS Safari often ignores `download`, so open in new tab for long-press save.
   setTimeout(() => {
     if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       window.open(url, '_blank', 'noopener');
@@ -54,149 +53,333 @@ function _getSessionShareCanvas() {
   return null;
 }
 
-function _drawSessionShareCard() {
+function _sessionShareUserName() {
+  try {
+    if (typeof userProfile !== 'undefined' && userProfile && userProfile.name) {
+      return String(userProfile.name).trim() || 'FORGE ATHLETE';
+    }
+  } catch (_) {}
+  try {
+    const p = JSON.parse(localStorage.getItem('forge_profile') || '{}');
+    return (p && p.name ? String(p.name).trim() : '') || 'FORGE ATHLETE';
+  } catch (_) {
+    return 'FORGE ATHLETE';
+  }
+}
+
+function _drawPill(ctx, x, y, w, h, label, value, accent) {
+  ctx.fillStyle = 'rgba(13,24,18,.92)';
+  _roundRect(ctx, x, y, w, h, 16);
+  ctx.fill();
+  ctx.strokeStyle = accent ? 'rgba(57,255,143,.46)' : 'rgba(130,162,137,.24)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(161,192,168,.88)';
+  ctx.font = '600 17px "DM Mono", monospace';
+  ctx.fillText(label, x + 16, y + 35);
+
+  ctx.fillStyle = accent ? '#54ffab' : '#f0faf2';
+  ctx.font = '700 40px "Barlow Condensed", sans-serif';
+  ctx.fillText(String(value), x + 16, y + 92);
+}
+
+function _wrapText(ctx, text, maxWidth) {
+  const words = String(text || '').split(' ');
+  const lines = [];
+  let line = '';
+  for (let i = 0; i < words.length; i++) {
+    const test = line ? line + ' ' + words[i] : words[i];
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = words[i];
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function _fmtNum(n) {
+  return Math.round(Number(n) || 0).toLocaleString();
+}
+
+function _fmtExerciseMeta(log) {
+  if (!log) return '';
+
+  if (log.mode === 'weighted') {
+    const sets = Array.isArray(log.sets) ? log.sets : [];
+    const work = sets.filter(s => s && s.type !== 'warmup');
+    const use = work.length ? work : sets;
+    const top = use.slice(0, 3).map(s => {
+      const reps = Number(s.reps) || 0;
+      const weight = Number(s.weight) || 0;
+      const unit = s.unit || 'kg';
+      return weight > 0 && reps > 0 ? (weight + unit + ' x ' + reps) : (reps > 0 ? (reps + ' reps') : (weight + unit));
+    }).filter(Boolean).join(' | ');
+    const setCount = use.length || sets.length;
+    const volume = Number(log.volume) || 0;
+    const volText = volume > 0 ? ('Vol ' + _fmtNum(volume)) : '';
+    return [setCount + ' sets', top, volText].filter(Boolean).join(' | ');
+  }
+
+  if (log.mode === 'bodyweight') {
+    const sets = Array.isArray(log.sets) ? log.sets : [];
+    const top = sets.slice(0, 3).map(s => {
+      if (Number(s.reps) > 0) return s.reps + ' reps';
+      if (Number(s.secs) > 0) return s.secs + ' sec';
+      return '';
+    }).filter(Boolean).join(' | ');
+    const reps = Number(log.totalReps) || 0;
+    const repText = reps > 0 ? (reps + ' reps total') : '';
+    return [sets.length + ' sets', top, repText].filter(Boolean).join(' | ');
+  }
+
+  const mins = Number(log.durationMins) || 0;
+  const kcal = Number(log.calories) || 0;
+  const zone = log.hrZone ? ('Zone ' + log.hrZone) : '';
+  return [mins + ' min', kcal > 0 ? (kcal + ' kcal') : '', zone].filter(Boolean).join(' | ');
+}
+
+function _svgMarkupToImage(svgMarkup) {
+  return new Promise(resolve => {
+    if (!svgMarkup) return resolve(null);
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgMarkup);
+    img.src = encoded;
+  });
+}
+
+async function _drawSessionShareCard() {
   const s = (typeof _lastSessionSummary !== 'undefined' && _lastSessionSummary) || null;
   if (!s) return null;
 
   const canvas = document.createElement('canvas');
-  const W = 1080, H = 1350; // social-friendly portrait format
+  const W = 1080;
+  const H = 1350;
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#07110b');
-  bg.addColorStop(0.65, '#0b1a10');
-  bg.addColorStop(1, '#060d08');
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#050d08');
+  bg.addColorStop(0.5, '#0b1a12');
+  bg.addColorStop(1, '#06110b');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // Ambient glow
-  const glow = ctx.createRadialGradient(W * 0.2, H * 0.2, 20, W * 0.2, H * 0.2, 380);
-  glow.addColorStop(0, 'rgba(57,255,143,.22)');
-  glow.addColorStop(1, 'rgba(57,255,143,0)');
-  ctx.fillStyle = glow;
+  const glowA = ctx.createRadialGradient(170, 170, 20, 170, 170, 420);
+  glowA.addColorStop(0, 'rgba(84,255,171,.22)');
+  glowA.addColorStop(1, 'rgba(84,255,171,0)');
+  ctx.fillStyle = glowA;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = '#39ff8f';
-  ctx.font = '700 44px "Bebas Neue", sans-serif';
-  ctx.letterSpacing = '2px';
-  ctx.fillText('FORGE SESSION COMPLETE', 72, 110);
+  const glowB = ctx.createRadialGradient(W - 130, 410, 40, W - 130, 410, 420);
+  glowB.addColorStop(0, 'rgba(78,197,255,.18)');
+  glowB.addColorStop(1, 'rgba(78,197,255,0)');
+  ctx.fillStyle = glowB;
+  ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = 'rgba(234,244,235,.72)';
-  ctx.font = '500 24px "DM Mono", monospace';
-  ctx.fillText((s.dateStr || '') + '  آ·  ' + (s.timeStr || ''), 72, 154);
+  ctx.fillStyle = '#54ffab';
+  ctx.font = '700 60px "Bebas Neue", sans-serif';
+  ctx.fillText('FORGE SESSION', 70, 96);
 
-  const streakVal = (typeof calcStreak === 'function') ? calcStreak() : 0;
+  ctx.fillStyle = 'rgba(229,246,235,.9)';
+  ctx.font = '700 48px "Barlow Condensed", sans-serif';
+  ctx.fillText('PERFORMANCE POSTER', 70, 144);
+
+  ctx.fillStyle = 'rgba(179,207,187,.88)';
+  ctx.font = '500 22px "DM Mono", monospace';
+  ctx.fillText((s.dateStr || '') + ' | ' + (s.timeStr || ''), 70, 179);
+
+  const athleteName = _sessionShareUserName().toUpperCase();
+  ctx.fillStyle = 'rgba(221,240,227,.92)';
+  ctx.font = '700 24px "Barlow Condensed", sans-serif';
+  ctx.fillText('ATHLETE: ' + athleteName, 720, 96);
+
+  const streakVal = typeof calcStreak === 'function' ? calcStreak() : 0;
+  const volumeVal = Number(s.totalVol) > 0 ? (_fmtNum(s.totalVol) + 'kg') : '-';
   const cards = [
-    { label: 'DURATION', value: s.durStr || '00:00' },
-    { label: 'ENTRIES', value: String((s.logs || []).length) },
-    { label: 'SETS', value: String(s.totalSets || 0) },
-    { label: 'PRS', value: String(s.prCount || 0) },
-    { label: 'STREAK', value: String(streakVal) + 'D' }
+    { label: 'DURATION', value: s.durStr || '00:00', accent: true },
+    { label: 'SETS', value: s.totalSets || 0, accent: false },
+    { label: 'VOLUME', value: volumeVal, accent: true },
+    { label: 'PRS', value: s.prCount || 0, accent: (s.prCount || 0) > 0 },
+    { label: 'STREAK', value: String(streakVal) + 'D', accent: false }
   ];
 
-  let x = 72;
-  const y = 200;
-  const cw = 188;
-  const ch = 140;
-  cards.forEach(card => {
-    ctx.fillStyle = 'rgba(20,30,22,.95)';
-    _roundRect(ctx, x, y, cw, ch, 16);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(57,255,143,.22)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(122,158,126,.95)';
-    ctx.font = '500 18px "DM Mono", monospace';
-    ctx.fillText(card.label, x + 18, y + 40);
-    ctx.fillStyle = '#eaf4eb';
-    ctx.font = '700 42px "Barlow Condensed", sans-serif';
-    ctx.fillText(card.value, x + 18, y + 98);
-    x += cw + 20;
-  });
-
-  const lines = [];
-  if (s.totalVol > 0) lines.push('Weighted Volume: ' + Math.round(s.totalVol).toLocaleString() + ' kg');
-  if (s.totalBwReps > 0) lines.push('Bodyweight Reps: ' + s.totalBwReps);
-  if (s.totalCardioMins > 0) lines.push('Cardio Time: ' + s.totalCardioMins + ' min');
-  if (!lines.length) lines.push('No measurable output captured');
-
-  const muscles = (s.muscles && s.muscles.length) ? s.muscles.join(', ') : 'No specific muscles tracked';
-
-  ctx.fillStyle = 'rgba(20,30,22,.94)';
-  _roundRect(ctx, 72, 380, W - 144, 190, 18);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(57,255,143,.2)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#39ff8f';
-  ctx.font = '600 22px "DM Mono", monospace';
-  ctx.fillText('SESSION OUTPUT', 100, 424);
-  ctx.fillStyle = '#c8dcc9';
-  ctx.font = '500 28px "Barlow", sans-serif';
-  ctx.fillText(lines.join('  آ·  '), 100, 470);
-  ctx.fillStyle = 'rgba(234,244,235,.78)';
-  ctx.font = '500 22px "Barlow", sans-serif';
-  ctx.fillText('Muscles: ' + muscles, 100, 512);
-
-  const top = (s.logs || []).slice(0, 6);
-  ctx.fillStyle = 'rgba(20,30,22,.94)';
-  _roundRect(ctx, 72, 610, W - 144, 590, 18);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(57,255,143,.16)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#39ff8f';
-  ctx.font = '600 22px "DM Mono", monospace';
-  ctx.fillText('SESSION BREAKDOWN', 100, 654);
-  ctx.fillStyle = 'rgba(234,244,235,.9)';
-  ctx.font = '600 28px "Barlow Condensed", sans-serif';
-  if (!top.length) {
-    ctx.fillText('No entries logged in this session', 100, 704);
-  } else {
-    let yy = 706;
-    top.forEach((l, idx) => {
-      const tag = l.mode === 'weighted' ? 'W' : l.mode === 'bodyweight' ? 'BW' : 'CARDIO';
-      const title = (idx + 1) + '. ' + (l.exercise || l.activity || 'Entry');
-      let meta = '';
-      if (l.mode === 'weighted') {
-        meta = ((l.sets || []).length) + ' sets';
-        if (l.volume > 0) meta += '  آ·  ' + Math.round(l.volume).toLocaleString() + ' kg';
-      } else if (l.mode === 'bodyweight') {
-        meta = ((l.sets || []).length) + ' sets';
-        if (l.totalReps > 0) meta += '  آ·  ' + l.totalReps + ' reps';
-      } else {
-        meta = (l.durationMins || 0) + ' min';
-        if (l.calories) meta += '  آ·  ' + l.calories + ' kcal';
-      }
-      if (l.isPR) meta += '  آ·  PR';
-
-      ctx.fillStyle = 'rgba(234,244,235,.95)';
-      ctx.font = '600 28px "Barlow Condensed", sans-serif';
-      ctx.fillText(title + ' [' + tag + ']', 100, yy);
-      ctx.fillStyle = 'rgba(200,220,201,.7)';
-      ctx.font = '500 20px "Barlow", sans-serif';
-      ctx.fillText(meta, 100, yy + 30);
-      yy += 78;
-    });
+  const cardY = 214;
+  const gap = 16;
+  const cw = Math.floor((W - 140 - gap * 4) / 5);
+  const ch = 128;
+  for (let i = 0; i < cards.length; i++) {
+    _drawPill(ctx, 70 + i * (cw + gap), cardY, cw, ch, cards[i].label, cards[i].value, cards[i].accent);
   }
 
-  ctx.fillStyle = 'rgba(234,244,235,.55)';
+  const leftX = 70;
+  const leftY = 372;
+  const leftW = 320;
+  const leftH = 420;
+  ctx.fillStyle = 'rgba(13,24,18,.92)';
+  _roundRect(ctx, leftX, leftY, leftW, leftH, 18);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(84,255,171,.35)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#54ffab';
+  ctx.font = '600 20px "DM Mono", monospace';
+  ctx.fillText('BODY MAP', leftX + 18, leftY + 34);
+
+  if (typeof _buildSessionBodyMapSVG === 'function') {
+    const muscles = new Set(Array.isArray(s.muscles) ? s.muscles : []);
+    const frontSvg = _buildSessionBodyMapSVG(muscles, 'front') || '';
+    const backSvg = _buildSessionBodyMapSVG(muscles, 'back') || '';
+    const frontImg = await _svgMarkupToImage(frontSvg);
+    const backImg = await _svgMarkupToImage(backSvg);
+    if (frontImg) ctx.drawImage(frontImg, leftX + 18, leftY + 56, 130, 300);
+    if (backImg) ctx.drawImage(backImg, leftX + 170, leftY + 56, 130, 300);
+
+    ctx.fillStyle = 'rgba(190,214,196,.85)';
+    ctx.font = '600 16px "DM Mono", monospace';
+    ctx.fillText('FRONT', leftX + 44, leftY + 382);
+    ctx.fillText('BACK', leftX + 202, leftY + 382);
+  }
+
+  const rightX = 410;
+  const rightY = 372;
+  const rightW = 600;
+  const rightH = 420;
+  ctx.fillStyle = 'rgba(13,24,18,.92)';
+  _roundRect(ctx, rightX, rightY, rightW, rightH, 18);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(84,255,171,.28)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#54ffab';
+  ctx.font = '600 20px "DM Mono", monospace';
+  ctx.fillText('SESSION OUTPUT', rightX + 20, rightY + 34);
+
+  const out = [];
+  if (Number(s.totalVol) > 0) out.push('Weighted volume: ' + _fmtNum(s.totalVol));
+  if (Number(s.totalBwReps) > 0) out.push('Bodyweight reps: ' + _fmtNum(s.totalBwReps));
+  if (Number(s.totalCardioMins) > 0) out.push('Cardio: ' + _fmtNum(s.totalCardioMins) + ' min');
+  if (!out.length) out.push('No measurable output captured');
+  ctx.fillStyle = '#f0faf2';
+  ctx.font = '600 30px "Barlow Condensed", sans-serif';
+  let yy = rightY + 74;
+  for (let i = 0; i < out.length && i < 3; i++) {
+    ctx.fillText(out[i], rightX + 20, yy);
+    yy += 36;
+  }
+
+  const musclesText = (Array.isArray(s.muscles) && s.muscles.length)
+    ? s.muscles.join(', ')
+    : 'No specific muscles tracked';
+  ctx.fillStyle = '#9df8c8';
+  ctx.font = '700 18px "DM Mono", monospace';
+  ctx.fillText('MUSCLES TRAINED', rightX + 20, rightY + 171);
+  ctx.fillStyle = 'rgba(190,214,196,.88)';
+  ctx.font = '500 18px "Barlow", sans-serif';
+  const wrappedMuscles = _wrapText(ctx, musclesText, rightW - 40);
+  let my = rightY + 196;
+  for (let i = 0; i < wrappedMuscles.length && i < 3; i++) {
+    ctx.fillText(wrappedMuscles[i], rightX + 20, my);
+    my += 24;
+  }
+
+  const prItems = (s.logs || []).filter(l => l && l.isPR).map(l => l.exercise || l.activity || 'PR');
+  ctx.fillStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.18)' : 'rgba(44,58,47,.85)';
+  _roundRect(ctx, rightX + 18, rightY + 288, rightW - 36, 112, 14);
+  ctx.fill();
+  ctx.strokeStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.45)' : 'rgba(90,110,96,.28)';
+  ctx.stroke();
+
+  ctx.fillStyle = (s.prCount || 0) > 0 ? '#ffd666' : 'rgba(190,214,196,.74)';
+  ctx.font = '600 18px "DM Mono", monospace';
+  ctx.fillText((s.prCount || 0) > 0 ? ('PR HITS | ' + s.prCount) : 'PR HITS | 0', rightX + 34, rightY + 320);
+
+  ctx.fillStyle = 'rgba(239,247,241,.95)';
+  ctx.font = '600 23px "Barlow Condensed", sans-serif';
+  const prText = prItems.length ? prItems.slice(0, 3).join(' | ') : 'No PR this session';
+  ctx.fillText(prText, rightX + 34, rightY + 362);
+
+  const listX = 70;
+  const listY = 824;
+  const listW = W - 140;
+  const listH = 456;
+  ctx.fillStyle = 'rgba(12,22,16,.94)';
+  _roundRect(ctx, listX, listY, listW, listH, 20);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(84,255,171,.28)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#54ffab';
+  ctx.font = '600 22px "DM Mono", monospace';
+  ctx.fillText('EXERCISES WORKED', listX + 20, listY + 36);
+
+  const logs = Array.isArray(s.logs) ? s.logs.slice(0, 6) : [];
+  if (!logs.length) {
+    ctx.fillStyle = 'rgba(236,246,239,.85)';
+    ctx.font = '600 28px "Barlow Condensed", sans-serif';
+    ctx.fillText('No exercise entries in this session', listX + 20, listY + 92);
+  } else {
+    let ry = listY + 82;
+    for (let i = 0; i < logs.length; i++) {
+      const l = logs[i] || {};
+      const rowH = 61;
+      ctx.fillStyle = i % 2 ? 'rgba(18,30,23,.78)' : 'rgba(15,26,20,.78)';
+      _roundRect(ctx, listX + 16, ry - 34, listW - 32, rowH, 10);
+      ctx.fill();
+
+      const modeTag = l.mode === 'weighted' ? 'W' : (l.mode === 'bodyweight' ? 'BW' : 'CARDIO');
+      const title = (l.exercise || l.activity || 'Entry') + (l.muscle ? (' | ' + l.muscle) : '');
+
+      ctx.fillStyle = '#f1faf3';
+      ctx.font = '700 25px "Barlow Condensed", sans-serif';
+      ctx.fillText((i + 1) + '. ' + title, listX + 30, ry - 8);
+
+      ctx.fillStyle = 'rgba(191,217,198,.9)';
+      ctx.font = '500 17px "Barlow", sans-serif';
+      const meta = _fmtExerciseMeta(l);
+      const metaLines = _wrapText(ctx, meta, listW - 270);
+      if (metaLines[0]) ctx.fillText(metaLines[0], listX + 30, ry + 14);
+
+      ctx.fillStyle = 'rgba(84,255,171,.25)';
+      _roundRect(ctx, listX + listW - 190, ry - 27, 75, 34, 9);
+      ctx.fill();
+      ctx.fillStyle = '#9df8c8';
+      ctx.font = '700 16px "DM Mono", monospace';
+      ctx.fillText(modeTag, listX + listW - 166, ry - 4);
+
+      if (l.isPR) {
+        ctx.fillStyle = 'rgba(255,214,102,.22)';
+        _roundRect(ctx, listX + listW - 106, ry - 27, 82, 34, 9);
+        ctx.fill();
+        ctx.fillStyle = '#ffd666';
+        ctx.fillText('PR', listX + listW - 78, ry - 4);
+      }
+
+      ry += 70;
+    }
+  }
+
+  ctx.fillStyle = 'rgba(211,228,216,.58)';
   ctx.font = '500 18px "DM Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText('Built with FORGE  ·  #ForgeSession  ·  ' + new Date().toISOString().slice(0, 10), W - 72, H - 40);
+  ctx.fillText('Built with FORGE | #ForgeSession | ' + new Date().toISOString().slice(0, 10), W - 70, H - 28);
   ctx.textAlign = 'left';
 
   return canvas;
 }
 
-function renderSessionSharePreview() {
-  const source = _drawSessionShareCard();
+async function renderSessionSharePreview() {
+  const source = await _drawSessionShareCard();
   const target = _getSessionShareCanvas();
   if (!source || !target) return null;
   const ctx = target.getContext('2d');
@@ -208,8 +391,14 @@ function renderSessionSharePreview() {
   return target;
 }
 
+async function _ensureSessionShareCanvas() {
+  const rendered = await renderSessionSharePreview();
+  if (rendered) return rendered;
+  return await _drawSessionShareCard();
+}
+
 async function shareSession() {
-  const canvas = renderSessionSharePreview() || _drawSessionShareCard();
+  const canvas = await _ensureSessionShareCanvas();
   if (!canvas) {
     if (navigator.share) {
       navigator.share({ title: 'FORGE Session', text: _sessionShareText }).catch(() => {});
@@ -244,7 +433,7 @@ async function shareSession() {
 }
 
 async function downloadSessionCard() {
-  const canvas = renderSessionSharePreview() || _drawSessionShareCard();
+  const canvas = await _ensureSessionShareCanvas();
   if (!canvas) {
     if (typeof showToast === 'function') showToast('No session data to export', 'var(--warn)');
     return;
@@ -263,4 +452,3 @@ function downloadShareCard() {
     _downloadBlob(blob, 'my-forge-' + new Date().toISOString().slice(0, 10) + '.png');
   }, 'image/png');
 }
-
