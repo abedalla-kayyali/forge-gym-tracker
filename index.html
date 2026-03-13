@@ -6853,6 +6853,14 @@ function _buildMealStreakMap() {
   return out;
 }
 
+let _nutriFocusMetric = 'protein';
+
+function _nutriSetMetric(metric) {
+  const allowed = ['protein', 'kcal', 'carbs', 'fats'];
+  _nutriFocusMetric = allowed.includes(metric) ? metric : 'protein';
+  renderCoachNutrition();
+}
+
 function _getNutriCustomTargets() {
   const raw = userProfile?.customNutritionTargets;
   if (!raw || typeof raw !== 'object') return { enabled: false, kcal: 0, p: 0, c: 0, f: 0 };
@@ -7286,8 +7294,17 @@ function renderCoachNutrition() {
   const nowTime = new Date();
   const defaultMealTime = _mealLogTime || `${String(nowTime.getHours()).padStart(2,'0')}:${String(nowTime.getMinutes()).padStart(2,'0')}`;
   const todayMeals = Array.isArray(mealsLog?.[mealKey]) ? mealsLog[mealKey] : [];
-  const savedMeals = _getSavedMealEntries();
   const mealStreakMap = _buildMealStreakMap();
+  const savedMeals = _getSavedMealEntries();
+  const rankedSavedMeals = [...savedMeals].sort((a, b) => {
+    const sa = mealStreakMap[_normalizeMealName(a?.name || '')] || 0;
+    const sb = mealStreakMap[_normalizeMealName(b?.name || '')] || 0;
+    if (sb !== sa) return sb - sa;
+    const ua = a?.uses || 0;
+    const ub = b?.uses || 0;
+    if (ub !== ua) return ub - ua;
+    return (b?.lastUsed || 0) - (a?.lastUsed || 0);
+  });
   const mealTotals = todayMeals.reduce((acc, m) => {
     acc.kcal += +m.kcal || 0;
     acc.p += +m.p || 0;
@@ -7325,6 +7342,46 @@ function renderCoachNutrition() {
     }
   });
   const todayAdherence = Math.round(((mealPct.kcal * 0.35) + (mealPct.p * 0.45) + (mealPct.c * 0.10) + (mealPct.f * 0.10)));
+  const metricMap = {
+    protein: { label: tx('Protein', 'البروتين'), consumed: mealTotals.p, target: proteinG, unit: 'g', pct: mealPct.p },
+    kcal:    { label: tx('Calories', 'السعرات'), consumed: mealTotals.kcal, target: targetCal, unit: 'kcal', pct: mealPct.kcal },
+    carbs:   { label: tx('Carbs', 'الكارب'), consumed: mealTotals.c, target: Math.max(0, carbG), unit: 'g', pct: mealPct.c },
+    fats:    { label: tx('Fats', 'الدهون'), consumed: mealTotals.f, target: fatG, unit: 'g', pct: mealPct.f }
+  };
+  const activeMetric = metricMap[_nutriFocusMetric] || metricMap.protein;
+  const metricLeft = Math.max(0, (activeMetric.target || 0) - (activeMetric.consumed || 0));
+  const metricPct = Math.max(0, Math.min(100, Math.round(activeMetric.pct || 0)));
+  const ringCirc = 2 * Math.PI * 26;
+  const ringOff = ringCirc - ((metricPct / 100) * ringCirc);
+  const macroQuestHtml = `
+    <div class="nutri-quest-card">
+      <div class="nutri-quest-head">
+        <div class="nutri-quest-title">${tx('Macro Quest', 'تحدي الماكروز')}</div>
+        <div class="nutri-quest-sub">${tx('Tap to switch metric', 'اضغط لتغيير المؤشر')}</div>
+      </div>
+      <div class="nutri-quest-body">
+        <div class="nutri-ring-wrap">
+          <svg viewBox="0 0 64 64" class="nutri-ring-svg" aria-hidden="true">
+            <circle cx="32" cy="32" r="26" class="nutri-ring-track"></circle>
+            <circle cx="32" cy="32" r="26" class="nutri-ring-fill" style="stroke-dasharray:${ringCirc.toFixed(2)};stroke-dashoffset:${ringOff.toFixed(2)};"></circle>
+          </svg>
+          <div class="nutri-ring-center">
+            <strong>${metricPct}%</strong>
+            <span>${activeMetric.label}</span>
+          </div>
+        </div>
+        <div class="nutri-quest-meta">
+          <div class="nutri-quest-main">${Math.round(metricLeft)} ${activeMetric.unit} ${tx('left', 'متبقي')}</div>
+          <div class="nutri-quest-sub2">${Math.round(activeMetric.consumed)} / ${Math.round(activeMetric.target)} ${activeMetric.unit}</div>
+        </div>
+      </div>
+      <div class="nutri-metric-tabs">
+        <button class="nutri-metric-btn ${_nutriFocusMetric === 'protein' ? 'active' : ''}" onclick="_nutriSetMetric('protein')">${tx('Protein', 'بروتين')}</button>
+        <button class="nutri-metric-btn ${_nutriFocusMetric === 'kcal' ? 'active' : ''}" onclick="_nutriSetMetric('kcal')">${tx('Calories', 'سعرات')}</button>
+        <button class="nutri-metric-btn ${_nutriFocusMetric === 'carbs' ? 'active' : ''}" onclick="_nutriSetMetric('carbs')">${tx('Carbs', 'كارب')}</button>
+        <button class="nutri-metric-btn ${_nutriFocusMetric === 'fats' ? 'active' : ''}" onclick="_nutriSetMetric('fats')">${tx('Fats', 'دهون')}</button>
+      </div>
+    </div>`;
   const nutritionInsightsHtml = `
     <div class="nutri-focus-grid">
       <div class="nutri-focus-card">
@@ -7360,12 +7417,12 @@ function renderCoachNutrition() {
       </div>`;
     }).join('')
     : `<div class="meal-empty">${tx('No meals logged today yet.','�� ���� ����� ����� ����� ���.')}</div>`;
-  const savedChipsHtml = savedMeals.slice(0, 8).map(m => {
+  const savedChipsHtml = rankedSavedMeals.slice(0, 10).map(m => {
     const nm = _normalizeMealName(m?.name || '');
     const streak = Math.max(0, mealStreakMap[nm] || 0);
     return `<button class="meal-saved-chip" onclick="_cnApplySavedMeal('${encodeURIComponent(m.name)}')">${esc(m.name)} <span class="meal-chip-streak">${streak}d</span></button>`;
   }).join('');
-  const savedOptionsHtml = savedMeals.map(m => `<option value="${esc(m.name)}"></option>`).join('');
+  const savedOptionsHtml = rankedSavedMeals.map(m => `<option value="${esc(m.name)}"></option>`).join('');
 
   el.innerHTML = `
     <div style="padding:12px 16px 4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.2px;color:var(--text2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -7373,6 +7430,7 @@ function renderCoachNutrition() {
       <span style="color:var(--accent);">${tx('Live','مباشر')}</span>
     </div>
     ${nutritionInsightsHtml}
+    ${macroQuestHtml}
     <div class="nutri-custom-box">
       <div class="nutri-custom-head">
         <label><input type="checkbox" id="nutri-custom-enable" ${customTargets.enabled ? 'checked' : ''} onchange="_nutriOnCustomToggle()"> ${tx('Use custom targets','استخدم أهداف مخصصة')}</label>
