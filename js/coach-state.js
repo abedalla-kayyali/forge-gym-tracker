@@ -631,6 +631,7 @@
   window._coachOpenCardioAnalytics = _coachOpenCardioAnalytics;
   window._coachStartWeightedFromCoach = _coachStartWeightedFromCoach;
   window._coachStartBodyweightFromCoach = _coachStartBodyweightFromCoach;
+  window._coachFocusNutritionLog = _coachFocusNutritionLog;
 
   const _origRenderCoachToday = window.renderCoachToday;
   const _origRenderCoachTrain = window.renderCoachTrain;
