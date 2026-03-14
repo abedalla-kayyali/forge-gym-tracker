@@ -3681,8 +3681,9 @@ header{animation:headerGlow 4s ease-in-out infinite;}
   border-radius:16px;
   border:1px solid rgba(255,255,255,.06);
   background:
-    radial-gradient(circle at 50% 15%, rgba(255,255,255,.08), transparent 36%),
-    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+    radial-gradient(circle at 50% 18%, rgba(111,231,186,.26), transparent 42%),
+    radial-gradient(circle at 50% 78%, rgba(57,255,143,.08), transparent 48%),
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.01));
   display:flex;
   align-items:center;
   justify-content:center;
@@ -3703,39 +3704,48 @@ header{animation:headerGlow 4s ease-in-out infinite;}
   color:var(--white);
 }
 .profile-avatar-slot-list{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
   gap:8px;
   margin-top:12px;
 }
 .profile-avatar-slot-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:7px 10px;
-  border-radius:999px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:4px;
+  min-height:56px;
+  padding:9px 11px;
+  border-radius:14px;
   border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.03);
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
   color:var(--text2);
   font-family:'DM Mono',monospace;
   font-size:9px;
   letter-spacing:.8px;
   text-transform:uppercase;
+  overflow:hidden;
 }
 .profile-avatar-slot-chip strong{
   color:var(--white);
-  font-size:9px;
+  font-size:10px;
+  line-height:1.15;
 }
 .profile-avatar-slot-chip small{
-  color:var(--text3);
+  color:var(--accent-2);
   font-size:8px;
-  letter-spacing:1.1px;
+  letter-spacing:.9px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .profile-avatar-slot-chip.tier-basic{border-color:rgba(111,231,186,.24);background:rgba(57,255,143,.06);}
 .profile-avatar-slot-chip.tier-elite{border-color:rgba(114,208,255,.28);background:rgba(85,194,255,.08);}
 .profile-avatar-slot-chip.tier-mythic{border-color:rgba(245,176,65,.35);background:rgba(245,176,65,.1);}
-.profile-avatar-slot-chip.tool-chip strong{font-size:8px;letter-spacing:.5px;}
-.profile-avatar-slot-chip.tool-chip small{max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profile-avatar-slot-chip.tool-chip strong{font-size:9px;letter-spacing:.4px;}
+.profile-avatar-slot-chip.tool-chip small{max-width:100%;}
 .avatar-modal-sheet{max-width:520px;margin:0 auto;max-height:88vh;overflow:auto;}
 .avatar-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
 .avatar-modal-title{
@@ -4078,7 +4088,7 @@ header{animation:headerGlow 4s ease-in-out infinite;}
   max-width:170px;
   height:auto;
 }
-.forge-avatar-shell{fill:rgba(7,15,16,.88);stroke:rgba(255,255,255,.08);stroke-width:1.2;}
+.forge-avatar-shell{fill:rgba(18,31,28,.92);stroke:rgba(195,245,225,.18);stroke-width:1.2;}
 .forge-avatar-svg-anime .forge-avatar-head,
 .forge-avatar-svg-anime .forge-avatar-torso,
 .forge-avatar-svg-anime .forge-avatar-arm-left,
@@ -4093,16 +4103,16 @@ header{animation:headerGlow 4s ease-in-out infinite;}
 .forge-avatar-anime-crest{fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.24);stroke-width:1.8;}
 .forge-avatar-anime-brow,.forge-avatar-anime-eye{fill:none;stroke:rgba(255,255,255,.42);stroke-width:2.2;stroke-linecap:round;}
 .forge-avatar-head,.forge-avatar-torso,.forge-avatar-arm-left,.forge-avatar-arm-right,.forge-avatar-leg-left,.forge-avatar-leg-right{
-  fill:rgba(175,214,198,.12);
-  stroke:rgba(206,241,226,.18);
+  fill:rgba(190,232,218,.28);
+  stroke:rgba(225,251,241,.34);
   stroke-width:2;
 }
 .forge-avatar-theme-iron .forge-avatar-body{color:#8dc7b3;}
 .forge-avatar-theme-aqua .forge-avatar-body{color:#84d9ff;}
 .forge-avatar-theme-solar .forge-avatar-body{color:#ffd584;}
-.forge-avatar-theme-iron .forge-avatar-head,.forge-avatar-theme-iron .forge-avatar-torso,.forge-avatar-theme-iron .forge-avatar-arm-left,.forge-avatar-theme-iron .forge-avatar-arm-right,.forge-avatar-theme-iron .forge-avatar-leg-left,.forge-avatar-theme-iron .forge-avatar-leg-right{fill:rgba(141,199,179,.16);stroke:rgba(190,232,219,.26);}
-.forge-avatar-theme-aqua .forge-avatar-head,.forge-avatar-theme-aqua .forge-avatar-torso,.forge-avatar-theme-aqua .forge-avatar-arm-left,.forge-avatar-theme-aqua .forge-avatar-arm-right,.forge-avatar-theme-aqua .forge-avatar-leg-left,.forge-avatar-theme-aqua .forge-avatar-leg-right{fill:rgba(132,217,255,.14);stroke:rgba(187,238,255,.28);}
-.forge-avatar-theme-solar .forge-avatar-head,.forge-avatar-theme-solar .forge-avatar-torso,.forge-avatar-theme-solar .forge-avatar-arm-left,.forge-avatar-theme-solar .forge-avatar-arm-right,.forge-avatar-theme-solar .forge-avatar-leg-left,.forge-avatar-theme-solar .forge-avatar-leg-right{fill:rgba(255,213,132,.14);stroke:rgba(255,231,186,.3);}
+.forge-avatar-theme-iron .forge-avatar-head,.forge-avatar-theme-iron .forge-avatar-torso,.forge-avatar-theme-iron .forge-avatar-arm-left,.forge-avatar-theme-iron .forge-avatar-arm-right,.forge-avatar-theme-iron .forge-avatar-leg-left,.forge-avatar-theme-iron .forge-avatar-leg-right{fill:rgba(156,222,198,.32);stroke:rgba(219,252,240,.4);}
+.forge-avatar-theme-aqua .forge-avatar-head,.forge-avatar-theme-aqua .forge-avatar-torso,.forge-avatar-theme-aqua .forge-avatar-arm-left,.forge-avatar-theme-aqua .forge-avatar-arm-right,.forge-avatar-theme-aqua .forge-avatar-leg-left,.forge-avatar-theme-aqua .forge-avatar-leg-right{fill:rgba(150,226,255,.3);stroke:rgba(219,246,255,.42);}
+.forge-avatar-theme-solar .forge-avatar-head,.forge-avatar-theme-solar .forge-avatar-torso,.forge-avatar-theme-solar .forge-avatar-arm-left,.forge-avatar-theme-solar .forge-avatar-arm-right,.forge-avatar-theme-solar .forge-avatar-leg-left,.forge-avatar-theme-solar .forge-avatar-leg-right{fill:rgba(255,218,144,.3);stroke:rgba(255,236,191,.44);}
 .forge-avatar-backpiece path,.forge-avatar-helm,.forge-avatar-shoulder-left,.forge-avatar-shoulder-right,.forge-avatar-chestplate,.forge-avatar-gauntlet-left,.forge-avatar-gauntlet-right,.forge-avatar-greave-left,.forge-avatar-greave-right{
   fill:rgba(255,255,255,.08);
   stroke:rgba(255,255,255,.18);
@@ -4338,8 +4348,8 @@ header{animation:headerGlow 4s ease-in-out infinite;}
   .profile-avatar-stage-wrap{grid-template-columns:1fr;gap:10px;}
   .profile-avatar-stage{min-height:180px;}
   .profile-avatar-insight{font-size:16px;padding:12px;}
-  .profile-avatar-slot-list{gap:6px;}
-  .profile-avatar-slot-chip{width:100%;justify-content:space-between;}
+  .profile-avatar-slot-list{gap:6px;grid-template-columns:1fr 1fr;}
+  .profile-avatar-slot-chip{min-height:58px;padding:9px 10px;}
   .avatar-modal-sheet{
     width:100%;
     max-width:none;

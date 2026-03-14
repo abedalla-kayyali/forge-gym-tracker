@@ -29,6 +29,7 @@ assert(typeof window.downloadProfileAvatarPoster === 'function', 'downloadProfil
 assert(typeof window.openProfileAvatarMuscleInspect === 'function', 'openProfileAvatarMuscleInspect should exist');
 assert(typeof window.buildProfileAvatarMuscleInspectData === 'function', 'buildProfileAvatarMuscleInspectData should exist');
 assert(typeof window.buildProfileAvatarToolState === 'function', 'buildProfileAvatarToolState should exist');
+assert(typeof window.buildProfileAvatarCardBadges === 'function', 'buildProfileAvatarCardBadges should exist');
 assert(typeof window.buildProfileAvatarSlotInspectData === 'function', 'buildProfileAvatarSlotInspectData should exist');
 assert(typeof window.openProfileAvatarSlotInspect === 'function', 'openProfileAvatarSlotInspect should exist');
 assert(typeof window.closeProfileAvatarSlotInspect === 'function', 'closeProfileAvatarSlotInspect should exist');
@@ -71,6 +72,12 @@ const tools = window.buildProfileAvatarToolState({
 assert(Array.isArray(tools.list) && tools.list.length >= 4, 'tool state should expose a tool list');
 assert(tools.map.hammer && tools.map.hammer.tier !== 'none', 'hammer should unlock from performance');
 assert(tools.map.chain && tools.map.chain.tier !== 'none', 'chain should unlock from consistency');
+
+const cardBadges = window.buildProfileAvatarCardBadges(balanced);
+assert(Array.isArray(cardBadges), 'card badges should be an array');
+assert(cardBadges.length > 0, 'card badges should include visible items');
+assert(cardBadges.length <= 4, 'card badges should stay compact for the profile card');
+assert(cardBadges.some((item) => item.kind === 'slot'), 'card badges should include slot summaries');
 
 const poster = window.buildProfileAvatarPosterSvg(balanced, {
   mode: 'showcase',

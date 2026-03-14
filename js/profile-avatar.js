@@ -379,6 +379,60 @@
     };
   };
 
+  window.buildProfileAvatarCardBadges = function buildProfileAvatarCardBadges(stateArg) {
+    const rank = (typeof getCurrentLevel === 'function' && typeof calcXP === 'function') ? getCurrentLevel(calcXP()) : null;
+    const balance = (typeof window.getBalanceRegionSummary === 'function') ? window.getBalanceRegionSummary() : {};
+    const state = stateArg || window.buildProfileAvatarState(rank || {}, balance);
+    const details = _forgeAvatarDetailsData(state, state.balance || balance);
+    const slotBadges = details.slots
+      .filter(function (slot) { return slot.id !== 'head'; })
+      .sort(function (a, b) {
+        const tierGap = (FORGE_AVATAR_TIER_SCORE[b.tier] || 0) - (FORGE_AVATAR_TIER_SCORE[a.tier] || 0);
+        if (tierGap) return tierGap;
+        return b.progressPct - a.progressPct;
+      })
+      .slice(0, 2)
+      .map(function (slot) {
+        const remaining = Math.max(0, slot.unlockAt - slot.progressPct);
+        return {
+          kind: 'slot',
+          id: slot.id,
+          label: slot.label,
+          tier: slot.tier,
+          meta: slot.tier === 'none'
+            ? _forgeAvatarTx('Need +' + remaining + '%', 'تحتاج +' + remaining + '%')
+            : _forgeAvatarTx(String(slot.tier).toUpperCase(), ({
+              basic: 'أساسي',
+              elite: 'نخبوي',
+              mythic: 'أسطوري'
+            }[slot.tier] || 'نشط')),
+          progressPct: slot.progressPct
+        };
+      });
+    const toolBadges = ((state.tools && Array.isArray(state.tools.featured)) ? state.tools.featured : [])
+      .slice(0, 2)
+      .map(function (tool) {
+        return {
+          kind: 'tool',
+          id: tool.id,
+          label: tool.label,
+          tier: tool.tier,
+          meta: _forgeAvatarTx('Tool', 'أداة'),
+          progressPct: 100
+        };
+      });
+    const merged = slotBadges.concat(toolBadges).slice(0, 4);
+    if (merged.length) return merged;
+    return [{
+      kind: 'slot',
+      id: 'head',
+      label: _forgeAvatarSlotLabel('head'),
+      tier: state.slots.head,
+      meta: _forgeAvatarTx('Start logging', 'ابدأ التسجيل'),
+      progressPct: 0
+    }];
+  };
+
   window.buildProfileAvatarToolInspectData = function buildProfileAvatarToolInspectData(toolId, stateArg) {
     const rank = (typeof getCurrentLevel === 'function' && typeof calcXP === 'function') ? getCurrentLevel(calcXP()) : null;
     const balance = (typeof window.getBalanceRegionSummary === 'function') ? window.getBalanceRegionSummary() : {};
@@ -985,19 +1039,13 @@
       badge.style.color = state.rankColor || '#39ff8f';
     }
     if (slots) {
-      const slotHtml = FORGE_AVATAR_SLOT_ORDER.map((slot) => `
-        <span class="profile-avatar-slot-chip tier-${state.slots[slot]}">
-          <strong>${_forgeAvatarSlotLabel(slot)}</strong>
-          <small>${state.slots[slot]}</small>
+      const badges = window.buildProfileAvatarCardBadges(state);
+      slots.innerHTML = badges.map((item) => `
+        <span class="profile-avatar-slot-chip tier-${item.tier} ${item.kind === 'tool' ? 'tool-chip' : ''}">
+          <strong>${item.label}</strong>
+          <small>${item.meta}</small>
         </span>
       `).join('');
-      const toolHtml = (state.tools && Array.isArray(state.tools.featured) ? state.tools.featured : []).map((tool) => `
-        <span class="profile-avatar-slot-chip tool-chip tier-${tool.tier}">
-          <strong>${tool.label}</strong>
-          <small>${tool.source}</small>
-        </span>
-      `).join('');
-      slots.innerHTML = slotHtml + toolHtml;
     }
     const upgraded = _forgeAvatarCheckUpgrade(state);
     if (upgraded.length) {
