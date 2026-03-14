@@ -80,6 +80,12 @@
     if (!Number.isFinite(n) || n <= 0) return '—';
     return String(n) + (unit || '');
   }
+  function _fmtMaybeDate(dateStr) {
+    if (!dateStr) return 'No log yet';
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime()) || d.getTime() <= 0) return 'No log yet';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
   function _privacyEnabled() {
     return !window.FORGE_DUELS || typeof window.FORGE_DUELS.getSocialPrivacy !== 'function'
       ? true
@@ -211,6 +217,8 @@
       muscleSummary: own.muscleSummary || {},
       cardioSummary: own.cardioSummary || {},
       bodyweightSummary: own.bodyweightSummary || {},
+      bodyweightExerciseSummary: own.bodyweightExerciseSummary || {},
+      cardioActivitySummary: own.cardioActivitySummary || {},
       shared: true
     };
   }
@@ -236,7 +244,9 @@
       strongestArea: stats.strongestArea || '',
       muscleSummary: stats.muscleSummary || {},
       cardioSummary: stats.cardioSummary || {},
-      bodyweightSummary: stats.bodyweightSummary || {}
+      bodyweightSummary: stats.bodyweightSummary || {},
+      bodyweightExerciseSummary: stats.bodyweightExerciseSummary || {},
+      cardioActivitySummary: stats.cardioActivitySummary || {}
     };
   }
 
@@ -532,7 +542,8 @@
       '<div class="social-empty-grid">' +
         '<div class="social-card"><div class="social-card-title">YOUR CARDIO SNAPSHOT</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(my.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(my.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(my.distance7d, 'km')) + '</div></div>' +
         '<div class="social-card"><div class="social-card-title">RIVAL CARDIO SNAPSHOT</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(rival.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(rival.distance7d, 'km')) + '</div></div>' +
-      '</div>';
+      '</div>' +
+      _renderCardioRivalries(me.cardioActivitySummary || {}, friend.cardioActivitySummary || {});
   }
 
   function _renderCompareBodyweight(me, friend) {
@@ -558,7 +569,76 @@
       '<div class="social-empty-grid">' +
         '<div class="social-card"><div class="social-card-title">YOUR BODYWEIGHT SNAPSHOT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(my.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(my.bestDurationSec, 's')) + '</div></div>' +
         '<div class="social-card"><div class="social-card-title">RIVAL BODYWEIGHT SNAPSHOT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(rival.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(rival.bestDurationSec, 's')) + '</div></div>' +
-      '</div>';
+      '</div>' +
+      _renderBodyweightRivalries(me.bodyweightExerciseSummary || {}, friend.bodyweightExerciseSummary || {});
+  }
+  function _bodyweightRivalRows(meSummary, friendSummary) {
+    const keys = Array.from(new Set(Object.keys(meSummary || {}).concat(Object.keys(friendSummary || {}))));
+    return keys.map((key) => {
+      const mine = meSummary?.[key] || {};
+      const rival = friendSummary?.[key] || {};
+      const myScore = Math.max(_num(mine.maxReps, 0), _num(mine.maxDurationSec, 0) / 10);
+      const rivalScore = Math.max(_num(rival.maxReps, 0), _num(rival.maxDurationSec, 0) / 10);
+      return {
+        key,
+        label: mine.exercise || rival.exercise || key,
+        my: mine,
+        rival,
+        lead: myScore === rivalScore ? 'EVEN' : myScore > rivalScore ? 'YOU' : 'RIVAL',
+        gap: Math.abs(myScore - rivalScore)
+      };
+    }).filter((row) => _num(row.my.sessions, 0) > 0 || _num(row.rival.sessions, 0) > 0)
+      .sort((a, b) => b.gap - a.gap)
+      .slice(0, 8);
+  }
+  function _cardioRivalRows(meSummary, friendSummary) {
+    const keys = Array.from(new Set(Object.keys(meSummary || {}).concat(Object.keys(friendSummary || {}))));
+    return keys.map((key) => {
+      const mine = meSummary?.[key] || {};
+      const rival = friendSummary?.[key] || {};
+      const myScore = _num(mine.bestMinutes, 0) + (_num(mine.bestDistanceKm, 0) * 10) + _num(mine.weeklyMinutes, 0);
+      const rivalScore = _num(rival.bestMinutes, 0) + (_num(rival.bestDistanceKm, 0) * 10) + _num(rival.weeklyMinutes, 0);
+      return {
+        key,
+        label: mine.activity || rival.activity || key,
+        my: mine,
+        rival,
+        lead: myScore === rivalScore ? 'EVEN' : myScore > rivalScore ? 'YOU' : 'RIVAL',
+        gap: Math.abs(myScore - rivalScore)
+      };
+    }).filter((row) => _num(row.my.sessions, 0) > 0 || _num(row.rival.sessions, 0) > 0)
+      .sort((a, b) => b.gap - a.gap)
+      .slice(0, 8);
+  }
+  function _renderBodyweightRivalries(meSummary, friendSummary) {
+    const rows = _bodyweightRivalRows(meSummary, friendSummary);
+    if (!rows.length) {
+      return '<div class="social-card"><div class="social-card-title">EXERCISE RIVALRY</div><div class="social-card-sub">No bodyweight exercise rivalry data yet. Log pull-ups, holds, or skills to start the battle board.</div></div>';
+    }
+    return '<div class="social-card">' +
+      '<div class="social-card-title">EXERCISE RIVALRY</div>' +
+      '<div class="social-card-sub">Compare max reps and hold times exercise by exercise.</div>' +
+      '<div class="social-rivalry-list">' + rows.map((row) => (
+        '<button class="social-rivalry-row" type="button" onclick=\'window.FORGE_SOCIAL.openBodyweightRivalry(' + JSON.stringify(row.key) + ')\'>' +
+          '<div class="social-rivalry-main"><strong>' + _escape(row.label) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
+          '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.my.maxReps, ' reps')) + ' / ' + _escape(_metricOrDash(row.my.maxDurationSec, 's')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rival.maxReps, ' reps')) + ' / ' + _escape(_metricOrDash(row.rival.maxDurationSec, 's')) + '</b></div>' +
+        '</button>'
+      )).join('') + '</div></div>';
+  }
+  function _renderCardioRivalries(meSummary, friendSummary) {
+    const rows = _cardioRivalRows(meSummary, friendSummary);
+    if (!rows.length) {
+      return '<div class="social-card"><div class="social-card-title">ACTIVITY RIVALRY</div><div class="social-card-sub">No cardio rivalry data yet. Log runs, rides, or walks to light up the leaderboard.</div></div>';
+    }
+    return '<div class="social-card">' +
+      '<div class="social-card-title">ACTIVITY RIVALRY</div>' +
+      '<div class="social-card-sub">Compare best single sessions and weekly totals by activity.</div>' +
+      '<div class="social-rivalry-list">' + rows.map((row) => (
+        '<button class="social-rivalry-row" type="button" onclick=\'window.FORGE_SOCIAL.openCardioRivalry(' + JSON.stringify(row.key) + ')\'>' +
+          '<div class="social-rivalry-main"><strong>' + _escape(row.label) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
+          '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.my.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.my.bestDistanceKm, 'km')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rival.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.bestDistanceKm, 'km')) + '</b></div>' +
+        '</button>'
+      )).join('') + '</div></div>';
   }
 
   function renderCompare() {
@@ -768,6 +848,76 @@
     const modal = byId('social-compare-muscle-modal');
     if (modal) modal.style.display = 'none';
   }
+  function _openRivalryDetail(kind, key) {
+    const modal = byId('social-rivalry-modal');
+    const title = byId('social-rivalry-title');
+    const sub = byId('social-rivalry-sub');
+    const body = byId('social-rivalry-body');
+    const s = _duelState();
+    const friends = Array.isArray(s?.friends) ? s.friends : [];
+    const selected = friends.find((f) => String(f.id) === String(state.selectedFriendId)) || friends[0] || null;
+    if (!modal || !selected) return;
+    const me = _localSummary();
+    const friend = _friendCompareSummary(selected.id);
+    if (kind === 'cardio') {
+      const mine = me.cardioActivitySummary?.[key] || {};
+      const rival = friend.cardioActivitySummary?.[key] || {};
+      const label = mine.activity || rival.activity || key || 'Cardio';
+      const lead = (_num(mine.bestMinutes, 0) + _num(mine.bestDistanceKm, 0)) === (_num(rival.bestMinutes, 0) + _num(rival.bestDistanceKm, 0))
+        ? 'Even cardio rivalry'
+        : (_num(mine.bestMinutes, 0) + _num(mine.bestDistanceKm, 0)) > (_num(rival.bestMinutes, 0) + _num(rival.bestDistanceKm, 0))
+          ? 'You lead this activity'
+          : 'Rival leads this activity';
+      if (title) title.textContent = label;
+      if (sub) sub.textContent = lead;
+      if (body) {
+        body.innerHTML = '' +
+          '<div class="social-empty-grid">' +
+            '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Best minutes: ' + _escape(_metricOrDash(mine.bestMinutes, 'm')) + '<br>Best distance: ' + _escape(_metricOrDash(mine.bestDistanceKm, 'km')) + '<br>Weekly total: ' + _escape(_metricOrDash(mine.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(mine.weeklyDistanceKm, 'km')) + '<br>Last: ' + _escape(_fmtMaybeDate(mine.lastAt)) + '</div></div>' +
+            '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Best minutes: ' + _escape(_metricOrDash(rival.bestMinutes, 'm')) + '<br>Best distance: ' + _escape(_metricOrDash(rival.bestDistanceKm, 'km')) + '<br>Weekly total: ' + _escape(_metricOrDash(rival.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(rival.weeklyDistanceKm, 'km')) + '<br>Last: ' + _escape(_fmtMaybeDate(rival.lastAt)) + '</div></div>' +
+          '</div>' +
+          '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CHASE TIP</div><div class="social-card-sub">' +
+            _escape(_num(mine.bestMinutes, 0) >= _num(rival.bestMinutes, 0)
+              ? 'Protect your lead with one more strong session this week.'
+              : 'Beat the rival by adding one longer session or one farther effort this week.') +
+          '</div></div>';
+      }
+    } else {
+      const mine = me.bodyweightExerciseSummary?.[key] || {};
+      const rival = friend.bodyweightExerciseSummary?.[key] || {};
+      const label = mine.exercise || rival.exercise || key || 'Bodyweight';
+      const lead = Math.max(_num(mine.maxReps, 0), _num(mine.maxDurationSec, 0)) === Math.max(_num(rival.maxReps, 0), _num(rival.maxDurationSec, 0))
+        ? 'Even bodyweight rivalry'
+        : Math.max(_num(mine.maxReps, 0), _num(mine.maxDurationSec, 0)) > Math.max(_num(rival.maxReps, 0), _num(rival.maxDurationSec, 0))
+          ? 'You lead this exercise'
+          : 'Rival leads this exercise';
+      if (title) title.textContent = label;
+      if (sub) sub.textContent = lead;
+      if (body) {
+        body.innerHTML = '' +
+          '<div class="social-empty-grid">' +
+            '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Max reps: ' + _escape(_metricOrDash(mine.maxReps, '')) + '<br>Best hold: ' + _escape(_metricOrDash(mine.maxDurationSec, 's')) + '<br>Sessions: ' + _num(mine.sessions, 0) + '<br>Last: ' + _escape(_fmtMaybeDate(mine.lastAt)) + '</div></div>' +
+            '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Max reps: ' + _escape(_metricOrDash(rival.maxReps, '')) + '<br>Best hold: ' + _escape(_metricOrDash(rival.maxDurationSec, 's')) + '<br>Sessions: ' + _num(rival.sessions, 0) + '<br>Last: ' + _escape(_fmtMaybeDate(rival.lastAt)) + '</div></div>' +
+          '</div>' +
+          '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CHASE TIP</div><div class="social-card-sub">' +
+            _escape(_num(mine.maxReps, 0) >= _num(rival.maxReps, 0) && _num(mine.maxDurationSec, 0) >= _num(rival.maxDurationSec, 0)
+              ? 'Hold your lead by repeating this skill again this week.'
+              : 'Close the gap with one focused practice block and a max-effort set this week.') +
+          '</div></div>';
+      }
+    }
+    modal.style.display = 'flex';
+  }
+  function openCardioRivalry(key) {
+    _openRivalryDetail('cardio', key);
+  }
+  function openBodyweightRivalry(key) {
+    _openRivalryDetail('bodyweight', key);
+  }
+  function closeRivalryDetail() {
+    const modal = byId('social-rivalry-modal');
+    if (modal) modal.style.display = 'none';
+  }
   async function toggleShareStats() {
     if (!window.FORGE_DUELS || typeof window.FORGE_DUELS.setSocialPrivacy !== 'function') return;
     const next = await window.FORGE_DUELS.setSocialPrivacy(!_privacyEnabled());
@@ -835,6 +985,9 @@
     toggleShareStats,
     openMuscleCompare,
     closeMuscleCompare,
+    openCardioRivalry,
+    openBodyweightRivalry,
+    closeRivalryDetail,
     startDuel,
     getState: function () { return { ...state }; }
   };

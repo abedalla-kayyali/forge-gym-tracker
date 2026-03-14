@@ -207,6 +207,8 @@ if (fs.existsSync(duelsPath)) {
   if (!duels.includes('muscleSummary')) fail('Duels public stats are missing muscle summary publishing');
   if (!duels.includes('cardioSummary')) fail('Duels public stats are missing cardio summary publishing');
   if (!duels.includes('bodyweightSummary')) fail('Duels public stats are missing bodyweight summary publishing');
+  if (!duels.includes('bodyweightExerciseSummary')) fail('Duels public stats are missing bodyweight exercise rivalry publishing');
+  if (!duels.includes('cardioActivitySummary')) fail('Duels public stats are missing cardio activity rivalry publishing');
   if (!duels.includes('socialShareStats')) fail('Duels profile is missing social share-stats toggle support');
 }
 
@@ -228,6 +230,9 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-body-rival-header')) fail('Social body compare is missing rivalry header hook');
   if (!socialUi.includes('social-spotlight-rail')) fail('Social body compare is missing spotlight rail hook');
   if (!socialUi.includes('social-anatomy-board')) fail('Social body compare is missing anatomy board hook');
+  if (!socialUi.includes('social-rivalry-list')) fail('Social compare is missing rivalry list hook');
+  if (!socialUi.includes('openCardioRivalry')) fail('Social compare is missing cardio rivalry detail action');
+  if (!socialUi.includes('openBodyweightRivalry')) fail('Social compare is missing bodyweight rivalry detail action');
 } else {
   fail('Missing file: js/social-ui.js');
 }

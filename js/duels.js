@@ -157,6 +157,72 @@
     skillsDone = skillSet.size;
     return { sessions7d, skillsDone, bestReps, bestDurationSec, lastBodyweightAt };
   }
+  function _buildBodyweightExerciseSummary() {
+    const rows = _bwWorkouts();
+    const out = Object.create(null);
+    rows.forEach((row) => {
+      const ex = String(row?.exercise || row?.name || '').trim();
+      if (!ex) return;
+      const key = ex.toLowerCase();
+      const existing = out[key] || {
+        exercise: ex,
+        maxReps: 0,
+        maxDurationSec: 0,
+        sessions: 0,
+        lastAt: ''
+      };
+      let rowReps = 0;
+      let rowSecs = 0;
+      _arr(row?.sets).forEach((set) => {
+        rowReps = Math.max(rowReps, _toNum(set?.reps, 0));
+        rowSecs = Math.max(rowSecs, _toNum(set?.secs ?? set?.durationSec, 0));
+      });
+      const rowDate = String(row?.date || '');
+      out[key] = {
+        exercise: existing.exercise || ex,
+        maxReps: Math.max(_toNum(existing.maxReps, 0), rowReps),
+        maxDurationSec: Math.max(_toNum(existing.maxDurationSec, 0), rowSecs),
+        sessions: _toNum(existing.sessions, 0) + 1,
+        lastAt: (!existing.lastAt || new Date(rowDate).getTime() > new Date(existing.lastAt).getTime()) ? rowDate : existing.lastAt
+      };
+    });
+    return out;
+  }
+  function _buildCardioActivitySummary() {
+    const rows = _cardio();
+    const out = Object.create(null);
+    const last7Ms = Date.now() - (7 * DAY_MS);
+    rows.forEach((row) => {
+      const activity = String(row?.activity || row?.act || row?.name || row?.mode || 'Cardio').trim() || 'Cardio';
+      const key = activity.toLowerCase();
+      const existing = out[key] || {
+        activity,
+        bestMinutes: 0,
+        bestDistanceKm: 0,
+        weeklyMinutes: 0,
+        weeklyDistanceKm: 0,
+        sessions: 0,
+        lastAt: ''
+      };
+      const rowDate = String(row?.date || '');
+      const rowMs = new Date(rowDate || 0).getTime();
+      const mins = _toNum(row?.durationMins ?? row?.duration ?? row?.mins, 0);
+      const km = _toNum(row?.distanceKm ?? row?.distance ?? row?.km, 0);
+      out[key] = {
+        activity: existing.activity || activity,
+        bestMinutes: Math.max(_toNum(existing.bestMinutes, 0), mins),
+        bestDistanceKm: Math.max(_toNum(existing.bestDistanceKm, 0), km),
+        weeklyMinutes: _toNum(existing.weeklyMinutes, 0) + (rowMs >= last7Ms ? mins : 0),
+        weeklyDistanceKm: _toNum(existing.weeklyDistanceKm, 0) + (rowMs >= last7Ms ? km : 0),
+        sessions: _toNum(existing.sessions, 0) + 1,
+        lastAt: (!existing.lastAt || rowMs > new Date(existing.lastAt).getTime()) ? rowDate : existing.lastAt
+      };
+    });
+    Object.keys(out).forEach((key) => {
+      out[key].weeklyDistanceKm = Math.round(_toNum(out[key].weeklyDistanceKm, 0) * 10) / 10;
+    });
+    return out;
+  }
   function _buildPublicStats(profileArg, opts) {
     const profile = profileArg && typeof profileArg === 'object' ? profileArg : _profileObj();
     const options = opts || {};
@@ -207,6 +273,8 @@
     base.muscleSummary = _buildMuscleSummaryFromWorkouts();
     base.cardioSummary = _buildCardioSummary();
     base.bodyweightSummary = _buildBodyweightSummary();
+    base.bodyweightExerciseSummary = _buildBodyweightExerciseSummary();
+    base.cardioActivitySummary = _buildCardioActivitySummary();
     return base;
   }
 
