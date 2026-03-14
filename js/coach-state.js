@@ -479,6 +479,10 @@
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Cardio Trend (14d)', '\u0627\u062a\u062c\u0627\u0647 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648 (14 \u064a\u0648\u0645)') + '</div><div class="coach-kpi-value">' + (cDiff >= 0 ? '+' : '') + cDiff + '</div><div class="coach-kpi-sub">' + _cx('minutes vs prior 14d', '\u062f\u0642\u0627\u0626\u0642 \u0645\u0642\u0627\u0631\u0646\u0629 \u0628\u0640 14 \u064a\u0648\u0645 \u0633\u0627\u0628\u0642\u0629') + '</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Lift Volume Trend (14d)', '\u0627\u062a\u062c\u0627\u0647 \u062d\u062c\u0645 \u0627\u0644\u0623\u0648\u0632\u0627\u0646 (14 \u064a\u0648\u0645)') + '</div><div class="coach-kpi-value">' + (wDiff >= 0 ? '+' : '') + Math.round(wDiff) + '</div><div class="coach-kpi-sub">' + _cx('volume vs prior 14d', '\u062d\u062c\u0645 \u0645\u0642\u0627\u0631\u0646\u0629 \u0628\u0640 14 \u064a\u0648\u0645 \u0633\u0627\u0628\u0642\u0629') + '</div></div>' +
         '</div>' +
+        '<div class="coach-dual-actions" style="margin-top:10px;">' +
+          '<button class="coach-action-btn primary" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.open){window.FORGE_DUELS.open();}">' + _cx('Open 1v1 Duel', '\u0627\u0641\u062a\u062d \u062a\u062d\u062f\u064a 1v1') + '</button>' +
+          '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.startXp){window.FORGE_DUELS.startXp();}">' + _cx('Start New Duel', '\u0627\u0628\u062f\u0623 \u062a\u062d\u062f\u064a \u062c\u062f\u064a\u062f') + '</button>' +
+        '</div>' +
       '</div>';
     const wrap = host.querySelector('.coach-chat-wrap');
     if (!wrap) return;
@@ -502,6 +506,10 @@
         '<div class="coach-dual-actions" style="margin-top:8px;">' +
           '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">' + _cx('Start Cardio', '\u0627\u0628\u062f\u0623 \u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
           '<button class="coach-action-btn" onclick="_coachOpenCardioAnalytics()">' + _cx('Cardio Analytics', '\u062a\u062d\u0644\u064a\u0644\u0627\u062a \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
+        '</div>' +
+        '<div class="coach-dual-actions" style="margin-top:8px;">' +
+          '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.open){window.FORGE_DUELS.open();}">' + _cx('Open 1v1 Duel', '\u0627\u0641\u062a\u062d \u062a\u062d\u062f\u064a 1v1') + '</button>' +
+          '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.startVolume){window.FORGE_DUELS.startVolume();}">' + _cx('Volume Duel', '\u062a\u062d\u062f\u064a \u0627\u0644\u062d\u062c\u0645') + '</button>' +
         '</div>' +
       '</div>';
     _replaceCoachInject(host, 'coach-integration-train', card, 'prepend');

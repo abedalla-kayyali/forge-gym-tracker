@@ -667,8 +667,12 @@ function switchDashTab(name, btn) {
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
-    _ensureProgressAccordion();
-    _applyProgressAccordion();
+    _renderProgressReadinessHub();
+    const tools = document.getElementById('progress-compact-tools');
+    if (tools) tools.style.display = 'none';
+    const view = document.getElementById('view-dashboard');
+    if (view) view.classList.remove('progress-compact-mode');
+    document.body.classList.remove('progress-compact-active');
   } else {
     _applyProgressAccordion();
   }
@@ -678,6 +682,119 @@ function switchDashTab(name, btn) {
   } else {
     _applyOverviewAccordion();
   }
+}
+
+function _renderProgressReadinessHub() {
+  const view = document.getElementById('view-dashboard');
+  if (!view) return;
+  const tx = (en, ar) => ((typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
+  const legacy = Array.from(view.querySelectorAll('.panel[data-dash-tab="progress"]')).filter(p => p.id !== 'progress-readiness-hub');
+
+  let hub = document.getElementById('progress-readiness-hub');
+  if (!hub) {
+    hub = document.createElement('section');
+    hub.id = 'progress-readiness-hub';
+    hub.className = 'panel progress-readiness-hub';
+    hub.dataset.dashTab = 'progress';
+    const anchor = legacy[0];
+    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(hub, anchor);
+    else view.appendChild(hub);
+  }
+
+  legacy.forEach(p => { p.style.display = 'none'; });
+  hub.style.display = '';
+
+  const state = (typeof window.buildCoachUnifiedState === 'function')
+    ? (window.buildCoachUnifiedState() || {})
+    : {};
+  const readiness = clamp(state.readiness?.score ?? 60, 0, 100);
+  const checkin = clamp(state.readiness?.checkinScore ?? 60, 0, 100);
+  const freshness = clamp(state.readiness?.freshnessScore ?? 60, 0, 100);
+  const vol14 = clamp(state.trends?.weightedVol14 ?? 0, 0, 200000);
+  const cardio14 = clamp(state.trends?.cardioMins14 ?? 0, 0, 3000);
+  const strain = clamp(Math.round(((vol14 / 12000) * 70) + ((cardio14 / 240) * 30)), 0, 100);
+  const load = clamp(100 - strain, 0, 100);
+  const ringColor = readiness >= 75 ? '#2ecc71' : (readiness >= 55 ? '#f39c12' : '#e74c3c');
+
+  hub.innerHTML = `
+    <div class="panel-header">
+      <div class="panel-title">${tx('Readiness Breakdown', 'تفصيل الجاهزية')}</div>
+      <div class="panel-sub">${tx('Interactive score composition', 'تفصيل تفاعلي لمكونات النتيجة')}</div>
+    </div>
+    <div class="prg-ready-grid">
+      <div class="prg-ready-ring" style="--pct:${readiness};--ring-color:${ringColor};">
+        <div class="prg-ready-center">
+          <div class="prg-ready-score">${readiness}</div>
+          <div class="prg-ready-unit">/100</div>
+        </div>
+      </div>
+      <div class="prg-ready-copy">
+        <div class="prg-ready-head">${tx('Today Readiness', 'جاهزية اليوم')}</div>
+        <div class="prg-ready-msg">${state.readiness?.message || tx('Train with intent and smart load control.', 'تدرّب بذكاء وتحكم في الحمل التدريبي.')}</div>
+        <div class="prg-ready-tags">
+          <span class="prg-tag ${readiness >= 75 ? 'good' : readiness >= 55 ? 'warn' : 'alert'}">${tx('Overall', 'الإجمالي')}</span>
+          <span class="prg-tag ${checkin >= 70 ? 'good' : checkin >= 50 ? 'warn' : 'alert'}">${tx('Check-in', 'التقييم اليومي')}</span>
+          <span class="prg-tag ${freshness >= 70 ? 'good' : freshness >= 50 ? 'warn' : 'alert'}">${tx('Recovery', 'التعافي')}</span>
+        </div>
+      </div>
+    </div>
+    <div class="prg-factor-list">
+      <button class="prg-factor" data-factor="checkin">
+        <span>${tx('Check-in Quality', 'جودة التقييم اليومي')}</span>
+        <strong>${checkin}</strong>
+        <em><i style="width:${checkin}%;"></i></em>
+      </button>
+      <button class="prg-factor" data-factor="freshness">
+        <span>${tx('Freshness Window', 'نافذة الاستشفاء')}</span>
+        <strong>${freshness}</strong>
+        <em><i style="width:${freshness}%;"></i></em>
+      </button>
+      <button class="prg-factor" data-factor="load">
+        <span>${tx('Load Pressure', 'ضغط الحمل')}</span>
+        <strong>${load}</strong>
+        <em><i style="width:${load}%;"></i></em>
+      </button>
+    </div>
+    <div class="prg-ready-detail" id="progress-readiness-details"></div>
+  `;
+
+  const details = hub.querySelector('#progress-readiness-details');
+  const info = {
+    checkin: {
+      title: tx('Check-in Quality', 'جودة التقييم اليومي'),
+      text: tx(
+        'Built from sleep, energy, and mood. Improve this by prioritizing sleep quality and pre-workout nutrition.',
+        'تعتمد على النوم والطاقة والمزاج. حسّنها عبر نوم أفضل وتغذية مناسبة قبل التمرين.'
+      )
+    },
+    freshness: {
+      title: tx('Freshness Window', 'نافذة الاستشفاء'),
+      text: tx(
+        'Measures recent training recency. If low, reduce intensity and focus on technique plus mobility.',
+        'تقيس حداثة الجلسات الأخيرة. إذا كانت منخفضة، خفف الشدة وركز على التقنية والمرونة.'
+      )
+    },
+    load: {
+      title: tx('Load Pressure', 'ضغط الحمل'),
+      text: tx(
+        'Derived from 14-day weighted volume and cardio minutes. Lower pressure means better readiness to push.',
+        'مستخلصة من حجم الأوزان ودقائق الكارديو خلال 14 يوم. انخفاض الضغط يعني جاهزية أعلى للدفع.'
+      )
+    }
+  };
+
+  const paint = (key) => {
+    const pack = info[key] || info.checkin;
+    hub.querySelectorAll('.prg-factor').forEach(b => b.classList.toggle('active', b.dataset.factor === key));
+    if (details) {
+      details.innerHTML = `<strong>${pack.title}</strong><p>${pack.text}</p>`;
+    }
+  };
+  hub.querySelectorAll('.prg-factor').forEach(btn => {
+    btn.onclick = () => paint(btn.dataset.factor);
+  });
+  paint('checkin');
 }
 
 let _progressAccordionInit = false;

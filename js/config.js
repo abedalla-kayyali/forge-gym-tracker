@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v101';
-window.FORGE_BUILD   = '2026-03-14 (duels + readiness ring)';
+window.FORGE_VERSION = 'v102';
+window.FORGE_BUILD   = '2026-03-14 (duels discoverability + interactive progress readiness)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

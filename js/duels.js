@@ -350,6 +350,24 @@
     _finalizeIfNeeded();
   }
 
+  function _openDuelCenter() {
+    try {
+      if (typeof window.switchView === 'function') {
+        window.switchView('coach', document.getElementById('bnav-coach'));
+      }
+      const todayBtn = document.querySelector('.coach-tab[onclick*="coachSwitchTab(\'today\'"]') || document.querySelector('.coach-tab');
+      if (typeof window.coachSwitchTab === 'function') window.coachSwitchTab('today', todayBtn || null);
+      setTimeout(() => {
+        const duelCard = document.querySelector('#coach-tab-today .coach-duel-card');
+        if (duelCard) {
+          try { duelCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_e) {}
+          duelCard.classList.add('duel-card-pulse');
+          setTimeout(() => duelCard.classList.remove('duel-card-pulse'), 1200);
+        }
+      }, 180);
+    } catch (_e) {}
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     _renderCoachCard();
     _subscribeRemote();
@@ -363,6 +381,7 @@
     cancelActive: _cancel,
     syncNow: function () { _pullRemote(); _pushRemote(); },
     onPostSave: _onPostSave,
-    renderInto: _renderCoachCard
+    renderInto: _renderCoachCard,
+    open: _openDuelCenter
   };
 })();
