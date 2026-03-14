@@ -4,6 +4,10 @@
     overlay.style.display = 'none';
     document.body.classList.remove('scroll-locked');
   }
+  if (window._pendingSessionCheckin) {
+    window._pendingSessionCheckin = false;
+    if (typeof maybeShowCheckin === 'function') maybeShowCheckin();
+  }
 }
 
 function _roundRect(ctx, x, y, w, h, r) {

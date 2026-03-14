@@ -1,5 +1,8 @@
 // FORGE Gym Tracker - workout save pipeline and bodyweight save flow
 // Extracted from index.html to reduce main-script coupling.
+function _ws(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
 
 // ═══════════════════════════════════════════
 //  BODYWEIGHT WORKOUTS DATA
@@ -51,10 +54,10 @@ function saveWorkout() {
 
 function _saveWeightedWorkout() {
   const name = document.getElementById('exercise-name').value.trim();
-  if (!selectedMuscle) { showToast('Select a muscle group first!'); return; }
-  if (!name) { showToast('Enter an exercise name!'); return; }
+  if (!selectedMuscle) { showToast(_ws('Select a muscle group first!', 'اختر مجموعة عضلية أولًا')); return; }
+  if (!name) { showToast(_ws('Enter an exercise name!', 'أدخل اسم التمرين')); return; }
   const rows = document.querySelectorAll('.set-row');
-  if (!rows.length) { showToast('Add at least one set!'); return; }
+  if (!rows.length) { showToast(_ws('Add at least one set!', 'أضف مجموعة واحدة على الأقل')); return; }
   const sets = []; let valid = true;
   rows.forEach(r => {
     const repsEl = r.querySelector('.set-reps');
@@ -69,7 +72,7 @@ function _saveWeightedWorkout() {
     if (rpe) _setObj.rpe = rpe;
     sets.push(_setObj);
   });
-  if (!valid) { showToast('Fill in all set values!'); return; }
+  if (!valid) { showToast(_ws('Fill in all set values!', 'أكمل جميع قيم المجموعات')); return; }
 
   // ── Stagnation Break gate ──
   if (!_stagnationConfirmed && typeof _checkStagnation === 'function' && _checkStagnation(sets)) {
@@ -78,11 +81,8 @@ function _saveWeightedWorkout() {
   }
   _stagnationConfirmed = false;
 
-  // Show daily wellness check-in on first save of the day
-  if (typeof maybeShowCheckin === 'function') maybeShowCheckin();
-
   const btn = document.getElementById('save-btn');
-  btn.classList.add('loading'); btn.textContent = 'Saving…';
+  btn.classList.add('loading'); btn.textContent = _ws('Saving...', 'جاري الحفظ...');
 
   setTimeout(() => {
     const workSets = sets.filter(s => s.type !== 'warmup');
@@ -139,10 +139,10 @@ function _saveWeightedWorkout() {
     _checkEndSessionNudge();
 
     btn.classList.remove('loading');
-    btn.innerHTML = '<svg class="btn-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' + (typeof t === 'function' && currentLang === 'ar' ? 'تسجيل التمرين' : 'Log Workout');
+    btn.innerHTML = '<svg class="btn-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' + _ws('Log Workout', 'تسجيل التمرين');
 
     if (isPR) {
-      showToast(typeof t === 'function' ? (currentLang === 'ar' ? 'رقم قياسي جديد! تم تسجيل التمرين' : 'NEW PR! Workout logged!') : 'NEW PR! Workout logged!');
+      showToast(_ws('NEW PR! Workout logged!', 'رقم قياسي جديد! تم تسجيل التمرين'));
       if (typeof hapPR === 'function') hapPR();
       if (typeof _addEnergy === 'function') _addEnergy(10);
       (function() {
@@ -153,7 +153,7 @@ function _saveWeightedWorkout() {
           if (_hdr && !_hdr.querySelector('.boss-badge')) {
             var _badge = document.createElement('span');
             _badge.className = 'boss-badge boss-defeated-badge';
-            _badge.textContent = '\u2694 BOSS DEFEATED!';
+            _badge.textContent = _ws('\u2694 BOSS DEFEATED!', '⚔ تم إسقاط البوس!');
             _hdr.appendChild(_badge);
           }
           setTimeout(function() {
@@ -168,10 +168,10 @@ function _saveWeightedWorkout() {
       if (typeof burstPR === 'function') burstPR(btn);
       // JIT: first PR hit
       if (typeof showJit === 'function') {
-        setTimeout(() => showJit('pr-first', document.getElementById('save-btn'), '🏆 First PR! Visit the Stats tab to see your full PR history.'), 1200);
+        setTimeout(() => showJit('pr-first', document.getElementById('save-btn'), _ws('🏆 First PR! Visit the Stats tab to see your full PR history.', '🏆 أول رقم قياسي! افتح تبويب الإحصائيات لرؤية سجل أرقامك.')), 1200);
       }
     } else {
-      showToast(typeof t === 'function' && currentLang === 'ar' ? 'تم تسجيل التمرين!' : 'Workout logged!');
+      showToast(_ws('Workout logged!', 'تم تسجيل التمرين!'));
       if (typeof hapSave === 'function') hapSave();
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
@@ -188,10 +188,10 @@ function _saveWeightedWorkout() {
 
 function saveBwWorkout() {
   const name = document.getElementById('exercise-name').value.trim();
-  if (!name) { showToast('Enter or pick an exercise!'); return; }
+  if (!name) { showToast(_ws('Enter or pick an exercise!', 'أدخل التمرين أو اختره')); return; }
 
   const bwRows = document.querySelectorAll('#bw-sets-container .bw-dot-row');
-  if (!bwRows.length) { showToast('Add at least one set!'); return; }
+  if (!bwRows.length) { showToast(_ws('Add at least one set!', 'أضف مجموعة واحدة على الأقل')); return; }
 
   const sets = Array.from(bwRows).map(row => {
     const infoEl = row.querySelector('.bw-dot-info');
@@ -202,10 +202,10 @@ function saveBwWorkout() {
       ? { secs: val, effort: effortClass || 'medium' }
       : { reps: val, effort: effortClass || 'medium' };
   }).filter(s => (s.reps || s.secs || 0) > 0);
-  if (!sets.length) { showToast('Enter values!'); return; }
+  if (!sets.length) { showToast(_ws('Enter values!', 'أدخل القيم')); return; }
 
   const btn = document.getElementById('save-btn');
-  btn.classList.add('loading'); btn.textContent = 'Saving…';
+  btn.classList.add('loading'); btn.textContent = _ws('Saving...', 'جاري الحفظ...');
 
   setTimeout(() => {
     const bwEx = BW_EXERCISES.find(e => e.name.toLowerCase() === name.toLowerCase());
@@ -273,11 +273,11 @@ function saveBwWorkout() {
     postSaveHooks();
 
     btn.classList.remove('loading');
-    btn.innerHTML = '<svg class="btn-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' + (typeof t === 'function' && currentLang === 'ar' ? 'تسجيل التمرين' : 'Log Workout');
+    btn.innerHTML = '<svg class="btn-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' + _ws('Log Workout', 'تسجيل التمرين');
 
     const _prUnit = _currentBwType === 'hold' ? 'secs' : 'reps';
     if (isPR) {
-      showToast(typeof t === 'function' && currentLang === 'ar' ? `رقم قياسي! ${newMaxVal} — رقم جديد!` : `BW PR! ${newMaxVal} ${_prUnit} — new record!`);
+      showToast(_ws(`BW PR! ${newMaxVal} ${_prUnit} - new record!`, `رقم قياسي! ${newMaxVal} ${_prUnit} - رقم جديد!`));
       if (typeof hapPR === 'function') hapPR();
       if (typeof _addEnergy === 'function') _addEnergy(10);
       (function() {
@@ -288,7 +288,7 @@ function saveBwWorkout() {
           if (_hdr && !_hdr.querySelector('.boss-badge')) {
             var _badge = document.createElement('span');
             _badge.className = 'boss-badge boss-defeated-badge';
-            _badge.textContent = '\u2694 BOSS DEFEATED!';
+            _badge.textContent = _ws('\u2694 BOSS DEFEATED!', '⚔ تم إسقاط البوس!');
             _hdr.appendChild(_badge);
           }
           setTimeout(function() {
@@ -301,7 +301,7 @@ function saveBwWorkout() {
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
     } else {
-      showToast(typeof t === 'function' && currentLang === 'ar' ? `${name} — ${totalReps} إجمالي` : `${name} logged! ${totalReps} total ${_prUnit}`);
+      showToast(_ws(`${name} logged! ${totalReps} total ${_prUnit}`, `${name} - ${totalReps} إجمالي ${_prUnit}`));
       if (typeof hapSave === 'function') hapSave();
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
