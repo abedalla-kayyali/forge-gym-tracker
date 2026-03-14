@@ -192,6 +192,47 @@ function sndMilestone() {
   _note(440, 'sine', 0.05, 0.0001, 0.55, 0.4);
 }
 
+function sndAvatarOpen() {
+  if (!soundOn) return;
+  _note(392, 'sine', 0.14, 0.0001, 0, 0.12);
+  _note(587.33, 'triangle', 0.12, 0.0001, 0.06, 0.16);
+  _note(783.99, 'sine', 0.08, 0.0001, 0.12, 0.18);
+}
+
+function sndAvatarSlot() {
+  if (!soundOn) return;
+  _note(660, 'sine', 0.10, 0.0001, 0, 0.08);
+  _note(990, 'triangle', 0.06, 0.0001, 0.03, 0.08);
+}
+
+function sndAvatarUnlock() {
+  if (!soundOn) return;
+  sndMilestone();
+  _note(1046.5, 'sine', 0.10, 0.0001, 0.12, 0.24);
+  _note(1318.51, 'sine', 0.08, 0.0001, 0.2, 0.28);
+}
+
+function sndPrimaryAction() {
+  if (!soundOn) return;
+  _note(420, 'triangle', 0.12, 0.0001, 0, 0.08);
+  _note(620, 'sine', 0.08, 0.0001, 0.04, 0.1);
+  _note(880, 'sine', 0.04, 0.0001, 0.08, 0.08);
+}
+
+window.playPrimaryActionFx = function playPrimaryActionFx() {
+  sndPrimaryAction();
+  if (typeof hapTap === 'function') hapTap();
+};
+
+document.addEventListener('click', function (event) {
+  const target = event.target && typeof event.target.closest === 'function'
+    ? event.target.closest('.auth-submit, .auth-update-btn, .onb-btn-primary, .sh-start-btn, .btn.btn-primary, .bw-log-workout-btn, .bio-modal-save, .share-btn, .nutri-save-btn, .ctoday-bw-btn, .btn-wend-share, .mdc-share-btn, .mdc-download-fab')
+    : null;
+  if (!target || target.disabled) return;
+  if (target.classList.contains('auth-back') || target.classList.contains('auth-forgot')) return;
+  window.playPrimaryActionFx();
+});
+
 /* Sync header button icon to current soundOn state */
 function _updateSoundBtn() {
   const iconOn  = document.getElementById('sound-icon-on');

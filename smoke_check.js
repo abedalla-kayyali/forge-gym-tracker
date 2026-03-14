@@ -23,6 +23,7 @@ const requiredFiles = [
   'js/dashboard-weight-chart.js',
   'js/data-actions.js',
   'js/xp-system.js',
+  'js/profile-avatar.js',
   'js/data-transfer.js',
   'js/achievements-ui.js',
   'js/coach-plan-controls.js',
@@ -65,6 +66,8 @@ requiredFiles.forEach((rel) => {
 });
 
 const indexPath = path.join(ROOT, 'index.html');
+const fxSoundPath = path.join(ROOT, 'js', 'fx-sound.js');
+const authUiPath = path.join(ROOT, 'js', 'auth-ui.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
 
@@ -85,6 +88,7 @@ if (fs.existsSync(indexPath)) {
     '<script src="js/dashboard-weight-chart.js"></script>',
     '<script src="js/data-actions.js"></script>',
     '<script src="js/xp-system.js"></script>',
+    '<script src="js/profile-avatar.js"></script>',
     '<script src="js/data-transfer.js"></script>',
     '<script src="js/achievements-ui.js"></script>',
     '<script src="js/coach-plan-controls.js"></script>',
@@ -110,12 +114,23 @@ if (fs.existsSync(indexPath)) {
     '<script src="js/muscle-detail-modal.js"></script>',
     '<script src="js/bootstrap.js"></script>',
     '<script src="js/i18n.js"></script>',
-    'function postSaveHooks()'
+    'function postSaveHooks()',
+    'id="profile-avatar-modal"'
   ];
 
   requiredSnippets.forEach((snippet) => {
     if (!html.includes(snippet)) fail('Missing snippet in index.html: ' + snippet);
   });
+}
+
+if (fs.existsSync(fxSoundPath)) {
+  const fx = fs.readFileSync(fxSoundPath, 'utf8');
+  if (!fx.includes('window.playPrimaryActionFx')) fail('Missing shared primary action FX hook in js/fx-sound.js');
+}
+
+if (fs.existsSync(authUiPath)) {
+  const auth = fs.readFileSync(authUiPath, 'utf8');
+  if (!auth.includes('auth-submit-glow')) fail('Missing auth submit glow treatment in js/auth-ui.js');
 }
 
 if (failures > 0) {

@@ -308,6 +308,8 @@
 
       /* Submit button */
       .auth-submit {
+        position: relative;
+        isolation: isolate;
         width: 100%;
         margin-top: 6px;
         padding: 13px;
@@ -324,12 +326,33 @@
         transition: background .2s, box-shadow .2s, transform .15s;
         box-shadow: 0 2px 18px rgba(57,255,143,.12);
       }
+      .auth-submit-glow::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border-radius: 14px;
+        background:
+          radial-gradient(circle at 50% 50%, rgba(57,255,143,.28), rgba(57,255,143,0) 70%);
+        opacity: .85;
+        filter: blur(14px);
+        z-index: -1;
+        pointer-events: none;
+        animation: authSubmitGlow 2.4s ease-in-out infinite alternate;
+      }
+      @keyframes authSubmitGlow {
+        0% { opacity: .55; transform: scale(.985); }
+        100% { opacity: 1; transform: scale(1.03); }
+      }
       .auth-submit:hover {
         background: linear-gradient(135deg, rgba(57,255,143,.22), rgba(57,255,143,.38));
-        box-shadow: 0 4px 28px rgba(57,255,143,.25);
+        box-shadow: 0 4px 28px rgba(57,255,143,.25), 0 0 22px rgba(57,255,143,.18);
       }
-      .auth-submit:active { transform: scale(.98); }
+      .auth-submit:active {
+        transform: scale(.98);
+        box-shadow: 0 4px 30px rgba(57,255,143,.3), 0 0 28px rgba(57,255,143,.24);
+      }
       .auth-submit:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+      .auth-submit:disabled::before { display:none; }
 
       /* Error / success messages */
       .auth-error {
@@ -482,7 +505,7 @@
           <input type="password" id="auth-pass-l" autocomplete="current-password" placeholder="********">
         </div>
         <button class="auth-forgot" id="auth-forgot-btn" onclick="_authSwitchTab('forgot')">Forgot password?</button>
-        <button class="auth-submit" id="auth-btn-login" onclick="_authLogin()">LOGIN</button>
+        <button class="auth-submit auth-submit-glow" id="auth-btn-login" onclick="_authLogin()">LOGIN</button>
         <div class="auth-error" id="auth-error-login"></div>
         <div class="auth-divider" id="auth-divider-login">or</div>
         <button class="auth-guest-btn" id="auth-guest-login" onclick="window._authGuestMode()">Continue as Guest</button>
@@ -503,7 +526,7 @@
           <label for="auth-pass-s" id="auth-label-pass-s">Password</label>
           <input type="password" id="auth-pass-s" autocomplete="new-password" placeholder="Min 6 characters">
         </div>
-        <button class="auth-submit" id="auth-btn-signup" onclick="_authSignup()">CREATE ACCOUNT</button>
+        <button class="auth-submit auth-submit-glow" id="auth-btn-signup" onclick="_authSignup()">CREATE ACCOUNT</button>
         <div class="auth-error" id="auth-error-signup"></div>
         <div class="auth-divider" id="auth-divider-signup">or</div>
         <button class="auth-guest-btn" id="auth-guest-signup" onclick="window._authGuestMode()">Continue as Guest</button>
@@ -520,7 +543,7 @@
           <label for="auth-email-r" id="auth-label-email-r">Email address</label>
           <input type="email" id="auth-email-r" autocomplete="email" placeholder="you@example.com">
         </div>
-        <button class="auth-submit" id="auth-btn-reset" onclick="_authResetPassword()">SEND RESET LINK</button>
+        <button class="auth-submit auth-submit-glow" id="auth-btn-reset" onclick="_authResetPassword()">SEND RESET LINK</button>
         <div class="auth-error" id="auth-error-forgot"></div>
         <div class="auth-success" id="auth-success-forgot"></div>
       </div>
