@@ -2620,6 +2620,8 @@ function _mirrorCoreDataToIdb() {
     _idb.put(STORAGE_KEYS.SETTINGS, settings);
     _idb.put(STORAGE_KEYS.MEALS, mealsLog);
     _idb.put(STORAGE_KEYS.MEAL_LIBRARY, mealLibrary);
+    const currentCardio = _lsGet(STORAGE_KEYS.CARDIO, []);
+    _idb.put(STORAGE_KEYS.CARDIO, currentCardio);
   }
 }
 

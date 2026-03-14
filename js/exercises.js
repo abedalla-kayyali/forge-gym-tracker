@@ -715,12 +715,25 @@ function repeatLastWorkout() {
 // (updateStatBar defined later with full gamification support)
 
 function calcStreak() {
-  if (!workouts.length) return 0;
-  const days = [...new Set(workouts.map(w => new Date(w.date).toDateString()))].sort((a,b) => new Date(b)-new Date(a));
-  let streak = 0, d = new Date();
+  const wDates = (typeof workouts !== 'undefined' ? workouts : []).map(w => w && w.date);
+  const bwDates = (typeof bwWorkouts !== 'undefined' ? bwWorkouts : []).map(w => w && w.date);
+  const cardioDates = (typeof cardioLog !== 'undefined' ? cardioLog : []).map(c => c && c.date);
+
+  const allDatesRaw = [...wDates, ...bwDates, ...cardioDates].filter(Boolean);
+  if (!allDatesRaw.length) return 0;
+
+  const days = [...new Set(allDatesRaw.map(d => new Date(d).toDateString()))]
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  let streak = 0;
+  let d = new Date();
   for (const day of days) {
-    if (new Date(day).toDateString() === d.toDateString()) { streak++; d.setDate(d.getDate()-1); }
-    else break;
+    if (new Date(day).toDateString() === d.toDateString()) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
   }
   return streak;
 }
