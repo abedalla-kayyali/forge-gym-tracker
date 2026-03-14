@@ -8536,6 +8536,13 @@ window._authSuccess = async function (session, isNewUser) {
   // Show signed-in email in the profile account row
   const _emailEl = document.getElementById('forge-account-email');
   if (_emailEl) _emailEl.textContent = session.user.email || '';
+  // Keep profile email updated so social features (duels search by email) can discover users.
+  try {
+    userProfile = _lsGet('forge_profile', {});
+    userProfile.email = session.user.email || userProfile.email || '';
+    localStorage.setItem('forge_profile', JSON.stringify(userProfile));
+    if (typeof _syncPushProfile === 'function') _syncPushProfile(userId);
+  } catch (_e) {}
 
   if (isNewUser) {
     // New user: push any existing localStorage data (unlikely but safe)

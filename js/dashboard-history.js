@@ -1196,7 +1196,19 @@ function renderWeekComparison() {
 
   const badge = document.getElementById('week-compare-badge');
   if (badge) {
-    if (!lw.sessions) { badge.textContent = 'NEW'; badge.style.background = 'var(--accent)'; badge.style.color = '#000'; } else if (tw.vol >= lw.vol) { badge.textContent = 'â–² UP'; badge.style.background = 'rgba(46,204,113,.2)'; badge.style.color = '#2ecc71'; } else { badge.textContent = 'â–¼ DOWN'; badge.style.background = 'rgba(231,76,60,.15)'; badge.style.color = '#e74c3c'; }
+    if (!lw.sessions) {
+      badge.textContent = 'NEW';
+      badge.style.background = 'var(--accent)';
+      badge.style.color = '#000';
+    } else if (tw.vol >= lw.vol) {
+      badge.textContent = 'UP';
+      badge.style.background = 'rgba(46,204,113,.2)';
+      badge.style.color = '#2ecc71';
+    } else {
+      badge.textContent = 'DOWN';
+      badge.style.background = 'rgba(231,76,60,.15)';
+      badge.style.color = '#e74c3c';
+    }
   }
 
   const deltas = document.getElementById('wcmp-deltas');
