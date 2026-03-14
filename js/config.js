@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v103';
-window.FORGE_BUILD   = '2026-03-14 (real 1v1 duel matchmaking + week trend encoding fix)';
+window.FORGE_VERSION = 'v104';
+window.FORGE_BUILD   = '2026-03-14 (duel search/friends QR + supabase table fallback/stability)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

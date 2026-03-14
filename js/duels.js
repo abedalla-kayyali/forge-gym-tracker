@@ -3,6 +3,7 @@
 (function () {
   const KEY_STATE = 'forge_duel_state_v2';
   const TABLES = ['forge_duels', 'duels'];
+  const PROFILE_TABLES = ['profiles_public', 'profiles'];
   const DAY_MS = 86400000;
   const INBOX_POLL_MS = 60000;
   const MUSCLES = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Forearms', 'Glutes', 'Calves'];
@@ -12,6 +13,8 @@
   let _table = null;
   let _me = null;
   let _lastInboxPull = 0;
+  let _tableMissingUntil = 0;
+  const _profileTableCache = {};
 
   function _toNum(v, fb) {
     const n = Number(v);
@@ -94,13 +97,14 @@
     return 7;
   }
   function _defaultState() {
-    return { active: null, invites: [], history: [] };
+    return { active: null, invites: [], history: [], friends: [] };
   }
   function _loadState() {
     const s = _safeGet(KEY_STATE, _defaultState());
     if (!s || typeof s !== 'object') return _defaultState();
     if (!Array.isArray(s.invites)) s.invites = [];
     if (!Array.isArray(s.history)) s.history = [];
+    if (!Array.isArray(s.friends)) s.friends = [];
     return s;
   }
   function _saveState() {
@@ -173,6 +177,7 @@
   }
 
   async function _ensureTable() {
+    if (Date.now() < _tableMissingUntil) return null;
     if (_table || !window._sb) return _table;
     for (const name of TABLES) {
       try {
@@ -180,6 +185,7 @@
         if (!error) { _table = name; return name; }
       } catch (_e) {}
     }
+    _tableMissingUntil = Date.now() + (5 * 60 * 1000);
     return null;
   }
   async function _getMe() {
@@ -202,31 +208,119 @@
 
   async function _searchUsers(query) {
     const me = await _getMe();
-    const table = await _ensureTable();
-    if (!window._sb || !table || !me) return [];
+    if (!window._sb || !me) return [];
     const q = String(query || '').trim().toLowerCase();
     if (!q) return [];
     try {
-      const { data, error } = await window._sb.from('profiles').select('id,data').limit(120);
-      if (error || !Array.isArray(data)) return [];
-      return data
+      let rows = [];
+      for (const table of PROFILE_TABLES) {
+        try {
+          const { data, error } = await window._sb.from(table).select('id,name,email,display_name,data').limit(220);
+          if (!error && Array.isArray(data)) {
+            rows = data;
+            _profileTableCache[table] = true;
+            break;
+          }
+          _profileTableCache[table] = false;
+        } catch (_e) {
+          _profileTableCache[table] = false;
+        }
+      }
+      if (!rows.length) return [];
+      return rows
         .map(r => ({
           id: r.id,
-          name: String(r?.data?.name || r?.data?.displayName || r?.data?.username || ''),
-          email: String(r?.data?.email || '')
+          name: String(r?.name || r?.display_name || r?.data?.name || r?.data?.displayName || r?.data?.username || ''),
+          email: String(r?.email || r?.data?.email || ''),
+          stats: r?.duel_public_stats || r?.data?.duelPublicStats || null
         }))
         .filter(u => u.id && u.id !== me.id)
-        .filter(u => (u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)))
-        .slice(0, 16);
+        .filter(u => (
+          u.name.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          String(u.id).toLowerCase().includes(q)
+        ))
+        .slice(0, 20);
     } catch (_e) {
       return [];
     }
   }
 
+  function _friendToken(user) {
+    return _encodeUser({ id: user.id, name: user.name || 'Athlete', email: user.email || '' });
+  }
+  function _isFriend(userId) {
+    return _state.friends.some(f => String(f.id) === String(userId));
+  }
+  function _addFriend(user) {
+    if (!user || !user.id || _isFriend(user.id)) return;
+    _state.friends.unshift({ id: String(user.id), name: String(user.name || 'Athlete'), email: String(user.email || '') });
+    _state.friends = _state.friends.slice(0, 80);
+    _saveState();
+  }
+  function _removeFriend(userId) {
+    _state.friends = _state.friends.filter(f => String(f.id) !== String(userId));
+    _saveState();
+  }
+  function _myFriendCode() {
+    if (!_me) return '';
+    return _friendToken({ id: _me.id, name: _playerName(_me), email: _me.email || '' });
+  }
+  function _addFriendByCode(rawCode) {
+    const u = _decodeUser(String(rawCode || '').trim());
+    if (!u.id) return false;
+    if (_me && String(u.id) === String(_me.id)) return false;
+    _addFriend(u);
+    return true;
+  }
+  async function _publishOwnStats() {
+    try {
+      const profile = _safeGet('forge_profile', {});
+      const cardioLen = _cardio().length;
+      const weightedLen = _workouts().length;
+      const bwLen = _bwWorkouts().length;
+      const last7Ms = Date.now() - (7 * DAY_MS);
+      const toMs = (d) => new Date(d || 0).getTime();
+      const cardio7 = _cardio().filter(c => toMs(c?.date) >= last7Ms).length;
+      const workout7 = _workouts().filter(w => toMs(w?.date) >= last7Ms).length + _bwWorkouts().filter(w => toMs(w?.date) >= last7Ms).length;
+      profile.duelPublicStats = {
+        updatedAt: _isoNow(),
+        workoutSessions: weightedLen + bwLen,
+        cardioSessions: cardioLen,
+        workout7d: workout7,
+        cardio7d: cardio7
+      };
+      _safeSet('forge_profile', profile);
+      if (window._sb && _me) {
+        const payload = {
+          id: _me.id,
+          name: _playerName(_me),
+          email: String(_me.email || ''),
+          duel_public_stats: profile.duelPublicStats,
+          updated_at: _isoNow()
+        };
+        for (const table of PROFILE_TABLES) {
+          if (_profileTableCache[table] === false) continue;
+          try {
+            const { error } = await window._sb.from(table).upsert(payload, { onConflict: 'id' });
+            if (!error) {
+              _profileTableCache[table] = true;
+              break;
+            }
+            _profileTableCache[table] = false;
+          } catch (_e) {
+            _profileTableCache[table] = false;
+          }
+        }
+      }
+      if (_me && typeof window._syncPushProfile === 'function') window._syncPushProfile(_me.id);
+    } catch (_e) {}
+  }
+
   async function _createInvite(user, scopeMode, customTarget) {
     const me = await _getMe();
     const table = await _ensureTable();
-    if (!window._sb || !table || !me || !user?.id) {
+    if (!me || !user?.id) {
       if (typeof showToast === 'function') showToast(_tx('Cannot create duel now', 'تعذر إنشاء التحدي الآن'), 'warn');
       return;
     }
@@ -246,6 +340,14 @@
       ends_at: new Date(now + 7 * DAY_MS).toISOString(),
       updated_at: _isoNow()
     };
+    if (!window._sb || !table) {
+      payload.status = 'active';
+      _state.active = payload;
+      _saveState();
+      if (typeof showToast === 'function') showToast(_tx('Duel started (local mode)', 'تم بدء التحدي (وضع محلي)'), 'warn');
+      _closeModal();
+      return;
+    }
     try {
       const { error } = await window._sb.from(table).upsert(payload);
       if (error) throw error;
@@ -275,6 +377,11 @@
     }
   }
   async function _refreshState() {
+    if (!window._sb || !await _ensureTable()) {
+      _saveState();
+      _renderFriendsZone();
+      return;
+    }
     const rows = await _fetchRows();
     const pending = rows.filter(r => r.status === 'pending' && _getSide(r) === 'opponent');
     const active = rows.find(r => r.status === 'active') || null;
@@ -283,6 +390,7 @@
     _state.active = active;
     _state.history = history;
     _saveState();
+    _renderFriendsZone();
   }
   async function _refreshInboxIfDue() {
     if (Date.now() - _lastInboxPull < INBOX_POLL_MS) return;
@@ -312,7 +420,7 @@
     if (!row || row.status !== 'active') return;
     const table = await _ensureTable();
     const me = await _getMe();
-    if (!window._sb || !table || !me) return;
+    if (!me) return;
     const side = _getSide(row);
     if (!side) return;
 
@@ -329,6 +437,15 @@
       patch.status = 'completed';
     }
 
+    if (!window._sb || !table) {
+      if (side === 'challenger') row.score_self = myScore;
+      else row.score_opponent = myScore;
+      row.updated_at = _isoNow();
+      if (patch.status === 'completed') row.status = 'completed';
+      _saveState();
+      return;
+    }
+
     try {
       const { error } = await window._sb.from(table).update(patch).eq('id', row.id);
       if (!error) _refreshState();
@@ -338,7 +455,15 @@
   async function _cancelActive() {
     const row = _state.active;
     const table = await _ensureTable();
-    if (!row || !table || !window._sb) return;
+    if (!row) return;
+    if (!table || !window._sb) {
+      row.status = 'cancelled';
+      row.updated_at = _isoNow();
+      _state.history = [row, ..._arr(_state.history)].slice(0, 10);
+      _state.active = null;
+      _saveState();
+      return;
+    }
     try {
       await window._sb.from(table).update({ status: 'cancelled', updated_at: _isoNow() }).eq('id', row.id);
       _refreshState();
@@ -402,15 +527,16 @@
           }).join('') + '</div>'
         : '<div class="ctoday-plan-note">' + _tx('No pending invites', 'لا توجد دعوات حالياً') + '</div>';
 
-      card.innerHTML =
-        '<div class="ctoday-card-title">1v1 Duel</div>' +
-        '<div class="ctoday-plan-note">' + _tx('Search athletes by name/email and challenge them in workout, muscle, or cardio.', 'ابحث عن الرياضيين بالاسم أو البريد وتحداهم في التمرين أو العضلة أو الكارديو.') + '</div>' +
-        '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="FORGE_DUELS.open()">' + _tx('Find Athlete', 'ابحث عن لاعب') + '</button>' +
-          '<button class="coach-action-btn" onclick="FORGE_DUELS.refresh()">' + _tx('Refresh', 'تحديث') + '</button>' +
-        '</div>' +
-        '<div class="ctoday-plan-note" style="margin-top:10px;"><strong>' + _tx('Invites', 'الدعوات') + ':</strong> ' + inv.length + '</div>' +
-        inviteHtml;
+    card.innerHTML =
+      '<div class="ctoday-card-title">1v1 Duel</div>' +
+      '<div class="ctoday-plan-note">' + _tx('Search athletes by name/email and challenge them in workout, muscle, or cardio.', 'ابحث عن الرياضيين بالاسم أو البريد وتحداهم في التمرين أو العضلة أو الكارديو.') + '</div>' +
+      '<div class="coach-dual-actions" style="margin-top:10px;">' +
+        '<button class="coach-action-btn primary" onclick="FORGE_DUELS.open()">' + _tx('Find Athlete', 'ابحث عن لاعب') + '</button>' +
+        '<button class="coach-action-btn" onclick="FORGE_DUELS.refresh()">' + _tx('Refresh', 'تحديث') + '</button>' +
+      '</div>' +
+      '<div class="ctoday-plan-note" style="margin-top:8px;"><strong>' + _tx('Friends', 'الأصدقاء') + ':</strong> ' + _arr(_state.friends).length + '</div>' +
+      '<div class="ctoday-plan-note" style="margin-top:10px;"><strong>' + _tx('Invites', 'الدعوات') + ':</strong> ' + inv.length + '</div>' +
+      inviteHtml;
       return;
     }
 
@@ -451,6 +577,13 @@
       '<div class="duel-modal-card">' +
         '<div class="duel-modal-head"><strong>1v1 Matchmaking</strong><button class="coach-action-btn" onclick="FORGE_DUELS.closeModal()">X</button></div>' +
         '<div class="duel-modal-row">' +
+          '<input id="duel-friend-code-input" class="duel-search-input" placeholder="Paste friend code" />' +
+          '<button class="coach-action-btn" onclick="FORGE_DUELS.addFriendCode()">' + _tx('Add Friend', 'إضافة صديق') + '</button>' +
+          '<button class="coach-action-btn" onclick="FORGE_DUELS.copyCode()">' + _tx('Copy My Code', 'نسخ كودي') + '</button>' +
+        '</div>' +
+        '<div id="duel-my-code-qr" class="duel-my-code-qr"></div>' +
+        '<div id="duel-friends-zone" class="duel-friends-zone"></div>' +
+        '<div class="duel-modal-row">' +
           '<input id="duel-search-input" class="duel-search-input" placeholder="Search by name or email" />' +
           '<button class="coach-action-btn primary" onclick="FORGE_DUELS.search()">Search</button>' +
         '</div>' +
@@ -470,6 +603,8 @@
     }
     const rs = document.getElementById('duel-search-results');
     if (rs) rs.innerHTML = '<div class="ctoday-plan-note">' + _tx('Type a name or email to find athletes.', 'اكتب اسماً أو بريداً للبحث عن الرياضيين.') + '</div>';
+    _renderFriendsZone();
+    _renderCodeQr();
   }
   function _closeModal() {
     const modal = document.getElementById('duel-modal');
@@ -487,17 +622,21 @@
     rs.innerHTML = '<div class="ctoday-plan-note">' + _tx('Searching...', 'جاري البحث...') + '</div>';
     const users = await _searchUsers(q);
     if (!users.length) {
-      rs.innerHTML = '<div class="ctoday-plan-note">' + _tx('No athlete found', 'لم يتم العثور على لاعب') + '</div>';
+      rs.innerHTML = '<div class="ctoday-plan-note">' + _tx('No athlete found. Use Friend Code/QR to connect directly.', 'لم يتم العثور على لاعب. استخدم كود/QR الصديق للربط مباشرة.') + '</div>';
       return;
     }
     rs.innerHTML = users.map(u => {
       const uid = _jsArg(u.id);
       const un = _jsArg(u.name || '');
       const ue = _jsArg(u.email || '');
+      const friendBtn = _isFriend(u.id)
+        ? '<button class="coach-action-btn" onclick="FORGE_DUELS.removeFriend(' + uid + ')">' + _tx('Remove Friend', 'حذف صديق') + '</button>'
+        : '<button class="coach-action-btn" onclick="FORGE_DUELS.addFriend(' + uid + ',' + un + ',' + ue + ')">' + _tx('Add Friend', 'إضافة صديق') + '</button>';
       return (
         '<div class="duel-user-row">' +
           '<div class="duel-user-meta"><strong>' + (u.name || 'Athlete') + '</strong><small>' + (u.email || '') + '</small></div>' +
           '<div class="duel-user-actions">' +
+            friendBtn +
             '<button class="coach-action-btn" onclick="FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',\'scope:workout\')">' + _tx('Workout', 'تمرين') + '</button>' +
             '<button class="coach-action-btn" onclick="FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',\'scope:cardio\')">' + _tx('Cardio', 'كارديو') + '</button>' +
             '<button class="coach-action-btn primary" onclick="FORGE_DUELS.challengeMuscle(' + uid + ',' + un + ',' + ue + ')">' + _tx('Muscle', 'عضلة') + '</button>' +
@@ -513,6 +652,7 @@
     return m || '';
   }
   function _challenge(userId, name, email, mode) {
+    _addFriend({ id: userId, name, email });
     _createInvite({ id: userId, name, email }, mode, _targetFor(mode));
   }
   function _challengeMuscle(userId, name, email) {
@@ -522,6 +662,100 @@
       return;
     }
     _createInvite({ id: userId, name, email }, 'scope:muscle:' + muscle, 5);
+  }
+
+  async function _renderFriendsZone() {
+    const zone = document.getElementById('duel-friends-zone');
+    if (!zone) return;
+    const fr = _arr(_state.friends);
+    if (!fr.length) {
+      zone.innerHTML = '<div class="ctoday-plan-note">' + _tx('No friends yet. Add by code or search.', 'لا يوجد أصدقاء بعد. أضف بالكود أو بالبحث.') + '</div>';
+      return;
+    }
+    const profileMap = Object.create(null);
+    if (window._sb) {
+      try {
+        const ids = fr.map(f => f.id).filter(Boolean);
+        if (ids.length) {
+          let data = [];
+          for (const table of PROFILE_TABLES) {
+            try {
+              const res = await window._sb.from(table).select('id,name,email,display_name,duel_public_stats,data').in('id', ids);
+              if (!res.error && Array.isArray(res.data)) {
+                data = res.data;
+                _profileTableCache[table] = true;
+                break;
+              }
+              _profileTableCache[table] = false;
+            } catch (_e) {
+              _profileTableCache[table] = false;
+            }
+          }
+          _arr(data).forEach(r => {
+            profileMap[r.id] = {
+              duelPublicStats: r?.duel_public_stats || r?.data?.duelPublicStats || null
+            };
+          });
+        }
+      } catch (_e) {}
+    }
+    zone.innerHTML =
+      '<div class="ctoday-plan-note"><strong>' + _tx('Friends', 'الأصدقاء') + ':</strong> ' + fr.length + '</div>' +
+      fr.map(f => {
+        const uid = _jsArg(f.id);
+        const un = _jsArg(f.name || '');
+        const ue = _jsArg(f.email || '');
+        const st = profileMap[f.id]?.duelPublicStats || null;
+        const stats = st
+          ? (_tx('7d workouts', 'تمارين 7 أيام') + ': ' + _toNum(st.workout7d, 0) + ' | ' + _tx('7d cardio', 'كارديو 7 أيام') + ': ' + _toNum(st.cardio7d, 0))
+          : _tx('No shared stats yet', 'لا توجد إحصاءات مشتركة بعد');
+        return (
+          '<div class="duel-user-row">' +
+            '<div class="duel-user-meta"><strong>' + (f.name || 'Athlete') + '</strong><small>' + stats + '</small></div>' +
+            '<div class="duel-user-actions">' +
+              '<button class="coach-action-btn" onclick="FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',\'scope:workout\')">' + _tx('Workout', 'تمرين') + '</button>' +
+              '<button class="coach-action-btn" onclick="FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',\'scope:cardio\')">' + _tx('Cardio', 'كارديو') + '</button>' +
+              '<button class="coach-action-btn" onclick="FORGE_DUELS.challengeMuscle(' + uid + ',' + un + ',' + ue + ')">' + _tx('Muscle', 'عضلة') + '</button>' +
+              '<button class="coach-action-btn" onclick="FORGE_DUELS.removeFriend(' + uid + ')">' + _tx('Remove', 'حذف') + '</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+  }
+  function _renderCodeQr() {
+    const el = document.getElementById('duel-my-code-qr');
+    if (!el) return;
+    const code = _myFriendCode();
+    if (!code) {
+      el.innerHTML = '';
+      return;
+    }
+    const url = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(code);
+    el.innerHTML =
+      '<div class="ctoday-plan-note">' + _tx('My Friend QR/Code', 'رمز/كود الصديق الخاص بي') + '</div>' +
+      '<div class="duel-qr-wrap"><img src="' + url + '" alt="friend-qr" /><code>' + code.slice(0, 24) + '...</code></div>';
+  }
+  function _addFriendFromInput() {
+    const input = document.getElementById('duel-friend-code-input');
+    const ok = _addFriendByCode(String(input?.value || ''));
+    if (ok) {
+      if (input) input.value = '';
+      if (typeof showToast === 'function') showToast(_tx('Friend added', 'تمت إضافة الصديق'), 'success');
+      _renderFriendsZone();
+      _saveState();
+    } else {
+      if (typeof showToast === 'function') showToast(_tx('Invalid friend code', 'كود صديق غير صالح'), 'warn');
+    }
+  }
+  async function _copyMyCode() {
+    const code = _myFriendCode();
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      if (typeof showToast === 'function') showToast(_tx('Friend code copied', 'تم نسخ كود الصديق'), 'success');
+    } catch (_e) {
+      if (typeof showToast === 'function') showToast(code, 'warn');
+    }
   }
 
   function _openDuelCenter() {
@@ -565,12 +799,14 @@
   }
 
   async function _onPostSave() {
+    _publishOwnStats();
     await _syncActiveScore();
     await _refreshInboxIfDue();
   }
 
   document.addEventListener('DOMContentLoaded', async function () {
     await _getMe();
+    _publishOwnStats();
     _renderCoachCard();
     _refreshState();
     _subscribe();
@@ -580,6 +816,10 @@
     open: function () { _openDuelCenter(); _openModal(); },
     closeModal: _closeModal,
     search: _searchFromModal,
+    addFriendCode: _addFriendFromInput,
+    copyCode: _copyMyCode,
+    addFriend: function (id, name, email) { _addFriend({ id, name, email }); _renderFriendsZone(); },
+    removeFriend: function (id) { _removeFriend(id); _renderFriendsZone(); },
     challenge: _challenge,
     challengeMuscle: _challengeMuscle,
     startXp: function () { _openDuelCenter(); _openModal(); },

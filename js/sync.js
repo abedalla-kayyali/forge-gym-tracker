@@ -18,6 +18,7 @@
 
   let _debounceTimer = null;
   let _currentUserId = null;
+  const _tableCache = {};
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -26,6 +27,25 @@
   }
   function _lsSet(key, val) {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+  async function _hasTable(table) {
+    if (!window._sb || !table) return false;
+    if (Object.prototype.hasOwnProperty.call(_tableCache, table)) return _tableCache[table];
+    try {
+      const { error } = await window._sb.from(table).select('id').limit(1);
+      if (error) {
+        const msg = String(error.message || '').toLowerCase();
+        if (error.code === 'PGRST205' || msg.includes('could not find') || msg.includes('relation') || msg.includes('404')) {
+          _tableCache[table] = false;
+          return false;
+        }
+      }
+      _tableCache[table] = !error;
+      return _tableCache[table];
+    } catch (_e) {
+      _tableCache[table] = false;
+      return false;
+    }
   }
 
   function _profileTargetsUpdatedAt(profile) {
@@ -94,6 +114,7 @@
   }
 
   async function _syncPushCardio(userId) {
+    if (!await _hasTable('cardio')) return;
     const cardio = _ls('forge_cardio');
     if (!Array.isArray(cardio) || cardio.length === 0) return;
     const rows = cardio.map(c => ({
@@ -245,6 +266,9 @@
     if (!window._sb || !userId) return;
     _currentUserId = userId;
     try {
+      const cardioReq = (await _hasTable('cardio'))
+        ? window._sb.from('cardio').select('data').eq('user_id', userId)
+        : Promise.resolve({ data: [], error: null });
       const [
         profileRes, workoutsRes, bwRes, cardioRes, bwWeightRes, tplRes,
         settingsRes, mealsRes, mealLibRes, checkinsRes, waterRes, stepsRes
@@ -252,7 +276,7 @@
         window._sb.from('profiles').select('data').eq('id', userId).maybeSingle(),
         window._sb.from('workouts').select('data').eq('user_id', userId),
         window._sb.from('bw_workouts').select('data').eq('user_id', userId),
-        window._sb.from('cardio').select('data').eq('user_id', userId),
+        cardioReq,
         window._sb.from('body_weight').select('data').eq('user_id', userId),
         window._sb.from('templates').select('data').eq('user_id', userId),
         window._sb.from('settings').select('data').eq('user_id', userId).maybeSingle(),
