@@ -578,11 +578,11 @@ const LANGS = {
   'heat.tier5': 'Rested 14+d / never',
 
   // Recovery detail badge
-  'recovery.tier1': '\uD83D\uDD25 Trained (0-1d)',
-  'recovery.tier2': '\uD83D\uDFE0 Recovering (2-3d)',
-  'recovery.tier3': '\uD83D\uDFE1 Ready (4-6d)',
-  'recovery.tier4': '\uD83D\uDFE2 Primed (7-13d)',
-  'recovery.tier5': '\u26AA Rested (14+d)',
+  'recovery.tier1': 'Trained (0-1d)',
+  'recovery.tier2': 'Recovering (2-3d)',
+  'recovery.tier3': 'Ready (4-6d)',
+  'recovery.tier4': 'Primed (7-13d)',
+  'recovery.tier5': 'Rested (14+d)',
 
   // History / session
   'hist.noWorkouts':      'No workouts yet',
@@ -1303,11 +1303,11 @@ const LANGS = {
     'heat.tier5': 'ط±ط§ط­ط© 14+ ظٹظˆظ… / ط؛ظٹط± ظ…ظڈط¯ط±ظژظ‘ط¨',
 
     // Recovery detail badge
-    'recovery.tier1': '\uD83D\uDD25 \u0645\u062A\u0645\u0631\u0651\u0646 (0-1 \u064A\u0648\u0645)',
-    'recovery.tier2': '\uD83D\uDFE0 \u064A\u062A\u0639\u0627\u0641\u0649 (2-3 \u0623\u064A\u0627\u0645)',
-    'recovery.tier3': '\uD83D\uDFE1 \u062C\u0627\u0647\u0632 (4-6 \u0623\u064A\u0627\u0645)',
-    'recovery.tier4': '\uD83D\uDFE2 \u0645\u0633\u062A\u0639\u062F (7-13 \u064A\u0648\u0645)',
-    'recovery.tier5': '\u26AA \u0645\u0631\u062A\u0627\u062D (14+ \u064A\u0648\u0645)',
+    'recovery.tier1': '\u0645\u062A\u0645\u0631\u0651\u0646 (0-1 \u064A\u0648\u0645)',
+    'recovery.tier2': '\u064A\u062A\u0639\u0627\u0641\u0649 (2-3 \u0623\u064A\u0627\u0645)',
+    'recovery.tier3': '\u062C\u0627\u0647\u0632 (4-6 \u0623\u064A\u0627\u0645)',
+    'recovery.tier4': '\u0645\u0633\u062A\u0639\u062F (7-13 \u064A\u0648\u0645)',
+    'recovery.tier5': '\u0645\u0631\u062A\u0627\u062D (14+ \u064A\u0648\u0645)',
 
     // History / session
     'hist.noWorkouts':      'ظ„ط§ طھظ…ط§ط±ظٹظ† ط¨ط¹ط¯',

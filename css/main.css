@@ -755,13 +755,14 @@ body.deload-active .body-zone.zone-selected{
 @keyframes slideUpModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .mdc-download-fab{
   position:absolute; top:10px; right:12px; z-index:2;
-  width:40px; height:40px; border-radius:12px;
+  min-width:58px; height:34px; border-radius:10px;
   border:1px solid rgba(57,255,143,.35);
   background:rgba(10,24,17,.88); color:var(--accent);
   display:flex; align-items:center; justify-content:center;
   cursor:pointer; backdrop-filter:blur(2px);
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.8px; font-weight:700;
+  padding:0 10px;
 }
-.mdc-download-fab svg{width:20px;height:20px;display:block;}
 .mdc-download-fab:active{transform:scale(.96);}
 .mdc-drag-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:0 auto 16px;}
 .mdc-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
