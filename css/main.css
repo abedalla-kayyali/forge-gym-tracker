@@ -1419,6 +1419,22 @@ body.deload-active .body-zone.zone-selected{
   padding:12px;
   background:linear-gradient(180deg, rgba(7,18,30,.92), rgba(7,14,23,.98));
 }
+.social-anatomy-board{
+  position:relative;
+  overflow:hidden;
+  border-color:rgba(159,230,255,.14);
+  background:
+    radial-gradient(circle at top right, rgba(57,255,143,.12), transparent 36%),
+    radial-gradient(circle at bottom left, rgba(94,179,255,.10), transparent 32%),
+    linear-gradient(180deg, rgba(8,18,30,.98), rgba(7,12,18,1));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 18px 38px rgba(0,0,0,.22);
+}
+.social-body-rival-header{
+  border-color:rgba(99,231,176,.18);
+  background:
+    radial-gradient(circle at top right, rgba(99,231,176,.14), transparent 34%),
+    linear-gradient(180deg, rgba(9,22,30,.98), rgba(7,14,23,1));
+}
 .social-body-map-label{
   font-family:'DM Mono',monospace;
   font-size:10px;
@@ -1434,7 +1450,7 @@ body.deload-active .body-zone.zone-selected{
 }
 .social-body-zone{
   cursor:pointer;
-  transition:transform .18s ease, filter .18s ease;
+  transition:transform .18s ease, filter .18s ease, fill .2s ease, stroke .2s ease;
 }
 .social-body-zone:hover{
   transform:translateY(-1px);
@@ -1449,6 +1465,40 @@ body.deload-active .body-zone.zone-selected{
   color:#dff8ff;
   font-size:13px;
 }
+.social-spotlight-rail{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.social-spotlight-chip{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  padding:12px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  text-align:left;
+  cursor:pointer;
+  color:#eafaf2;
+}
+.social-spotlight-chip span{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.8px;
+  color:#9ec7e8;
+  text-transform:uppercase;
+}
+.social-spotlight-chip strong{
+  font-size:16px;
+  line-height:1.05;
+}
+.social-spotlight-chip em{
+  font-style:normal;
+  color:var(--text3);
+  font-size:12px;
+}
 .social-compare-muscle-sheet{
   max-width:540px;
 }
@@ -1457,7 +1507,8 @@ body.deload-active .body-zone.zone-selected{
   .social-empty-grid,
   .social-action-row,
   .social-compare-grid,
-  .social-body-map-grid{
+  .social-body-map-grid,
+  .social-spotlight-rail{
     grid-template-columns:1fr;
   }
   .social-compare-head{

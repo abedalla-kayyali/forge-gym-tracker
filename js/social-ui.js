@@ -98,25 +98,25 @@
   }
   function _muscleZones() {
     return [
-      { key: 'Neck', x: 118, y: 26, w: 44, h: 22, r: 11 },
-      { key: 'Traps', x: 86, y: 52, w: 108, h: 26, r: 14 },
-      { key: 'Chest', x: 84, y: 84, w: 112, h: 52, r: 20 },
-      { key: 'Shoulders', x: 50, y: 78, w: 40, h: 52, r: 18 },
-      { key: 'Shoulders', x: 190, y: 78, w: 40, h: 52, r: 18 },
-      { key: 'Biceps', x: 42, y: 136, w: 32, h: 48, r: 16 },
-      { key: 'Biceps', x: 206, y: 136, w: 32, h: 48, r: 16 },
-      { key: 'Triceps', x: 38, y: 188, w: 28, h: 42, r: 14 },
-      { key: 'Triceps', x: 214, y: 188, w: 28, h: 42, r: 14 },
-      { key: 'Forearms', x: 36, y: 236, w: 24, h: 54, r: 12 },
-      { key: 'Forearms', x: 220, y: 236, w: 24, h: 54, r: 12 },
-      { key: 'Core', x: 102, y: 140, w: 76, h: 72, r: 18 },
-      { key: 'Back', x: 84, y: 84, w: 112, h: 54, r: 20, backOnly: true },
-      { key: 'Lower Back', x: 100, y: 146, w: 80, h: 34, r: 16, backOnly: true },
-      { key: 'Glutes', x: 92, y: 184, w: 96, h: 48, r: 20, backOnly: true },
-      { key: 'Legs', x: 92, y: 224, w: 42, h: 104, r: 18 },
-      { key: 'Legs', x: 146, y: 224, w: 42, h: 104, r: 18 },
-      { key: 'Calves', x: 94, y: 334, w: 34, h: 72, r: 18 },
-      { key: 'Calves', x: 152, y: 334, w: 34, h: 72, r: 18 }
+      { key: 'Neck', path: 'M124 30 Q140 22 156 30 L152 52 Q140 56 128 52 Z' },
+      { key: 'Traps', path: 'M98 58 Q112 44 140 44 Q168 44 182 58 L176 84 Q154 90 140 90 Q126 90 104 84 Z' },
+      { key: 'Chest', path: 'M96 92 Q114 80 140 80 Q166 80 184 92 L178 138 Q160 154 140 154 Q120 154 102 138 Z' },
+      { key: 'Shoulders', path: 'M60 94 Q70 78 92 80 L96 136 Q78 138 62 126 Q52 112 60 94 Z' },
+      { key: 'Shoulders', path: 'M220 94 Q210 78 188 80 L184 136 Q202 138 218 126 Q228 112 220 94 Z' },
+      { key: 'Biceps', path: 'M62 136 Q76 132 88 142 L82 188 Q72 198 58 190 Q50 176 62 136 Z' },
+      { key: 'Biceps', path: 'M218 136 Q204 132 192 142 L198 188 Q208 198 222 190 Q230 176 218 136 Z' },
+      { key: 'Triceps', path: 'M54 190 Q68 182 80 188 L78 230 Q66 240 52 230 Q46 214 54 190 Z' },
+      { key: 'Triceps', path: 'M226 190 Q212 182 200 188 L202 230 Q214 240 228 230 Q234 214 226 190 Z' },
+      { key: 'Forearms', path: 'M48 230 Q60 224 72 230 L68 292 Q56 300 46 288 Q42 258 48 230 Z' },
+      { key: 'Forearms', path: 'M232 230 Q220 224 208 230 L212 292 Q224 300 234 288 Q238 258 232 230 Z' },
+      { key: 'Core', path: 'M110 152 Q124 146 140 146 Q156 146 170 152 L166 224 Q156 236 140 236 Q124 236 114 224 Z' },
+      { key: 'Back', path: 'M96 92 Q114 84 140 84 Q166 84 184 92 L176 152 Q158 164 140 164 Q122 164 104 152 Z' },
+      { key: 'Lower Back', path: 'M110 164 Q124 158 140 158 Q156 158 170 164 L166 210 Q154 220 140 220 Q126 220 114 210 Z' },
+      { key: 'Glutes', path: 'M106 220 Q122 212 140 212 Q158 212 174 220 L170 258 Q158 270 140 270 Q122 270 110 258 Z' },
+      { key: 'Legs', path: 'M110 260 Q124 252 132 260 L130 364 Q120 378 106 366 Q98 344 110 260 Z' },
+      { key: 'Legs', path: 'M170 260 Q156 252 148 260 L150 364 Q160 378 174 366 Q182 344 170 260 Z' },
+      { key: 'Calves', path: 'M108 364 Q118 356 126 364 L124 418 Q114 428 104 420 Q100 390 108 364 Z' },
+      { key: 'Calves', path: 'M172 364 Q162 356 154 364 L156 418 Q166 428 176 420 Q180 390 172 364 Z' }
     ];
   }
   function _musclePower(summary, key) {
@@ -128,19 +128,52 @@
   }
   function _renderBodyMap(summary, who) {
     const zones = _muscleZones();
+    const dominant = Object.keys(summary || {}).sort((a, b) => _musclePower(summary, b) - _musclePower(summary, a))[0] || '';
     return '' +
-      '<div class="social-body-map-card">' +
+      '<div class="social-body-map-card social-anatomy-board">' +
         '<div class="social-body-map-label">' + who + '</div>' +
         '<svg class="social-body-map-svg" viewBox="0 0 280 430" role="img" aria-label="' + _escape(who + ' body map') + '">' +
-          '<rect x="72" y="18" width="136" height="398" rx="34" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>' +
+          '<defs>' +
+            '<linearGradient id="social-board-shell" x1="0" x2="0" y1="0" y2="1">' +
+              '<stop offset="0%" stop-color="rgba(15,25,36,0.98)"/>' +
+              '<stop offset="100%" stop-color="rgba(7,12,18,1)"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<rect x="58" y="16" width="164" height="400" rx="38" fill="url(#social-board-shell)" stroke="rgba(159,230,255,0.14)" stroke-width="2"/>' +
+          '<rect x="76" y="34" width="128" height="364" rx="30" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.06)"/>' +
           zones.map((zone) => {
             const power = _musclePower(summary, zone.key);
-            const fill = power <= 0 ? 'rgba(255,255,255,0.05)' : 'rgba(99,231,176,' + (0.18 + power * 0.42).toFixed(2) + ')';
-            const stroke = power <= 0 ? 'rgba(255,255,255,0.12)' : 'rgba(159,230,255,' + (0.32 + power * 0.38).toFixed(2) + ')';
-            return '<rect class="social-body-zone" data-muscle="' + _escape(zone.key) + '" x="' + zone.x + '" y="' + zone.y + '" width="' + zone.w + '" height="' + zone.h + '" rx="' + zone.r + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>';
+            const dominantGlow = zone.key === dominant ? 0.28 : 0;
+            const fill = power <= 0 ? 'rgba(255,255,255,0.04)' : 'rgba(99,231,176,' + (0.16 + power * 0.34).toFixed(2) + ')';
+            const stroke = power <= 0 ? 'rgba(255,255,255,0.10)' : 'rgba(159,230,255,' + (0.24 + power * 0.34 + dominantGlow).toFixed(2) + ')';
+            return '<path class="social-body-zone" data-muscle="' + _escape(zone.key) + '" d="' + zone.path + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (zone.key === dominant ? '3' : '2') + '"/>';
           }).join('') +
         '</svg>' +
       '</div>';
+  }
+  function _spotlightMetrics(meSummary, friendSummary) {
+    const keys = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Forearms'];
+    const rows = keys.map((key) => {
+      const mine = meSummary?.[key] || {};
+      const rival = friendSummary?.[key] || {};
+      return {
+        key,
+        diff: (_num(mine.maxWeight, 0) + (_num(mine.sessions, 0) * 8)) - (_num(rival.maxWeight, 0) + (_num(rival.sessions, 0) * 8)),
+        myMax: _num(mine.maxWeight, 0),
+        myLast: mine.lastTrainedAt || '',
+        rivalLast: rival.lastTrainedAt || ''
+      };
+    });
+    const lead = rows.slice().sort((a, b) => b.diff - a.diff)[0];
+    const trail = rows.slice().sort((a, b) => a.diff - b.diff)[0];
+    const heavy = rows.slice().sort((a, b) => b.myMax - a.myMax)[0];
+    const recent = rows.slice().sort((a, b) => new Date(b.myLast || 0).getTime() - new Date(a.myLast || 0).getTime())[0];
+    return [
+      { title: 'Strongest Lead', muscle: lead?.key || 'Chest', label: lead?.diff > 0 ? 'You lead' : 'Even' },
+      { title: 'Biggest Gap', muscle: trail?.key || 'Legs', label: trail?.diff < 0 ? 'Rival leads' : 'Even' },
+      { title: 'Heaviest Plate', muscle: heavy?.key || 'Chest', label: heavy?.myMax ? (heavy.myMax + ' kg') : 'No max yet' },
+      { title: 'Most Recent', muscle: recent?.key || 'Core', label: _dayText(recent?.myLast || '') }
+    ];
   }
   function _muscleInsight(meSummary, friendSummary) {
     const keys = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Forearms'];
@@ -450,7 +483,12 @@
   }
 
   function _renderCompareBody(me, friend) {
+    const spots = _spotlightMetrics(me.muscleSummary, friend.muscleSummary);
     return '' +
+      '<div class="social-card social-body-rival-header">' +
+        '<div class="social-card-title">RIVALRY HEAT</div>' +
+        '<div class="social-card-sub">Most contested: ' + _escape((spots[0] && spots[0].muscle) || 'Chest') + ' | ' + _escape(_muscleInsight(me.muscleSummary, friend.muscleSummary)) + '</div>' +
+      '</div>' +
       '<div class="social-card">' +
         '<div class="social-card-title">BODY MAP RIVALRY</div>' +
         '<div class="social-card-sub">Tap any muscle to compare max load, session count, and training recency.</div>' +
@@ -459,6 +497,15 @@
           _renderBodyMap(friend.muscleSummary, 'Rival') +
         '</div>' +
         '<div class="social-body-summary">' + _escape(_muscleInsight(me.muscleSummary, friend.muscleSummary)) + '</div>' +
+        '<div class="social-spotlight-rail">' +
+          spots.map((spot) => (
+            '<button class="social-spotlight-chip" type="button" onclick=\'window.FORGE_SOCIAL.openMuscleCompare("' + _escape(spot.muscle) + '")\'>' +
+              '<span>' + _escape(spot.title) + '</span>' +
+              '<strong>' + _escape(spot.muscle) + '</strong>' +
+              '<em>' + _escape(spot.label) + '</em>' +
+            '</button>'
+          )).join('') +
+        '</div>' +
       '</div>';
   }
 

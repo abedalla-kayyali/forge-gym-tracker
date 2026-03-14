@@ -225,6 +225,9 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-compare-subtabs')) fail('Social compare depth tabs are missing');
   if (!socialUi.includes('toggleShareStats')) fail('Social UI is missing share-stats toggle action');
   if (!socialUi.includes('openMuscleCompare')) fail('Social UI is missing muscle compare detail action');
+  if (!socialUi.includes('social-body-rival-header')) fail('Social body compare is missing rivalry header hook');
+  if (!socialUi.includes('social-spotlight-rail')) fail('Social body compare is missing spotlight rail hook');
+  if (!socialUi.includes('social-anatomy-board')) fail('Social body compare is missing anatomy board hook');
 } else {
   fail('Missing file: js/social-ui.js');
 }
