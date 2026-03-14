@@ -13,16 +13,16 @@ function renderBodyHeatmap(arr) {
     if (!lastTrainedMs[w.muscle] || ts > lastTrainedMs[w.muscle]) lastTrainedMs[w.muscle] = ts;
   });
 
-  // Heat color: 0-1d = red (just trained), 2-3d = orange (DOMS), 4-6d = yellow (ready), 7-13d = green (primed), 14+d = dark (overdue)
+  // Whoop-style recovery ramp: red -> orange -> yellow -> green -> cool dark.
   function heatColor(muscle) {
     const ts = lastTrainedMs[muscle];
-    if (!ts) return '#1a2e1a'; // never trained
+    if (!ts) return '#1f2b39'; // never trained
     const days = (now - ts) / 86400000;
-    if (days <= 1) return '#e74c3c'; // just trained
-    if (days <= 3) return '#e67e22'; // recovering (DOMS)
-    if (days <= 6) return '#f1c40f'; // ready
-    if (days <= 13) return '#2ecc71'; // primed
-    return '#1a4a2a'; // rested / overdue
+    if (days <= 1) return '#ff5e70'; // freshly taxed
+    if (days <= 3) return '#ff9c4d'; // recovering
+    if (days <= 6) return '#ffd15b'; // near-ready
+    if (days <= 13) return '#3ad27f'; // primed
+    return '#2f4458'; // fully rested / stale
   }
 
   // Front body zones
@@ -67,11 +67,11 @@ function renderBodyHeatmap(arr) {
   };
 
   const legend = [
-    ['#e74c3c', t('heat.tier1')],
-    ['#e67e22', t('heat.tier2')],
-    ['#f1c40f', t('heat.tier3')],
-    ['#2ecc71', t('heat.tier4')],
-    ['#1a4a2a', t('heat.tier5')],
+    ['#ff5e70', t('heat.tier1')],
+    ['#ff9c4d', t('heat.tier2')],
+    ['#ffd15b', t('heat.tier3')],
+    ['#3ad27f', t('heat.tier4')],
+    ['#2f4458', t('heat.tier5')],
   ].map(([c, l]) => `
     <div class="heatmap-legend-item">
       <div class="heatmap-legend-swatch" style="background:${c}"></div>
