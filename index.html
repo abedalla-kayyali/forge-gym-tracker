@@ -1223,6 +1223,12 @@
         <div class="snap-val snap-neutral" id="snap-prs">0</div>
         <div class="snap-lbl">? PRs (period)</div>
       </div>
+      <div class="snap-item snap-readiness-card" id="snap-readiness-card">
+        <div class="snap-readiness-ring" id="snap-readiness-ring" style="--pct:60;--ring-color:#f39c12;">
+          <div class="snap-readiness-center"><span id="snap-readiness-val">60</span><small>%</small></div>
+        </div>
+        <div class="snap-lbl" id="snap-readiness-lbl">readiness</div>
+      </div>
     </div>
 
     <!-- CALISTHENICS SNAPSHOT -->
@@ -8160,6 +8166,9 @@ function _runPostSaveAsyncHooks() {
   setTimeout(checkAchievements, 600);
   // ?? FX: detect level-up after XP update ??
   if (typeof _checkLevelUp === 'function') setTimeout(_checkLevelUp, 700);
+  if (window.FORGE_DUELS && typeof window.FORGE_DUELS.onPostSave === 'function') {
+    setTimeout(() => window.FORGE_DUELS.onPostSave(), 900);
+  }
 }
 
 // ???????????????????????????????????????????
@@ -9120,6 +9129,7 @@ if (document.readyState === 'loading') {
 <script src="js/cardio-log.js"></script>
 <script src="js/cardio-stats.js"></script>
 <script src="js/coach-state.js"></script>
+<script src="js/duels.js"></script>
 <script src="js/steps-health.js"></script>
 <script src="js/cali-dashboard.js"></script>
 <script src="js/ui-layout-theme.js"></script>

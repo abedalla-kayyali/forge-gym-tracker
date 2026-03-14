@@ -620,6 +620,24 @@ function _renderOverviewSnapshot() {
     }
   }
 
+  // Daily readiness ring (Whoop-style)
+  const readinessLbl = document.getElementById('snap-readiness-lbl');
+  if (readinessLbl) readinessLbl.textContent = isAr ? 'الجاهزية' : 'readiness';
+  const ring = document.getElementById('snap-readiness-ring');
+  const val = document.getElementById('snap-readiness-val');
+  if (ring && val) {
+    let r = 60;
+    try {
+      if (typeof window.buildCoachUnifiedState === 'function') {
+        r = Math.max(0, Math.min(100, Number(window.buildCoachUnifiedState()?.readiness?.score || 60)));
+      }
+    } catch (_e) {}
+    const ringColor = r >= 75 ? '#2ecc71' : (r >= 55 ? '#f39c12' : '#e74c3c');
+    ring.style.setProperty('--pct', String(r));
+    ring.style.setProperty('--ring-color', ringColor);
+    val.textContent = String(Math.round(r));
+  }
+
   // Update heatmap badge to show recovery context
   const _heatBadge = document.getElementById('heatmap-legend-badge');
   if (_heatBadge) _heatBadge.textContent = t('dash.recoveryStatus');

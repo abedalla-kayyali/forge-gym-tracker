@@ -672,6 +672,9 @@
     const greeting = host.querySelector('.ctoday-greeting');
     if (greeting) greeting.insertAdjacentHTML('afterend', brief);
     else host.insertAdjacentHTML('afterbegin', brief);
+    if (window.FORGE_DUELS && typeof window.FORGE_DUELS.renderInto === 'function') {
+      try { window.FORGE_DUELS.renderInto(host); } catch (_e) {}
+    }
   }
   window.buildCoachUnifiedState = buildCoachUnifiedState;
   window.calcTrainingScore = calcTrainingScoreUnified;

@@ -1790,6 +1790,41 @@ button:focus:not(:focus-visible){outline:none;}
 .cali-snapshot{border-color:rgba(46,204,113,.15);margin-top:-6px;}
 .snap-cali-label{padding:10px 2px;}
 .cali-snap-icon{font-size:18px;display:block;line-height:1;}
+.snap-readiness-card{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:88px;
+}
+.snap-readiness-ring{
+  --pct:60;
+  --ring-color:#f39c12;
+  width:58px;
+  height:58px;
+  border-radius:50%;
+  position:relative;
+  background:
+    radial-gradient(closest-side, var(--bg3) 76%, transparent 77% 100%),
+    conic-gradient(var(--ring-color) calc(var(--pct) * 1%), rgba(255,255,255,.12) 0);
+}
+.snap-readiness-center{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Bebas Neue',cursive;
+  color:var(--text);
+  font-size:20px;
+  line-height:1;
+}
+.snap-readiness-center small{
+  margin-left:1px;
+  font-size:11px;
+  font-family:'DM Mono',monospace;
+  color:var(--text3);
+}
 .overview-quick-actions{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
   margin:0 0 12px;
@@ -1803,6 +1838,8 @@ button:focus:not(:focus-visible){outline:none;}
 .overview-qa-btn:active{transform:scale(.98);}
 @media (max-width:700px){
   .overview-snapshot{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .snap-readiness-card{min-height:78px;}
+  .snap-readiness-ring{width:52px;height:52px;}
 }
 /* ── CALI DASHBOARD TAB ── */
 .dash-tab-cali{border-color:rgba(46,204,113,.4)!important;color:#2ecc71!important;}
@@ -5209,9 +5246,70 @@ body[data-theme="solar"] .xp-fill {
   border-color:#91ffd0;
 }
 .ctoday-brief-card .ctoday-plan-note strong{color:var(--accent);}
+.coach-duel-card{
+  border:1px solid rgba(94,179,255,.35);
+  background:linear-gradient(180deg,rgba(7,18,30,.9),rgba(8,12,20,.95));
+}
+.duel-split{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:10px;
+  align-items:center;
+  margin-top:10px;
+}
+.duel-vs{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text3);
+}
+.duel-side{
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  padding:8px;
+  background:rgba(255,255,255,.03);
+}
+.duel-side.self{border-color:rgba(99,231,176,.45);}
+.duel-side.opp{border-color:rgba(255,132,132,.35);}
+.duel-name{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:var(--text2);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.duel-score{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  line-height:1;
+  color:#dbfff0;
+  margin-top:4px;
+}
+.duel-bar{
+  height:7px;
+  margin-top:5px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(255,255,255,.12);
+}
+.duel-bar > span{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#52ecb0,var(--accent));
+}
+.duel-side.opp .duel-bar > span{
+  background:linear-gradient(90deg,#ff7070,#ffb257);
+}
+.duel-lead{
+  color:#b8d8ff;
+  margin-top:8px;
+}
 @media (max-width:680px){
   .coach-kpi-grid{grid-template-columns:1fr;}
   .coach-dual-actions{grid-template-columns:1fr;}
+  .duel-split{grid-template-columns:1fr;gap:8px;}
+  .duel-vs{display:none;}
 }
 
 /* ── READINESS INDICATORS ── */
