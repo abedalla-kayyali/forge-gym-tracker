@@ -68,6 +68,8 @@ requiredFiles.forEach((rel) => {
 const indexPath = path.join(ROOT, 'index.html');
 const fxSoundPath = path.join(ROOT, 'js', 'fx-sound.js');
 const authUiPath = path.join(ROOT, 'js', 'auth-ui.js');
+const dataTransferPath = path.join(ROOT, 'js', 'data-transfer.js');
+const dataActionsPath = path.join(ROOT, 'js', 'data-actions.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
 
@@ -131,6 +133,19 @@ if (fs.existsSync(fxSoundPath)) {
 if (fs.existsSync(authUiPath)) {
   const auth = fs.readFileSync(authUiPath, 'utf8');
   if (!auth.includes('auth-submit-glow')) fail('Missing auth submit glow treatment in js/auth-ui.js');
+}
+
+if (fs.existsSync(dataTransferPath)) {
+  const transfer = fs.readFileSync(dataTransferPath, 'utf8');
+  if (!transfer.includes('forge_bw_custom_exercises')) fail('Missing bodyweight custom cards in backup transfer');
+  if (!transfer.includes('forge_cardio_custom_types')) fail('Missing cardio custom cards in backup transfer');
+}
+
+if (fs.existsSync(dataActionsPath)) {
+  const actions = fs.readFileSync(dataActionsPath, 'utf8');
+  if (!actions.includes('cardioLog = []')) fail('Clear-all path does not clear cardio logs');
+  if (!actions.includes('forge_bw_custom_exercises')) fail('Clear-all path does not clear bodyweight custom cards');
+  if (!actions.includes('forge_cardio_custom_types')) fail('Clear-all path does not clear cardio custom cards');
 }
 
 if (failures > 0) {

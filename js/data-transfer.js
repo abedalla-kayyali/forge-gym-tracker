@@ -182,7 +182,7 @@ function exportJSON() {
   const _lsGet = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const data = {
     exportDate: new Date().toISOString(),
-    version: 2,
+    version: 3,
     summary: {
       totalWeightedWorkouts: (typeof workouts !== 'undefined' ? workouts : []).length,
       totalBWWorkouts: (typeof bwWorkouts !== 'undefined' ? bwWorkouts : []).length,
@@ -195,6 +195,8 @@ function exportJSON() {
     cardio:      typeof cardioLog  !== 'undefined' ? cardioLog  : (_lsGet('forge_cardio') || []),
     bodyWeight:  typeof bodyWeight !== 'undefined' ? bodyWeight : (_lsGet('forge_bodyweight') || []),
     templates:   typeof templates  !== 'undefined' ? templates  : (_lsGet('forge_templates') || []),
+    bwCustomExercises: _lsGet('forge_bw_custom_exercises') || [],
+    cardioCustomTypes: _lsGet('forge_cardio_custom_types') || [],
     settings:    typeof settings   !== 'undefined' ? settings   : (_lsGet('forge_settings') || {}),
     // Nutrition
     meals:       _lsGet('forge_meals') || [],
@@ -224,6 +226,14 @@ function importJSON(input) {
       if (data.cardio)     { cardioLog  = data.cardio;     _lsSet('forge_cardio', data.cardio); }
       if (data.bodyWeight) { bodyWeight = data.bodyWeight; _lsSet('forge_bodyweight', data.bodyWeight); }
       if (data.templates)  { templates  = data.templates;  _lsSet('forge_templates', data.templates); }
+      if (data.bwCustomExercises) {
+        if (typeof _bwCustomExercises !== 'undefined') _bwCustomExercises = data.bwCustomExercises;
+        _lsSet('forge_bw_custom_exercises', data.bwCustomExercises);
+      }
+      if (data.cardioCustomTypes) {
+        if (typeof _cardioCustomTypes !== 'undefined') _cardioCustomTypes = data.cardioCustomTypes;
+        _lsSet('forge_cardio_custom_types', data.cardioCustomTypes);
+      }
       if (data.settings)   { settings   = data.settings;   _lsSet('forge_settings', data.settings); }
 
       // Nutrition
