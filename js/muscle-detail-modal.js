@@ -106,6 +106,20 @@
     return sets.reduce(function (acc, s) { return acc + _calcSetVolume(s); }, 0);
   }
 
+  function _exerciseMaxWeight(row) {
+    const sets = Array.isArray(row && row.sets) ? row.sets : [];
+    let max = 0;
+    let unit = 'kg';
+    sets.forEach(function (s) {
+      const w = Number(s && s.weight) || 0;
+      if (w > max) {
+        max = w;
+        unit = (s && s.unit) ? s.unit : unit;
+      }
+    });
+    return { max: max, unit: unit };
+  }
+
   function _summarizeDay(rows) {
     const list = Array.isArray(rows) ? rows : [];
     const volume = list.reduce(function (acc, r) { return acc + _exerciseVolume(r); }, 0);
@@ -493,8 +507,10 @@
       dayRows.slice(0, 8).forEach(function (row, idx) {
         const exVol = _exerciseVolume(row);
         const sets = Array.isArray(row.sets) ? row.sets.length : 0;
+        const maxW = _exerciseMaxWeight(row);
         const line = (idx + 1) + '. ' + (row.exercise || 'Exercise');
-        const meta = sets + ' sets | ' + _fmtVolume(exVol) + (row.isPR ? ' | PR' : '');
+        const maxTxt = maxW.max > 0 ? ('Max ' + maxW.max + maxW.unit) : 'Max -';
+        const meta = sets + ' sets | ' + maxTxt + ' | ' + _fmtVolume(exVol) + (row.isPR ? ' | PR' : '');
 
         _drawRoundRect(ctx, 92, y - 34, W - 184, 62, 10);
         ctx.fillStyle = idx % 2 ? 'rgba(16,31,24,.82)' : 'rgba(13,26,20,.82)';
@@ -526,6 +542,23 @@
     return await _buildMuscleCardCanvas(muscle, data);
   }
 
+  function _ensureDownloadFab() {
+    const card = document.querySelector('#muscle-detail-modal .mdc-card');
+    if (!card) return null;
+    let btn = card.querySelector('.mdc-download-fab');
+    if (btn) return btn;
+
+    btn = document.createElement('button');
+    btn.className = 'mdc-download-fab';
+    btn.setAttribute('aria-label', 'Download image');
+    btn.textContent = 'SAVE';
+    btn.onclick = function () {
+      if (typeof window._downloadMuscleCard === 'function') window._downloadMuscleCard();
+    };
+    card.insertBefore(btn, card.firstChild);
+    return btn;
+  }
+
   function _setToast(msg, tone) {
     if (typeof showToast === 'function') {
       showToast(msg, tone || 'var(--accent)');
@@ -536,6 +569,7 @@
     _mdcCurrentMuscle = muscle;
     const modal = document.getElementById('muscle-detail-modal');
     if (!modal) return;
+    _ensureDownloadFab();
 
     const data = _getMuscleSessions(muscle);
     const theme = MUSCLE_THEME[muscle] || { colorA: '#54ffab', colorB: '#2dbf77', icon: 'core' };
@@ -661,7 +695,7 @@
     const muscle = _mdcCurrentMuscle;
     if (!muscle) return;
 
-    const btn = document.querySelector('.mdc-download-fab, .mdc-download-btn');
+    const btn = _ensureDownloadFab() || document.querySelector('.mdc-download-fab, .mdc-download-btn');
     const release = _setButtonBusy(btn, 'EXPORTING');
 
     try {
