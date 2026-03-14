@@ -4,6 +4,7 @@
   const state = {
     currentTab: 'hub',
     selectedFriendId: '',
+    compareView: 'body',
     lastResults: [],
     profileDirectory: [],
     lastUiSnapshot: null,
@@ -60,32 +61,118 @@
   function _maybeToast(msg, tone) {
     if (typeof showToast === 'function') showToast(msg, tone || 'success');
   }
+  function _dayText(dateStr) {
+    const ms = new Date(dateStr || 0).getTime();
+    if (!Number.isFinite(ms) || !ms) return 'No log yet';
+    const diff = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+    if (diff === 0) return 'Today';
+    if (diff === 1) return '1d ago';
+    return diff + 'd ago';
+  }
+  function _fmtShortDate(dateStr) {
+    const d = new Date(dateStr || 0);
+    if (Number.isNaN(d.getTime())) return 'No log yet';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function _privacyEnabled() {
+    return !window.FORGE_DUELS || typeof window.FORGE_DUELS.getSocialPrivacy !== 'function'
+      ? true
+      : window.FORGE_DUELS.getSocialPrivacy() !== false;
+  }
+  function _compareSubtabs() {
+    const tabs = [
+      ['body', 'Body'],
+      ['cardio', 'Cardio'],
+      ['bodyweight', 'Bodyweight'],
+      ['overview', 'Overview']
+    ];
+    return '<div class="social-compare-subtabs">' + tabs.map((tab) => (
+      '<button class="social-compare-subtab' + (state.compareView === tab[0] ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.setCompareView("' + tab[0] + '")\'>' + tab[1] + '</button>'
+    )).join('') + '</div>';
+  }
+  function _muscleZones() {
+    return [
+      { key: 'Neck', x: 118, y: 26, w: 44, h: 22, r: 11 },
+      { key: 'Traps', x: 86, y: 52, w: 108, h: 26, r: 14 },
+      { key: 'Chest', x: 84, y: 84, w: 112, h: 52, r: 20 },
+      { key: 'Shoulders', x: 50, y: 78, w: 40, h: 52, r: 18 },
+      { key: 'Shoulders', x: 190, y: 78, w: 40, h: 52, r: 18 },
+      { key: 'Biceps', x: 42, y: 136, w: 32, h: 48, r: 16 },
+      { key: 'Biceps', x: 206, y: 136, w: 32, h: 48, r: 16 },
+      { key: 'Triceps', x: 38, y: 188, w: 28, h: 42, r: 14 },
+      { key: 'Triceps', x: 214, y: 188, w: 28, h: 42, r: 14 },
+      { key: 'Forearms', x: 36, y: 236, w: 24, h: 54, r: 12 },
+      { key: 'Forearms', x: 220, y: 236, w: 24, h: 54, r: 12 },
+      { key: 'Core', x: 102, y: 140, w: 76, h: 72, r: 18 },
+      { key: 'Back', x: 84, y: 84, w: 112, h: 54, r: 20, backOnly: true },
+      { key: 'Lower Back', x: 100, y: 146, w: 80, h: 34, r: 16, backOnly: true },
+      { key: 'Glutes', x: 92, y: 184, w: 96, h: 48, r: 20, backOnly: true },
+      { key: 'Legs', x: 92, y: 224, w: 42, h: 104, r: 18 },
+      { key: 'Legs', x: 146, y: 224, w: 42, h: 104, r: 18 },
+      { key: 'Calves', x: 94, y: 334, w: 34, h: 72, r: 18 },
+      { key: 'Calves', x: 152, y: 334, w: 34, h: 72, r: 18 }
+    ];
+  }
+  function _musclePower(summary, key) {
+    const row = summary && summary[key] ? summary[key] : null;
+    if (!row) return 0;
+    const sessions = _num(row.sessions, 0);
+    const maxWeight = _num(row.maxWeight, 0);
+    return Math.max(Math.min(1, sessions / 8), Math.min(1, maxWeight / 120));
+  }
+  function _renderBodyMap(summary, who) {
+    const zones = _muscleZones();
+    return '' +
+      '<div class="social-body-map-card">' +
+        '<div class="social-body-map-label">' + who + '</div>' +
+        '<svg class="social-body-map-svg" viewBox="0 0 280 430" role="img" aria-label="' + _escape(who + ' body map') + '">' +
+          '<rect x="72" y="18" width="136" height="398" rx="34" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)"/>' +
+          zones.map((zone) => {
+            const power = _musclePower(summary, zone.key);
+            const fill = power <= 0 ? 'rgba(255,255,255,0.05)' : 'rgba(99,231,176,' + (0.18 + power * 0.42).toFixed(2) + ')';
+            const stroke = power <= 0 ? 'rgba(255,255,255,0.12)' : 'rgba(159,230,255,' + (0.32 + power * 0.38).toFixed(2) + ')';
+            return '<rect class="social-body-zone" data-muscle="' + _escape(zone.key) + '" x="' + zone.x + '" y="' + zone.y + '" width="' + zone.w + '" height="' + zone.h + '" rx="' + zone.r + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>';
+          }).join('') +
+        '</svg>' +
+      '</div>';
+  }
+  function _muscleInsight(meSummary, friendSummary) {
+    const keys = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Forearms'];
+    const scored = keys.map((key) => {
+      const mine = meSummary?.[key] || {};
+      const rival = friendSummary?.[key] || {};
+      const myScore = _num(mine.maxWeight, 0) + (_num(mine.sessions, 0) * 8);
+      const theirScore = _num(rival.maxWeight, 0) + (_num(rival.sessions, 0) * 8);
+      return { key, diff: myScore - theirScore };
+    });
+    const lead = scored.slice().sort((a, b) => b.diff - a.diff)[0];
+    const trail = scored.slice().sort((a, b) => a.diff - b.diff)[0];
+    const parts = [];
+    if (lead && lead.diff > 0) parts.push(lead.key + ': You lead');
+    if (trail && trail.diff < 0) parts.push(trail.key + ': Rival leads');
+    return parts.length ? parts.join(' | ') : 'Even body-map rivalry right now.';
+  }
 
   function _localSummary() {
-    const weighted = Array.isArray(window.workouts) ? window.workouts : [];
-    const bw = Array.isArray(window.bwWorkouts) ? window.bwWorkouts : [];
-    const cardio = Array.isArray(window.cardioLog) ? window.cardioLog : [];
-    const weekMs = Date.now() - (7 * 86400000);
-    const toMs = (v) => new Date(v || 0).getTime();
-    const weighted7 = weighted.filter((row) => toMs(row?.date) >= weekMs).length;
-    const bw7 = bw.filter((row) => toMs(row?.date) >= weekMs).length;
-    const cardio7 = cardio.filter((row) => toMs(row?.date) >= weekMs).length;
-    const volume7 = weighted.filter((row) => toMs(row?.date) >= weekMs).reduce((sum, row) => sum + _num(row?.volume, 0), 0);
-    const streak = typeof window.calcStreak === 'function' ? _num(window.calcStreak(), 0) : 0;
-    const xp = typeof window.calcXP === 'function' ? _num(window.calcXP(), 0) : 0;
-    const lvl = typeof window.getCurrentLevel === 'function' ? window.getCurrentLevel(xp) : null;
     const profile = window.userProfile || {};
+    const own = window.FORGE_DUELS && typeof window.FORGE_DUELS.buildOwnCompareStats === 'function'
+      ? window.FORGE_DUELS.buildOwnCompareStats()
+      : {};
     return {
       name: (profile.name || profile.displayName) || 'You',
-      workout7d: weighted7 + bw7,
-      cardio7d: cardio7,
-      volume7d: Math.round(volume7),
-      streak,
-      readiness: _num(window._coachScoreCached?.totalScore, _num(window.readinessScore, 0)),
-      balance: _num(window._coachScoreCached?.balanceScore, 0),
-      xp,
-      rank: lvl?.name || '',
-      strongestArea: profile.targetMuscle || ''
+      workout7d: _num(own.workout7d, 0),
+      cardio7d: _num(own.cardio7d, 0),
+      volume7d: _num(own.volume7d, 0),
+      streak: _num(own.streak, 0),
+      readiness: _num(own.readiness, 0),
+      balance: _num(own.balanceScore, 0),
+      xp: _num(own.xp, 0),
+      rank: own.rank || '',
+      strongestArea: own.strongestArea || '',
+      muscleSummary: own.muscleSummary || {},
+      cardioSummary: own.cardioSummary || {},
+      bodyweightSummary: own.bodyweightSummary || {},
+      shared: true
     };
   }
 
@@ -98,6 +185,7 @@
     const stats = friend?.stats || {};
     return {
       name: friend?.name || 'Friend',
+      shared: stats.shared !== false,
       workout7d: _num(stats.workout7d, 0),
       cardio7d: _num(stats.cardio7d, 0),
       volume7d: _num(stats.volume7d, 0),
@@ -106,7 +194,10 @@
       balance: _num(stats.balanceScore, 0),
       xp: _num(stats.xp, 0),
       rank: stats.rank || '',
-      strongestArea: stats.strongestArea || ''
+      strongestArea: stats.strongestArea || '',
+      muscleSummary: stats.muscleSummary || {},
+      cardioSummary: stats.cardioSummary || {},
+      bodyweightSummary: stats.bodyweightSummary || {}
     };
   }
 
@@ -225,6 +316,7 @@
     const inviteRail = invites.length
       ? invites.map(_inviteCard).join('')
       : '<div class="social-card-sub">No pending invites right now.</div>';
+    const privacyOn = _privacyEnabled();
     el.innerHTML = '' +
       _panelHtml(
         'SOCIAL HUB',
@@ -237,7 +329,15 @@
         '</div>'
       ) +
       activeCard +
-      '<div class="social-card"><div class="social-card-title">INVITE RAIL</div><div class="social-card-sub">Respond fast to keep the social loop active.</div><div class="social-feed-list">' + inviteRail + '</div></div>';
+      '<div class="social-card"><div class="social-card-title">INVITE RAIL</div><div class="social-card-sub">Respond fast to keep the social loop active.</div><div class="social-feed-list">' + inviteRail + '</div></div>' +
+      '<div class="social-card social-privacy-card">' +
+        '<div class="social-card-title">PRIVACY</div>' +
+        '<div class="social-card-sub">Control whether friends can compare your body map, cardio, and bodyweight summaries.</div>' +
+        '<div class="social-privacy-row">' +
+          '<div class="social-privacy-copy"><strong>' + (privacyOn ? 'Sharing is on' : 'Sharing is off') + '</strong><span>' + (privacyOn ? 'Friends can view your aggregated compare stats.' : 'Friends can still add and duel you, but compare stats stay hidden.') + '</span></div>' +
+          '<button class="social-action-btn' + (privacyOn ? ' primary' : '') + '" type="button" onclick="window.FORGE_SOCIAL.toggleShareStats()">' + (privacyOn ? 'Turn Off' : 'Turn On') + '</button>' +
+        '</div>' +
+      '</div>';
   }
 
   function _friendCard(friend) {
@@ -316,6 +416,90 @@
       '<div class="social-card"><div class="social-card-title">YOUR FRIENDS</div><div class="social-card-sub">People you can compare with and challenge.</div><div class="social-friend-list">' + friendHtml + '</div></div>';
   }
 
+  function _compareHidden(friend) {
+    return '' +
+      _panelHtml(
+        'COMPARE',
+        'This athlete has hidden compare stats from friends.',
+        _compareSubtabs()
+      ) +
+      '<div class="social-card"><div class="social-card-title">STATS HIDDEN</div><div class="social-card-sub">You can still keep this friend and challenge them to duels, but their body map and compare summaries are private.</div></div>';
+  }
+
+  function _renderCompareOverview(me, friend) {
+    const compareMeta = '' +
+      '<div class="social-empty-grid">' +
+        '<div class="social-card"><div class="social-card-title">RANK</div><div class="social-card-sub">You: ' + _escape(me.rank || 'Unranked') + ' | Rival: ' + _escape(friend.rank || 'Unranked') + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">STRONGEST AREA</div><div class="social-card-sub">You: ' + _escape(me.strongestArea || 'N/A') + ' | Rival: ' + _escape(friend.strongestArea || 'N/A') + '</div></div>' +
+      '</div>';
+    return compareMeta +
+      '<div class="social-compare-grid">' +
+        _compareMetric('Weekly Sessions', me.workout7d, friend.workout7d, '') +
+        _compareMetric('Cardio 7d', me.cardio7d, friend.cardio7d, '') +
+        _compareMetric('Volume 7d', me.volume7d, friend.volume7d, 'kg') +
+        _compareMetric('Streak', me.streak, friend.streak, 'd') +
+        _compareMetric('Readiness', me.readiness, friend.readiness, '') +
+        _compareMetric('Balance', me.balance, friend.balance, '') +
+      '</div>';
+  }
+
+  function _renderCompareBody(me, friend) {
+    return '' +
+      '<div class="social-card">' +
+        '<div class="social-card-title">BODY MAP RIVALRY</div>' +
+        '<div class="social-card-sub">Tap any muscle to compare max load, session count, and training recency.</div>' +
+        '<div class="social-body-map-grid">' +
+          _renderBodyMap(me.muscleSummary, 'You') +
+          _renderBodyMap(friend.muscleSummary, 'Rival') +
+        '</div>' +
+        '<div class="social-body-summary">' + _escape(_muscleInsight(me.muscleSummary, friend.muscleSummary)) + '</div>' +
+      '</div>';
+  }
+
+  function _renderCompareCardio(me, friend) {
+    const my = me.cardioSummary || {};
+    const rival = friend.cardioSummary || {};
+    const verdict = _num(my.minutes7d, 0) === _num(rival.minutes7d, 0)
+      ? 'Cardio rivalry is even.'
+      : _num(my.minutes7d, 0) > _num(rival.minutes7d, 0)
+        ? 'You lead cardio volume.'
+        : 'Rival leads cardio volume.';
+    return '' +
+      '<div class="social-card"><div class="social-card-title">CARDIO COMPARE</div><div class="social-card-sub">' + verdict + '</div></div>' +
+      '<div class="social-compare-grid">' +
+        _compareMetric('Sessions 7d', my.sessions7d, rival.sessions7d, '') +
+        _compareMetric('Minutes 7d', my.minutes7d, rival.minutes7d, 'm') +
+        _compareMetric('Distance 7d', my.distance7d, rival.distance7d, 'km') +
+        _compareMetric('Last Cardio', _dayText(my.lastCardioAt) === 'No log yet' ? 0 : Math.max(1, 30 - _num((Date.now() - new Date(my.lastCardioAt || 0).getTime()) / 86400000, 30)), _dayText(rival.lastCardioAt) === 'No log yet' ? 0 : Math.max(1, 30 - _num((Date.now() - new Date(rival.lastCardioAt || 0).getTime()) / 86400000, 30)), '') +
+      '</div>' +
+      '<div class="social-empty-grid">' +
+        '<div class="social-card"><div class="social-card-title">YOUR TOP MODE</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | ' + _escape(_fmtShortDate(my.lastCardioAt)) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">RIVAL TOP MODE</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '</div></div>' +
+      '</div>';
+  }
+
+  function _renderCompareBodyweight(me, friend) {
+    const my = me.bodyweightSummary || {};
+    const rival = friend.bodyweightSummary || {};
+    const verdict = _num(my.skillsDone, 0) === _num(rival.skillsDone, 0)
+      ? 'Bodyweight skill output is even.'
+      : _num(my.skillsDone, 0) > _num(rival.skillsDone, 0)
+        ? 'You lead on bodyweight skill variety.'
+        : 'Rival leads on bodyweight skill variety.';
+    return '' +
+      '<div class="social-card"><div class="social-card-title">BODYWEIGHT COMPARE</div><div class="social-card-sub">' + verdict + '</div></div>' +
+      '<div class="social-compare-grid">' +
+        _compareMetric('Sessions 7d', my.sessions7d, rival.sessions7d, '') +
+        _compareMetric('Skills Done', my.skillsDone, rival.skillsDone, '') +
+        _compareMetric('Best Reps', my.bestReps, rival.bestReps, '') +
+        _compareMetric('Best Hold', my.bestDurationSec, rival.bestDurationSec, 's') +
+      '</div>' +
+      '<div class="social-empty-grid">' +
+        '<div class="social-card"><div class="social-card-title">YOUR LAST SESSION</div><div class="social-card-sub">' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">RIVAL LAST SESSION</div><div class="social-card-sub">' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '</div></div>' +
+      '</div>';
+  }
+
   function renderCompare() {
     const el = byId('social-panel-compare');
     if (!el) return;
@@ -326,7 +510,7 @@
       el.innerHTML = _panelHtml(
         'COMPARE',
         'Head-to-head workout, cardio, streak, and balance comparisons will render here.',
-        '<div class="social-empty-grid">' +
+        _compareSubtabs() + '<div class="social-empty-grid">' +
           '<div class="social-card"><div class="social-card-title">NO RIVAL YET</div><div class="social-card-sub">Add a friend first, then compare sessions, cardio, streak, and balance.</div></div>' +
           '<div class="social-card"><div class="social-card-title">NEXT MOVE</div><div class="social-card-sub">Search a rival from Friends to unlock compare cards.</div></div>' +
         '</div>'
@@ -336,29 +520,25 @@
     state.selectedFriendId = String(selected.id);
     const me = _localSummary();
     const friend = _friendCompareSummary(selected.id);
-    const compareMeta = '' +
-      '<div class="social-empty-grid">' +
-        '<div class="social-card"><div class="social-card-title">RANK</div><div class="social-card-sub">You: ' + _escape(me.rank || 'Unranked') + ' | Rival: ' + _escape(friend.rank || 'Unranked') + '</div></div>' +
-        '<div class="social-card"><div class="social-card-title">STRONGEST AREA</div><div class="social-card-sub">You: ' + _escape(me.strongestArea || 'N/A') + ' | Rival: ' + _escape(friend.strongestArea || 'N/A') + '</div></div>' +
-      '</div>';
+    if (!friend.shared) {
+      el.innerHTML = _compareHidden(friend);
+      return;
+    }
+    let body = _renderCompareBody(me, friend);
+    if (state.compareView === 'overview') body = _renderCompareOverview(me, friend);
+    else if (state.compareView === 'cardio') body = _renderCompareCardio(me, friend);
+    else if (state.compareView === 'bodyweight') body = _renderCompareBodyweight(me, friend);
     el.innerHTML = '' +
       _panelHtml(
         'COMPARE',
         _leadCopy(me, friend),
+        _compareSubtabs() +
         '<div class="social-compare-head">' +
           '<div class="social-compare-side"><span>YOU</span><strong>' + _escape(me.name) + '</strong></div>' +
           '<div class="social-compare-vs">VS</div>' +
           '<div class="social-compare-side"><span>RIVAL</span><strong>' + _escape(friend.name) + '</strong></div>' +
         '</div>'
-      ) + compareMeta +
-      '<div class="social-compare-grid">' +
-        _compareMetric('Weekly Sessions', me.workout7d, friend.workout7d, '') +
-        _compareMetric('Cardio 7d', me.cardio7d, friend.cardio7d, '') +
-        _compareMetric('Volume 7d', me.volume7d, friend.volume7d, 'kg') +
-        _compareMetric('Streak', me.streak, friend.streak, 'd') +
-        _compareMetric('Readiness', me.readiness, friend.readiness, '') +
-        _compareMetric('Balance', me.balance, friend.balance, '') +
-      '</div>';
+      ) + body;
   }
 
   function _duelComposer() {
@@ -477,6 +657,62 @@
     renderCompare();
     renderDuels();
   }
+  function setCompareView(view) {
+    state.compareView = String(view || 'body');
+    renderCompare();
+    _bindBodyCompareZones();
+  }
+  function _bindBodyCompareZones() {
+    document.querySelectorAll('.social-body-zone').forEach((node) => {
+      node.onclick = function () { openMuscleCompare(node.getAttribute('data-muscle')); };
+    });
+  }
+  function openMuscleCompare(muscle) {
+    const modal = byId('social-compare-muscle-modal');
+    const title = byId('social-compare-muscle-title');
+    const sub = byId('social-compare-muscle-sub');
+    const body = byId('social-compare-muscle-body');
+    const s = _duelState();
+    const friends = Array.isArray(s?.friends) ? s.friends : [];
+    const selected = friends.find((f) => String(f.id) === String(state.selectedFriendId)) || friends[0] || null;
+    if (!modal || !selected) return;
+    const me = _localSummary();
+    const friend = _friendCompareSummary(selected.id);
+    const myRow = me.muscleSummary?.[muscle] || {};
+    const rivalRow = friend.muscleSummary?.[muscle] || {};
+    const myWeight = _num(myRow.maxWeight, 0);
+    const rivalWeight = _num(rivalRow.maxWeight, 0);
+    const lead = myWeight === rivalWeight
+      ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? 'Even rivalry' : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? 'You lead consistency' : 'Rival leads consistency')
+      : myWeight > rivalWeight ? 'You lead max load' : 'Rival leads max load';
+    if (title) title.textContent = muscle || 'Muscle';
+    if (sub) sub.textContent = lead;
+    if (body) {
+      body.innerHTML = '' +
+        '<div class="social-empty-grid">' +
+          '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Max: ' + _escape(myWeight ? (myWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(myRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(myRow.lastTrainedAt)) + '</div></div>' +
+          '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Max: ' + _escape(rivalWeight ? (rivalWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(rivalRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(rivalRow.lastTrainedAt)) + '</div></div>' +
+        '</div>' +
+        '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CATCH-UP TIP</div><div class="social-card-sub">' +
+          _escape(
+            myWeight < rivalWeight
+              ? ('Add 2 focused ' + muscle + ' sessions this week to close the load gap.')
+              : ('Keep ' + muscle + ' frequency high to protect your lead.')
+          ) +
+        '</div></div>';
+    }
+    modal.style.display = 'flex';
+  }
+  function closeMuscleCompare() {
+    const modal = byId('social-compare-muscle-modal');
+    if (modal) modal.style.display = 'none';
+  }
+  async function toggleShareStats() {
+    if (!window.FORGE_DUELS || typeof window.FORGE_DUELS.setSocialPrivacy !== 'function') return;
+    const next = await window.FORGE_DUELS.setSocialPrivacy(!_privacyEnabled());
+    _maybeToast(next ? 'Friend compare sharing enabled' : 'Friend compare sharing disabled', 'success');
+    await refresh();
+  }
 
   function startDuel(id, mode) {
     const duelState = _duelState();
@@ -504,6 +740,7 @@
     renderCompare();
     renderDuels();
     setTab(state.currentTab);
+    _bindBodyCompareZones();
     const nextSocial = _uiDuelState();
     state.lastUiSnapshot = {
       friendCount: _friendCount(),
@@ -533,6 +770,10 @@
     removeFriend,
     copyFriendCode,
     selectFriend,
+    setCompareView,
+    toggleShareStats,
+    openMuscleCompare,
+    closeMuscleCompare,
     startDuel,
     getState: function () { return { ...state }; }
   };

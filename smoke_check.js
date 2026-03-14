@@ -150,7 +150,8 @@ if (fs.existsSync(indexPath)) {
     'id="social-tab-hub"',
     'id="social-tab-friends"',
     'id="social-tab-compare"',
-    'id="social-tab-duels"'
+    'id="social-tab-duels"',
+    'id="social-compare-muscle-modal"'
   ];
   requiredSocialSnippets.forEach((snippet) => {
     if (!html.includes(snippet)) fail('Missing social shell snippet in index.html: ' + snippet);
@@ -203,6 +204,10 @@ if (fs.existsSync(duelsPath)) {
   if (!duels.includes('ensureReady')) fail('Duels module is missing readiness republish flow');
   if (!duels.includes('_searchUsers(q, { force: true })')) fail('Manual duel search does not force-refresh profile directory');
   if (!duels.includes("const matches = await _searchUsers(raw, { force: true });")) fail('Friend add input does not fall back to refreshed profile search');
+  if (!duels.includes('muscleSummary')) fail('Duels public stats are missing muscle summary publishing');
+  if (!duels.includes('cardioSummary')) fail('Duels public stats are missing cardio summary publishing');
+  if (!duels.includes('bodyweightSummary')) fail('Duels public stats are missing bodyweight summary publishing');
+  if (!duels.includes('socialShareStats')) fail('Duels profile is missing social share-stats toggle support');
 }
 
 const socialUiPath = path.join(ROOT, 'js', 'social-ui.js');
@@ -216,6 +221,10 @@ if (fs.existsSync(socialUiPath)) {
   if (socialUi.includes('onclick="window.FORGE_SOCIAL.addFoundFriend(\' + id + \')"')) fail('Social UI still renders invalid inline add-friend onclick HTML');
   if (socialUi.includes('onclick="window.FORGE_SOCIAL.startDuel(\' + id + \',\\\'workout\\\')"')) fail('Social UI still renders invalid inline duel onclick HTML');
   if (socialUi.includes('onclick="if(window.FORGE_DUELS){window.FORGE_DUELS.acceptInvite(\' + JSON.stringify(invite.id) + \');} window.FORGE_SOCIAL.refresh();"')) fail('Social UI still renders invalid inline invite onclick HTML');
+  if (!socialUi.includes("compareView: 'body'")) fail('Social compare view is missing compare-depth subview state');
+  if (!socialUi.includes('social-compare-subtabs')) fail('Social compare depth tabs are missing');
+  if (!socialUi.includes('toggleShareStats')) fail('Social UI is missing share-stats toggle action');
+  if (!socialUi.includes('openMuscleCompare')) fail('Social UI is missing muscle compare detail action');
 } else {
   fail('Missing file: js/social-ui.js');
 }

@@ -8,7 +8,7 @@
   const PROFILE_CACHE_MS = 90000;
   const DAY_MS = 86400000;
   const INBOX_POLL_MS = 60000;
-  const MUSCLES = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Biceps', 'Triceps', 'Forearms', 'Glutes', 'Calves'];
+  const MUSCLES = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Forearms', 'Core', 'Legs', 'Calves', 'Glutes', 'Lower Back', 'Traps', 'Neck'];
 
   let _state = _loadState();
   let _channel = null;
@@ -54,6 +54,160 @@
   function _cardio() {
     if (typeof cardioLog !== 'undefined' && Array.isArray(cardioLog)) return cardioLog;
     return Array.isArray(window.cardioLog) ? window.cardioLog : [];
+  }
+  function _profileObj() {
+    const profile = _safeGet('forge_profile', {});
+    return profile && typeof profile === 'object' ? profile : {};
+  }
+  function _socialShareEnabled(profileArg) {
+    const profile = profileArg && typeof profileArg === 'object' ? profileArg : _profileObj();
+    return profile.socialShareStats !== false;
+  }
+  function _normMuscleKey(raw) {
+    const key = String(raw || '').trim().toLowerCase();
+    if (!key) return '';
+    if (key === 'lower back' || key === 'lowerback') return 'Lower Back';
+    if (key === 'glute' || key === 'glutes') return 'Glutes';
+    if (key === 'trap' || key === 'traps') return 'Traps';
+    if (key === 'leg' || key === 'legs' || key === 'quads' || key === 'hamstrings') return 'Legs';
+    if (key === 'shoulder' || key === 'shoulders' || key === 'delts') return 'Shoulders';
+    if (key === 'abs' || key === 'abdominals' || key === 'core') return 'Core';
+    if (key === 'calf' || key === 'calves') return 'Calves';
+    if (key === 'bicep' || key === 'biceps') return 'Biceps';
+    if (key === 'tricep' || key === 'triceps') return 'Triceps';
+    if (key === 'forearm' || key === 'forearms') return 'Forearms';
+    if (key === 'back' || key === 'lats' || key === 'lat') return 'Back';
+    if (key === 'chest' || key === 'pecs' || key === 'pec') return 'Chest';
+    if (key === 'neck') return 'Neck';
+    return MUSCLES.find((m) => m.toLowerCase() === key) || '';
+  }
+  function _buildMuscleSummaryFromWorkouts() {
+    const out = Object.create(null);
+    _workouts().forEach((w) => {
+      const muscle = _normMuscleKey(w?.muscle);
+      if (!muscle) return;
+      const existing = out[muscle] || { maxWeight: 0, sessions: 0, lastTrainedAt: '' };
+      const maxWeight = Math.max(
+        _toNum(existing.maxWeight, 0),
+        _toNum(w?.weight, 0),
+        _toNum(w?.maxWeight, 0),
+        _arr(w?.sets).reduce((mx, s) => Math.max(mx, _toNum(s?.weight, 0)), 0)
+      );
+      const rowDate = String(w?.date || '');
+      out[muscle] = {
+        maxWeight,
+        sessions: _toNum(existing.sessions, 0) + 1,
+        lastTrainedAt: (!existing.lastTrainedAt || new Date(rowDate).getTime() > new Date(existing.lastTrainedAt).getTime()) ? rowDate : existing.lastTrainedAt
+      };
+    });
+    return out;
+  }
+  function _buildCardioSummary() {
+    const rows = _cardio();
+    const last7Ms = Date.now() - (7 * DAY_MS);
+    const toMs = (d) => new Date(d || 0).getTime();
+    const modeMap = Object.create(null);
+    let minutes7d = 0;
+    let distance7d = 0;
+    let sessions7d = 0;
+    let lastCardioAt = '';
+    rows.forEach((row) => {
+      const rowDate = String(row?.date || '');
+      const rowMs = toMs(rowDate);
+      const mode = String(row?.activity || row?.act || row?.name || row?.mode || 'Cardio').trim() || 'Cardio';
+      modeMap[mode] = (modeMap[mode] || 0) + 1;
+      if (!lastCardioAt || rowMs > toMs(lastCardioAt)) lastCardioAt = rowDate;
+      if (rowMs >= last7Ms) {
+        sessions7d += 1;
+        minutes7d += _toNum(row?.durationMins ?? row?.duration ?? row?.mins, 0);
+        distance7d += _toNum(row?.distanceKm ?? row?.distance ?? row?.km, 0);
+      }
+    });
+    const topMode = Object.keys(modeMap).sort((a, b) => modeMap[b] - modeMap[a])[0] || '';
+    return {
+      sessions7d,
+      minutes7d: Math.round(minutes7d),
+      distance7d: Math.round(distance7d * 10) / 10,
+      lastCardioAt,
+      topMode
+    };
+  }
+  function _buildBodyweightSummary() {
+    const rows = _bwWorkouts();
+    const last7Ms = Date.now() - (7 * DAY_MS);
+    const toMs = (d) => new Date(d || 0).getTime();
+    let sessions7d = 0;
+    let skillsDone = 0;
+    let bestReps = 0;
+    let bestDurationSec = 0;
+    let lastBodyweightAt = '';
+    const skillSet = new Set();
+    rows.forEach((row) => {
+      const rowDate = String(row?.date || '');
+      const rowMs = toMs(rowDate);
+      const ex = String(row?.exercise || '').trim();
+      if (ex) skillSet.add(ex.toLowerCase());
+      if (!lastBodyweightAt || rowMs > toMs(lastBodyweightAt)) lastBodyweightAt = rowDate;
+      if (rowMs >= last7Ms) sessions7d += 1;
+      _arr(row?.sets).forEach((set) => {
+        bestReps = Math.max(bestReps, _toNum(set?.reps, 0));
+        bestDurationSec = Math.max(bestDurationSec, _toNum(set?.secs ?? set?.durationSec, 0));
+      });
+    });
+    skillsDone = skillSet.size;
+    return { sessions7d, skillsDone, bestReps, bestDurationSec, lastBodyweightAt };
+  }
+  function _buildPublicStats(profileArg, opts) {
+    const profile = profileArg && typeof profileArg === 'object' ? profileArg : _profileObj();
+    const options = opts || {};
+    const shareEnabled = options.forceShare === true ? true : _socialShareEnabled(profile);
+    const cardioLen = _cardio().length;
+    const weightedLen = _workouts().length;
+    const bwLen = _bwWorkouts().length;
+    const last7Ms = Date.now() - (7 * DAY_MS);
+    const toMs = (d) => new Date(d || 0).getTime();
+    const cardio7 = _cardio().filter(c => toMs(c?.date) >= last7Ms).length;
+    const workout7 = _workouts().filter(w => toMs(w?.date) >= last7Ms).length + _bwWorkouts().filter(w => toMs(w?.date) >= last7Ms).length;
+    const volume7d = _workouts().filter(w => toMs(w?.date) >= last7Ms).reduce((sum, w) => sum + _toNum(w?.volume, 0), 0);
+    const xp = typeof window.calcXP === 'function' ? _toNum(window.calcXP(), 0) : _toNum(profile?.xp, 0);
+    const level = typeof window.getCurrentLevel === 'function' ? window.getCurrentLevel(xp) : null;
+    const streak = typeof window.calcStreak === 'function' ? _toNum(window.calcStreak(), 0) : 0;
+    const coachState = typeof window.buildCoachUnifiedState === 'function' ? window.buildCoachUnifiedState() : null;
+    const readiness = _toNum(coachState?.readiness?.score, 0);
+    const balanceScore = _toNum(coachState?.scoreBreakdown?.balance ?? coachState?.balanceScore, 0);
+    const muscleMap = Object.create(null);
+    _workouts().forEach(w => {
+      const key = _normMuscleKey(w?.muscle);
+      if (!key) return;
+      muscleMap[key] = (muscleMap[key] || 0) + 1;
+    });
+    _bwWorkouts().forEach(w => {
+      const key = _normMuscleKey(w?.muscle);
+      if (!key) return;
+      muscleMap[key] = (muscleMap[key] || 0) + 1;
+    });
+    const strongestArea = Object.keys(muscleMap).sort((a, b) => muscleMap[b] - muscleMap[a])[0] || '';
+    const base = {
+      shared: shareEnabled,
+      updatedAt: _isoNow(),
+      workoutSessions: weightedLen + bwLen,
+      cardioSessions: cardioLen,
+      workout7d: workout7,
+      cardio7d: cardio7,
+      volume7d: Math.round(volume7d),
+      xp,
+      rank: level?.name || '',
+      streak,
+      readiness,
+      balanceScore,
+      strongestArea,
+      lastActiveAt: _isoNow()
+    };
+    if (!shareEnabled && !options.forceShare) return base;
+    base.muscleSummary = _buildMuscleSummaryFromWorkouts();
+    base.cardioSummary = _buildCardioSummary();
+    base.bodyweightSummary = _buildBodyweightSummary();
+    return base;
   }
 
   function _encodeUser(user) {
@@ -165,7 +319,7 @@
   async function _syncOwnFriendState() {
     if (!window._sb || !_me?.id) return;
     try {
-      const profile = _safeGet('forge_profile', {});
+      const profile = _profileObj();
       const payload = {
         id: _me.id,
         data: {
@@ -447,48 +601,8 @@
   }
   async function _publishOwnStats() {
     try {
-      const profile = _safeGet('forge_profile', {});
-      const cardioLen = _cardio().length;
-      const weightedLen = _workouts().length;
-      const bwLen = _bwWorkouts().length;
-      const last7Ms = Date.now() - (7 * DAY_MS);
-      const toMs = (d) => new Date(d || 0).getTime();
-      const cardio7 = _cardio().filter(c => toMs(c?.date) >= last7Ms).length;
-      const workout7 = _workouts().filter(w => toMs(w?.date) >= last7Ms).length + _bwWorkouts().filter(w => toMs(w?.date) >= last7Ms).length;
-      const volume7d = _workouts().filter(w => toMs(w?.date) >= last7Ms).reduce((sum, w) => sum + _toNum(w?.volume, 0), 0);
-      const xp = typeof window.calcXP === 'function' ? _toNum(window.calcXP(), 0) : _toNum(profile?.xp, 0);
-      const level = typeof window.getCurrentLevel === 'function' ? window.getCurrentLevel(xp) : null;
-      const streak = typeof window.calcStreak === 'function' ? _toNum(window.calcStreak(), 0) : 0;
-      const coachState = typeof window.buildCoachUnifiedState === 'function' ? window.buildCoachUnifiedState() : null;
-      const readiness = _toNum(coachState?.readiness?.score, 0);
-      const balanceScore = _toNum(coachState?.scoreBreakdown?.balance ?? coachState?.balanceScore, 0);
-      const muscleMap = Object.create(null);
-      _workouts().forEach(w => {
-        const key = String(w?.muscle || '').trim();
-        if (!key) return;
-        muscleMap[key] = (muscleMap[key] || 0) + 1;
-      });
-      _bwWorkouts().forEach(w => {
-        const key = String(w?.muscle || '').trim();
-        if (!key) return;
-        muscleMap[key] = (muscleMap[key] || 0) + 1;
-      });
-      const strongestArea = Object.keys(muscleMap).sort((a, b) => muscleMap[b] - muscleMap[a])[0] || '';
-      profile.duelPublicStats = {
-        updatedAt: _isoNow(),
-        workoutSessions: weightedLen + bwLen,
-        cardioSessions: cardioLen,
-        workout7d: workout7,
-        cardio7d: cardio7,
-        volume7d: Math.round(volume7d),
-        xp,
-        rank: level?.name || '',
-        streak,
-        readiness,
-        balanceScore,
-        strongestArea,
-        lastActiveAt: _isoNow()
-      };
+      const profile = _profileObj();
+      profile.duelPublicStats = _buildPublicStats(profile);
       _safeSet('forge_profile', profile);
       if (window._sb && _me) {
         const publicPayload = {
@@ -1199,6 +1313,18 @@
     cancelActive: _cancelActive,
     syncNow: function () { _syncActiveScore(); _refreshState(); },
     ensureReady: _ensureReady,
+    getSocialPrivacy: function () { return _socialShareEnabled(); },
+    setSocialPrivacy: async function (enabled) {
+      const profile = _profileObj();
+      profile.socialShareStats = enabled !== false;
+      _safeSet('forge_profile', profile);
+      await _publishOwnStats();
+      return profile.socialShareStats;
+    },
+    buildOwnCompareStats: function () {
+      const profile = _profileObj();
+      return _buildPublicStats(profile, { forceShare: true });
+    },
     searchUsers: async function (query) { await _ensureReady(); return _searchUsers(query, { force: true }); },
     listProfiles: async function () { await _ensureReady(); return _fetchProfiles(true); },
     getFriendCode: function () { return _myFriendCode(); },
