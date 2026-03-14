@@ -98,6 +98,9 @@ function startProgramWorkout() {
     if (exInp) exInp.value = day.exs[0];
     updateLastSessionHint();
     loadLastSessionSets(day.exs[0]);
+    if (typeof applyProgramAutoRegulation === 'function') {
+      try { applyProgramAutoRegulation(day.exs[0]); } catch (_) {}
+    }
     showToast(day.label + ' loaded!');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, 80);
