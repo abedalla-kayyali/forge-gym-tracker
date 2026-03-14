@@ -70,9 +70,15 @@
     return diff + 'd ago';
   }
   function _fmtShortDate(dateStr) {
-    const d = new Date(dateStr || 0);
-    if (Number.isNaN(d.getTime())) return 'No log yet';
+    if (!dateStr) return 'No log yet';
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime()) || d.getTime() <= 0) return 'No log yet';
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function _metricOrDash(v, unit) {
+    const n = _num(v, NaN);
+    if (!Number.isFinite(n) || n <= 0) return '—';
+    return String(n) + (unit || '');
   }
   function _privacyEnabled() {
     return !window.FORGE_DUELS || typeof window.FORGE_DUELS.getSocialPrivacy !== 'function'
@@ -459,7 +465,11 @@
   function _renderCompareCardio(me, friend) {
     const my = me.cardioSummary || {};
     const rival = friend.cardioSummary || {};
-    const verdict = _num(my.minutes7d, 0) === _num(rival.minutes7d, 0)
+    const myHas = _num(my.sessions7d, 0) > 0 || _num(my.minutes7d, 0) > 0 || _num(my.distance7d, 0) > 0;
+    const rivalHas = _num(rival.sessions7d, 0) > 0 || _num(rival.minutes7d, 0) > 0 || _num(rival.distance7d, 0) > 0;
+    const verdict = (!myHas && !rivalHas)
+      ? 'No cardio compare data yet.'
+      : _num(my.minutes7d, 0) === _num(rival.minutes7d, 0)
       ? 'Cardio rivalry is even.'
       : _num(my.minutes7d, 0) > _num(rival.minutes7d, 0)
         ? 'You lead cardio volume.'
@@ -470,18 +480,22 @@
         _compareMetric('Sessions 7d', my.sessions7d, rival.sessions7d, '') +
         _compareMetric('Minutes 7d', my.minutes7d, rival.minutes7d, 'm') +
         _compareMetric('Distance 7d', my.distance7d, rival.distance7d, 'km') +
-        _compareMetric('Last Cardio', _dayText(my.lastCardioAt) === 'No log yet' ? 0 : Math.max(1, 30 - _num((Date.now() - new Date(my.lastCardioAt || 0).getTime()) / 86400000, 30)), _dayText(rival.lastCardioAt) === 'No log yet' ? 0 : Math.max(1, 30 - _num((Date.now() - new Date(rival.lastCardioAt || 0).getTime()) / 86400000, 30)), '') +
+        _compareMetric('Activity Pulse', myHas ? 1 : 0, rivalHas ? 1 : 0, '') +
       '</div>' +
       '<div class="social-empty-grid">' +
-        '<div class="social-card"><div class="social-card-title">YOUR TOP MODE</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | ' + _escape(_fmtShortDate(my.lastCardioAt)) + '</div></div>' +
-        '<div class="social-card"><div class="social-card-title">RIVAL TOP MODE</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">YOUR CARDIO SNAPSHOT</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(my.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(my.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(my.distance7d, 'km')) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">RIVAL CARDIO SNAPSHOT</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(rival.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(rival.distance7d, 'km')) + '</div></div>' +
       '</div>';
   }
 
   function _renderCompareBodyweight(me, friend) {
     const my = me.bodyweightSummary || {};
     const rival = friend.bodyweightSummary || {};
-    const verdict = _num(my.skillsDone, 0) === _num(rival.skillsDone, 0)
+    const myHas = _num(my.sessions7d, 0) > 0 || _num(my.skillsDone, 0) > 0 || _num(my.bestReps, 0) > 0 || _num(my.bestDurationSec, 0) > 0;
+    const rivalHas = _num(rival.sessions7d, 0) > 0 || _num(rival.skillsDone, 0) > 0 || _num(rival.bestReps, 0) > 0 || _num(rival.bestDurationSec, 0) > 0;
+    const verdict = (!myHas && !rivalHas)
+      ? 'No bodyweight compare data yet.'
+      : _num(my.skillsDone, 0) === _num(rival.skillsDone, 0)
       ? 'Bodyweight skill output is even.'
       : _num(my.skillsDone, 0) > _num(rival.skillsDone, 0)
         ? 'You lead on bodyweight skill variety.'
@@ -495,8 +509,8 @@
         _compareMetric('Best Hold', my.bestDurationSec, rival.bestDurationSec, 's') +
       '</div>' +
       '<div class="social-empty-grid">' +
-        '<div class="social-card"><div class="social-card-title">YOUR LAST SESSION</div><div class="social-card-sub">' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '</div></div>' +
-        '<div class="social-card"><div class="social-card-title">RIVAL LAST SESSION</div><div class="social-card-sub">' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">YOUR BODYWEIGHT SNAPSHOT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(my.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(my.bestDurationSec, 's')) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">RIVAL BODYWEIGHT SNAPSHOT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(rival.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(rival.bestDurationSec, 's')) + '</div></div>' +
       '</div>';
   }
 
