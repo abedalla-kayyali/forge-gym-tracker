@@ -197,6 +197,56 @@
     if (trail && trail.diff < 0) parts.push(trail.key + ': Rival leads');
     return parts.length ? parts.join(' | ') : 'Even body-map rivalry right now.';
   }
+  function _buildMuscleExerciseRows(muscle, meSummary, friendSummary) {
+    const mine = meSummary?.[muscle] || {};
+    const rival = friendSummary?.[muscle] || {};
+    const names = Array.from(new Set(Object.keys(mine).concat(Object.keys(rival))));
+    return names.map((name) => {
+      const myRow = mine?.[name] || {};
+      const rivalRow = rival?.[name] || {};
+      const myWeight = _num(myRow.maxWeight, 0);
+      const rivalWeight = _num(rivalRow.maxWeight, 0);
+      const myLast = new Date(myRow.lastAt || 0).getTime();
+      const rivalLast = new Date(rivalRow.lastAt || 0).getTime();
+      const lead = myWeight === rivalWeight
+        ? (myLast === rivalLast ? 'EVEN' : myLast > rivalLast ? 'YOU' : 'RIVAL')
+        : myWeight > rivalWeight ? 'YOU' : 'RIVAL';
+      const gap = Math.abs(myWeight - rivalWeight);
+      return {
+        name,
+        myRow,
+        rivalRow,
+        myWeight,
+        rivalWeight,
+        lead,
+        gap,
+        recentBias: Math.max(myLast, rivalLast)
+      };
+    }).filter((row) => _num(row.myRow.sessions, 0) > 0 || _num(row.rivalRow.sessions, 0) > 0)
+      .sort((a, b) => (b.gap - a.gap) || (b.recentBias - a.recentBias))
+      .slice(0, 6);
+  }
+  function _renderMuscleExerciseLeaderboard(muscle, meSummary, friendSummary) {
+    const rows = _buildMuscleExerciseRows(muscle, meSummary, friendSummary);
+    if (!rows.length) {
+      return '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">EXERCISE LEADERBOARD</div><div class="social-card-sub">No weighted exercise records published for this muscle yet.</div></div>';
+    }
+    return '<div class="social-card social-muscle-exercise-list" style="margin-top:12px;">' +
+      '<div class="social-card-title">EXERCISE LEADERBOARD</div>' +
+      '<div class="social-card-sub">Top lifts for this muscle, sorted by the biggest max-weight gap.</div>' +
+      '<div class="social-rivalry-list">' + rows.map((row) => {
+        const tip = row.lead === 'YOU'
+          ? 'Protect this lane by touching it again this week.'
+          : row.lead === 'RIVAL'
+            ? 'One focused session can start closing this gap.'
+            : 'Next strong session decides this exercise.';
+        return '<div class="social-rivalry-row">' +
+          '<div class="social-rivalry-main"><strong>' + _escape(row.name) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
+          '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.myWeight, 'kg')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rivalWeight, 'kg')) + '</b></div>' +
+          '<div class="social-card-sub">Last: ' + _escape(_dayText(row.myRow.lastAt)) + ' vs ' + _escape(_dayText(row.rivalRow.lastAt)) + ' | Sessions: ' + _num(row.myRow.sessions, 0) + ' vs ' + _num(row.rivalRow.sessions, 0) + '<br>' + _escape(tip) + '</div>' +
+        '</div>';
+      }).join('') + '</div></div>';
+  }
 
   function _localSummary() {
     const profile = window.userProfile || {};
@@ -215,6 +265,7 @@
       rank: own.rank || '',
       strongestArea: own.strongestArea || '',
       muscleSummary: own.muscleSummary || {},
+      muscleExerciseSummary: own.muscleExerciseSummary || {},
       cardioSummary: own.cardioSummary || {},
       bodyweightSummary: own.bodyweightSummary || {},
       bodyweightExerciseSummary: own.bodyweightExerciseSummary || {},
@@ -243,6 +294,7 @@
       rank: stats.rank || '',
       strongestArea: stats.strongestArea || '',
       muscleSummary: stats.muscleSummary || {},
+      muscleExerciseSummary: stats.muscleExerciseSummary || {},
       cardioSummary: stats.cardioSummary || {},
       bodyweightSummary: stats.bodyweightSummary || {},
       bodyweightExerciseSummary: stats.bodyweightExerciseSummary || {},
@@ -826,14 +878,19 @@
     const lead = myWeight === rivalWeight
       ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? 'Even rivalry' : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? 'You lead consistency' : 'Rival leads consistency')
       : myWeight > rivalWeight ? 'You lead max load' : 'Rival leads max load';
+    const verdict = myWeight === rivalWeight
+      ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? (muscle + ' is contested') : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? ('You own ' + muscle + ' consistency') : ('Rival owns ' + muscle + ' consistency'))
+      : myWeight > rivalWeight ? ('You own ' + muscle + ' power') : ('Rival owns ' + muscle + ' power');
     if (title) title.textContent = muscle || 'Muscle';
-    if (sub) sub.textContent = lead;
+    if (sub) sub.textContent = verdict;
     if (body) {
       body.innerHTML = '' +
         '<div class="social-empty-grid">' +
           '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Max: ' + _escape(myWeight ? (myWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(myRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(myRow.lastTrainedAt)) + '</div></div>' +
           '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Max: ' + _escape(rivalWeight ? (rivalWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(rivalRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(rivalRow.lastTrainedAt)) + '</div></div>' +
         '</div>' +
+        '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">MUSCLE VERDICT</div><div class="social-card-sub">' + _escape(lead) + '</div></div>' +
+        _renderMuscleExerciseLeaderboard(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {}) +
         '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CATCH-UP TIP</div><div class="social-card-sub">' +
           _escape(
             myWeight < rivalWeight

@@ -205,6 +205,7 @@ if (fs.existsSync(duelsPath)) {
   if (!duels.includes('_searchUsers(q, { force: true })')) fail('Manual duel search does not force-refresh profile directory');
   if (!duels.includes("const matches = await _searchUsers(raw, { force: true });")) fail('Friend add input does not fall back to refreshed profile search');
   if (!duels.includes('muscleSummary')) fail('Duels public stats are missing muscle summary publishing');
+  if (!duels.includes('muscleExerciseSummary')) fail('Duels public stats are missing muscle exercise summary publishing');
   if (!duels.includes('cardioSummary')) fail('Duels public stats are missing cardio summary publishing');
   if (!duels.includes('bodyweightSummary')) fail('Duels public stats are missing bodyweight summary publishing');
   if (!duels.includes('bodyweightExerciseSummary')) fail('Duels public stats are missing bodyweight exercise rivalry publishing');
@@ -227,6 +228,7 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-compare-subtabs')) fail('Social compare depth tabs are missing');
   if (!socialUi.includes('toggleShareStats')) fail('Social UI is missing share-stats toggle action');
   if (!socialUi.includes('openMuscleCompare')) fail('Social UI is missing muscle compare detail action');
+  if (!socialUi.includes('social-muscle-exercise-list')) fail('Social muscle compare is missing exercise leaderboard hook');
   if (!socialUi.includes('social-body-rival-header')) fail('Social body compare is missing rivalry header hook');
   if (!socialUi.includes('social-spotlight-rail')) fail('Social body compare is missing spotlight rail hook');
   if (!socialUi.includes('social-anatomy-board')) fail('Social body compare is missing anatomy board hook');

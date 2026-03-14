@@ -102,6 +102,28 @@
     });
     return out;
   }
+  function _buildMuscleExerciseSummary() {
+    const out = Object.create(null);
+    _workouts().forEach((w) => {
+      const muscle = _normMuscleKey(w?.muscle);
+      const exercise = String(w?.exercise || w?.name || '').trim();
+      if (!muscle || !exercise) return;
+      const rowDate = String(w?.date || '');
+      const maxWeight = Math.max(
+        _toNum(w?.weight, 0),
+        _toNum(w?.maxWeight, 0),
+        _arr(w?.sets).reduce((mx, s) => Math.max(mx, _toNum(s?.weight, 0)), 0)
+      );
+      if (!out[muscle]) out[muscle] = Object.create(null);
+      const existing = out[muscle][exercise] || { maxWeight: 0, sessions: 0, lastAt: '' };
+      out[muscle][exercise] = {
+        maxWeight: Math.max(_toNum(existing.maxWeight, 0), maxWeight),
+        sessions: _toNum(existing.sessions, 0) + 1,
+        lastAt: (!existing.lastAt || new Date(rowDate).getTime() > new Date(existing.lastAt).getTime()) ? rowDate : existing.lastAt
+      };
+    });
+    return out;
+  }
   function _buildCardioSummary() {
     const rows = _cardio();
     const last7Ms = Date.now() - (7 * DAY_MS);
@@ -271,6 +293,7 @@
     };
     if (!shareEnabled && !options.forceShare) return base;
     base.muscleSummary = _buildMuscleSummaryFromWorkouts();
+    base.muscleExerciseSummary = _buildMuscleExerciseSummary();
     base.cardioSummary = _buildCardioSummary();
     base.bodyweightSummary = _buildBodyweightSummary();
     base.bodyweightExerciseSummary = _buildBodyweightExerciseSummary();
