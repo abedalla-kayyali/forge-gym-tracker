@@ -243,6 +243,7 @@
         return '<div class="social-rivalry-row">' +
           '<div class="social-rivalry-main"><strong>' + _escape(row.name) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
           '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.myWeight, 'kg')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rivalWeight, 'kg')) + '</b></div>' +
+          '<div class="social-rivalry-delta">' + _escape(_muscleExerciseDeltaLabel(row)) + '</div>' +
           '<div class="social-card-sub">Last: ' + _escape(_dayText(row.myRow.lastAt)) + ' vs ' + _escape(_dayText(row.rivalRow.lastAt)) + ' | Sessions: ' + _num(row.myRow.sessions, 0) + ' vs ' + _num(row.rivalRow.sessions, 0) + '<br>' + _escape(tip) + '</div>' +
         '</div>';
       }).join('') + '</div></div>';
@@ -662,6 +663,27 @@
       .sort((a, b) => b.gap - a.gap)
       .slice(0, 8);
   }
+  function _bodyweightDeltaLabel(row) {
+    const repGap = Math.abs(_num(row?.my?.maxReps, 0) - _num(row?.rival?.maxReps, 0));
+    const holdGap = Math.abs(_num(row?.my?.maxDurationSec, 0) - _num(row?.rival?.maxDurationSec, 0));
+    if (repGap > 0) return '+' + repGap + ' reps';
+    if (holdGap > 0) return '+' + holdGap + 's';
+    return 'Even';
+  }
+  function _cardioDeltaLabel(row) {
+    const kmGap = Math.abs(_num(row?.my?.bestDistanceKm, 0) - _num(row?.rival?.bestDistanceKm, 0));
+    const minGap = Math.abs(_num(row?.my?.bestMinutes, 0) - _num(row?.rival?.bestMinutes, 0));
+    const weeklyGap = Math.abs(_num(row?.my?.weeklyMinutes, 0) - _num(row?.rival?.weeklyMinutes, 0));
+    if (kmGap > 0) return '+' + kmGap.toFixed(1).replace(/\.0$/, '') + 'km';
+    if (minGap > 0) return '+' + minGap + 'm';
+    if (weeklyGap > 0) return '+' + weeklyGap + 'm week';
+    return 'Even';
+  }
+  function _muscleExerciseDeltaLabel(row) {
+    const kgGap = Math.abs(_num(row?.myWeight, 0) - _num(row?.rivalWeight, 0));
+    if (kgGap > 0) return '+' + kgGap + 'kg';
+    return 'Even';
+  }
   function _renderBodyweightRivalries(meSummary, friendSummary) {
     const rows = _bodyweightRivalRows(meSummary, friendSummary);
     if (!rows.length) {
@@ -674,6 +696,7 @@
         '<button class="social-rivalry-row" type="button" onclick=\'window.FORGE_SOCIAL.openBodyweightRivalry(' + JSON.stringify(row.key) + ')\'>' +
           '<div class="social-rivalry-main"><strong>' + _escape(row.label) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
           '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.my.maxReps, ' reps')) + ' / ' + _escape(_metricOrDash(row.my.maxDurationSec, 's')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rival.maxReps, ' reps')) + ' / ' + _escape(_metricOrDash(row.rival.maxDurationSec, 's')) + '</b></div>' +
+          '<div class="social-rivalry-delta">' + _escape(_bodyweightDeltaLabel(row)) + '</div>' +
         '</button>'
       )).join('') + '</div></div>';
   }
@@ -689,6 +712,7 @@
         '<button class="social-rivalry-row" type="button" onclick=\'window.FORGE_SOCIAL.openCardioRivalry(' + JSON.stringify(row.key) + ')\'>' +
           '<div class="social-rivalry-main"><strong>' + _escape(row.label) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
           '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.my.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.my.bestDistanceKm, 'km')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rival.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.bestDistanceKm, 'km')) + '</b></div>' +
+          '<div class="social-rivalry-delta">' + _escape(_cardioDeltaLabel(row)) + '</div>' +
         '</button>'
       )).join('') + '</div></div>';
   }

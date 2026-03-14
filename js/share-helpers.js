@@ -145,6 +145,14 @@ function _fmtExerciseMeta(log) {
   const zone = log.hrZone ? ('Zone ' + log.hrZone) : '';
   return [mins + ' min', kcal > 0 ? (kcal + ' kcal') : '', zone].filter(Boolean).join(' | ');
 }
+function _groupSessionLogs(logs) {
+  const rows = Array.isArray(logs) ? logs : [];
+  return [
+    { key: 'weighted', label: 'WEIGHTED', rows: rows.filter((l) => l && l.mode === 'weighted') },
+    { key: 'bodyweight', label: 'BODYWEIGHT', rows: rows.filter((l) => l && l.mode === 'bodyweight') },
+    { key: 'cardio', label: 'CARDIO', rows: rows.filter((l) => l && l.mode === 'cardio') }
+  ].filter((group) => group.rows.length);
+}
 
 function _svgMarkupToImage(svgMarkup) {
   return new Promise(resolve => {
@@ -163,7 +171,11 @@ async function _drawSessionShareCard() {
 
   const canvas = document.createElement('canvas');
   const W = 1080;
-  const H = 1350;
+  const groupedLogs = _groupSessionLogs(s.logs);
+  const totalRows = groupedLogs.reduce((sum, group) => sum + group.rows.length, 0);
+  const sectionCount = groupedLogs.length || 1;
+  const listBaseH = 120 + (sectionCount * 44) + (totalRows * 72);
+  const H = Math.max(1350, 824 + listBaseH + 70);
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -315,7 +327,7 @@ async function _drawSessionShareCard() {
   const listX = 70;
   const listY = 824;
   const listW = W - 140;
-  const listH = 456;
+  const listH = H - listY - 70;
   ctx.fillStyle = 'rgba(12,22,16,.94)';
   _roundRect(ctx, listX, listY, listW, listH, 20);
   ctx.fill();
@@ -325,52 +337,62 @@ async function _drawSessionShareCard() {
 
   ctx.fillStyle = '#54ffab';
   ctx.font = '600 22px "DM Mono", monospace';
-  ctx.fillText('EXERCISES WORKED', listX + 20, listY + 36);
+  ctx.fillText('SESSION BREAKDOWN', listX + 20, listY + 36);
 
-  const logs = Array.isArray(s.logs) ? s.logs.slice(0, 6) : [];
-  if (!logs.length) {
+  if (!groupedLogs.length) {
     ctx.fillStyle = 'rgba(236,246,239,.85)';
     ctx.font = '600 28px "Barlow Condensed", sans-serif';
     ctx.fillText('No exercise entries in this session', listX + 20, listY + 92);
   } else {
     let ry = listY + 82;
-    for (let i = 0; i < logs.length; i++) {
-      const l = logs[i] || {};
-      const rowH = 61;
-      ctx.fillStyle = i % 2 ? 'rgba(18,30,23,.78)' : 'rgba(15,26,20,.78)';
-      _roundRect(ctx, listX + 16, ry - 34, listW - 32, rowH, 10);
-      ctx.fill();
-
-      const modeTag = l.mode === 'weighted' ? 'W' : (l.mode === 'bodyweight' ? 'BW' : 'CARDIO');
-      const title = (l.exercise || l.activity || 'Entry') + (l.muscle ? (' | ' + l.muscle) : '');
-
-      ctx.fillStyle = '#f1faf3';
-      ctx.font = '700 25px "Barlow Condensed", sans-serif';
-      ctx.fillText((i + 1) + '. ' + title, listX + 30, ry - 8);
-
-      ctx.fillStyle = 'rgba(191,217,198,.9)';
-      ctx.font = '500 17px "Barlow", sans-serif';
-      const meta = _fmtExerciseMeta(l);
-      const metaLines = _wrapText(ctx, meta, listW - 270);
-      if (metaLines[0]) ctx.fillText(metaLines[0], listX + 30, ry + 14);
-
-      ctx.fillStyle = 'rgba(84,255,171,.25)';
-      _roundRect(ctx, listX + listW - 190, ry - 27, 75, 34, 9);
+    let index = 1;
+    groupedLogs.forEach((group) => {
+      ctx.fillStyle = 'rgba(84,255,171,.16)';
+      _roundRect(ctx, listX + 16, ry - 26, listW - 32, 34, 10);
       ctx.fill();
       ctx.fillStyle = '#9df8c8';
-      ctx.font = '700 16px "DM Mono", monospace';
-      ctx.fillText(modeTag, listX + listW - 166, ry - 4);
-
-      if (l.isPR) {
-        ctx.fillStyle = 'rgba(255,214,102,.22)';
-        _roundRect(ctx, listX + listW - 106, ry - 27, 82, 34, 9);
+      ctx.font = '700 18px "DM Mono", monospace';
+      ctx.fillText(group.label + ' | ' + group.rows.length, listX + 30, ry - 3);
+      ry += 50;
+      group.rows.forEach((l, rowIndex) => {
+        const rowH = 61;
+        ctx.fillStyle = rowIndex % 2 ? 'rgba(18,30,23,.78)' : 'rgba(15,26,20,.78)';
+        _roundRect(ctx, listX + 16, ry - 34, listW - 32, rowH, 10);
         ctx.fill();
-        ctx.fillStyle = '#ffd666';
-        ctx.fillText('PR', listX + listW - 78, ry - 4);
-      }
 
-      ry += 70;
-    }
+        const modeTag = l.mode === 'weighted' ? 'W' : (l.mode === 'bodyweight' ? 'BW' : 'CARDIO');
+        const title = (l.exercise || l.activity || 'Entry') + (l.muscle ? (' | ' + l.muscle) : '');
+
+        ctx.fillStyle = '#f1faf3';
+        ctx.font = '700 25px "Barlow Condensed", sans-serif';
+        ctx.fillText(index + '. ' + title, listX + 30, ry - 8);
+
+        ctx.fillStyle = 'rgba(191,217,198,.9)';
+        ctx.font = '500 17px "Barlow", sans-serif';
+        const meta = _fmtExerciseMeta(l);
+        const metaLines = _wrapText(ctx, meta, listW - 270);
+        if (metaLines[0]) ctx.fillText(metaLines[0], listX + 30, ry + 14);
+
+        ctx.fillStyle = 'rgba(84,255,171,.25)';
+        _roundRect(ctx, listX + listW - 190, ry - 27, 75, 34, 9);
+        ctx.fill();
+        ctx.fillStyle = '#9df8c8';
+        ctx.font = '700 16px "DM Mono", monospace';
+        ctx.fillText(modeTag, listX + listW - 166, ry - 4);
+
+        if (l.isPR) {
+          ctx.fillStyle = 'rgba(255,214,102,.22)';
+          _roundRect(ctx, listX + listW - 106, ry - 27, 82, 34, 9);
+          ctx.fill();
+          ctx.fillStyle = '#ffd666';
+          ctx.fillText('PR', listX + listW - 78, ry - 4);
+        }
+
+        ry += 70;
+        index += 1;
+      });
+      ry += 8;
+    });
   }
 
   ctx.fillStyle = 'rgba(211,228,216,.58)';

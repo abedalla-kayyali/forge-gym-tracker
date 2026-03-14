@@ -73,6 +73,7 @@ const dataActionsPath = path.join(ROOT, 'js', 'data-actions.js');
 const onboardingPath = path.join(ROOT, 'js', 'onboarding-controls.js');
 const duelsPath = path.join(ROOT, 'js', 'duels.js');
 const fxHapticPath = path.join(ROOT, 'js', 'fx-haptic.js');
+const shareHelpersPath = path.join(ROOT, 'js', 'share-helpers.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
 
@@ -233,10 +234,18 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-spotlight-rail')) fail('Social body compare is missing spotlight rail hook');
   if (!socialUi.includes('social-anatomy-board')) fail('Social body compare is missing anatomy board hook');
   if (!socialUi.includes('social-rivalry-list')) fail('Social compare is missing rivalry list hook');
+  if (!socialUi.includes('social-rivalry-delta')) fail('Social compare is missing rivalry delta hook');
   if (!socialUi.includes('openCardioRivalry')) fail('Social compare is missing cardio rivalry detail action');
   if (!socialUi.includes('openBodyweightRivalry')) fail('Social compare is missing bodyweight rivalry detail action');
 } else {
   fail('Missing file: js/social-ui.js');
+}
+
+if (fs.existsSync(shareHelpersPath)) {
+  const shareHelpers = fs.readFileSync(shareHelpersPath, 'utf8');
+  if (shareHelpers.includes('slice(0, 6)')) fail('Session poster still truncates logs to the first six entries');
+  if (!shareHelpers.includes('_groupSessionLogs')) fail('Session poster is missing grouped session log helper');
+  if (!shareHelpers.includes('SESSION BREAKDOWN')) fail('Session poster is missing grouped breakdown heading');
 }
 
 if (failures > 0) {
