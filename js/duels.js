@@ -160,6 +160,44 @@
   function _saveState() {
     _safeSet(KEY_STATE, _state);
     _renderCoachCard();
+    _syncOwnFriendState();
+  }
+  async function _syncOwnFriendState() {
+    if (!window._sb || !_me?.id) return;
+    try {
+      const profile = _safeGet('forge_profile', {});
+      const payload = {
+        id: _me.id,
+        data: {
+          ...(profile && typeof profile === 'object' ? profile : {}),
+          name: _playerName(_me),
+          email: String(_me.email || ''),
+          duelFriends: _arr(_state.friends).map((f) => ({
+            id: String(f?.id || ''),
+            name: String(f?.name || 'Athlete'),
+            email: String(f?.email || '')
+          })).filter((f) => f.id)
+        }
+      };
+      const { error } = await window._sb.from('profiles').upsert(payload, { onConflict: 'id' });
+      if (!error) _profileTableCache.profiles = true;
+    } catch (_e) {}
+  }
+  async function _pullOwnFriendState() {
+    if (!window._sb || !_me?.id) return;
+    try {
+      const { data, error } = await window._sb.from('profiles').select('id,data').eq('id', _me.id).maybeSingle();
+      if (error || !data?.data) return;
+      const remoteFriends = _arr(data.data.duelFriends).map((f) => ({
+        id: String(f?.id || ''),
+        name: String(f?.name || 'Athlete'),
+        email: String(f?.email || '')
+      })).filter((f) => f.id);
+      if (remoteFriends.length) {
+        _state.friends = remoteFriends.slice(0, 80);
+        _safeSet(KEY_STATE, _state);
+      }
+    } catch (_e) {}
   }
   function _getDateKey(v) {
     const d = new Date(v);
@@ -417,12 +455,39 @@
       const toMs = (d) => new Date(d || 0).getTime();
       const cardio7 = _cardio().filter(c => toMs(c?.date) >= last7Ms).length;
       const workout7 = _workouts().filter(w => toMs(w?.date) >= last7Ms).length + _bwWorkouts().filter(w => toMs(w?.date) >= last7Ms).length;
+      const volume7d = _workouts().filter(w => toMs(w?.date) >= last7Ms).reduce((sum, w) => sum + _toNum(w?.volume, 0), 0);
+      const xp = typeof window.calcXP === 'function' ? _toNum(window.calcXP(), 0) : _toNum(profile?.xp, 0);
+      const level = typeof window.getCurrentLevel === 'function' ? window.getCurrentLevel(xp) : null;
+      const streak = typeof window.calcStreak === 'function' ? _toNum(window.calcStreak(), 0) : 0;
+      const coachState = typeof window.buildCoachUnifiedState === 'function' ? window.buildCoachUnifiedState() : null;
+      const readiness = _toNum(coachState?.readiness?.score, 0);
+      const balanceScore = _toNum(coachState?.scoreBreakdown?.balance ?? coachState?.balanceScore, 0);
+      const muscleMap = Object.create(null);
+      _workouts().forEach(w => {
+        const key = String(w?.muscle || '').trim();
+        if (!key) return;
+        muscleMap[key] = (muscleMap[key] || 0) + 1;
+      });
+      _bwWorkouts().forEach(w => {
+        const key = String(w?.muscle || '').trim();
+        if (!key) return;
+        muscleMap[key] = (muscleMap[key] || 0) + 1;
+      });
+      const strongestArea = Object.keys(muscleMap).sort((a, b) => muscleMap[b] - muscleMap[a])[0] || '';
       profile.duelPublicStats = {
         updatedAt: _isoNow(),
         workoutSessions: weightedLen + bwLen,
         cardioSessions: cardioLen,
         workout7d: workout7,
-        cardio7d: cardio7
+        cardio7d: cardio7,
+        volume7d: Math.round(volume7d),
+        xp,
+        rank: level?.name || '',
+        streak,
+        readiness,
+        balanceScore,
+        strongestArea,
+        lastActiveAt: _isoNow()
       };
       _safeSet('forge_profile', profile);
       if (window._sb && _me) {
@@ -472,6 +537,7 @@
 
   async function _ensureReady() {
     await _getMe();
+    await _pullOwnFriendState();
     await _publishOwnStats();
     await _refreshState();
   }
@@ -1133,6 +1199,57 @@
     cancelActive: _cancelActive,
     syncNow: function () { _syncActiveScore(); _refreshState(); },
     ensureReady: _ensureReady,
+    searchUsers: async function (query) { await _ensureReady(); return _searchUsers(query, { force: true }); },
+    listProfiles: async function () { await _ensureReady(); return _fetchProfiles(true); },
+    getFriendCode: function () { return _myFriendCode(); },
+    getStateSnapshot: function () {
+      return {
+        active: _state.active || null,
+        invites: _arr(_state.invites),
+        history: _arr(_state.history),
+        friends: _arr(_state.friends)
+      };
+    },
+    getUiSnapshot: function () {
+      const active = _state.active ? _asRow(_state.active) : null;
+      const activeScores = active ? _displayScores(active) : null;
+      return {
+        active: active ? {
+          id: active.id,
+          mode: active.mode,
+          modeLabel: _formatScope(active.mode),
+          target: _toNum(active.target, _targetFor(active.mode)),
+          daysLeft: _daysLeft(active),
+          mine: activeScores ? _toNum(activeScores.mine, 0) : 0,
+          theirs: activeScores ? _toNum(activeScores.theirs, 0) : 0,
+          myName: activeScores ? activeScores.myName : '',
+          theirName: activeScores ? activeScores.theirName : ''
+        } : null,
+        invites: _arr(_state.invites).map((row) => {
+          const duel = _asRow(row);
+          const challenger = _decodeUser(duel?.challenger || '');
+          return {
+            id: duel?.id || '',
+            mode: duel?.mode || 'scope:workout',
+            modeLabel: _formatScope(duel?.mode || 'scope:workout'),
+            challengerName: challenger.name || 'Athlete',
+            target: _toNum(duel?.target, _targetFor(duel?.mode))
+          };
+        }),
+        history: _arr(_state.history).map((row) => {
+          const duel = _asRow(row);
+          const challenger = _decodeUser(duel?.challenger || '');
+          const opponent = _decodeUser(duel?.opponent || '');
+          return {
+            id: duel?.id || '',
+            status: duel?.status || '',
+            modeLabel: _formatScope(duel?.mode || 'scope:workout'),
+            challengerName: challenger.name || 'Athlete',
+            opponentName: opponent.name || 'Athlete'
+          };
+        })
+      };
+    },
     refresh: _refreshState,
     onPostSave: _onPostSave,
     renderInto: _renderCoachCard

@@ -1827,6 +1827,55 @@
     </div>
   </div>
 
+  <!-- SOCIAL VIEW -->
+  <div id="view-social" class="view">
+    <div class="view-pad social-view-shell" id="social-view">
+      <div class="view-hero social-hero">
+        <div class="view-hero-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="view-hero-text">
+          <div class="view-hero-title">SOCIAL ARENA</div>
+          <div class="view-hero-sub">Friends, rivalries, compare cards, and live duels in one place</div>
+        </div>
+      </div>
+      <div class="social-hero-strip" id="social-hero-strip">
+        <div class="social-kpi-card">
+          <span class="social-kpi-label">FRIENDS</span>
+          <strong id="social-kpi-friends">0</strong>
+          <span class="social-kpi-sub">Build your rival squad</span>
+        </div>
+        <div class="social-kpi-card">
+          <span class="social-kpi-label">ACTIVE DUEL</span>
+          <strong id="social-kpi-duel">NONE</strong>
+          <span class="social-kpi-sub">Challenge someone today</span>
+        </div>
+        <div class="social-kpi-card">
+          <span class="social-kpi-label">COMPARE</span>
+          <strong id="social-kpi-compare">READY</strong>
+          <span class="social-kpi-sub">See who leads each metric</span>
+        </div>
+      </div>
+      <div class="social-tab-strip" id="social-tab-strip">
+        <button class="social-tab-btn active" id="social-tab-hub" type="button" onclick="FORGE_SOCIAL.open('hub', this)">Hub</button>
+        <button class="social-tab-btn" id="social-tab-friends" type="button" onclick="FORGE_SOCIAL.open('friends', this)">Friends</button>
+        <button class="social-tab-btn" id="social-tab-compare" type="button" onclick="FORGE_SOCIAL.open('compare', this)">Compare</button>
+        <button class="social-tab-btn" id="social-tab-duels" type="button" onclick="FORGE_SOCIAL.open('duels', this)">Duels</button>
+      </div>
+      <div class="social-tab-panels">
+        <section class="social-panel active" id="social-panel-hub"></section>
+        <section class="social-panel" id="social-panel-friends" style="display:none;"></section>
+        <section class="social-panel" id="social-panel-compare" style="display:none;"></section>
+        <section class="social-panel" id="social-panel-duels" style="display:none;"></section>
+      </div>
+    </div>
+  </div>
+
 </div><!-- end app-shell -->
 
 <!-- BOTTOM NAVIGATION -->
@@ -1851,6 +1900,16 @@
         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>
       </svg>
     </span><span data-i18n="nav.history">History</span>
+  </button>
+  <button class="bnav-btn" id="bnav-social" onclick="switchView('social',this)">
+    <span class="bnav-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="8.5" cy="7" r="4"/>
+        <path d="M20 8v6"/>
+        <path d="M17 11h6"/>
+      </svg>
+    </span><span>Social</span>
   </button>
   <button class="bnav-btn" id="bnav-coach" onclick="switchView('coach',this)">
     <span class="bnav-icon">
@@ -3053,6 +3112,7 @@ function switchView(name, btn) {
   }
   if (name === 'more')      { renderBWHistory(); renderMyTemplates(); loadSettings(); renderProfile(); renderCompCards(); renderGuide(); }
   if (name === 'log')       { setTimeout(_updateMuscleChipColors, 0); _initSessionCard(); }
+  if (name === 'social')    { if (window.FORGE_SOCIAL && typeof window.FORGE_SOCIAL.refresh === 'function') setTimeout(() => window.FORGE_SOCIAL.refresh(), 0); }
   if (name === 'coach')     {
     setTimeout(() => {
       _renderAskChips();
@@ -8511,7 +8571,7 @@ if (_customBgHex) applyCustomBg(_customBgHex); // restore custom BG on load
 
 // ?? Swipe gesture for tab switching ??
 (function() {
-  const TAB_ORDER = ['log','dashboard','history','more'];
+  const TAB_ORDER = ['log','dashboard','history','social','more'];
   let _swipeX = null, _swipeY = null;
   const shell = document.querySelector('.app-shell');
   if (!shell) return;
@@ -8658,6 +8718,7 @@ if (document.readyState === 'loading') {
 <script src="js/cardio-stats.js"></script>
 <script src="js/coach-state.js"></script>
 <script src="js/duels.js"></script>
+<script src="js/social-ui.js"></script>
 <script src="js/steps-health.js"></script>
 <script src="js/cali-dashboard.js"></script>
 <script src="js/ui-layout-theme.js"></script>

@@ -72,6 +72,7 @@ const dataTransferPath = path.join(ROOT, 'js', 'data-transfer.js');
 const dataActionsPath = path.join(ROOT, 'js', 'data-actions.js');
 const onboardingPath = path.join(ROOT, 'js', 'onboarding-controls.js');
 const duelsPath = path.join(ROOT, 'js', 'duels.js');
+const fxHapticPath = path.join(ROOT, 'js', 'fx-haptic.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
 
@@ -143,11 +144,32 @@ if (fs.existsSync(indexPath)) {
   requiredSetupSnippets.forEach((snippet) => {
     if (!html.includes(snippet)) fail('Missing setup prompt snippet in index.html: ' + snippet);
   });
+
+  const requiredSocialSnippets = [
+    'id="social-view"',
+    'id="social-tab-hub"',
+    'id="social-tab-friends"',
+    'id="social-tab-compare"',
+    'id="social-tab-duels"'
+  ];
+  requiredSocialSnippets.forEach((snippet) => {
+    if (!html.includes(snippet)) fail('Missing social shell snippet in index.html: ' + snippet);
+  });
 }
 
 if (fs.existsSync(fxSoundPath)) {
   const fx = fs.readFileSync(fxSoundPath, 'utf8');
   if (!fx.includes('window.playPrimaryActionFx')) fail('Missing shared primary action FX hook in js/fx-sound.js');
+  if (!fx.includes('function sndSocialInvite()')) fail('Missing social invite sound in js/fx-sound.js');
+  if (!fx.includes('function sndSocialAccept()')) fail('Missing social accept sound in js/fx-sound.js');
+  if (!fx.includes('function sndSocialWin()')) fail('Missing social win sound in js/fx-sound.js');
+}
+
+if (fs.existsSync(fxHapticPath)) {
+  const fxh = fs.readFileSync(fxHapticPath, 'utf8');
+  if (!fxh.includes('function hapSocialInvite()')) fail('Missing social invite haptic in js/fx-haptic.js');
+  if (!fxh.includes('function hapSocialAccept()')) fail('Missing social accept haptic in js/fx-haptic.js');
+  if (!fxh.includes('function hapSocialWin()')) fail('Missing social win haptic in js/fx-haptic.js');
 }
 
 if (fs.existsSync(authUiPath)) {
@@ -181,6 +203,21 @@ if (fs.existsSync(duelsPath)) {
   if (!duels.includes('ensureReady')) fail('Duels module is missing readiness republish flow');
   if (!duels.includes('_searchUsers(q, { force: true })')) fail('Manual duel search does not force-refresh profile directory');
   if (!duels.includes("const matches = await _searchUsers(raw, { force: true });")) fail('Friend add input does not fall back to refreshed profile search');
+}
+
+const socialUiPath = path.join(ROOT, 'js', 'social-ui.js');
+if (fs.existsSync(indexPath)) {
+  const html = fs.readFileSync(indexPath, 'utf8');
+  if (!html.includes('<script src="js/social-ui.js"></script>')) fail('Missing social UI script include in index.html');
+}
+if (fs.existsSync(socialUiPath)) {
+  const socialUi = fs.readFileSync(socialUiPath, 'utf8');
+  if (!socialUi.includes('window.FORGE_SOCIAL')) fail('Missing FORGE_SOCIAL global in js/social-ui.js');
+  if (socialUi.includes('onclick="window.FORGE_SOCIAL.addFoundFriend(\' + id + \')"')) fail('Social UI still renders invalid inline add-friend onclick HTML');
+  if (socialUi.includes('onclick="window.FORGE_SOCIAL.startDuel(\' + id + \',\\\'workout\\\')"')) fail('Social UI still renders invalid inline duel onclick HTML');
+  if (socialUi.includes('onclick="if(window.FORGE_DUELS){window.FORGE_DUELS.acceptInvite(\' + JSON.stringify(invite.id) + \');} window.FORGE_SOCIAL.refresh();"')) fail('Social UI still renders invalid inline invite onclick HTML');
+} else {
+  fail('Missing file: js/social-ui.js');
 }
 
 if (failures > 0) {

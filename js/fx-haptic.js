@@ -84,3 +84,8 @@ function hapStars(n) {
 function hapAvatarOpen() { _vib([18, 20, 28]); }
 function hapAvatarSlot() { _vib(16); }
 function hapAvatarUnlock() { _vib([35, 25, 45, 25, 75]); }
+
+function hapSocialInvite() { _vib([24, 18, 24]); }
+function hapSocialAccept() { _vib([30, 20, 50]); }
+function hapSocialLead() { _vib(18); }
+function hapSocialWin() { _vib([40, 25, 60, 25, 90]); }

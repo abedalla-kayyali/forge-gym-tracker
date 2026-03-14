@@ -339,3 +339,29 @@ function sndStars(n) {
     }
   }
 }
+
+function sndSocialInvite() {
+  if (!soundOn) return;
+  _note(740, 'triangle', 0.12, 0.0001, 0, 0.12);
+  _note(988, 'sine', 0.08, 0.0001, 0.05, 0.14);
+}
+
+function sndSocialAccept() {
+  if (!soundOn) return;
+  _note(523.25, 'sine', 0.10, 0.0001, 0, 0.10);
+  _note(659.25, 'triangle', 0.10, 0.0001, 0.05, 0.12);
+  _note(783.99, 'sine', 0.08, 0.0001, 0.11, 0.16);
+}
+
+function sndSocialLead() {
+  if (!soundOn) return;
+  _note(330, 'sawtooth', 0.08, 0.0001, 0, 0.08);
+  _note(494, 'sine', 0.06, 0.0001, 0.04, 0.1);
+}
+
+function sndSocialWin() {
+  if (!soundOn) return;
+  sndMilestone();
+  _note(1318.51, 'sine', 0.10, 0.0001, 0.1, 0.22);
+  _note(1568, 'triangle', 0.08, 0.0001, 0.18, 0.24);
+}
