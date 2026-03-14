@@ -856,7 +856,6 @@
   window._authGuestMode = function () {
     localStorage.setItem('forge_guest', '1');
     _authHideOverlay();
-    if (typeof _onboardingCheck === 'function') _onboardingCheck();
   };
 
   // Force-update helper for stale mobile PWA caches before login

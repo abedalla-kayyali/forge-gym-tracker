@@ -704,36 +704,42 @@
     window.renderCoachToday = function () {
       _origRenderCoachToday();
       _injectTodayBriefCard();
+      if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
     };
   }
   if (typeof _origRenderCoachTrain === 'function') {
     window.renderCoachTrain = function () {
       _origRenderCoachTrain();
       _enhanceTrainTab();
+      if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
     };
   }
   if (typeof _origRenderCoachPlan === 'function') {
     window.renderCoachPlan = function () {
       _origRenderCoachPlan();
       _enhancePlanTab();
+      if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
     };
   }
   if (typeof _origRenderCoachNutrition === 'function') {
     window.renderCoachNutrition = function () {
       _origRenderCoachNutrition();
       _enhanceNutritionTab();
+      if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
     };
   }
   if (typeof _origRenderCoachCali === 'function') {
     window.renderCoachCali = function () {
       _origRenderCoachCali();
       _enhanceCaliTab();
+      if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
     };
   }
   if (typeof _origRenderCoach === 'function') {
     window.renderCoach = function () {
       _origRenderCoach();
       _enhanceInsightsTab();
+      if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
     };
   }
 
@@ -755,6 +761,7 @@
     if (tab === 'plan' && typeof window.renderCoachPlan === 'function') window.renderCoachPlan();
     if (tab === 'nutrition' && typeof window.renderCoachNutrition === 'function') window.renderCoachNutrition();
     if (tab === 'cali' && typeof window.renderCoachCali === 'function') window.renderCoachCali();
+    if (typeof window.renderCoachGoalSetupPrompt === 'function') window.renderCoachGoalSetupPrompt();
   };
 
   document.addEventListener('DOMContentLoaded', function () {

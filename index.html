@@ -27,355 +27,7 @@
 </head>
 <body>
 
-<!-- ====== ONBOARDING OVERLAY ====== -->
-  <div id="forge-onboarding" style="display:none;">
-
-    <!-- STEP 0: Welcome splash -->
-    <div class="onb-step onb-welcome active" id="onb-step-0">
-      <div class="onb-logo-wrap">
-        <div class="onb-logo-emoji">&#x26A1;</div>
-        <span class="onb-logo-word">FORGE</span>
-        <span class="onb-logo-tag">// Gym OS</span>
-      </div>
-      <h1 class="onb-h1" data-i18n="onb.welcome.title">Welcome to FORGE</h1>
-      <p class="onb-subtitle" data-i18n="onb.welcome.sub">Your gym. Your rules.</p>
-      <p class="onb-desc" data-i18n="onb.welcome.desc">Set up in 10 seconds ? no friction, just gains.</p>
-      <div class="onb-footer">
-        <button class="onb-btn-primary" onclick="_onbNext()" data-i18n="onb.welcome.cta">Get Started ?</button>
-      </div>
-    </div>
-
-    <!-- STEP 1: Name -->
-    <div class="onb-step" id="onb-step-1">
-      <div class="onb-slim-hdr">
-        <button class="onb-slim-back" onclick="_onbBack()">?</button>
-        <div class="onb-slim-dots">
-          <span class="onb-sdot active"></span>
-          <span class="onb-sdot"></span>
-        </div>
-        <button class="onb-slim-skip" onclick="_onbComplete(true)" data-i18n="onb.skip">Skip</button>
-      </div>
-      <div class="onb-step-head">
-        <h2 class="onb-step-title" data-i18n="onb.name.title">What's your name?</h2>
-        <p class="onb-step-sub" data-i18n="onb.name.sub">So FORGE can cheer you on.</p>
-      </div>
-      <div class="onb-field">
-        <input class="onb-input" id="onb-name" type="text" autocomplete="given-name" autocapitalize="words" data-i18n-placeholder="onb.name.placeholder">
-      </div>
-      <div class="onb-footer">
-        <button class="onb-btn-primary" onclick="_onbNext()" data-i18n="onb.next">Continue ?</button>
-      </div>
-    </div>
-
-    <!-- STEP 2: Goal (tap auto-advances) -->
-    <div class="onb-step" id="onb-step-2">
-      <div class="onb-slim-hdr">
-        <button class="onb-slim-back" onclick="_onbBack()">?</button>
-        <div class="onb-slim-dots">
-          <span class="onb-sdot done"></span>
-          <span class="onb-sdot active"></span>
-        </div>
-        <button class="onb-slim-skip" onclick="_onbComplete(true)" data-i18n="onb.skip">Skip</button>
-      </div>
-      <div class="onb-step-head">
-        <h2 class="onb-step-title" data-i18n="onb.goal.title">Your main goal</h2>
-        <p class="onb-step-sub" data-i18n="onb.goal.sub">Tap to pick ? FORGE tailors your coaching.</p>
-      </div>
-      <div class="onb-goals">
-        <button class="onb-goal-card" data-goal="muscle" onclick="_onbSelectGoal('muscle')">
-          <span class="onb-goal-icon">&#x1F4AA;</span>
-          <span class="onb-goal-name" data-i18n="onb.goal.muscle">Build Muscle</span>
-          <span class="onb-goal-sub" data-i18n="onb.goal.muscle.sub">Hypertrophy &amp; size</span>
-        </button>
-        <button class="onb-goal-card" data-goal="fat" onclick="_onbSelectGoal('fat')">
-          <span class="onb-goal-icon">&#x1F525;</span>
-          <span class="onb-goal-name" data-i18n="onb.goal.fat">Lose Fat</span>
-          <span class="onb-goal-sub" data-i18n="onb.goal.fat.sub">Cutting &amp; cardio</span>
-        </button>
-        <button class="onb-goal-card" data-goal="strength" onclick="_onbSelectGoal('strength')">
-          <span class="onb-goal-icon">&#x1F3CB;</span>
-          <span class="onb-goal-name" data-i18n="onb.goal.strength">Get Strong</span>
-          <span class="onb-goal-sub" data-i18n="onb.goal.strength.sub">Power &amp; 1RM</span>
-        </button>
-        <button class="onb-goal-card" data-goal="active" onclick="_onbSelectGoal('active')">
-          <span class="onb-goal-icon">&#x1F3C3;</span>
-          <span class="onb-goal-name" data-i18n="onb.goal.active">Stay Active</span>
-          <span class="onb-goal-sub" data-i18n="onb.goal.active.sub">Health &amp; wellness</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- STEP 3: All set! -->
-    <div class="onb-step onb-welcome" id="onb-step-3">
-      <div class="onb-done-icon">&#x1F3C6;</div>
-      <h1 class="onb-h1" data-i18n="onb.done.title">You're all set!</h1>
-      <p class="onb-subtitle" data-i18n="onb.done.sub">FORGE is ready. Let's build something.</p>
-      <div class="onb-done-xp">+50 XP | First Session</div>
-      <div class="onb-summary" id="onb-summary"></div>
-      <div class="onb-footer">
-        <button class="onb-btn-primary" onclick="_onbComplete()" data-i18n="onb.done.cta">Start Training</button>
-      </div>
-    </div>
-
-  </div><!-- /#forge-onboarding -->
-
-<!-- ====== SPOTLIGHT OVERLAY ====== -->
-<div id="forge-spotlight" style="display:none;" aria-hidden="true">
-  <div id="spl-hole" class="spl-hole"></div>
-  <div id="spl-tooltip" class="spl-tooltip">
-    <p id="spl-tip-text" class="spl-tip-text"></p>
-    <div class="spl-tip-row">
-      <button class="spl-skip-btn" onclick="_splSkip()">Skip tour</button>
-      <span id="spl-count" class="spl-count"></span>
-      <button class="spl-next-btn" onclick="_splNext()">Next ?</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOUR VIEWPORT (kept for legacy reference, hidden) -->
-<div id="forge-tour" style="display:none;" aria-hidden="true">
-  <div class="tour-viewport" id="tour-viewport">
-
-    <!-- SLIDE 0 ? Welcome -->
-    <div class="tour-slide" id="tour-slide-0">
-      <div class="tour-icon-wrap" style="background:rgba(46,204,113,.15);color:#2ecc71;">&#x1F680;</div>
-      <div class="tour-tag" data-i18n="tour.s0.tag">FORGE GYM OS</div>
-      <h2 class="tour-title" data-i18n="tour.s0.title">Your Gym OS is Live</h2>
-      <p class="tour-subtitle" data-i18n="tour.s0.sub">A 60-second tour of everything FORGE can do for you.</p>
-    </div>
-
-    <!-- SLIDE 1 ? Log workouts -->
-    <div class="tour-slide" id="tour-slide-1">
-      <div class="tour-icon-wrap" style="background:rgba(46,204,113,.15);color:#2ecc71;">&#x1F4AA;</div>
-      <div class="tour-tag" data-i18n="tour.s1.tag">STEP 1 ? LOG</div>
-      <h2 class="tour-title" data-i18n="tour.s1.title">Log Every Rep</h2>
-      <p class="tour-subtitle" data-i18n="tour.s1.sub">Pick a muscle group, find your exercise, track your sets.</p>
-      <ul class="tour-features">
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s1.f0">100+ exercises built-in</div>
-            <div class="tour-fi-sub" data-i18n="tour.s1.f0s">Across 9 muscle groups with smart search</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s1.f1">Sets ? Reps ? Weight ? Notes</div>
-            <div class="tour-fi-sub" data-i18n="tour.s1.f1s">Plus dropset, warmup &amp; AMRAP markers</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s1.f2">Last session hint</div>
-            <div class="tour-fi-sub" data-i18n="tour.s1.f2s">See what you lifted last time, inline</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- SLIDE 2 ? PRs -->
-    <div class="tour-slide" id="tour-slide-2">
-      <div class="tour-icon-wrap" style="background:rgba(255,215,0,.15);color:#ffd700;">??</div>
-      <div class="tour-tag" data-i18n="tour.s2.tag">PERFORMANCE</div>
-      <h2 class="tour-title" data-i18n="tour.s2.title">Chase Your PRs</h2>
-      <p class="tour-subtitle" data-i18n="tour.s2.sub">Every time you beat a personal record, FORGE fires a PR alert.</p>
-      <ul class="tour-features">
-        <li class="tour-fi">
-          <span class="tour-fi-icon">?</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s2.f0">Instant PR badge</div>
-            <div class="tour-fi-sub" data-i18n="tour.s2.f0s">Flashes the moment you hit a new best</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s2.f1">Volume &amp; 1RM records</div>
-            <div class="tour-fi-sub" data-i18n="tour.s2.f1s">Per exercise, tracked automatically</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">&#x1F3C6;</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s2.f2">Full PR history in Stats</div>
-            <div class="tour-fi-sub" data-i18n="tour.s2.f2s">Every exercise, every milestone</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- SLIDE 3 ? Rest Timer -->
-    <div class="tour-slide" id="tour-slide-3">
-      <div class="tour-icon-wrap" style="background:rgba(96,165,250,.15);color:#60a5fa;">??</div>
-      <div class="tour-tag" data-i18n="tour.s3.tag">RECOVERY</div>
-      <h2 class="tour-title" data-i18n="tour.s3.title">Rest Like a Pro</h2>
-      <p class="tour-subtitle" data-i18n="tour.s3.sub">The floating ? button sits bottom-right on every screen.</p>
-      <ul class="tour-features">
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s3.f0">Tap after each set</div>
-            <div class="tour-fi-sub" data-i18n="tour.s3.f0s">Start your rest countdown instantly</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s3.f1">Vibration + audio alert</div>
-            <div class="tour-fi-sub" data-i18n="tour.s3.f1s">Never miss your rest ending</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">&#x23F1;</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s3.f2">Presets: 60 / 90 / 120 / 180s</div>
-            <div class="tour-fi-sub" data-i18n="tour.s3.f2s">One tap to lock in your rest time</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- SLIDE 4 ? Stats -->
-    <div class="tour-slide" id="tour-slide-4">
-      <div class="tour-icon-wrap" style="background:rgba(192,132,252,.15);color:#c084fc;">??</div>
-      <div class="tour-tag" data-i18n="tour.s4.tag">ANALYTICS</div>
-      <h2 class="tour-title" data-i18n="tour.s4.title">See Your Growth</h2>
-      <p class="tour-subtitle" data-i18n="tour.s4.sub">Charts, heatmaps and trends. Watch yourself transform.</p>
-      <ul class="tour-features">
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s4.f0">Volume &amp; strength charts</div>
-            <div class="tour-fi-sub" data-i18n="tour.s4.f0s">Per exercise and per muscle group</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s4.f1">Muscle balance radar</div>
-            <div class="tour-fi-sub" data-i18n="tour.s4.f1s">See which muscles you're neglecting</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">&#x1F4CA;</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s4.f2">Body weight &amp; calendar</div>
-            <div class="tour-fi-sub" data-i18n="tour.s4.f2s">Daily logs, weekly trends, heatmap</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- SLIDE 5 ? XP / Gamification -->
-    <div class="tour-slide" id="tour-slide-5">
-      <div class="tour-icon-wrap" style="background:rgba(251,191,36,.15);color:#fbbf24;">?</div>
-      <div class="tour-tag" data-i18n="tour.s5.tag">GAMIFICATION</div>
-      <h2 class="tour-title" data-i18n="tour.s5.title">Level Up Daily</h2>
-      <p class="tour-subtitle" data-i18n="tour.s5.sub">Every rep earns XP. Missions push you past your limits.</p>
-      <ul class="tour-features">
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s5.f0">Rookie ? Veteran ? Legend</div>
-            <div class="tour-fi-sub" data-i18n="tour.s5.f0s">10 ranks to climb, each one harder</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s5.f1">Daily &amp; weekly missions</div>
-            <div class="tour-fi-sub" data-i18n="tour.s5.f1s">Fresh challenges every single day</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s5.f2">Streak rewards &amp; badges</div>
-            <div class="tour-fi-sub" data-i18n="tour.s5.f2s">Don't break the chain</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- SLIDE 6 ? Coach -->
-    <div class="tour-slide" id="tour-slide-6">
-      <div class="tour-icon-wrap" style="background:rgba(34,211,238,.15);color:#22d3ee;">??</div>
-      <div class="tour-tag" data-i18n="tour.s6.tag">AI COACH</div>
-      <h2 class="tour-title" data-i18n="tour.s6.title">Your Personal Coach</h2>
-      <p class="tour-subtitle" data-i18n="tour.s6.sub">FORGE reads your training data and adapts to you daily.</p>
-      <ul class="tour-features">
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s6.f0">Daily readiness score</div>
-            <div class="tour-fi-sub" data-i18n="tour.s6.f0s">Know when to push hard or recover</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">&#x1F4DD;</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s6.f1">PPL, 5/3/1, 5?5 programs</div>
-            <div class="tour-fi-sub" data-i18n="tour.s6.f1s">Science-based templates, one tap to start</div>
-          </div>
-        </li>
-        <li class="tour-fi">
-          <span class="tour-fi-icon">??</span>
-          <div class="tour-fi-body">
-            <div class="tour-fi-text" data-i18n="tour.s6.f2">Nutrition &amp; macro targets</div>
-            <div class="tour-fi-sub" data-i18n="tour.s6.f2s">Calories &amp; protein tailored to your goal</div>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- SLIDE 7 ? Done -->
-    <div class="tour-slide" id="tour-slide-7">
-      <div class="tour-icon-wrap" style="background:rgba(255,107,129,.15);color:#ff6b81;">??</div>
-      <div class="tour-tag" data-i18n="tour.s7.tag">YOU'RE READY</div>
-      <h2 class="tour-title" data-i18n="tour.s7.title">Now Go FORGE</h2>
-      <p class="tour-subtitle" data-i18n="tour.s7.sub">The iron is waiting. Your first session starts right now.</p>
-      <div class="tour-done-grid">
-        <div class="tour-done-tile">
-          <span class="tour-done-tile-icon">??</span>
-          <span class="tour-done-tile-label" data-i18n="tour.s7.t0">Log</span>
-        </div>
-        <div class="tour-done-tile">
-          <span class="tour-done-tile-icon">??</span>
-          <span class="tour-done-tile-label" data-i18n="tour.s7.t1">PRs</span>
-        </div>
-        <div class="tour-done-tile">
-          <span class="tour-done-tile-icon">??</span>
-          <span class="tour-done-tile-label" data-i18n="tour.s7.t2">Stats</span>
-        </div>
-        <div class="tour-done-tile">
-          <span class="tour-done-tile-icon">?</span>
-          <span class="tour-done-tile-label" data-i18n="tour.s7.t3">Level Up</span>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /.tour-viewport -->
-
-  <!-- Progress dots -->
-  <div class="tour-progress" id="tour-progress">
-    <span class="tour-dot" id="tdot-0"></span>
-    <span class="tour-dot" id="tdot-1"></span>
-    <span class="tour-dot" id="tdot-2"></span>
-    <span class="tour-dot" id="tdot-3"></span>
-    <span class="tour-dot" id="tdot-4"></span>
-    <span class="tour-dot" id="tdot-5"></span>
-    <span class="tour-dot" id="tdot-6"></span>
-    <span class="tour-dot" id="tdot-7"></span>
-  </div>
-
-  <!-- Footer CTA -->
-  <div class="tour-footer">
-    <button class="tour-btn" id="tour-next-btn" onclick="_tourNext()" data-i18n="tour.next">Next ?</button>
-  </div>
-
-</div><!-- /#forge-tour -->
+<!-- Startup onboarding removed; setup is handled progressively inside Profile and Coach. -->
 
 <div class="app-shell">
 
@@ -1646,25 +1298,47 @@
           <button onclick="window._dismissGuestBanner()" style="padding:8px 12px;background:transparent;border:1px solid var(--border2,#253527);border-radius:8px;color:var(--text2,#7a9e7e);font-family:'Barlow',sans-serif;font-size:0.8rem;cursor:pointer;">Later</button>
         </div>
       </div>
-      <div class="profile-avatar-card" id="profile-avatar-card">
-        <div class="profile-avatar-card-head">
-          <div>
-            <div class="profile-avatar-card-title" id="profile-avatar-card-title">Forge Avatar</div>
-            <div class="profile-avatar-card-subtitle" id="profile-avatar-card-subtitle">Armor evolves from your training balance.</div>
+        <div class="profile-avatar-card" id="profile-avatar-card">
+          <div class="profile-avatar-card-head">
+            <div>
+              <div class="profile-avatar-card-title" id="profile-avatar-card-title">Forge Avatar</div>
+              <div class="profile-avatar-card-subtitle" id="profile-avatar-card-subtitle">Armor evolves from your training balance.</div>
           </div>
           <div class="profile-avatar-theme-badge" id="profile-avatar-theme-badge">Theme: Iron</div>
         </div>
         <div class="profile-avatar-stage-wrap">
           <div class="profile-avatar-stage" id="profile-avatar-stage"></div>
           <div class="profile-avatar-insight" id="profile-avatar-insight">Train more muscle groups to unlock your armor.</div>
+          </div>
+          <div class="profile-avatar-slot-list" id="profile-avatar-slot-list"></div>
         </div>
-        <div class="profile-avatar-slot-list" id="profile-avatar-slot-list"></div>
-      </div>
-      <!-- Avatar row -->
-      <div class="profile-avatar-row">
-        <div class="profile-avatar" id="profile-avatar"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l-2 4h10l-2-4"/><path d="M10 17l-1 4M14 17l1 4"/></svg></div>
-        <div class="profile-avatar-info">
-          <div class="profile-name" id="profile-name-display">Athlete</div>
+        <div class="progressive-setup-card" id="profile-setup-card" style="display:none;">
+          <div class="progressive-setup-copy">
+            <div class="progressive-setup-kicker">COMPLETE YOUR SETUP</div>
+            <div class="progressive-setup-title" id="profile-setup-title">Add your name and goal for better coaching.</div>
+            <div class="progressive-setup-sub" id="profile-setup-sub">This is optional, but it improves Coach, nutrition targets, and profile personalization.</div>
+          </div>
+          <div class="progressive-setup-grid">
+            <input type="text" id="profile-setup-name" class="pf-input" placeholder="Your name">
+            <select id="profile-setup-goal" class="pf-input">
+              <option value="">Select goal</option>
+              <option value="muscle">Build Muscle</option>
+              <option value="strength">Get Stronger</option>
+              <option value="fat_loss">Lose Fat</option>
+              <option value="endurance">Endurance</option>
+              <option value="recomp">Recomp</option>
+            </select>
+          </div>
+          <div class="progressive-setup-actions">
+            <button class="coach-action-btn primary" type="button" onclick="saveProfileSetupPrompt()">Save Setup</button>
+            <button class="coach-action-btn" type="button" onclick="dismissProfileSetupPrompt()">Later</button>
+          </div>
+        </div>
+        <!-- Avatar row -->
+        <div class="profile-avatar-row">
+          <div class="profile-avatar" id="profile-avatar"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l-2 4h10l-2-4"/><path d="M10 17l-1 4M14 17l1 4"/></svg></div>
+          <div class="profile-avatar-info">
+            <div class="profile-name" id="profile-name-display">Athlete</div>
           <div class="profile-xp-mini" id="profile-xp-mini">0 XP</div>
         </div>
       </div>
@@ -2128,10 +1802,21 @@
           <button class="coach-tab" onclick="coachSwitchTab('cardio',this)"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l2-4 4 8 2-4h6"/></svg> Cardio</button>
           <button class="coach-tab" onclick="coachSwitchTab('plan',this)" data-i18n="coach.tab.plan"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Plan</button>
           <button class="coach-tab" onclick="coachSwitchTab('cali',this)"><svg class="ctab-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l-2 4h10l-2-4"/><path d="M10 17l-1 4M14 17l1 4"/></svg> Cali</button>
-        </div>
-        <!-- Persistent Ask bar ? always visible across all coach tabs -->
-        <div class="coach-ask-bar" id="coach-ask-bar"></div>
-        <div id="coach-tab-today"></div>
+          </div>
+          <!-- Persistent Ask bar ? always visible across all coach tabs -->
+          <div class="coach-ask-bar" id="coach-ask-bar"></div>
+          <div class="progressive-setup-card coach-goal-setup-card" id="coach-goal-setup-card" style="display:none;">
+            <div class="progressive-setup-copy">
+              <div class="progressive-setup-kicker">COACH SETUP</div>
+              <div class="progressive-setup-title" id="coach-goal-setup-title">Set a goal to unlock better coaching.</div>
+              <div class="progressive-setup-sub" id="coach-goal-setup-sub">Coach can still work without it, but goal-based plans and nutrition targets will be weaker.</div>
+            </div>
+            <div class="progressive-setup-actions">
+              <button class="coach-action-btn primary" type="button" onclick="goToProfileGoalSetup()">Set Goal</button>
+              <button class="coach-action-btn" type="button" onclick="dismissCoachGoalPrompt()">Hide</button>
+            </div>
+          </div>
+          <div id="coach-tab-today"></div>
         <div id="coach-tab-train" style="display:none;"></div>
 <div id="coach-tab-insights" style="display:none;"><div class="coach-chat-wrap" id="coach-body"></div><div id="coach-tips-wrap" style="padding:0 14px 14px;"><div class="panel-header" style="padding:10px 0 6px;"><span class="panel-title" data-i18n="section.tips">Smart Tips</span><span class="panel-badge" data-i18n="install.tips.for">FOR YOU</span></div><div id="tips-container"><div class="tips-list" id="tips-list-dynamic"></div></div></div></div>
         <div id="coach-tab-cardio" style="display:none;"></div>
@@ -8217,6 +7902,7 @@ function saveProfile() {
   // Refresh coach + nutrition so targets reflect immediately
   if (typeof renderCoach === 'function') renderCoach();
   if (typeof renderCoachNutrition === 'function') renderCoachNutrition();
+  if (typeof renderCoachGoalSetupPrompt === 'function') renderCoachGoalSetupPrompt();
   // Re-compute water goal from updated profile weight
   if (typeof _updateWaterGoal === 'function') _updateWaterGoal();
   if (typeof _updateHdrWater  === 'function') _updateHdrWater();
@@ -8345,6 +8031,9 @@ function renderProfile() {
       console.warn('profile avatar render:', e);
     }
   }
+  if (typeof renderProfileSetupPrompt === 'function') {
+    try { renderProfileSetupPrompt(); } catch (e) { console.warn('profile setup prompt:', e); }
+  }
 
   // Update header greeting with user's first name
   const greeting = document.getElementById('header-greeting');
@@ -8444,10 +8133,7 @@ window._authSuccess = async function (session, isNewUser) {
     if (typeof _syncPushProfile === 'function') _syncPushProfile(userId);
   } catch (_e) {}
 
-  if (isNewUser) {
-    // New user: push any existing localStorage data (unlikely but safe)
-    _onboardingCheck();
-  } else {
+  if (!isNewUser) {
     // Returning user: pull latest data from Supabase into localStorage
     await _syncPull(userId);
     // Reload in-memory arrays from updated localStorage
@@ -8462,8 +8148,6 @@ window._authSuccess = async function (session, isNewUser) {
     if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(e) {}
     if (typeof renderHistory   === 'function') try { renderHistory();   } catch(e) {}
     if (typeof renderProfile   === 'function') try { renderProfile();   } catch(e) {}
-    // Check if returning user still needs onboarding
-    if (!userProfile.setupDone) _onboardingCheck();
   }
 
   // Migrate guest data to account if upgrading from guest
@@ -8482,7 +8166,6 @@ window._authSuccess = async function (session, isNewUser) {
 async function _authBoot() {
   // If Supabase not configured, run offline � skip auth gate entirely
   if (!window._sb) {
-    _onboardingCheck();
     return;
   }
   // Check for existing session
@@ -8493,7 +8176,7 @@ async function _authBoot() {
   } else {
     // No session � check if user chose guest mode previously
     if (localStorage.getItem('forge_guest') === '1') {
-      _onboardingCheck();
+      return;
     } else {
       // Show auth overlay (blocks app usage)
       if (typeof _authShowOverlay === 'function') _authShowOverlay();
@@ -8513,71 +8196,7 @@ async function _authBoot() {
   });
 }
 
-// ???????????????????????????????????????????
-//  ONBOARDING FLOW
-// ???????????????????????????????????????????
-let _onbStep = 0;
-const _onbData = { name:'', gender:'', dob:'', weight:'', weightUnit:'kg', height:'', heightUnit:'cm', goal:'', targetWeight:'', targetMuscle:'', targetFat:'' };
-
-function _onboardingCheck() {
-  const profile = _lsGet('forge_profile', {});
-  if (profile.setupDone) return;
-  const el = document.getElementById('forge-onboarding');
-  if (el) {
-    el.style.display = 'flex';
-    _onbGoto(0);
-    // Apply current language to overlay
-    if (typeof applyLanguage === 'function') applyLanguage();
-  }
-}
-
-// ??? SLIM ONBOARDING (steps 0=Welcome, 1=Name, 2=Goal, 3=Done) ???????????????
-
-function _onbComplete(skip) {
-  if (!skip) {
-    _onbData.name = document.getElementById('onb-name')?.value.trim() || _onbData.name;
-  }
-
-  // Persist to profile
-  userProfile.setupDone = true;
-  if (_onbData.name) userProfile.name = _onbData.name;
-  if (_onbData.goal) userProfile.goal = _onbData.goal;
-  localStorage.setItem('forge_profile', JSON.stringify(userProfile));
-
-  // Fade out overlay
-  const el = document.getElementById('forge-onboarding');
-  if (el) {
-    el.style.transition = 'opacity .4s ease';
-    el.style.opacity    = '0';
-    setTimeout(() => {
-      el.style.display    = 'none';
-      el.style.opacity    = '';
-      el.style.transition = '';
-    }, 420);
-  }
-
-  // Push onboarding profile to Supabase
-  if (typeof _syncPushProfile === 'function' && window._sb) {
-    window._sb.auth.getSession().then(({ data }) => {
-      if (data?.session?.user?.id) _syncPushProfile(data.session.user.id);
-    });
-  }
-
-  // Refresh app state
-  if (typeof renderProfile    === 'function') renderProfile();
-  if (typeof _updateWaterGoal === 'function') _updateWaterGoal();
-  if (typeof _updateMascot    === 'function') _updateMascot();
-  if (!skip) {
-    const greet = userProfile.name ? `Welcome, ${userProfile.name}! ??` : 'Welcome to FORGE! ??';
-    showToast(greet, 'success');
-    if (typeof addXP === 'function') addXP(50, 'Welcome bonus');
-  }
-
-  // Launch spotlight tour (first-time only)
-  if (!localStorage.getItem('forge_spl_done') && !localStorage.getItem('forge_tour_done')) {
-    setTimeout(_splShow, 800);
-  }
-}
+// First-run setup is progressive now. Startup no longer opens onboarding or spotlight flows.
 
 // ???????????????????????????????????????????
 //  SPOTLIGHT WALKTHROUGH
@@ -8720,10 +8339,6 @@ function quickStartBeginnerSession() {
 
       showToast('? Full Body Beginner loaded ? push through it!', 'success');
 
-      // Launch spotlight to guide through next steps
-      if (!localStorage.getItem('forge_spl_done')) {
-        setTimeout(() => { _splIdx = 2; _splGoto(2); }, 600);
-      }
     }, 300);
   }, 500);
 }

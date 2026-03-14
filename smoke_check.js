@@ -70,6 +70,7 @@ const fxSoundPath = path.join(ROOT, 'js', 'fx-sound.js');
 const authUiPath = path.join(ROOT, 'js', 'auth-ui.js');
 const dataTransferPath = path.join(ROOT, 'js', 'data-transfer.js');
 const dataActionsPath = path.join(ROOT, 'js', 'data-actions.js');
+const onboardingPath = path.join(ROOT, 'js', 'onboarding-controls.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
 
@@ -123,6 +124,24 @@ if (fs.existsSync(indexPath)) {
   requiredSnippets.forEach((snippet) => {
     if (!html.includes(snippet)) fail('Missing snippet in index.html: ' + snippet);
   });
+
+  const removedStartupSnippets = [
+    '_onboardingCheck();',
+    'id="forge-onboarding"',
+    'id="forge-tour"',
+    'id="forge-spotlight"'
+  ];
+  removedStartupSnippets.forEach((snippet) => {
+    if (html.includes(snippet)) fail('Legacy first-run startup snippet still present: ' + snippet);
+  });
+
+  const requiredSetupSnippets = [
+    'id="profile-setup-card"',
+    'id="coach-goal-setup-card"'
+  ];
+  requiredSetupSnippets.forEach((snippet) => {
+    if (!html.includes(snippet)) fail('Missing setup prompt snippet in index.html: ' + snippet);
+  });
 }
 
 if (fs.existsSync(fxSoundPath)) {
@@ -146,6 +165,11 @@ if (fs.existsSync(dataActionsPath)) {
   if (!actions.includes('cardioLog = []')) fail('Clear-all path does not clear cardio logs');
   if (!actions.includes('forge_bw_custom_exercises')) fail('Clear-all path does not clear bodyweight custom cards');
   if (!actions.includes('forge_cardio_custom_types')) fail('Clear-all path does not clear cardio custom cards');
+}
+
+if (fs.existsSync(onboardingPath)) {
+  const onboarding = fs.readFileSync(onboardingPath, 'utf8');
+  if (onboarding.includes('function _onboardingCheck')) fail('Legacy onboarding startup function still present');
 }
 
 if (failures > 0) {

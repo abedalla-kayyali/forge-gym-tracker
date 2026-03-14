@@ -1716,27 +1716,8 @@ function applyLanguage() {
   updateStaticLabels();
   // Re-render program panel in Log view so its text immediately updates on language switch
   if (typeof renderProgramPanel === "function") renderProgramPanel();
-  // Refresh onboarding overlay if visible
-  const _onbEl = document.getElementById('forge-onboarding');
-  if (_onbEl && _onbEl.style.display !== 'none') {
-    const _onbBtn = document.getElementById('onb-next-btn');
-    if (_onbBtn) {
-      if (typeof _onbStep !== 'undefined') {
-        if (_onbStep === 0) _onbBtn.textContent = t('onb.welcome.cta');
-        else if (_onbStep === 5) _onbBtn.textContent = t('onb.done.cta');
-        else _onbBtn.textContent = t('onb.next');
-      }
-    }
-    // Refresh step number labels
-    for (let _oi = 1; _oi <= 4; _oi++) {
-      const _oEl = document.getElementById('onb-step-num-' + _oi);
-      if (_oEl) _oEl.textContent = t('onb.step') + ' ' + _oi + ' ' + t('onb.of') + ' 4';
-    }
-    // Refresh summary if on done screen
-    if (typeof _onbStep !== 'undefined' && _onbStep === 5 && typeof _onbRenderSummary === 'function') {
-      _onbRenderSummary();
-    }
-  }
+  if (typeof renderProfileSetupPrompt === 'function') renderProfileSetupPrompt();
+  if (typeof renderCoachGoalSetupPrompt === 'function') renderCoachGoalSetupPrompt();
 
   // Final pass: fix any mojibake Arabic text rendered outside t() paths.
   if (isAr) {
