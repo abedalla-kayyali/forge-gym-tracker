@@ -8161,6 +8161,12 @@ window._authSuccess = async function (session, isNewUser) {
     localStorage.removeItem('forge_guest');
     localStorage.removeItem('forge_guest_banner_dismissed');
   }
+
+  if (window.FORGE_DUELS && typeof window.FORGE_DUELS.ensureReady === 'function') {
+    setTimeout(() => {
+      try { window.FORGE_DUELS.ensureReady(); } catch (_e) {}
+    }, 300);
+  }
 };
 
 async function _authBoot() {

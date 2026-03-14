@@ -178,6 +178,9 @@ if (fs.existsSync(duelsPath)) {
   if (!duels.includes("table === 'profiles_public'")) fail('Duels profile publishing does not branch for profiles_public');
   if (!duels.includes("table === 'profiles'")) fail('Duels profile publishing does not branch for profiles table');
   if (!duels.includes('data: {')) fail('Duels profile publishing is missing profiles data payload fallback');
+  if (!duels.includes('ensureReady')) fail('Duels module is missing readiness republish flow');
+  if (!duels.includes('_searchUsers(q, { force: true })')) fail('Manual duel search does not force-refresh profile directory');
+  if (!duels.includes("const matches = await _searchUsers(raw, { force: true });")) fail('Friend add input does not fall back to refreshed profile search');
 }
 
 if (failures > 0) {
