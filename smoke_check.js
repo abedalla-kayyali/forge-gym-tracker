@@ -71,6 +71,7 @@ const authUiPath = path.join(ROOT, 'js', 'auth-ui.js');
 const dataTransferPath = path.join(ROOT, 'js', 'data-transfer.js');
 const dataActionsPath = path.join(ROOT, 'js', 'data-actions.js');
 const onboardingPath = path.join(ROOT, 'js', 'onboarding-controls.js');
+const duelsPath = path.join(ROOT, 'js', 'duels.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
 
@@ -170,6 +171,13 @@ if (fs.existsSync(dataActionsPath)) {
 if (fs.existsSync(onboardingPath)) {
   const onboarding = fs.readFileSync(onboardingPath, 'utf8');
   if (onboarding.includes('function _onboardingCheck')) fail('Legacy onboarding startup function still present');
+}
+
+if (fs.existsSync(duelsPath)) {
+  const duels = fs.readFileSync(duelsPath, 'utf8');
+  if (!duels.includes("table === 'profiles_public'")) fail('Duels profile publishing does not branch for profiles_public');
+  if (!duels.includes("table === 'profiles'")) fail('Duels profile publishing does not branch for profiles table');
+  if (!duels.includes('data: {')) fail('Duels profile publishing is missing profiles data payload fallback');
 }
 
 if (failures > 0) {

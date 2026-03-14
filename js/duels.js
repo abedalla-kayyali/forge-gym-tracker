@@ -415,7 +415,7 @@
       };
       _safeSet('forge_profile', profile);
       if (window._sb && _me) {
-        const payload = {
+        const publicPayload = {
           id: _me.id,
           name: _playerName(_me),
           email: String(_me.email || ''),
@@ -425,9 +425,28 @@
         for (const table of PROFILE_TABLES) {
           if (_profileTableCache[table] === false) continue;
           try {
+            const payload = table === 'profiles_public'
+              ? publicPayload
+              : {
+                  id: _me.id,
+                  data: {
+                    ...(profile && typeof profile === 'object' ? profile : {}),
+                    name: publicPayload.name,
+                    email: publicPayload.email,
+                    duelPublicStats: publicPayload.duel_public_stats,
+                    updatedAt: publicPayload.updated_at
+                  }
+                };
             const { error } = await window._sb.from(table).upsert(payload, { onConflict: 'id' });
             if (!error) {
               _profileTableCache[table] = true;
+              if (table === 'profiles') {
+                _profilesCache.at = 0;
+              } else {
+                const existing = _arr(_profilesCache.rows).filter(u => String(u.id) !== String(_me.id));
+                existing.unshift(_normalizeProfileRow(publicPayload));
+                _profilesCache = { at: Date.now(), rows: existing.slice(0, 260) };
+              }
               break;
             }
             _profileTableCache[table] = false;
