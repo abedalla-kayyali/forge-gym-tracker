@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v106';
-window.FORGE_BUILD   = '2026-03-14 (whoop-style body map visual revamp for stats + weighted log)';
+window.FORGE_VERSION = 'v107';
+window.FORGE_BUILD   = '2026-03-14 (friend add reliability FG2 code + readiness click + expandable QR)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

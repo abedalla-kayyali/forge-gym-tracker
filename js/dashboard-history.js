@@ -625,6 +625,28 @@ function _renderOverviewSnapshot() {
   if (readinessLbl) readinessLbl.textContent = isAr ? 'الجاهزية' : 'readiness';
   const ring = document.getElementById('snap-readiness-ring');
   const val = document.getElementById('snap-readiness-val');
+  const readinessCard = document.getElementById('snap-readiness-card');
+  if (readinessCard) {
+    readinessCard.setAttribute('role', 'button');
+    readinessCard.setAttribute('tabindex', '0');
+    readinessCard.setAttribute('title', isAr ? 'عرض تفصيل الجاهزية' : 'Open readiness breakdown');
+    const openBreakdown = () => {
+      const progressBtn = document.querySelector('.dash-tab[data-tab="progress"]');
+      if (typeof switchDashTab === 'function') switchDashTab('progress', progressBtn || null);
+      if (typeof _renderProgressReadinessHub === 'function') _renderProgressReadinessHub();
+      const hub = document.getElementById('progress-readiness-hub');
+      if (hub) {
+        try { hub.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_e) {}
+      }
+    };
+    readinessCard.onclick = openBreakdown;
+    readinessCard.onkeydown = (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        openBreakdown();
+      }
+    };
+  }
   if (ring && val) {
     let r = 60;
     try {
@@ -702,7 +724,8 @@ function _renderProgressReadinessHub() {
     else view.appendChild(hub);
   }
 
-  legacy.forEach(p => { p.style.display = 'none'; });
+  // Keep all existing progress panels visible; this hub is additive.
+  legacy.forEach(p => { p.style.display = ''; });
   hub.style.display = '';
 
   const state = (typeof window.buildCoachUnifiedState === 'function')

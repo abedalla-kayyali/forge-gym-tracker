@@ -1816,6 +1816,15 @@ button:focus:not(:focus-visible){outline:none;}
   justify-content:center;
   gap:8px;
   min-height:88px;
+  cursor:pointer;
+  transition:border-color .18s, box-shadow .18s, transform .12s;
+}
+.snap-readiness-card:hover{
+  border-color:rgba(118,198,255,.42);
+  box-shadow:0 0 0 1px rgba(118,198,255,.24) inset;
+}
+.snap-readiness-card:active{
+  transform:translateY(1px);
 }
 .snap-readiness-ring{
   --pct:60;
@@ -5381,8 +5390,20 @@ body[data-theme="solar"] .xp-fill {
 .duel-friends-zone{margin-top:8px;display:flex;flex-direction:column;gap:8px;max-height:28vh;overflow:auto;padding-right:4px;}
 .duel-my-code-qr{margin-top:8px;}
 .duel-qr-wrap{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.03);}
-.duel-qr-wrap img{width:64px;height:64px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#fff;}
+.duel-qr-wrap img{width:64px;height:64px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#fff;cursor:pointer;}
 .duel-qr-wrap code{font-size:10px;color:var(--text2);word-break:break-all;}
+.duel-qr-modal{position:fixed;inset:0;z-index:12500;}
+.duel-qr-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.64);}
+.duel-qr-card{
+  position:relative;z-index:1;max-width:460px;width:min(92vw,460px);margin:8vh auto 0;
+  border-radius:14px;border:1px solid rgba(100,190,255,.35);
+  background:linear-gradient(180deg,rgba(7,18,30,.97),rgba(7,14,23,.98));padding:12px;
+}
+.duel-qr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#d4ecff;}
+.duel-qr-big-wrap{display:flex;flex-direction:column;gap:10px;align-items:center;padding-top:10px;}
+.duel-qr-big-wrap img{width:min(78vw,320px);height:auto;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#fff;}
+.duel-qr-big-wrap code{font-size:12px;color:var(--text2);word-break:break-all;text-align:center;}
+.duel-qr-actions{display:flex;gap:8px;justify-content:center;}
 .duel-scan-modal{position:fixed;inset:0;z-index:12000;}
 .duel-scan-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);}
 .duel-scan-card{

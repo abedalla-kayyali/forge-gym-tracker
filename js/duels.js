@@ -4,7 +4,7 @@
   const KEY_STATE = 'forge_duel_state_v2';
   const TABLES = ['forge_duels', 'duels'];
   const PROFILE_TABLES = ['profiles_public', 'profiles'];
-  const FRIEND_CODE_PREFIX = 'FG-';
+  const FRIEND_CODE_PREFIX = 'FG2-';
   const PROFILE_CACHE_MS = 90000;
   const DAY_MS = 86400000;
   const INBOX_POLL_MS = 60000;
@@ -64,6 +64,36 @@
   }
   function _shortId(id) {
     return String(id || '').replace(/-/g, '').toUpperCase().slice(0, 10);
+  }
+  function _uuidToCompact(uuid) {
+    const hex = String(uuid || '').replace(/-/g, '').toLowerCase();
+    if (!/^[0-9a-f]{32}$/.test(hex)) return '';
+    let raw = '';
+    for (let i = 0; i < 32; i += 2) raw += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16));
+    return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function _compactToUuid(compact) {
+    const token = String(compact || '').replace(/-/g, '+').replace(/_/g, '/');
+    if (!token || token.length < 22) return '';
+    const padLen = (4 - (token.length % 4)) % 4;
+    const padded = token + '='.repeat(padLen);
+    try {
+      const raw = atob(padded);
+      if (raw.length !== 16) return '';
+      let hex = '';
+      for (let i = 0; i < raw.length; i += 1) {
+        hex += raw.charCodeAt(i).toString(16).padStart(2, '0');
+      }
+      return [
+        hex.slice(0, 8),
+        hex.slice(8, 12),
+        hex.slice(12, 16),
+        hex.slice(16, 20),
+        hex.slice(20, 32)
+      ].join('-');
+    } catch (_e) {
+      return '';
+    }
   }
   function _escapeHtml(v) {
     return String(v == null ? '' : v)
@@ -316,7 +346,8 @@
   }
   function _myFriendCode() {
     if (!_me) return '';
-    return FRIEND_CODE_PREFIX + _shortId(_me.id);
+    const compact = _uuidToCompact(_me.id);
+    return compact ? (FRIEND_CODE_PREFIX + compact) : ('FG-' + _shortId(_me.id));
   }
   async function _addFriendByCode(rawCode) {
     const raw = String(rawCode || '').trim();
@@ -330,7 +361,21 @@
       return true;
     }
 
-    const q = _normQ(raw);
+    // New deterministic code: FG2-<base64url(uuid)> (works without profile search).
+    const low = _normQ(raw);
+    if (low.startsWith('fg2-')) {
+      const uuid = _compactToUuid(raw.slice(4).trim());
+      if (!uuid || (_me && String(uuid) === String(_me.id))) return false;
+      let friend = { id: uuid, name: 'Athlete', email: '' };
+      try {
+        const known = (await _fetchProfiles(true)).find(u => String(u.id) === String(uuid));
+        if (known) friend = { id: known.id, name: known.name || 'Athlete', email: known.email || '' };
+      } catch (_e) {}
+      _addFriend(friend);
+      return true;
+    }
+
+    const q = low;
     const codePart = q.replace(/^fg-/, '').replace(/[^a-z0-9]/g, '');
     const all = await _fetchProfiles(true);
     if (!all.length) return false;
@@ -655,7 +700,7 @@
       '<div class="duel-modal-card">' +
         '<div class="duel-modal-head"><strong>1v1 Matchmaking</strong><button class="coach-action-btn" onclick="FORGE_DUELS.closeModal()">X</button></div>' +
         '<div class="duel-modal-row">' +
-          '<input id="duel-friend-code-input" class="duel-search-input" placeholder="Paste short code (FG-XXXXXX)" />' +
+          '<input id="duel-friend-code-input" class="duel-search-input" placeholder="Paste code (FG2-...)" />' +
           '<button class="coach-action-btn" onclick="FORGE_DUELS.addFriendCode()">' + _tx('Add Friend', 'ط¥ط¶ط§ظپط© طµط¯ظٹظ‚') + '</button>' +
           '<button class="coach-action-btn" onclick="FORGE_DUELS.copyCode()">' + _tx('Copy My Code', 'ظ†ط³ط® ظƒظˆط¯ظٹ') + '</button>' +
           '<button class="coach-action-btn" onclick="FORGE_DUELS.scanCode()">' + _tx('Scan QR', 'ظ…ط³ط­ QR') + '</button>' +
@@ -696,6 +741,7 @@
     const modal = document.getElementById('duel-modal');
     if (modal) modal.style.display = 'none';
     _closeScanModal();
+    _closeQrModal();
   }
   function _renderUserResults(users, hintText) {
     const rs = document.getElementById('duel-search-results');
@@ -714,7 +760,7 @@
       const statLine = u?.stats
         ? (_tx('7d', '7 ط£ظٹط§ظ…') + ': ' + _toNum(u.stats.workout7d, 0) + 'W / ' + _toNum(u.stats.cardio7d, 0) + 'C')
         : (_tx('No stats shared', 'ظ„ط§ طھظˆط¬ط¯ ط¥ط­طµط§ط،ط§طھ ظ…ط´طھط±ظƒط©'));
-      const shortCode = FRIEND_CODE_PREFIX + _shortId(u.id);
+      const shortCode = (_uuidToCompact(u.id) ? (FRIEND_CODE_PREFIX + _uuidToCompact(u.id)) : ('FG-' + _shortId(u.id)));
       return (
         '<div class="duel-user-row">' +
           '<div class="duel-user-meta"><strong>' + _escapeHtml(u.name || 'Athlete') + '</strong><small>' + _escapeHtml(u.email || shortCode) + ' | ' + _escapeHtml(statLine) + '</small></div>' +
@@ -730,7 +776,7 @@
   }
   async function _renderSuggestedUsers() {
     const users = await _searchUsers('');
-    _renderUserResults(users, _tx('Type 2+ letters, email, or short code (FG-XXXX).', 'ط§ظƒطھط¨ ط­ط±ظپظٹظ† ط£ظˆ ط£ظƒط«ط±طŒ ط¨ط±ظٹط¯ظ‹ط§طŒ ط£ظˆ ظƒظˆط¯ظ‹ط§ ظ‚طµظٹط±ظ‹ط§ (FG-XXXX).'));
+    _renderUserResults(users, _tx('Type 2+ letters, email, or code (FG2-...).', 'اكتب حرفين أو أكثر، بريدًا، أو كودًا (FG2-...).'));
   }
   async function _searchFromModal() {
     const input = document.getElementById('duel-search-input');
@@ -833,7 +879,11 @@
     const url = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(code);
     el.innerHTML =
       '<div class="ctoday-plan-note">' + _tx('My Friend QR/Code', 'رمز/كود الصديق الخاص بي') + '</div>' +
-      '<div class="duel-qr-wrap"><img src="' + url + '" alt="friend-qr" /><code>' + code + '</code></div>';
+      '<div class="duel-qr-wrap">' +
+        '<img src="' + url + '" alt="friend-qr" onclick="FORGE_DUELS.expandQr()" />' +
+        '<code>' + code + '</code>' +
+        '<button class="coach-action-btn" onclick="FORGE_DUELS.expandQr()">' + _tx('Expand', 'تكبير') + '</button>' +
+      '</div>';
   }
   async function _addFriendFromInput() {
     const input = document.getElementById('duel-friend-code-input');
@@ -856,6 +906,41 @@
     } catch (_e) {
       if (typeof showToast === 'function') showToast(code, 'warn');
     }
+  }
+  function _ensureQrModal() {
+    let modal = document.getElementById('duel-qr-modal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'duel-qr-modal';
+    modal.className = 'duel-qr-modal';
+    modal.style.display = 'none';
+    modal.innerHTML =
+      '<div class="duel-qr-backdrop" onclick="FORGE_DUELS.closeQr()"></div>' +
+      '<div class="duel-qr-card">' +
+        '<div class="duel-qr-head"><strong>' + _tx('Share Friend Code', 'مشاركة كود الصديق') + '</strong><button class="coach-action-btn" onclick="FORGE_DUELS.closeQr()">X</button></div>' +
+        '<div id="duel-qr-modal-body"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    return modal;
+  }
+  function _closeQrModal() {
+    const modal = document.getElementById('duel-qr-modal');
+    if (modal) modal.style.display = 'none';
+  }
+  function _openQrModal() {
+    const code = _myFriendCode();
+    if (!code) return;
+    const modal = _ensureQrModal();
+    const body = document.getElementById('duel-qr-modal-body');
+    if (!body) return;
+    const url = 'https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=' + encodeURIComponent(code);
+    body.innerHTML =
+      '<div class="duel-qr-big-wrap">' +
+        '<img src="' + url + '" alt="friend-qr-large" />' +
+        '<code>' + code + '</code>' +
+        '<div class="duel-qr-actions"><button class="coach-action-btn" onclick="FORGE_DUELS.copyCode()">' + _tx('Copy Code', 'نسخ الكود') + '</button></div>' +
+      '</div>';
+    modal.style.display = 'block';
   }
   function _ensureScanModal() {
     let modal = document.getElementById('duel-scan-modal');
@@ -985,6 +1070,8 @@
     search: _searchFromModal,
     addFriendCode: _addFriendFromInput,
     copyCode: _copyMyCode,
+    expandQr: _openQrModal,
+    closeQr: _closeQrModal,
     scanCode: _scanCode,
     closeScan: _closeScanModal,
     addFriend: function (id, name, email) { _addFriend({ id, name, email }); _renderFriendsZone(); },
