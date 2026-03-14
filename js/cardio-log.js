@@ -8,6 +8,9 @@ let _selectedCardioAct = null; // { cat, act }
 let _selectedHRZone    = 0;
 let _cardioFilterCat   = '';
 let _cardioSearchQuery = '';
+function _cl(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
 
 const _cardioCategoryIcon = {
   cardio: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h4l2-4 4 8 2-4h6"/></svg>',
@@ -33,14 +36,14 @@ function _initCardioLogShell() {
     tools.className = 'cardio-filter-tools';
     tools.innerHTML =
       '<div class="cardio-search-wrap">' +
-        '<input class="cardio-search-input" type="text" placeholder="Search workout name..." oninput="setCardioSearchQuery(this.value)">' +
+        '<input class="cardio-search-input" type="text" placeholder="' + _cl('Search workout name...', 'ابحث باسم التمرين...') + '" oninput="setCardioSearchQuery(this.value)">' +
       '</div>' +
       '<div class="cardio-filter-row">' +
-        '<button type="button" class="cardio-filter-chip active" data-cat="" onclick="setCardioFilterCategory(\'\',this)">All</button>' +
-        '<button type="button" class="cardio-filter-chip" data-cat="cardio" onclick="setCardioFilterCategory(\'cardio\',this)">Cardio</button>' +
+        '<button type="button" class="cardio-filter-chip active" data-cat="" onclick="setCardioFilterCategory(\'\',this)">' + _cl('All', 'الكل') + '</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="cardio" onclick="setCardioFilterCategory(\'cardio\',this)">' + _cl('Cardio', 'كارديو') + '</button>' +
         '<button type="button" class="cardio-filter-chip" data-cat="hiit" onclick="setCardioFilterCategory(\'hiit\',this)">HIIT</button>' +
-        '<button type="button" class="cardio-filter-chip" data-cat="sports" onclick="setCardioFilterCategory(\'sports\',this)">Sports</button>' +
-        '<button type="button" class="cardio-filter-chip" data-cat="recovery" onclick="setCardioFilterCategory(\'recovery\',this)">Recovery</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="sports" onclick="setCardioFilterCategory(\'sports\',this)">' + _cl('Sports', 'رياضة') + '</button>' +
+        '<button type="button" class="cardio-filter-chip" data-cat="recovery" onclick="setCardioFilterCategory(\'recovery\',this)">' + _cl('Recovery', 'تعافي') + '</button>' +
       '</div>' +
       '<div class="cardio-gated-msg" id="cardio-gated-msg"></div>';
     streakBar.insertAdjacentElement('afterend', tools);
@@ -126,25 +129,25 @@ function _applyCardioActivityFilter() {
   if (gatedMsg) {
     if (!hasCriteria) {
       gatedMsg.style.display = '';
-      gatedMsg.innerHTML = 'Pick a category or type a workout name to reveal cards';
+      gatedMsg.innerHTML = _cl('Pick a category or type a workout name to reveal cards', 'اختر فئة أو اكتب اسم تمرين لإظهار البطاقات');
     } else if (visibleCount === 0 && hasQuery) {
       const suggestedCat = ['cardio', 'hiit', 'sports', 'recovery'].includes(_cardioFilterCat) ? _cardioFilterCat : 'cardio';
       gatedMsg.style.display = '';
       gatedMsg.innerHTML =
-        '<div class="cardio-gated-title">Workout not found</div>' +
-        '<div class="cardio-gated-sub">Add "' + _esc(_cardioSearchQuery) + '" for future use</div>' +
+        '<div class="cardio-gated-title">' + _cl('Workout not found', 'التمرين غير موجود') + '</div>' +
+        '<div class="cardio-gated-sub">' + _cl('Add "', 'أضف "') + _esc(_cardioSearchQuery) + _cl('" for future use', '" للاستخدام لاحقًا') + '</div>' +
         '<div class="cardio-add-inline">' +
           '<select id="cardio-add-cat" class="cardio-add-select">' +
-            '<option value="cardio"' + (suggestedCat === 'cardio' ? ' selected' : '') + '>Cardio</option>' +
+            '<option value="cardio"' + (suggestedCat === 'cardio' ? ' selected' : '') + '>' + _cl('Cardio', 'كارديو') + '</option>' +
             '<option value="hiit"' + (suggestedCat === 'hiit' ? ' selected' : '') + '>HIIT</option>' +
-            '<option value="sports"' + (suggestedCat === 'sports' ? ' selected' : '') + '>Sports</option>' +
-            '<option value="recovery"' + (suggestedCat === 'recovery' ? ' selected' : '') + '>Recovery</option>' +
+            '<option value="sports"' + (suggestedCat === 'sports' ? ' selected' : '') + '>' + _cl('Sports', 'رياضة') + '</option>' +
+            '<option value="recovery"' + (suggestedCat === 'recovery' ? ' selected' : '') + '>' + _cl('Recovery', 'تعافي') + '</option>' +
           '</select>' +
-          '<button type="button" class="cardio-add-inline-btn" onclick="addCardioFromSearch()">+ Add Workout</button>' +
+          '<button type="button" class="cardio-add-inline-btn" onclick="addCardioFromSearch()">+ ' + _cl('Add Workout', 'إضافة تمرين') + '</button>' +
         '</div>';
     } else if (visibleCount === 0) {
       gatedMsg.style.display = '';
-      gatedMsg.innerHTML = 'No workouts in this category';
+      gatedMsg.innerHTML = _cl('No workouts in this category', 'لا توجد تمارين في هذه الفئة');
     } else {
       gatedMsg.style.display = 'none';
       gatedMsg.innerHTML = '';
@@ -167,11 +170,11 @@ function _cardioActivityExists(name, cat) {
 
 function addCardioFromSearch() {
   const act = String(_cardioSearchQuery || '').trim();
-  if (!act) { showToast('Type workout name first'); return; }
+  if (!act) { showToast(_cl('Type workout name first', 'اكتب اسم التمرين أولًا')); return; }
   const catEl = document.getElementById('cardio-add-cat');
   const catRaw = String(catEl?.value || _cardioFilterCat || 'cardio').toLowerCase();
   const cat = ['cardio', 'hiit', 'sports', 'recovery'].includes(catRaw) ? catRaw : 'cardio';
-  if (_cardioActivityExists(act, cat)) { showToast('Workout already exists'); return; }
+  if (_cardioActivityExists(act, cat)) { showToast(_cl('Workout already exists', 'التمرين موجود مسبقًا')); return; }
   _cardioCustomTypes.push({ id: 'cc_' + Date.now(), act, cat });
   _saveCardioCustomTypes();
   _renderCardioCustomCards();
@@ -188,7 +191,7 @@ function addCardioFromSearch() {
     String(btn.dataset.cat || '').trim().toLowerCase() === cat
   );
   if (freshBtn) selectCardioActivity(freshBtn);
-  showToast('Workout added to your cards');
+  showToast(_cl('Workout added to your cards', 'تمت إضافة التمرين إلى بطاقاتك'));
 }
 
 // ── Activity selection ────────────────────────────────────────────────────────
@@ -211,7 +214,7 @@ function selectHRZone(zone) {
 function submitCardioLog() {
   if (!_selectedCardioAct) return;
   const dur = parseInt(document.getElementById('cardio-dur-input').value, 10) || 0;
-  if (!dur) { showToast('Enter duration'); return; }
+  if (!dur) { showToast(_cl('Enter duration', 'أدخل المدة')); return; }
   const cal  = parseInt(document.getElementById('cardio-cal-input').value, 10) || 0;
   const cond = document.getElementById('cardio-cond-select').value;
   const _mult = { hiit: 1.5, cardio: 1.2, sports: 1.1, recovery: 1.0 };
@@ -266,7 +269,7 @@ function submitCardioLog() {
   renderCardioRecentLog();
   _renderCardioStreakBar();
   _renderCardioActivityStreaks();
-  showToast(`Cardio logged! +${xpEarned} XP \uD83D\uDE80`);
+  showToast(_cl(`Cardio logged! +${xpEarned} XP`, `تم تسجيل الكارديو! +${xpEarned} نقطة`));
   if (typeof updateXPBar === 'function') updateXPBar();
 }
 
@@ -301,17 +304,17 @@ function _renderCardioStreakBar() {
   const latest = (Array.isArray(cardioLog) ? cardioLog : []).slice().sort((a, b) =>
     new Date(b?.date || 0) - new Date(a?.date || 0)
   )[0] || null;
-  const latestName = latest ? _esc(String(latest.activity || 'Workout')) : '--';
-  const latestDate = latest ? new Date(latest.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--';
+  const latestName = latest ? _esc(String(latest.activity || _cl('Workout', 'تمرين'))) : '--';
+  const latestDate = latest ? new Date(latest.date).toLocaleDateString((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'short' }) : '--';
   const streak = _calcCardioStreak();
   const streakText = streak === 0
-    ? 'Start your streak today'
-    : `${streak} day${streak > 1 ? 's' : ''} streak active`;
+    ? _cl('Start your streak today', 'ابدأ تتاليك اليوم')
+    : _cl(`${streak} day${streak > 1 ? 's' : ''} streak active`, `تتالي نشط: ${streak} يوم`);
   el.innerHTML =
-    '<div class="cardio-streak-kicker">ARCADE CARDIO</div>' +
-    `<div class="cardio-streak-main">\uD83D\uDD25 ${streakText}</div>` +
-    `<div class="cardio-streak-sub">${sessions} missions logged · ${totalMins} total mins</div>` +
-    `<div class="cardio-streak-latest">Latest: ${latestName} · ${latestDate}</div>`;
+    '<div class="cardio-streak-kicker">' + _cl('ARCADE CARDIO', 'كارديو أركيد') + '</div>' +
+    `<div class="cardio-streak-main">${streakText}</div>` +
+    `<div class="cardio-streak-sub">${sessions} ${_cl('sessions logged', 'جلسات مسجلة')} | ${totalMins} ${_cl('total mins', 'إجمالي دقائق')}</div>` +
+    `<div class="cardio-streak-latest">${_cl('Latest:', 'الأحدث:')} ${latestName} | ${latestDate}</div>`;
 }
 
 function _normalizeCardioDate(raw) {
@@ -351,7 +354,7 @@ function _renderCardioActivityStreaks() {
     const label = btn.dataset.act || chip.dataset.chipFor || '';
     const streak = _calcActivityStreak(label);
     if (streak > 0) {
-      chip.textContent = `\uD83D\uDD25 ${streak}d`;
+      chip.textContent = `${streak}d`;
       chip.classList.add('active');
     } else {
       chip.textContent = '0d';
@@ -374,9 +377,9 @@ function renderCardioRecentLog() {
       '<span class="cardio-log-dot"></span>' +
       '<span class="cardio-log-main">' +
         '<span class="cardio-log-act">' + e.activity + '</span>' +
-        '<span class="cardio-log-meta">' + dur + ' min' +
-          (kcal ? ' · ' + kcal + ' kcal' : '') +
-          (zone ? ' · Z' + zone : '') +
+        '<span class="cardio-log-meta">' + dur + ' ' + _cl('min', 'دقيقة') +
+          (kcal ? ' | ' + kcal + ' ' + _cl('kcal', 'سعرة') : '') +
+          (zone ? ' | Z' + zone : '') +
         '</span>' +
       '</span>' +
       '<span class="cardio-log-date">' + date + '</span>' +
@@ -400,26 +403,26 @@ function _saveCardioCustomTypes() {
 }
 
 function addCustomCardioType() {
-  const act = (prompt('New cardio activity name (example: Ski Erg, Padel, Dance)') || '').trim();
+  const act = (prompt(_cl('New cardio activity name (example: Ski Erg, Padel, Dance)', 'اسم نشاط كارديو جديد (مثال: Ski Erg, Padel, Dance)')) || '').trim();
   if (!act) return;
-  const catRaw = (prompt('Category: cardio / hiit / sports / recovery', 'cardio') || 'cardio').trim().toLowerCase();
+  const catRaw = (prompt(_cl('Category: cardio / hiit / sports / recovery', 'الفئة: cardio / hiit / sports / recovery'), 'cardio') || 'cardio').trim().toLowerCase();
   const cat = ['cardio', 'hiit', 'sports', 'recovery'].includes(catRaw) ? catRaw : 'cardio';
   const exists = _cardioCustomTypes.some(x =>
     String(x?.act || '').toLowerCase() === act.toLowerCase() && String(x?.cat || '') === cat
   );
-  if (exists) { showToast('Card already exists'); return; }
+  if (exists) { showToast(_cl('Card already exists', 'البطاقة موجودة مسبقًا')); return; }
   _cardioCustomTypes.push({ id: 'cc_' + Date.now(), act, cat });
   _saveCardioCustomTypes();
   _renderCardioCustomCards();
   _renderCardioActivityStreaks();
-  showToast('Custom cardio card added');
+  showToast(_cl('Custom cardio card added', 'تمت إضافة بطاقة كارديو مخصصة'));
 }
 
 function _renderCardioCustomCards() {
   const wrap = document.getElementById('cardio-custom-grid');
   if (!wrap) return;
   if (!_cardioCustomTypes.length) {
-    wrap.innerHTML = '<div class="cardio-custom-empty">No custom cards yet</div>';
+    wrap.innerHTML = '<div class="cardio-custom-empty">' + _cl('No custom cards yet', 'لا توجد بطاقات مخصصة بعد') + '</div>';
     return;
   }
   wrap.innerHTML = _cardioCustomTypes.map(c => {
@@ -443,8 +446,8 @@ function _ensureCardioCustomUi() {
   block.id = 'cardio-custom-block';
   block.className = 'cardio-cat-block cardio-custom-block';
   block.innerHTML =
-    '<div class="cardio-cat-label">CUSTOM WORKOUT TYPES</div>' +
-    '<button class="cardio-add-custom-btn" type="button" onclick="addCustomCardioType()">+ Add Custom Card</button>' +
+    '<div class="cardio-cat-label">' + _cl('CUSTOM WORKOUT TYPES', 'أنواع تمارين مخصصة') + '</div>' +
+    '<button class="cardio-add-custom-btn" type="button" onclick="addCustomCardioType()">+ ' + _cl('Add Custom Card', 'إضافة بطاقة مخصصة') + '</button>' +
     '<div id="cardio-custom-grid" class="cardio-grid cardio-custom-grid"></div>';
   if (targetBefore && targetBefore.parentNode === zone) zone.insertBefore(block, targetBefore);
   else zone.appendChild(block);

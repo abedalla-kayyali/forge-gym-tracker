@@ -3,6 +3,9 @@
 
 let stepsData = _lsGet('forge_steps', {});
 // stepsData = { 'Mon Feb 17 2025': { steps: 8500, goal: 10000 }, ... }
+function _sh(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
 
 const STEP_DEFAULTS = { goal: 10000, xpPer1k: 2 };
 
@@ -185,7 +188,7 @@ function renderStepsPanel() {
       <span class="steps-sub-stat"><b>${remaining.toLocaleString()}</b> ${toGoWord}</span>
       <span class="steps-sub-stat"><b>~${km}</b> km</span>
       <span class="steps-sub-stat"><b>${kcal}</b> kcal</span>
-      ${stepStreak > 0 ? `<span class="steps-sub-stat">${_fireSVG}<b>${stepStreak}${streakWord}</b> streak</span>` : ''}
+      ${stepStreak > 0 ? `<span class="steps-sub-stat">${_fireSVG}<b>${stepStreak}${streakWord}</b> ${_sh('streak', 'تتالي')}</span>` : ''}
     </div>
     <div class="steps-input-row" id="steps-input-row" style="display:none;">
       <input type="number" id="steps-input" min="0" inputmode="numeric" placeholder="${phWord}">
@@ -257,18 +260,18 @@ function openStepsInput() {
 function submitStepsInput() {
   const inp = document.getElementById('steps-input');
   const val = parseInt(inp?.value);
-  if (!val || val < 0) { showToast('Enter a valid step count!'); return; }
+  if (!val || val < 0) { showToast(_sh('Enter a valid step count!', 'أدخل عدد خطوات صحيح')); return; }
   logSteps(val);
   const row = document.getElementById('steps-input-row');
   if (row) row.style.display = 'none';
 }
 
 function openGoalSetter() {
-  const goal = prompt('Set daily step goal:', getTodaySteps().goal || STEP_DEFAULTS.goal);
+  const goal = prompt(_sh('Set daily step goal:', 'حدد هدف الخطوات اليومي:'), getTodaySteps().goal || STEP_DEFAULTS.goal);
   const parsed = parseInt(goal);
   if (parsed && parsed > 0) {
     setStepsGoal(parsed);
-    showToast(typeof t === 'function' && currentLang === 'ar' ? `هدف الخطوات: ${parsed.toLocaleString()}` : `Step goal set to ${parsed.toLocaleString()}!`);
+  showToast(_sh(`Step goal set to ${parsed.toLocaleString()}!`, `تم تعيين هدف الخطوات إلى ${parsed.toLocaleString()}`));
   }
 }
 
@@ -327,9 +330,9 @@ function importHealthFile(input) {
         saveSteps();
         renderStepsPanel();
         _healthStatus('✅ Imported ' + imported + ' days of health data!', true);
-        showToast('Health data imported: ' + imported + ' days', 'success');
+      showToast(_sh('Health data imported: ' + imported + ' days', 'تم استيراد بيانات الصحة: ' + imported + ' يوم'), 'success');
       } else {
-        _healthStatus('No recognisable data found in file.', false);
+      _healthStatus(_sh('No recognisable data found in file.', 'لم يتم العثور على بيانات قابلة للقراءة في الملف.'), false);
       }
     } catch (err) {
       _healthStatus('Parse error: ' + err.message, false);
@@ -387,7 +390,7 @@ function togglePedometer() {
       window.removeEventListener('devicemotion', window._pedometerListener);
       window._pedometerListener = null;
     }
-    if (btn) { btn.textContent = '▶ Start Pedometer'; btn.style.background = 'var(--accent)'; }
+  if (btn) { btn.textContent = _sh('Start Pedometer', 'بدء عداد الخطوات'); btn.style.background = 'var(--accent)'; }
     if (info) info.textContent = 'Pedometer stopped. Steps recorded: ' + _pedometerSteps;
     if (_pedometerSteps > 0) {
       logSteps(_pedometerSteps);
@@ -396,7 +399,7 @@ function togglePedometer() {
     return;
   }
   if (typeof DeviceMotionEvent === 'undefined') {
-    showToast('Motion sensor not available on this device.', 'warn');
+    showToast(_sh('Motion sensor not available on this device.', 'مستشعر الحركة غير متاح على هذا الجهاز.'), 'warn');
     return;
   }
   const start = () => {
@@ -425,8 +428,8 @@ function togglePedometer() {
   };
   if (typeof DeviceMotionEvent.requestPermission === 'function') {
     DeviceMotionEvent.requestPermission()
-      .then(r => { if (r === 'granted') start(); else showToast('Motion permission denied.', 'warn'); })
-      .catch(() => showToast('Could not request permission.', 'warn'));
+      .then(r => { if (r === 'granted') start(); else showToast(_sh('Motion permission denied.', 'تم رفض صلاحية الحركة.'), 'warn'); })
+      .catch(() => showToast(_sh('Could not request permission.', 'تعذر طلب الصلاحية.'), 'warn'));
   } else {
     start();
   }

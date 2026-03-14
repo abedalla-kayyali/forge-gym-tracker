@@ -11,6 +11,9 @@ let _currentBwReps = 10; // tracks reps stepper value
 let _bwStep = 1; // 1=pick muscle, 2=pick exercise, 3=log sets
 let _bwSessionMax = 0; // in-session high-water mark; reset when new exercise selected
 let _bwSearchQuery = ''; // bodyweight picker search text
+function _bwL(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
 
 function setWorkoutMode(mode) {
   workoutMode = mode;
@@ -620,17 +623,17 @@ function _saveBwCustomExercises() {
 }
 
 function addCustomBwExercise() {
-  const name = (prompt('New bodyweight exercise name (example: Wall Sit, Hollow Hold)') || '').trim();
+  const name = (prompt(_bwL('New bodyweight exercise name (example: Wall Sit, Hollow Hold)', 'اسم تمرين وزن جسم جديد (مثال: Wall Sit, Hollow Hold)')) || '').trim();
   if (!name) return;
-  const muscle = (prompt('Primary muscle (example: Core, Legs, Chest)', 'Core') || 'Core').trim() || 'Core';
-  const typeRaw = (prompt('Type: reps or hold', 'reps') || 'reps').trim().toLowerCase();
+  const muscle = (prompt(_bwL('Primary muscle (example: Core, Legs, Chest)', 'العضلة الأساسية (مثال: Core, Legs, Chest)'), 'Core') || 'Core').trim() || 'Core';
+  const typeRaw = (prompt(_bwL('Type: reps or hold', 'النوع: تكرارات أو ثبات'), 'reps') || 'reps').trim().toLowerCase();
   const t = typeRaw === 'hold' ? 'hold' : 'reps';
   const exists = _bwCustomExercises.some(x => String(x?.n || '').toLowerCase() === name.toLowerCase());
-  if (exists) { showToast('Exercise already exists'); return; }
+  if (exists) { showToast(_bwL('Exercise already exists', 'التمرين موجود مسبقًا')); return; }
   _bwCustomExercises.push({ id: 'bwc_' + Date.now(), n: name, muscle, t });
   _saveBwCustomExercises();
   renderBwExercisePicker();
-  showToast('Custom bodyweight card added');
+  showToast(_bwL('Custom bodyweight card added', 'تمت إضافة بطاقة تمرين وزن جسم مخصصة'));
 }
 
 function _bwExerciseExists(name) {
@@ -645,8 +648,8 @@ function _bwExerciseExists(name) {
 
 function addBwFromSearch() {
   const name = String(_bwSearchQuery || '').trim();
-  if (!name) { showToast('Type workout name first'); return; }
-  if (_bwExerciseExists(name)) { showToast('Exercise already exists'); return; }
+  if (!name) { showToast(_bwL('Type workout name first', 'اكتب اسم التمرين أولاً')); return; }
+  if (_bwExerciseExists(name)) { showToast(_bwL('Exercise already exists', 'التمرين موجود مسبقًا')); return; }
   const muscleEl = document.getElementById('bw-add-muscle');
   const typeEl = document.getElementById('bw-add-type');
   const muscle = String(muscleEl?.value || _bwFilterMuscle || 'Core').trim() || 'Core';
@@ -664,7 +667,7 @@ function addBwFromSearch() {
   });
   renderBwExercisePicker();
   pickBwExercise(name, muscle, t);
-  showToast('Custom bodyweight card added');
+  showToast(_bwL('Custom bodyweight card added', 'تمت إضافة بطاقة تمرين وزن جسم مخصصة'));
 }
 
 function setBwSearchQuery(val) {
@@ -815,19 +818,19 @@ function renderBwExercisePicker() {
   const latestBw = (Array.isArray(bwWorkouts) ? bwWorkouts : []).slice().sort((a, b) =>
     new Date(b?.date || 0) - new Date(a?.date || 0)
   )[0] || null;
-  const latestBwDate = latestBw ? new Date(latestBw.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '--';
-  const latestBwName = latestBw ? _esc(String(latestBw.exercise || 'Workout')) : '--';
+  const latestBwDate = latestBw ? new Date(latestBw.date).toLocaleDateString((typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-SA' : 'en-GB', { day: 'numeric', month: 'short' }) : '--';
+  const latestBwName = latestBw ? _esc(String(latestBw.exercise || _bwL('Workout', 'تمرين'))) : '--';
   const streakText = bwStreak === 0
-    ? 'Start your bodyweight streak today'
-    : (bwStreak + ' day' + (bwStreak > 1 ? 's' : '') + ' streak active');
+    ? _bwL('Start your bodyweight streak today', 'ابدأ تتالي وزن الجسم اليوم')
+    : _bwL((bwStreak + ' day' + (bwStreak > 1 ? 's' : '') + ' streak active'), ('تتالي نشط: ' + bwStreak + ' يوم'));
 
   const searchVal = _esc(_bwSearchQuery || '');
   const suggestedMuscle = _esc(_bwFilterMuscle || 'Core');
   const notFoundHtml = hasSearch
     ? (
       '<div class="bw-card-empty bw-card-empty-gated">' +
-        '<div class="bw-gated-title">Workout not found</div>' +
-        '<div class="bw-gated-sub">Add "' + _esc(_bwSearchQuery) + '" for future use</div>' +
+        '<div class="bw-gated-title">' + _bwL('Workout not found', 'التمرين غير موجود') + '</div>' +
+        '<div class="bw-gated-sub">' + _bwL('Add "', 'أضف "') + _esc(_bwSearchQuery) + _bwL('" for future use', '" للاستخدام لاحقًا') + '</div>' +
         '<div class="bw-add-inline">' +
           '<select id="bw-add-muscle" class="bw-add-select">' +
             '<option value="Chest"' + (suggestedMuscle === 'Chest' ? ' selected' : '') + '>Chest</option>' +
@@ -838,35 +841,35 @@ function renderBwExercisePicker() {
             '<option value="Triceps"' + (suggestedMuscle === 'Triceps' ? ' selected' : '') + '>Triceps</option>' +
           '</select>' +
           '<select id="bw-add-type" class="bw-add-select bw-add-type">' +
-            '<option value="reps">Reps</option>' +
-            '<option value="hold">Hold</option>' +
+            '<option value="reps">' + _bwL('Reps', 'تكرارات') + '</option>' +
+            '<option value="hold">' + _bwL('Hold', 'ثبات') + '</option>' +
           '</select>' +
-          '<button type="button" class="bw-add-inline-btn" onclick="addBwFromSearch()">+ Add Workout</button>' +
+          '<button type="button" class="bw-add-inline-btn" onclick="addBwFromSearch()">+ ' + _bwL('Add Workout', 'إضافة تمرين') + '</button>' +
         '</div>' +
       '</div>'
     )
-    : '<div class="bw-card-empty">No exercises in this filter</div>';
+    : '<div class="bw-card-empty">' + _bwL('No exercises in this filter', 'لا توجد تمارين ضمن هذا الفلتر') + '</div>';
   const listHtml = !hasCriteria
-    ? '<div class="bw-card-empty bw-card-empty-gated">Pick a muscle or type a workout name to reveal cards</div>'
+    ? '<div class="bw-card-empty bw-card-empty-gated">' + _bwL('Pick a muscle or type a workout name to reveal cards', 'اختر عضلة أو اكتب اسم تمرين لإظهار البطاقات') + '</div>'
     : (cards || notFoundHtml);
 
   wrap.innerHTML =
     '<div class="bw-streak-bar">' +
-      '<div class="bw-streak-kicker">BODYWEIGHT STREAK</div>' +
+      '<div class="bw-streak-kicker">' + _bwL('BODYWEIGHT STREAK', 'تتالي وزن الجسم') + '</div>' +
       '<div class="bw-streak-main">' + streakText + '</div>' +
-      '<div class="bw-streak-sub">' + sessions + ' sessions logged</div>' +
-      '<div class="bw-streak-latest">Latest: ' + latestBwName + ' · ' + latestBwDate + '</div>' +
+      '<div class="bw-streak-sub">' + sessions + ' ' + _bwL('sessions logged', 'جلسات مسجلة') + '</div>' +
+      '<div class="bw-streak-latest">' + _bwL('Latest:', 'الأحدث:') + ' ' + latestBwName + ' | ' + latestBwDate + '</div>' +
       '<div class="bw-insight-row">' +
-        '<div class="bw-insight-chip"><span class="bw-insight-lbl">TODAY</span><span class="bw-insight-val">' + todaySessions + '</span></div>' +
-        '<div class="bw-insight-chip"><span class="bw-insight-lbl">MOVES</span><span class="bw-insight-val">' + uniqueMoves + '</span></div>' +
-        '<div class="bw-insight-chip"><span class="bw-insight-lbl">BEST STREAK</span><span class="bw-insight-val">' + bwBest + 'd</span></div>' +
+        '<div class="bw-insight-chip"><span class="bw-insight-lbl">' + _bwL('TODAY', 'اليوم') + '</span><span class="bw-insight-val">' + todaySessions + '</span></div>' +
+        '<div class="bw-insight-chip"><span class="bw-insight-lbl">' + _bwL('MOVES', 'الحركات') + '</span><span class="bw-insight-val">' + uniqueMoves + '</span></div>' +
+        '<div class="bw-insight-chip"><span class="bw-insight-lbl">' + _bwL('BEST STREAK', 'أفضل تتالي') + '</span><span class="bw-insight-val">' + bwBest + 'd</span></div>' +
       '</div>' +
     '</div>' +
     '<div class="bw-card-tools">' +
       '<div class="bw-search-wrap">' +
-        '<input class="bw-search-input" type="text" value="' + searchVal + '" placeholder="Search workout name..." oninput="setBwSearchQuery(this.value)">' +
+        '<input class="bw-search-input" type="text" value="' + searchVal + '" placeholder="' + _bwL('Search workout name...', 'ابحث باسم التمرين...') + '" oninput="setBwSearchQuery(this.value)">' +
       '</div>' +
-      '<button class="bw-add-custom-btn" type="button" onclick="addCustomBwExercise()">+ Add Custom Card</button>' +
+      '<button class="bw-add-custom-btn" type="button" onclick="addCustomBwExercise()">+ ' + _bwL('Add Custom Card', 'إضافة بطاقة مخصصة') + '</button>' +
     '</div>' +
     '<div class="bw-card-grid">' + listHtml + '</div>';
 

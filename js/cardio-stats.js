@@ -378,12 +378,23 @@ function _renderCardioCharts(filtered) {
   const durVals = durKeys.map(k => durMap[k]);
   const durLabels = durKeys.map(_fmtCardioDate);
 
-  const zoneCount = [0, 0, 0, 0, 0, 0];
+  const activityMap = {};
   filtered.forEach(e => {
-    const z = e.hrZone || 0;
-    zoneCount[z >= 1 && z <= 5 ? z : 0]++;
+    const key = String(e.activity || '-');
+    if (!activityMap[key]) activityMap[key] = { mins: 0, sessions: 0 };
+    activityMap[key].mins += (e.durationMins || 0);
+    activityMap[key].sessions += 1;
   });
-  const allNoZone = filtered.every(e => !e.hrZone);
+  const topActivities = Object.entries(activityMap)
+    .sort((a, b) => {
+      const byMins = (b[1].mins || 0) - (a[1].mins || 0);
+      if (byMins !== 0) return byMins;
+      return (b[1].sessions || 0) - (a[1].sessions || 0);
+    })
+    .slice(0, 6);
+  const actLabels = topActivities.map(([name]) => name);
+  const actMinutes = topActivities.map(([, stat]) => stat.mins || 0);
+  const actSessions = topActivities.map(([, stat]) => stat.sessions || 0);
 
   zone.innerHTML =
     '<div class="cardio-chart-card">' +
@@ -394,9 +405,10 @@ function _renderCardioCharts(filtered) {
       '<div class="cardio-chart-label">' + _cs('Duration Trend', 'اتجاه مدة التمرين') + '</div>' +
       '<div class="cardio-chart-wrap"><canvas id="cc2"></canvas></div>' +
     '</div>' +
-    (allNoZone
-      ? '<div class="cardio-no-data">' + _cs('No HR zone data logged yet.', 'لا توجد بيانات نطاق نبض مسجلة بعد.') + '</div>'
-      : '<div class="cardio-chart-card"><div class="cardio-chart-label">' + _cs('HR Zone Distribution', 'توزيع نطاقات النبض') + '</div><div class="cardio-chart-wrap"><canvas id="cc3"></canvas></div></div>');
+    '<div class="cardio-chart-card">' +
+      '<div class="cardio-chart-label">' + _cs('Top Workouts by Time', 'أكثر التمارين حسب الوقت') + '</div>' +
+      '<div class="cardio-chart-wrap"><canvas id="cc3"></canvas></div>' +
+    '</div>';
 
   const theme = _chartThemeOptions();
 
@@ -458,33 +470,41 @@ function _renderCardioCharts(filtered) {
     }
   });
 
-  if (!allNoZone) {
-    _cardioChart3 = new Chart(document.getElementById('cc3'), {
-      type: 'doughnut',
-      data: {
-        labels: [_cs('No Zone', 'بدون نطاق'), 'Z1', 'Z2', 'Z3', 'Z4', 'Z5'],
-        datasets: [{
-          data: zoneCount,
-          borderWidth: 1,
-          borderColor: '#07110f',
-          backgroundColor: ['#22312c', '#8affda', '#56c7ff', '#ffd34d', '#ff9958', '#ff5e70']
-        }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        cutout: '62%',
-        plugins: {
-          legend: { position: 'right', labels: { color: theme.sub, boxWidth: 10, boxHeight: 10 } },
-          tooltip: {
-            ...theme.tooltip,
-            callbacks: {
-              label: (ctx) => `${ctx.label}: ${ctx.raw} ${_cs('sessions', 'جلسات')}`
+  _cardioChart3 = new Chart(document.getElementById('cc3'), {
+    type: 'bar',
+    data: {
+      labels: actLabels,
+      datasets: [{
+        data: actMinutes,
+        backgroundColor: 'rgba(86,199,255,0.58)',
+        borderColor: '#56c7ff',
+        borderWidth: 1.2,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...theme.tooltip,
+          callbacks: {
+            label: (ctx) => {
+              const i = ctx.dataIndex || 0;
+              const mins = actMinutes[i] || 0;
+              const sess = actSessions[i] || 0;
+              return `${mins} ${_cs('min', 'د')} • ${sess} ${_cs('sessions', 'جلسات')}`;
             }
           }
         }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: theme.sub }, grid: { color: theme.grid } },
+        y: { ticks: { color: theme.sub }, grid: { display: false } }
       }
-    });
-  }
+    }
+  });
 }
 
 function _calcCardioBadges(log) {

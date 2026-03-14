@@ -4,20 +4,15 @@
   const badge = document.getElementById('balance-overall-badge');
   if (!wrap) return;
 
-  const ALL = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Forearms','Glutes','Calves'];
-  // Antagonist pairs � both should be trained for balance
-  const PAIRS = [['Chest','Back'],['Biceps','Triceps'],['Legs','Glutes']];
-  const MUSCLE_COLORS = {
-    Chest:'#2ecc71', Back:'#3498db', Shoulders:'#9b59b6',
-    Biceps:'#e67e22', Triceps:'#e74c3c', Forearms:'#d35400',
-    Legs:'#f1c40f', Core:'#1abc9c', Glutes:'#e91e8c', Calves:'#00bcd4'
-  };
-
-  const counts = {}, vols = {};
-  arr.forEach(w => {
-    counts[w.muscle] = (counts[w.muscle]||0) + 1;
-    vols[w.muscle]   = (vols[w.muscle]||0)   + w.totalVolume;
-  });
+  const ALL = FORGE_BALANCE_ALL;
+  const PAIRS = FORGE_BALANCE_PAIRS;
+  const MUSCLE_COLORS = FORGE_BALANCE_COLORS;
+  const base = _forgeBalanceBase(arr);
+  const counts = base.counts;
+  const vols = base.vols;
+  const scores = base.scores;
+  const trained = base.trained;
+  const overallScore = base.overallScore;
 
   const total = arr.length;
   if (!total) {
@@ -25,28 +20,6 @@
     if (badge) badge.textContent = '--';
     return;
   }
-
-  // Score each muscle 0-100
-  const maxCount = Math.max(...ALL.map(m => counts[m]||0), 1);
-  const scores = {};
-  ALL.forEach(m => {
-    const freq = counts[m] || 0;
-    const freqScore = Math.round((freq / maxCount) * 100);
-    scores[m] = freqScore;
-  });
-
-  // Penalise imbalanced pairs
-  let pairPenalty = 0;
-  PAIRS.forEach(([a, b]) => {
-    const sa = scores[a], sb = scores[b];
-    const imbalance = Math.abs(sa - sb);
-    pairPenalty += imbalance * 0.15;
-  });
-
-  const trained = ALL.filter(m => counts[m]);
-  const coverageScore = Math.round((trained.length / ALL.length) * 100);
-  const avgIndividual = Math.round(ALL.reduce((s,m) => s + scores[m], 0) / ALL.length);
-  const overallScore  = Math.max(0, Math.min(100, Math.round((coverageScore * 0.5 + avgIndividual * 0.5) - pairPenalty)));
 
   // ?? Insights ??
   const _isAr = (typeof currentLang !== 'undefined') && currentLang === 'ar';
@@ -405,3 +378,54 @@ function mbTap(m) {
 
 
 
+const FORGE_BALANCE_ALL = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Forearms','Glutes','Calves'];
+const FORGE_BALANCE_PAIRS = [['Chest','Back'],['Biceps','Triceps'],['Legs','Glutes']];
+const FORGE_BALANCE_COLORS = {
+  Chest:'#2ecc71', Back:'#3498db', Shoulders:'#9b59b6',
+  Biceps:'#e67e22', Triceps:'#e74c3c', Forearms:'#d35400',
+  Legs:'#f1c40f', Core:'#1abc9c', Glutes:'#e91e8c', Calves:'#00bcd4'
+};
+
+function _forgeBalanceBase(arr) {
+  const src = Array.isArray(arr) ? arr : ((typeof workouts !== 'undefined' && Array.isArray(workouts)) ? workouts : []);
+  const counts = {};
+  const vols = {};
+  src.forEach((w) => {
+    const muscle = w && w.muscle;
+    if (!muscle) return;
+    counts[muscle] = (counts[muscle] || 0) + 1;
+    vols[muscle] = (vols[muscle] || 0) + (Number(w.totalVolume) || 0);
+  });
+  const maxCount = Math.max(...FORGE_BALANCE_ALL.map((m) => counts[m] || 0), 1);
+  const scores = {};
+  FORGE_BALANCE_ALL.forEach((m) => {
+    scores[m] = Math.round(((counts[m] || 0) / maxCount) * 100);
+  });
+  let pairPenalty = 0;
+  FORGE_BALANCE_PAIRS.forEach(([a, b]) => {
+    pairPenalty += Math.abs((scores[a] || 0) - (scores[b] || 0)) * 0.15;
+  });
+  const trained = FORGE_BALANCE_ALL.filter((m) => counts[m]);
+  const coverageScore = Math.round((trained.length / FORGE_BALANCE_ALL.length) * 100);
+  const avgIndividual = Math.round(FORGE_BALANCE_ALL.reduce((sum, m) => sum + (scores[m] || 0), 0) / FORGE_BALANCE_ALL.length);
+  const overallScore = Math.max(0, Math.min(100, Math.round((coverageScore * 0.5 + avgIndividual * 0.5) - pairPenalty)));
+  return { arr: src, counts, vols, scores, trained, overallScore };
+}
+
+window.getBalanceRegionSummary = function getBalanceRegionSummary(arr) {
+  const base = _forgeBalanceBase(arr);
+  const score = (name) => (base.scores[name] || 0) / 100;
+  const avg = (...vals) => vals.reduce((sum, val) => sum + val, 0) / Math.max(vals.length, 1);
+  return {
+    chest: avg(score('Chest')),
+    back: avg(score('Back')),
+    shoulders: avg(score('Shoulders')),
+    arms: avg(score('Biceps'), score('Triceps'), score('Forearms')),
+    core: avg(score('Core')),
+    legs: avg(score('Legs'), score('Glutes'), score('Calves')),
+    posterior: avg(score('Back'), score('Glutes'), score('Calves')),
+    overall: (base.overallScore || 0) / 100,
+    trainedCount: base.trained.length,
+    muscleScores: { ...base.scores }
+  };
+};

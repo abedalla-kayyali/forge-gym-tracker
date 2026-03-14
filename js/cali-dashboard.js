@@ -1,5 +1,11 @@
 // FORGE Gym Tracker - calisthenics dashboards and muscle drill-down
 // Extracted from index.html as part of modularization.
+function _cd(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
+function _cdDateLocale() {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'ar-SA' : 'en';
+}
 
 function renderCaliDash() {
   const el = document.getElementById('cali-dash-panel');
@@ -9,8 +15,8 @@ function renderCaliDash() {
   if (!bwW.length || typeof CALISTHENICS_TREES === 'undefined') {
     el.innerHTML = `<div class="empty-state" style="padding:40px 20px 80px;">
       <div class="empty-icon">🤸</div>
-      <div class="empty-title">No BW sessions yet</div>
-      <div class="empty-sub">Switch to Bodyweight mode and log your first calisthenics session to unlock your journey.</div>
+      <div class="empty-title">${_cd('No BW sessions yet', 'لا توجد جلسات وزن جسم بعد')}</div>
+      <div class="empty-sub">${_cd('Switch to Bodyweight mode and log your first calisthenics session to unlock your journey.', 'انتقل إلى وضع وزن الجسم وسجّل أول جلسة كاليستنكس لفتح رحلتك.')}</div>
     </div>`;
     return;
   }
@@ -60,13 +66,13 @@ function renderCaliDash() {
 
   // A. Hero stats
   const heroHtml = `<div class="cali-hero">
-    <div class="cali-hero-stat"><div class="cali-h-val">${bwW.length}</div><div class="cali-h-lbl">Sessions</div></div>
+    <div class="cali-hero-stat"><div class="cali-h-val">${bwW.length}</div><div class="cali-h-lbl">${_cd('Sessions', 'جلسات')}</div></div>
     <div class="cali-h-sep"></div>
-    <div class="cali-hero-stat"><div class="cali-h-val">${bwStreak}<span class="cali-h-of">d</span></div><div class="cali-h-lbl">🔥 BW Streak</div></div>
+    <div class="cali-hero-stat"><div class="cali-h-val">${bwStreak}<span class="cali-h-of">d</span></div><div class="cali-h-lbl">${_cd('BW Streak', 'تتالي وزن الجسم')}</div></div>
     <div class="cali-h-sep"></div>
-    <div class="cali-hero-stat"><div class="cali-h-val">${totalUnlocked}<span class="cali-h-of">/${totalSkills}</span></div><div class="cali-h-lbl">Skills</div></div>
+    <div class="cali-hero-stat"><div class="cali-h-val">${totalUnlocked}<span class="cali-h-of">/${totalSkills}</span></div><div class="cali-h-lbl">${_cd('Skills', 'مهارات')}</div></div>
     <div class="cali-h-sep"></div>
-    <div class="cali-hero-stat"><div class="cali-h-val">${totalPct}<span class="cali-h-of">%</span></div><div class="cali-h-lbl">🌳 Journey</div></div>
+    <div class="cali-hero-stat"><div class="cali-h-val">${totalPct}<span class="cali-h-of">%</span></div><div class="cali-h-lbl">${_cd('Journey', 'الرحلة')}</div></div>
   </div>`;
 
   // B. 30-day BW heatmap
@@ -78,9 +84,9 @@ function renderCaliDash() {
     const ds = d.toISOString().slice(0, 10);
     const count = bwW.filter(w => w.date.slice(0, 10) === ds).length;
     const cls = count === 0 ? '' : count === 1 ? 'cali-hday-1' : 'cali-hday-2';
-    heatCells += `<div class="cali-hday ${cls}" title="${ds}: ${count} session(s)"></div>`;
+    heatCells += `<div class="cali-hday ${cls}" title="${ds}: ${count} ${_cd('session(s)', 'جلسة')}"></div>`;
   }
-  const heatHtml = `<div class="panel"><div class="panel-header"><span class="panel-title">📅 30-Day Activity</span><span class="panel-badge">${bwW.filter(w => { const d = new Date(); d.setDate(d.getDate() - 30); return new Date(w.date) >= d; }).length} sessions</span></div>
+  const heatHtml = `<div class="panel"><div class="panel-header"><span class="panel-title">${_cd('30-Day Activity', 'نشاط 30 يومًا')}</span><span class="panel-badge">${bwW.filter(w => { const d = new Date(); d.setDate(d.getDate() - 30); return new Date(w.date) >= d; }).length} ${_cd('sessions', 'جلسات')}</span></div>
     <div class="cali-heatmap" style="padding:12px 14px 14px;">${heatCells}</div></div>`;
 
   // C. Active tree cards
@@ -88,9 +94,9 @@ function renderCaliDash() {
   if (activeTrees.length) {
     treeCardsHtml = activeTrees.map(tree => {
       const fr = tree.daysSinceLast;
-      const frLabel = fr === null ? 'Never' : fr === 0 ? 'Today' : fr === 1 ? 'Yesterday' : fr + 'd ago';
+      const frLabel = fr === null ? _cd('Never', 'أبدًا') : fr === 0 ? _cd('Today', 'اليوم') : fr === 1 ? _cd('Yesterday', 'أمس') : _cd(fr + 'd ago', 'قبل ' + fr + ' يوم');
       const frCls = fr === null ? 'cali-stale' : fr <= 2 ? 'cali-fresh' : fr > 7 ? 'cali-stale' : '';
-      const nextTarget = tree.nextSkill ? `▶ <strong>${window.FORGE_STORAGE.esc(tree.nextSkill.n)}</strong> — target: ${tree.nextSkill.target} reps` : `<span style="color:#f39c12;">🏆 Tree Complete!</span>`;
+      const nextTarget = tree.nextSkill ? `> <strong>${window.FORGE_STORAGE.esc(tree.nextSkill.n)}</strong> - ${_cd('target:', 'الهدف:')} ${tree.nextSkill.target} ${_cd('reps', 'تكرار')}` : `<span style="color:#f39c12;">${_cd('Tree Complete!', 'الشجرة مكتملة!')}</span>`;
       return `<div class="cali-tree-card">
         <div class="cali-tc-header">
           <span class="cali-tc-icon">${tree.icon}</span>
@@ -102,7 +108,7 @@ function renderCaliDash() {
           <span class="cali-tc-pct">${tree.pct}%</span>
         </div>
         <div class="cali-tc-skills">
-          ${tree.curSkill ? `<div class="cali-tc-cur">✓ ${window.FORGE_STORAGE.esc(tree.curSkill.n)} <span class="cali-tc-target">(${tree.curSkill.target} reps)</span></div>` : ''}
+          ${tree.curSkill ? `<div class="cali-tc-cur">+ ${window.FORGE_STORAGE.esc(tree.curSkill.n)} <span class="cali-tc-target">(${tree.curSkill.target} ${_cd('reps', 'تكرار')})</span></div>` : ''}
           <div class="cali-tc-next">${nextTarget}</div>
         </div>
       </div>`;
@@ -128,26 +134,26 @@ function renderCaliDash() {
       <div class="cali-target-vals">
         <span class="cali-target-cur">${p.current}</span><span class="cali-target-sep">/</span><span class="cali-target-tgt">${p.target}</span>
       </div>
-    </div>`).join('') || '<div class="cali-empty-msg">All skills in progress!</div>';
+    </div>`).join('') || '<div class="cali-empty-msg">' + _cd('All skills in progress!', 'كل المهارات قيد التقدم!') + '</div>';
 
   // E. Recent sessions
   const recent = bwW.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
   const recentHtml = recent.map(w => {
     const best = Math.max(...w.sets.map(s => s.reps || s.secs || 0));
-    const dateStr = new Date(w.date).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const dateStr = new Date(w.date).toLocaleDateString(_cdDateLocale(), { month: 'short', day: 'numeric' });
     return `<div class="cali-sess-row">
       <div class="cali-sess-date">${dateStr}</div>
       <div class="cali-sess-name">${window.FORGE_STORAGE.esc(w.exercise)}</div>
-      <div class="cali-sess-best">${best}<span class="cali-sess-unit"> reps</span>${w.isPR ? ' 🏆' : ''}</div>
+      <div class="cali-sess-best">${best}<span class="cali-sess-unit"> ${_cd('reps', 'تكرار')}</span>${w.isPR ? ' PR' : ''}</div>
     </div>`;
   }).join('');
 
   // F. Personal Records
   const prsHtml = prEntries.slice(0, 8).map(([name, data]) => {
-    const dateStr = new Date(data.date).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    const dateStr = new Date(data.date).toLocaleDateString(_cdDateLocale(), { month: 'short', day: 'numeric' });
     return `<div class="cali-pr-row">
       <div class="cali-pr-name">${window.FORGE_STORAGE.esc(name)}</div>
-      <div class="cali-pr-val">${data.best} <span class="cali-pr-unit">reps</span></div>
+      <div class="cali-pr-val">${data.best} <span class="cali-pr-unit">${_cd('reps', 'تكرار')}</span></div>
       <div class="cali-pr-date">${dateStr}</div>
     </div>`;
   }).join('');
@@ -178,12 +184,18 @@ function renderCaliDash() {
   const _cbAvg = Math.round(_cbMusc.reduce((s, m) => s + _cbFreq[m], 0) / _cbMusc.length);
   const _cbBal = Math.round(_cbCov * 0.5 + _cbAvg * 0.5);
   const _cbWeak = _cbMusc.filter(m => _cbFreq[m] < 35).sort((a, b) => _cbFreq[a] - _cbFreq[b]);
-  const _cbMsg = _cbBal >= 80 ? 'Excellent cali balance!' : _cbBal >= 60 ? 'Good balance. Push weaker muscles.' : _cbBal >= 40 ? 'Some imbalances detected.' : 'Focus on neglected muscle groups.';
+  const _cbMsg = _cbBal >= 80
+    ? _cd('Excellent cali balance!', 'توازن كالي ممتاز!')
+    : _cbBal >= 60
+      ? _cd('Good balance. Push weaker muscles.', 'توازن جيد. ركز على العضلات الأضعف.')
+      : _cbBal >= 40
+        ? _cd('Some imbalances detected.', 'يوجد بعض عدم التوازن.')
+        : _cd('Focus on neglected muscle groups.', 'ركز على المجموعات العضلية المهملة.');
   const _cbRC = _cbBal >= 75 ? '#2ecc71' : _cbBal >= 50 ? '#f39c12' : '#e74c3c';
   const _cbCirc = 2 * Math.PI * 20;
   const _cbDsh = (_cbBal / 100) * _cbCirc;
-  const _cbOverHtml = `<div class="mb-overall"><div class="mb-overall-ring"><svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/><circle cx="26" cy="26" r="20" fill="none" stroke="${_cbRC}" stroke-width="5" stroke-dasharray="${_cbDsh.toFixed(1)} ${_cbCirc.toFixed(1)}" stroke-linecap="round" style="transition:stroke-dasharray .8s ease;filter:drop-shadow(0 0 4px ${_cbRC})"/></svg><div class="mb-overall-ring-val" style="color:${_cbRC}">${_cbBal}</div></div><div class="mb-overall-text"><div class="mb-overall-label">CALI BALANCE</div><div class="mb-overall-msg">${_cbMsg}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-top:4px;">${_cbTrained.length}/${_cbMusc.length} muscle groups</div></div></div>`;
-  const _cbInsHtml = _cbWeak.length ? `<div class="mb-insights-bar"><div class="mb-insight"><span class="mb-insight-icon">⚡</span><span class="mb-insight-text">Needs more cali work: <strong>${_cbWeak.join(' · ')}</strong></span></div></div>` : '';
+  const _cbOverHtml = `<div class="mb-overall"><div class="mb-overall-ring"><svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/><circle cx="26" cy="26" r="20" fill="none" stroke="${_cbRC}" stroke-width="5" stroke-dasharray="${_cbDsh.toFixed(1)} ${_cbCirc.toFixed(1)}" stroke-linecap="round" style="transition:stroke-dasharray .8s ease;filter:drop-shadow(0 0 4px ${_cbRC})"/></svg><div class="mb-overall-ring-val" style="color:${_cbRC}">${_cbBal}</div></div><div class="mb-overall-text"><div class="mb-overall-label">${_cd('CALI BALANCE', 'توازن الكالي')}</div><div class="mb-overall-msg">${_cbMsg}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-top:4px;">${_cbTrained.length}/${_cbMusc.length} ${_cd('muscle groups', 'مجموعات عضلية')}</div></div></div>`;
+  const _cbInsHtml = _cbWeak.length ? `<div class="mb-insights-bar"><div class="mb-insight"><span class="mb-insight-icon">!</span><span class="mb-insight-text">${_cd('Needs more cali work:', 'تحتاج عملاً أكثر:')} <strong>${_cbWeak.join(' | ')}</strong></span></div></div>` : '';
   const _cbCx = 150;
   const _cbCy = 150;
   const _cbRad = 108;
@@ -219,19 +231,19 @@ function renderCaliDash() {
     const anch = Math.abs(lx - _cbCx) < 5 ? 'middle' : lx < _cbCx ? 'end' : 'start';
     return `<g onclick="caliMuscTap('${m}')" style="cursor:pointer">${fdot}${sdot}<circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="20" fill="transparent"/><text x="${lx.toFixed(1)}" y="${(ly - 4).toFixed(1)}" text-anchor="${anch}" font-family="'DM Mono',monospace" font-size="9.5" font-weight="700" fill="${sc > 0 ? col : 'rgba(255,255,255,.2)'}" letter-spacing=".8">${m.toUpperCase()}</text><text x="${lx.toFixed(1)}" y="${(ly + 7).toFixed(1)}" text-anchor="${anch}" font-family="'DM Mono',monospace" font-size="8" fill="${sc > 0 ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.12)'}">${sc}</text></g>`;
   }).join('');
-  const _cbCtr = `<text x="${_cbCx}" y="${_cbCy - 6}" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="28" fill="rgba(255,255,255,.9)" style="filter:drop-shadow(0 0 8px rgba(46,204,113,.5))">${_cbBal}</text><text x="${_cbCx}" y="${_cbCy + 9}" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7.5" fill="rgba(255,255,255,.3)" letter-spacing="1.5">BALANCE</text>`;
+  const _cbCtr = `<text x="${_cbCx}" y="${_cbCy - 6}" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="28" fill="rgba(255,255,255,.9)" style="filter:drop-shadow(0 0 8px rgba(46,204,113,.5))">${_cbBal}</text><text x="${_cbCx}" y="${_cbCy + 9}" text-anchor="middle" font-family="'DM Mono',monospace" font-size="7.5" fill="rgba(255,255,255,.3)" letter-spacing="1.5">${_cd('BALANCE', 'توازن')}</text>`;
   window._caliMbData = { muscles: _cbMusc, colors: _cbMC, counts: _cbCnt, freqScores: _cbFreq, skillScores: _cbSkill, treeProgress, bwW };
-  const caliRadarHtml = `<div class="panel" style="margin-bottom:12px;"><div class="panel-header"><span class="panel-title">⚖️ Cali Balance</span><span class="panel-badge">${_cbBal}/100</span></div><div style="padding:10px 12px 16px;">${_cbOverHtml}${_cbInsHtml}<div class="mb-radar-wrap" style="margin-top:8px;"><div class="mb-radar-legend"><span class="mb-legend-dot" style="background:#39ff8f;box-shadow:0 0 5px #39ff8f88"></span><span class="mb-legend-lbl">FREQUENCY</span><span class="mb-legend-dot" style="background:#fb923c;box-shadow:0 0 5px #fb923c88;margin-left:10px"></span><span class="mb-legend-lbl">SKILL LEVEL</span></div><svg viewBox="0 0 300 300" width="100%" style="max-width:340px;overflow:visible;display:block;margin:0 auto"><defs><radialGradient id="caliRBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(46,204,113,.06)"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></radialGradient></defs><circle cx="${_cbCx}" cy="${_cbCy}" r="${_cbRad}" fill="url(#caliRBg)"/>${_cbGrids}${_cbAxes}<polygon points="${_cbPts(_cbSF)}" fill="rgba(251,146,60,.08)" stroke="#fb923c" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="4,3" style="filter:drop-shadow(0 0 3px rgba(251,146,60,.25))"/><polygon points="${_cbPts(_cbFF)}" fill="rgba(57,255,143,.1)" stroke="#39ff8f" stroke-width="2" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px rgba(57,255,143,.35))"/>${_cbMGs}${_cbCtr}</svg></div><div id="cali-balance-detail" style="margin-top:10px;"></div></div></div>`;
+  const caliRadarHtml = `<div class="panel" style="margin-bottom:12px;"><div class="panel-header"><span class="panel-title">${_cd('Cali Balance', 'توازن الكالي')}</span><span class="panel-badge">${_cbBal}/100</span></div><div style="padding:10px 12px 16px;">${_cbOverHtml}${_cbInsHtml}<div class="mb-radar-wrap" style="margin-top:8px;"><div class="mb-radar-legend"><span class="mb-legend-dot" style="background:#39ff8f;box-shadow:0 0 5px #39ff8f88"></span><span class="mb-legend-lbl">${_cd('FREQUENCY', 'التكرار')}</span><span class="mb-legend-dot" style="background:#fb923c;box-shadow:0 0 5px #fb923c88;margin-left:10px"></span><span class="mb-legend-lbl">${_cd('SKILL LEVEL', 'مستوى المهارة')}</span></div><svg viewBox="0 0 300 300" width="100%" style="max-width:340px;overflow:visible;display:block;margin:0 auto"><defs><radialGradient id="caliRBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(46,204,113,.06)"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></radialGradient></defs><circle cx="${_cbCx}" cy="${_cbCy}" r="${_cbRad}" fill="url(#caliRBg)"/>${_cbGrids}${_cbAxes}<polygon points="${_cbPts(_cbSF)}" fill="rgba(251,146,60,.08)" stroke="#fb923c" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="4,3" style="filter:drop-shadow(0 0 3px rgba(251,146,60,.25))"/><polygon points="${_cbPts(_cbFF)}" fill="rgba(57,255,143,.1)" stroke="#39ff8f" stroke-width="2" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px rgba(57,255,143,.35))"/>${_cbMGs}${_cbCtr}</svg></div><div id="cali-balance-detail" style="margin-top:10px;"></div></div></div>`;
 
   el.innerHTML = `
     ${heroHtml}
     ${caliRadarHtml}
     ${heatHtml}
-    ${activeTrees.length ? `<div class="panel"><div class="panel-header"><span class="panel-title">🌳 Skill Trees</span><span class="panel-badge">${activeTrees.length} active</span></div><div style="padding:10px 12px 14px;">${treeCardsHtml}</div></div>` : ''}
-    ${pending.length ? `<div class="panel"><div class="panel-header"><span class="panel-title">🎯 Next Targets</span><span class="panel-badge">closest to unlock</span></div><div style="padding:10px 12px 14px;">${nextTargetsHtml}</div></div>` : ''}
-    ${recentHtml ? `<div class="panel"><div class="panel-header"><span class="panel-title">🕐 Recent Sessions</span></div><div style="padding:8px 12px 14px;">${recentHtml}</div></div>` : ''}
-    ${prsHtml ? `<div class="panel"><div class="panel-header"><span class="panel-title">🏆 Personal Records</span><span class="panel-badge">${prEntries.length} exercises</span></div><div style="padding:8px 12px 14px;">${prsHtml}</div></div>` : ''}
-    ${dormantHtml ? `<div class="panel"><div class="panel-header"><span class="panel-title">💤 Dormant Trees</span><span class="panel-badge">${dormantTrees.length} to explore</span></div><div class="cali-dormant-grid" style="padding:10px 12px 14px;">${dormantHtml}</div></div>` : ''}
+    ${activeTrees.length ? `<div class="panel"><div class="panel-header"><span class="panel-title">${_cd('Skill Trees', 'أشجار المهارات')}</span><span class="panel-badge">${activeTrees.length} ${_cd('active', 'نشطة')}</span></div><div style="padding:10px 12px 14px;">${treeCardsHtml}</div></div>` : ''}
+    ${pending.length ? `<div class="panel"><div class="panel-header"><span class="panel-title">${_cd('Next Targets', 'الأهداف التالية')}</span><span class="panel-badge">${_cd('closest to unlock', 'الأقرب للفتح')}</span></div><div style="padding:10px 12px 14px;">${nextTargetsHtml}</div></div>` : ''}
+    ${recentHtml ? `<div class="panel"><div class="panel-header"><span class="panel-title">${_cd('Recent Sessions', 'الجلسات الأخيرة')}</span></div><div style="padding:8px 12px 14px;">${recentHtml}</div></div>` : ''}
+    ${prsHtml ? `<div class="panel"><div class="panel-header"><span class="panel-title">${_cd('Personal Records', 'الأرقام القياسية')}</span><span class="panel-badge">${prEntries.length} ${_cd('exercises', 'تمارين')}</span></div><div style="padding:8px 12px 14px;">${prsHtml}</div></div>` : ''}
+    ${dormantHtml ? `<div class="panel"><div class="panel-header"><span class="panel-title">${_cd('Dormant Trees', 'أشجار خاملة')}</span><span class="panel-badge">${dormantTrees.length} ${_cd('to explore', 'للاستكشاف')}</span></div><div class="cali-dormant-grid" style="padding:10px 12px 14px;">${dormantHtml}</div></div>` : ''}
     <div style="height:20px;"></div>
   `;
 }
@@ -250,15 +262,23 @@ function caliMuscTap(m) {
   const allSess = d.bwW.filter(w => w.muscle === m).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   // Last trained
-  let lastStr = 'Never trained';
+  let lastStr = _cd('Never trained', 'لم يتم التدريب');
   if (allSess.length) {
     const diff = Math.floor((Date.now() - new Date(allSess[0].date).getTime()) / 86400000);
-    lastStr = diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : diff < 7 ? diff + 'd ago' : diff < 30 ? Math.floor(diff / 7) + 'w ago' : new Date(allSess[0].date).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    lastStr = diff === 0 ? _cd('Today', 'اليوم') : diff === 1 ? _cd('Yesterday', 'أمس') : diff < 7 ? _cd(diff + 'd ago', 'قبل ' + diff + ' يوم') : diff < 30 ? _cd(Math.floor(diff / 7) + 'w ago', 'قبل ' + Math.floor(diff / 7) + ' أسبوع') : new Date(allSess[0].date).toLocaleDateString(_cdDateLocale(), { month: 'short', day: 'numeric' });
   }
 
-  const grade = sc >= 80 ? 'S' : sc >= 60 ? 'A' : sc >= 40 ? 'B' : sc >= 20 ? 'C' : cnt > 0 ? 'D' : '—';
+  const grade = sc >= 80 ? 'S' : sc >= 60 ? 'A' : sc >= 40 ? 'B' : sc >= 20 ? 'C' : cnt > 0 ? 'D' : '--';
   const gradeColor = sc >= 80 ? '#39ff8f' : sc >= 60 ? '#f39c12' : sc >= 40 ? '#60a5fa' : sc >= 20 ? '#e74c3c' : 'var(--text3)';
-  const rec = sc >= 80 ? '💪 Dominant — keep it up!' : sc >= 60 ? '✅ Well balanced — good work' : sc >= 30 ? '⚡ Needs more attention' : cnt > 0 ? '⚠️ Rarely trained — add to your routine' : '❌ Not yet trained — start today!';
+  const rec = sc >= 80
+    ? _cd('Dominant - keep it up!', 'مسيطر - استمر!')
+    : sc >= 60
+      ? _cd('Well balanced - good work', 'متوازن بشكل جيد')
+      : sc >= 30
+        ? _cd('Needs more attention', 'يحتاج اهتمامًا أكبر')
+        : cnt > 0
+          ? _cd('Rarely trained - add to your routine', 'تدريب نادر - أضفه لروتينك')
+          : _cd('Not yet trained - start today!', 'لم يتم تدريبه بعد - ابدأ اليوم!');
   const bestPerf = allSess.length ? Math.max(...allSess.map(w => Math.max(...w.sets.map(s => s.reps || s.secs || 0)))) : 0;
 
   // Exercise skill rows per tree
@@ -279,7 +299,7 @@ function caliMuscTap(m) {
       <div class="cmtap-tree-hdr">${tree.icon} ${window.FORGE_STORAGE.esc(tree.tree)} <span class="cmtap-tree-pct" style="color:${col}">${tree.pct}%</span></div>
       ${rows}
     </div>`;
-  }).join('') || '<div class="cmtap-empty">No sessions logged for this muscle yet.</div>';
+    }).join('') || '<div class="cmtap-empty">' + _cd('No sessions logged for this muscle yet.', 'لا توجد جلسات مسجلة لهذه العضلة بعد.') + '</div>';
 
   strip.innerHTML = `<div class="cmtap-card" style="border-color:${col}55;">
     <div class="cmtap-header">
@@ -288,12 +308,12 @@ function caliMuscTap(m) {
     </div>
     <div class="cmtap-rec">${rec}</div>
     <div class="cmtap-stats">
-      <div class="cmtap-stat"><span class="cmtap-stat-lbl">Sessions</span><span class="cmtap-stat-val" style="color:${col}">${cnt || '—'}</span></div>
-      <div class="cmtap-stat"><span class="cmtap-stat-lbl">Freq</span><span class="cmtap-stat-val">${sc}%</span></div>
-      <div class="cmtap-stat"><span class="cmtap-stat-lbl">Skill</span><span class="cmtap-stat-val" style="color:#fb923c">${skillSc}%</span></div>
-      <div class="cmtap-stat"><span class="cmtap-stat-lbl">Best</span><span class="cmtap-stat-val" style="color:${col}">${bestPerf || '—'}</span></div>
+      <div class="cmtap-stat"><span class="cmtap-stat-lbl">${_cd('Sessions', 'جلسات')}</span><span class="cmtap-stat-val" style="color:${col}">${cnt || '--'}</span></div>
+      <div class="cmtap-stat"><span class="cmtap-stat-lbl">${_cd('Freq', 'تكرار')}</span><span class="cmtap-stat-val">${sc}%</span></div>
+      <div class="cmtap-stat"><span class="cmtap-stat-lbl">${_cd('Skill', 'مهارة')}</span><span class="cmtap-stat-val" style="color:#fb923c">${skillSc}%</span></div>
+      <div class="cmtap-stat"><span class="cmtap-stat-lbl">${_cd('Best', 'الأفضل')}</span><span class="cmtap-stat-val" style="color:${col}">${bestPerf || '--'}</span></div>
     </div>
-    <div class="cmtap-last">↻ Last: ${lastStr}</div>
+    <div class="cmtap-last">${_cd('Last:', 'آخر تدريب:')} ${lastStr}</div>
     <div class="cmtap-exercises">${exercisesHtml}</div>
   </div>`;
 
@@ -328,12 +348,12 @@ function renderCaliJourney() {
 
     const dots = levelData.map((l, i) =>
       (i > 0 ? '<div class="cj-dot-connector"></div>' : '') +
-      `<div class="cj-dot${l.done ? ' unlocked' : ''}" title="${l.n}: best ${l.maxVal}/${l.target}${l.t === 'hold' ? 's' : ' reps'}"></div>`
+      `<div class="cj-dot${l.done ? ' unlocked' : ''}" title="${l.n}: ${_cd('best', 'أفضل')} ${l.maxVal}/${l.target}${l.t === 'hold' ? 's' : ' ' + _cd('reps', 'تكرار')}"></div>`
     ).join('');
 
     const nextHtml = nextSkill
-      ? `<div class="cj-next">📈 Next: <strong>${window.FORGE_STORAGE.esc(nextSkill.n)}</strong> · ${nextSkill.target} ${nextSkill.t === 'hold' ? 'secs hold' : 'reps'}</div>`
-      : (isActive ? '<div class="cj-next" style="color:var(--green)">🏆 Tree Complete!</div>' : '');
+      ? `<div class="cj-next">${_cd('Next:', 'التالي:')} <strong>${window.FORGE_STORAGE.esc(nextSkill.n)}</strong> | ${nextSkill.target} ${nextSkill.t === 'hold' ? _cd('secs hold', 'ثوانٍ ثبات') : _cd('reps', 'تكرار')}</div>`
+      : (isActive ? '<div class="cj-next" style="color:var(--green)">' + _cd('Tree Complete!', 'الشجرة مكتملة!') + '</div>' : '');
 
     return `
       <div class="cj-tree${isActive ? ' active' : ' dormant'}">
@@ -341,7 +361,7 @@ function renderCaliJourney() {
           <span class="cj-icon">${tree.icon}</span>
           <div class="cj-tree-info">
             <div class="cj-tree-name">${window.FORGE_STORAGE.esc(tree.tree)}</div>
-            <div class="cj-tree-status">${isActive && curSkill ? window.FORGE_STORAGE.esc(curSkill.n) : 'Not started — tap BW tab'}</div>
+            <div class="cj-tree-status">${isActive && curSkill ? window.FORGE_STORAGE.esc(curSkill.n) : _cd('Not started - tap BW tab', 'لم يبدأ - اضغط تبويب BW')}</div>
           </div>
           <span class="cj-pct${pct >= 100 ? ' pct-done' : ''}">${pct}%</span>
         </div>
@@ -351,6 +371,6 @@ function renderCaliJourney() {
       </div>`;
   }).join('');
 
-  if (badge) badge.textContent = totalUnlocked + ' / ' + totalSkills + ' SKILLS';
+  if (badge) badge.textContent = totalUnlocked + ' / ' + totalSkills + ' ' + _cd('SKILLS', 'مهارات');
   body.innerHTML = treeHTML;
 }

@@ -80,3 +80,7 @@ function hapStars(n) {
   }
   _vib(pattern);
 }
+
+function hapAvatarOpen() { _vib([18, 20, 28]); }
+function hapAvatarSlot() { _vib(16); }
+function hapAvatarUnlock() { _vib([35, 25, 45, 25, 75]); }

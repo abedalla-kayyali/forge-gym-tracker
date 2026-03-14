@@ -988,7 +988,10 @@ function _ensureOverviewAccordion() {
       <select id="overview-compact-select" class="overview-compact-select" aria-label="Overview section"></select>
       <button type="button" id="overview-compact-collapse-btn" class="overview-compact-collapse-btn">Collapse</button>
     `;
-    const anchor = document.getElementById('overview-quick-actions') || document.getElementById('overview-snapshot');
+    const anchor =
+      document.getElementById('overview-quick-actions') ||
+      document.getElementById('overview-snapshot') ||
+      document.getElementById('muscle-heatmap-panel');
     if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(tools, anchor.nextSibling);
   }
 

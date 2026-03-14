@@ -1,3 +1,7 @@
+function _tm(en, ar) {
+  return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
+
 function openTemplateModal() {
   document.getElementById('template-modal').classList.add('open');
 }
@@ -11,18 +15,18 @@ function saveTemplate() {
   const muscle = document.getElementById('tmpl-muscle').value;
   const exercises = document.getElementById('tmpl-exercises').value.trim();
   const icon = document.getElementById('tmpl-icon').value.trim() || '💪';
-  if (!name || !exercises) { showToast('Fill in name and exercises!'); return; }
+  if (!name || !exercises) { showToast(_tm('Fill in name and exercises!', 'أدخل الاسم والتمارين')); return; }
   templates.push({ id: 't' + Date.now(), name, muscle, exercises, icon });
   save(); renderMyTemplates(); renderTemplates();
   document.getElementById('template-modal').classList.remove('open');
-  showToast(typeof t === 'function' && currentLang === 'ar' ? 'تم حفظ القالب!' : 'Template saved!');
+  showToast(_tm('Template saved!', 'تم حفظ القالب!'));
 }
 
 function renderMyTemplates() {
   const el = document.getElementById('my-templates-list');
   if (!el) return;
   if (!templates.length) {
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><div class="empty-title">No custom templates</div><div class="empty-sub">Create one above</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><div class="empty-title">' + _tm('No custom templates', 'لا توجد قوالب مخصصة') + '</div><div class="empty-sub">' + _tm('Create one above', 'أنشئ قالبًا من الأعلى') + '</div></div>';
     return;
   }
   el.innerHTML = templates.map(t => `
