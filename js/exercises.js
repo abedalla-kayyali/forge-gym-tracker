@@ -244,7 +244,9 @@ const EXERCISE_STORE = {
 
   raw: [...EXERCISE_DB],
 
-  byName: new Map()
+  byName: new Map(),
+
+  bodyweight: []
 
 };
 
@@ -459,13 +461,7 @@ function ensureFreeExerciseData() {
 let _exLibMuscle = 'All';
 
 let communityExercises = [];
-const FREE_EXERCISE_JSON_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
 const FREE_EXERCISE_MEDIA_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
-const EXERCISE_STORE = {
-  raw: [...EXERCISE_DB],
-  byName: new Map(),
-  bodyweight: []
-};
 let _freeTreeInjected = false;
 const FORM_INSPECTOR_MEDIA_FILE = './data/form-inspector-media.json';
 
@@ -1086,8 +1082,6 @@ function openFormInspector(name) {
 
   const selectBtn = document.getElementById('form-select-btn');
   const video = document.getElementById('form-video-player');
-  const gif = document.getElementById('form-media-gif');
-  const empty = document.getElementById('form-media-empty');
   const gif = document.getElementById('form-media-gif');
   const empty = document.getElementById('form-media-empty');
   if (gif) {
