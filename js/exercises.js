@@ -1128,7 +1128,6 @@ function openFormInspector(name) {
     video.pause();
     video.removeAttribute('src');
     video.style.display = 'none';
-    video.style.display = 'none';
   }
   if (gif) {
     gif.removeAttribute('src');
@@ -1138,16 +1137,16 @@ function openFormInspector(name) {
   if (empty) empty.style.display = 'none';
 
   if (media && media.type === 'video' && video) {
-    video.style.display = '';
+    video.style.display = 'block';
     video.src = media.url;
     video.load();
     video.play().catch(() => {});
   } else if (media && media.type === 'image' && gif) {
-    gif.style.display = '';
+    gif.style.display = 'block';
     gif.src = media.url;
     gif.alt = exercise.n || name;
   } else if (empty) {
-    empty.style.display = '';
+    empty.style.display = 'flex';
   }
 
   selectBtn.onclick = () => {
