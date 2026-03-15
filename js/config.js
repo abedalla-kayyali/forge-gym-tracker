@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v127';
-window.FORGE_BUILD   = '2026-03-15 (community meals + compare winner labels)';
+window.FORGE_VERSION = 'v128';
+window.FORGE_BUILD   = '2026-03-15 (social compare mobile + excel export)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

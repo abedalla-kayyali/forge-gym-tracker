@@ -788,6 +788,28 @@ body.deload-active .body-zone.zone-selected{
 }
 .heatmap-legend-swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0;box-shadow:0 0 0 1px rgba(255,255,255,.16) inset;}
 .heatmap-legend-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.5px;color:#c3d7ee;}
+@media (max-width:700px){
+  .heatmap-wrap{
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    padding:8px;
+  }
+  .heatmap-svg{
+    width:min(34vw,124px);
+  }
+  .heatmap-legend{
+    width:100%;
+    flex-direction:row;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:2px 0 0;
+    gap:5px;
+  }
+  .heatmap-legend-item{
+    max-width:calc(50% - 6px);
+  }
+}
 /* ── Muscle Detail Modal ── */
 #muscle-detail-modal{position:fixed;inset:0;z-index:9000;display:none;align-items:flex-end;justify-content:center;}
 #muscle-detail-modal.open{display:flex;}
@@ -1626,6 +1648,24 @@ body.deload-active .body-zone.zone-selected{
   overflow:auto;
   background:linear-gradient(180deg, rgba(8,16,23,.98), rgba(7,12,18,1));
 }
+.social-export-row{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:12px;
+}
+.social-export-btn{
+  border:1px solid rgba(99,231,176,.26);
+  border-radius:12px;
+  background:rgba(99,231,176,.08);
+  color:#cffff0;
+  padding:10px 14px;
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.social-export-btn:active{ transform:translateY(1px); }
 .social-sortbar{
   display:flex;
   gap:8px;
@@ -1766,8 +1806,9 @@ body.deload-active .body-zone.zone-selected{
     grid-template-columns:1fr;
   }
   .social-capsule-grid{
-    grid-template-columns:1fr;
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
+  .social-capsule-chip:last-child:nth-child(odd){ grid-column:1 / -1; }
   .social-compare-head{
     grid-template-columns:1fr;
   }
@@ -1785,6 +1826,18 @@ body.deload-active .body-zone.zone-selected{
   .social-privacy-row{
     flex-direction:column;
     align-items:stretch;
+  }
+  .social-premium-table-wrap{
+    -webkit-overflow-scrolling:touch;
+  }
+  .social-premium-table-grid{
+    min-width:640px;
+  }
+  .social-export-row{
+    justify-content:stretch;
+  }
+  .social-export-btn{
+    width:100%;
   }
 }
 

@@ -737,7 +737,7 @@ function _renderProgressReadinessHub() {
   const vol14 = clamp(state.trends?.weightedVol14 ?? 0, 0, 200000);
   const cardio14 = clamp(state.trends?.cardioMins14 ?? 0, 0, 3000);
   const strain = clamp(Math.round(((vol14 / 12000) * 70) + ((cardio14 / 240) * 30)), 0, 100);
-  const load = clamp(100 - strain, 0, 100);
+  const load = strain;
   const ringColor = readiness >= 75 ? '#2ecc71' : (readiness >= 55 ? '#f39c12' : '#e74c3c');
 
   hub.innerHTML = `

@@ -302,10 +302,13 @@
   }
 
   function _friendCompareSummary(friendId) {
+    const duel = _duelState();
+    const friendLite = Array.isArray(duel?.friends) ? duel.friends.find((row) => String(row.id) === String(friendId)) : null;
     const friend = _friendProfile(friendId);
     const stats = friend?.stats || {};
     return {
-      name: friend?.name || 'Friend',
+      name: friend?.name || friendLite?.name || friendLite?.email || 'Friend',
+      email: friend?.email || friendLite?.email || '',
       shared: stats.shared !== false,
       workout7d: _num(stats.workout7d, 0),
       cardio7d: _num(stats.cardio7d, 0),
@@ -581,6 +584,7 @@
         '<div class="social-card-title">MUSCLE TABLE</div>' +
         '<div class="social-card-sub">Selected muscle: ' + _escape(selectedMuscle) + '. Tap any capsule to change the exercise table.</div>' +
         _renderMuscleExerciseTable(selectedMuscle, me, friend) +
+        _compareExportBtn('body', 'Export Excel') +
         '<div class="social-spotlight-rail">' +
           spots.map((spot) => (
             '<button class="social-spotlight-chip" type="button" onclick=\'window.FORGE_SOCIAL.selectBodyMuscle(' + JSON.stringify(spot.muscle) + ')\'>' +
@@ -617,7 +621,8 @@
         '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(me, 'You')) + ' CARDIO</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(my.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(my.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(my.distance7d, 'km')) + '</div></div>' +
         '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(friend, 'Friend')) + ' CARDIO</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(rival.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(rival.distance7d, 'km')) + '</div></div>' +
       '</div>' +
-      _renderCardioRivalries(me.cardioActivitySummary || {}, friend.cardioActivitySummary || {});
+      _renderCardioRivalries(me.cardioActivitySummary || {}, friend.cardioActivitySummary || {}) +
+      _compareExportBtn('cardio', 'Export Excel');
   }
 
   function _renderCompareBodyweight(me, friend) {
@@ -644,7 +649,8 @@
         '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(me, 'You')) + ' BODYWEIGHT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(my.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(my.bestDurationSec, 's')) + '</div></div>' +
         '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(friend, 'Friend')) + ' BODYWEIGHT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(rival.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(rival.bestDurationSec, 's')) + '</div></div>' +
       '</div>' +
-      _renderBodyweightRivalries(me.bodyweightExerciseSummary || {}, friend.bodyweightExerciseSummary || {});
+      _renderBodyweightRivalries(me.bodyweightExerciseSummary || {}, friend.bodyweightExerciseSummary || {}) +
+      _compareExportBtn('bodyweight', 'Export Excel');
   }
   function _bodyweightRivalRows(meSummary, friendSummary) {
     const keys = Array.from(new Set(Object.keys(meSummary || {}).concat(Object.keys(friendSummary || {}))));
@@ -711,6 +717,40 @@
       options.map((opt) => (
         '<button class="social-sortpill' + (current === opt.key ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.setCompareSort(' + JSON.stringify(view) + ',' + JSON.stringify(opt.key) + ')\'>' + _escape(opt.label) + '</button>'
       )).join('') + '</div>';
+  }
+  function _compareExportBtn(kind, label) {
+    return '<div class="social-export-row"><button class="social-export-btn" type="button" onclick=\'window.FORGE_SOCIAL.exportCompareExcel(' + JSON.stringify(kind) + ')\'>' + _escape(label || 'Export Excel') + '</button></div>';
+  }
+  function _downloadBlobNamed(blob, filename) {
+    if (typeof window._downloadBlob === 'function') {
+      window._downloadBlob(blob, filename);
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function _sheetXmlEscape(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function _exportRowsToExcel(sheetName, headers, rows) {
+    const table = '<table><thead><tr>' +
+      headers.map((h) => '<th>' + _sheetXmlEscape(h) + '</th>').join('') +
+      '</tr></thead><tbody>' +
+      rows.map((row) => '<tr>' + row.map((cell) => '<td>' + _sheetXmlEscape(cell) + '</td>').join('') + '</tr>').join('') +
+      '</tbody></table>';
+    const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body>' + table + '</body></html>';
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const stamp = new Date().toISOString().slice(0, 10);
+    _downloadBlobNamed(blob, 'forge-social-' + sheetName + '-' + stamp + '.xls');
+    if (typeof showToast === 'function') showToast('Excel export ready', 'success');
   }
   function _renderPremiumTable(headers, rows, emptyText) {
     if (!rows.length) {
@@ -1127,6 +1167,46 @@
     const modal = byId('social-rivalry-modal');
     if (modal) modal.style.display = 'none';
   }
+  function exportCompareExcel(kind) {
+    const s = _duelState();
+    const friends = Array.isArray(s?.friends) ? s.friends : [];
+    const selected = friends.find((f) => String(f.id) === String(state.selectedFriendId)) || friends[0] || null;
+    if (!selected) return;
+    const me = _localSummary();
+    const friend = _friendCompareSummary(selected.id);
+    if (kind === 'body') {
+      const muscle = state.selectedBodyMuscle || 'Chest';
+      const rows = _buildMuscleExerciseRows(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {}).map((row) => [
+        row.name,
+        _metricOrDash(row.myWeight, 'kg'),
+        _metricOrDash(row.rivalWeight, 'kg'),
+        _dayText(row.myRow.lastAt) + ' / ' + _dayText(row.rivalRow.lastAt),
+        String(_num(row.myRow.sessions, 0)) + ' / ' + String(_num(row.rivalRow.sessions, 0)),
+        _muscleExerciseDeltaLabel(row)
+      ]);
+      return _exportRowsToExcel('body-' + muscle.toLowerCase().replace(/\s+/g, '-'), ['Exercise', _athleteName(me, 'You'), _athleteName(friend, 'Friend'), 'Last', 'Sessions', 'Delta'], rows);
+    }
+    if (kind === 'cardio') {
+      const rows = _cardioRivalRows(me.cardioActivitySummary || {}, friend.cardioActivitySummary || {}).map((row) => [
+        row.label,
+        _metricOrDash(row.my.bestMinutes, 'm') + ' / ' + _metricOrDash(row.rival.bestMinutes, 'm') + ' | ' + _metricOrDash(row.my.bestDistanceKm, 'km') + ' / ' + _metricOrDash(row.rival.bestDistanceKm, 'km'),
+        _metricOrDash(row.my.weeklyMinutes, 'm') + ' / ' + _metricOrDash(row.rival.weeklyMinutes, 'm'),
+        _dayText(row.my.lastAt) + ' / ' + _dayText(row.rival.lastAt),
+        _leadLabel(row.lead, me, friend),
+        _cardioDeltaLabel(row)
+      ]);
+      return _exportRowsToExcel('cardio-rivalry', ['Activity', 'Best Session', 'Weekly Total', 'Last', 'Lead', 'Delta'], rows);
+    }
+    const rows = _bodyweightRivalRows(me.bodyweightExerciseSummary || {}, friend.bodyweightExerciseSummary || {}).map((row) => [
+      row.label,
+      _metricOrDash(row.my.maxReps, '') + ' / ' + _metricOrDash(row.rival.maxReps, ''),
+      _metricOrDash(row.my.maxDurationSec, 's') + ' / ' + _metricOrDash(row.rival.maxDurationSec, 's'),
+      _dayText(row.my.lastAt) + ' / ' + _dayText(row.rival.lastAt),
+      _leadLabel(row.lead, me, friend),
+      _bodyweightDeltaLabel(row)
+    ]);
+    return _exportRowsToExcel('bodyweight-rivalry', ['Exercise', 'Best Reps', 'Best Hold', 'Last', 'Lead', 'Delta'], rows);
+  }
   async function toggleShareStats() {
     if (!window.FORGE_DUELS || typeof window.FORGE_DUELS.setSocialPrivacy !== 'function') return;
     const next = await window.FORGE_DUELS.setSocialPrivacy(!_privacyEnabled());
@@ -1198,6 +1278,7 @@
     closeMuscleCompare,
     openCardioRivalry,
     openBodyweightRivalry,
+    exportCompareExcel,
     closeCompareSheet,
     closeRivalryDetail,
     startDuel,
