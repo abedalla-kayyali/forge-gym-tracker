@@ -1,6 +1,6 @@
 // FORGE Gym Tracker - Service Worker
 // Bump version to force cache refresh after updates
-const CACHE_NAME = 'forge-v100';
+const CACHE_NAME = 'forge-v129';
 
 const CORE_ASSETS = [
   './index.html',
@@ -8,7 +8,10 @@ const CORE_ASSETS = [
   './icons/icon.svg',
   './css/main.css',
   './js/config.js',
+  './js/bootstrap.js',
   './js/coach-state.js',
+  './js/dashboard-history.js',
+  './js/social-ui.js',
   './js/supabase-client.js',
   './js/auth-ui.js',
   './js/sync.js',
@@ -78,11 +81,19 @@ self.addEventListener('fetch', event => {
   const accept = event.request.headers.get('accept') || '';
   const isNavigation = event.request.mode === 'navigate' || accept.includes('text/html');
   const path = url.pathname || '';
+  const isAppCodeAsset =
+    path.endsWith('.js') ||
+    path.endsWith('.css') ||
+    path.endsWith('.html') ||
+    path.endsWith('.json');
+
   const isCriticalAsset =
     path.endsWith('/index.html') ||
     path.endsWith('/manifest.json') ||
     path.endsWith('/js/config.js') ||
     path.endsWith('/js/coach-state.js') ||
+    path.endsWith('/js/dashboard-history.js') ||
+    path.endsWith('/js/social-ui.js') ||
     path.endsWith('/js/bootstrap.js') ||
     path.endsWith('/sw.js');
 
@@ -95,7 +106,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (isNavigation || isCriticalAsset) {
+  if (isNavigation || isCriticalAsset || isAppCodeAsset) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
         .then(response => {
