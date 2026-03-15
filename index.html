@@ -24,6 +24,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/form-inspector.css">
 </head>
 <body>
 
@@ -575,6 +576,7 @@
           <div style="display:flex;align-items:center;gap:6px;">
             <label id="exercise-name-label" data-i18n="form.exercise" style="flex:1;">Exercise Name</label>
             <button class="btn-ex-browse btn-ex-swap" id="swap-btn" onclick="openSwapModal()" style="display:none" data-i18n="form.swap">? Swap</button>
+            <button class="btn-ex-browse btn-ex-form" type="button" onclick="openFormInspector(document.getElementById('exercise-name')?.value || '')" data-i18n="form.form">Form</button>
             <button class="btn-ex-browse" onclick="openExLib()"><span data-i18n="form.browse">Browse</span></button>
           </div>
           <input type="text" id="exercise-name" placeholder="e.g. Bench Press, Squat?" autocomplete="off" autocapitalize="words" data-i18n-placeholder="form.exercisePlaceholder" oninput="showAutocomplete(this.value);updateLastSessionHint();updatePRPath();_updateSwapBtn(this.value);if(this.value.trim()){const p=document.getElementById('muscle-history-panel');if(p)p.style.display='none';}">
@@ -623,6 +625,7 @@
             <div class="bw-arcade-top">
               <div class="bw-arcade-ex-name" id="bw-arcade-ex-name">--</div>
               <div class="bw-arcade-ex-sub" id="bw-arcade-ex-sub"></div>
+              <button class="bw-technique-btn" type="button" data-i18n="form.viewTechnique" onclick="openFormInspector(document.getElementById('exercise-name')?.value || '')">View Technique</button>
             </div>
             <!-- PR strip: all-time record + today best -->
             <div class="bw-pr-strip" id="bw-pr-strip">
@@ -8805,6 +8808,27 @@ if (document.readyState === 'loading') {
     <input type="text" id="ex-lib-search" class="ex-lib-search" placeholder="Search exercises?" oninput="renderExLib()" autocomplete="off" autocapitalize="off">
     <div class="ex-lib-filters" id="ex-lib-filters"></div>
     <div class="ex-lib-list" id="ex-lib-list"></div>
+  </div>
+</div>
+
+<div id="form-inspector-modal" class="form-inspector-overlay" onclick="if(event.target===this)closeFormInspector()">
+  <div class="form-inspector-sheet">
+    <div class="bio-modal-handle"></div>
+    <div class="form-media-wrapper">
+      <video id="form-video-player" playsinline autoplay muted loop preload="auto"></video>
+      <img id="form-media-gif" alt="Technique reference" />
+      <div id="form-media-empty" class="form-media-empty">Technique coming soon.</div>
+      <div id="form-video-loading" class="ptr-spinner"></div>
+    </div>
+    <div class="form-inspector-body">
+      <h2 id="form-exercise-name" class="form-inspector-title">Exercise Name</h2>
+      <div id="form-badges" class="form-badges"></div>
+      <div class="form-step-kicker">STEP-BY-STEP</div>
+      <ol id="form-steps-list" class="form-steps-list"></ol>
+      <button id="form-select-btn" class="btn btn-primary form-select-btn">
+        <span data-i18n="form.select">SELECT EXERCISE</span>
+      </button>
+    </div>
   </div>
 </div>
 
