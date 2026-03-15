@@ -7,6 +7,7 @@
     selectedBodyMuscle: 'Chest',
     bodyShellMode: 'show',
     compareView: 'body',
+    compareSort: { body: 'delta', cardio: 'delta', bodyweight: 'delta' },
     lastResults: [],
     profileDirectory: [],
     lastUiSnapshot: null,
@@ -59,22 +60,48 @@
     const n = Number(v);
     return Number.isFinite(n) ? n : (fb || 0);
   }
+  function _socialTx(key, fallback) {
+    const ar = {
+      today: 'اليوم',
+      no_log: 'لا يوجد تسجيل بعد',
+      you: 'أنت',
+      rival: 'الخصم',
+      even: 'متساوٍ',
+      sort_by: 'الترتيب حسب',
+      delta: 'الفارق',
+      last: 'الأحدث',
+      sessions: 'الجلسات',
+      max: 'الحد الأقصى',
+      best: 'الأفضل',
+      weekly: 'الأسبوعي',
+      reps: 'التكرارات',
+      hold: 'الثبات',
+      exercise: 'التمرين',
+      activity: 'النشاط',
+      best_session: 'أفضل جلسة',
+      weekly_total: 'الإجمالي الأسبوعي',
+      lead: 'المتقدم',
+      no_compare_data: 'لا توجد بيانات مقارنة بعد.'
+    };
+    if ((typeof currentLang !== 'undefined') && currentLang === 'ar' && Object.prototype.hasOwnProperty.call(ar, key)) return ar[key];
+    return fallback;
+  }
 
   function _maybeToast(msg, tone) {
     if (typeof showToast === 'function') showToast(msg, tone || 'success');
   }
   function _dayText(dateStr) {
     const ms = new Date(dateStr || 0).getTime();
-    if (!Number.isFinite(ms) || !ms) return 'No log yet';
+    if (!Number.isFinite(ms) || !ms) return _socialTx('no_log', 'No log yet');
     const diff = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
-    if (diff === 0) return 'Today';
+    if (diff === 0) return _socialTx('today', 'Today');
     if (diff === 1) return '1d ago';
     return diff + 'd ago';
   }
   function _fmtShortDate(dateStr) {
-    if (!dateStr) return 'No log yet';
+    if (!dateStr) return _socialTx('no_log', 'No log yet');
     const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime()) || d.getTime() <= 0) return 'No log yet';
+    if (Number.isNaN(d.getTime()) || d.getTime() <= 0) return _socialTx('no_log', 'No log yet');
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
   function _metricOrDash(v, unit) {
@@ -83,9 +110,9 @@
     return String(n) + (unit || '');
   }
   function _fmtMaybeDate(dateStr) {
-    if (!dateStr) return 'No log yet';
+    if (!dateStr) return _socialTx('no_log', 'No log yet');
     const d = new Date(dateStr);
-    if (Number.isNaN(d.getTime()) || d.getTime() <= 0) return 'No log yet';
+    if (Number.isNaN(d.getTime()) || d.getTime() <= 0) return _socialTx('no_log', 'No log yet');
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
   function _privacyEnabled() {
@@ -661,7 +688,14 @@
   function _muscleExerciseDeltaLabel(row) {
     const kgGap = Math.abs(_num(row?.myWeight, 0) - _num(row?.rivalWeight, 0));
     if (kgGap > 0) return '+' + kgGap + 'kg';
-    return 'Even';
+    return _socialTx('even', 'Even');
+  }
+  function _sortBar(view, options) {
+    const current = state.compareSort[view] || 'delta';
+    return '<div class="social-sortbar"><span>' + _escape(_socialTx('sort_by', 'Sort by')) + '</span>' +
+      options.map((opt) => (
+        '<button class="social-sortpill' + (current === opt.key ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.setCompareSort(' + JSON.stringify(view) + ',' + JSON.stringify(opt.key) + ')\'>' + _escape(opt.label) + '</button>'
+      )).join('') + '</div>';
   }
   function _renderPremiumTable(headers, rows, emptyText) {
     if (!rows.length) {
@@ -675,9 +709,20 @@
     '</div>';
   }
   function _renderMuscleExerciseTable(muscle, me, friend) {
-    const rows = _buildMuscleExerciseRows(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {});
-    return _renderPremiumTable(
-      ['Exercise', 'You', 'Rival', 'Last', 'Sessions', 'Delta'],
+    const sortKey = state.compareSort.body || 'delta';
+    const rows = _buildMuscleExerciseRows(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {}).sort((a, b) => {
+      if (sortKey === 'last') return new Date(b.myRow.lastAt || 0).getTime() - new Date(a.myRow.lastAt || 0).getTime();
+      if (sortKey === 'sessions') return (_num(b.myRow.sessions, 0) + _num(b.rivalRow.sessions, 0)) - (_num(a.myRow.sessions, 0) + _num(a.rivalRow.sessions, 0));
+      if (sortKey === 'max') return Math.max(_num(b.myWeight, 0), _num(b.rivalWeight, 0)) - Math.max(_num(a.myWeight, 0), _num(a.rivalWeight, 0));
+      return b.gap - a.gap;
+    });
+    return _sortBar('body', [
+      { key: 'delta', label: _socialTx('delta', 'Delta') },
+      { key: 'last', label: _socialTx('last', 'Last') },
+      { key: 'sessions', label: _socialTx('sessions', 'Sessions') },
+      { key: 'max', label: _socialTx('max', 'Max') }
+    ]) + _renderPremiumTable(
+      [_socialTx('exercise', 'Exercise'), _socialTx('you', 'You'), _socialTx('rival', 'Rival'), _socialTx('last', 'Last'), _socialTx('sessions', 'Sessions'), _socialTx('delta', 'Delta')],
       rows.map((row) => (
         '<tr>' +
           '<td><strong>' + _escape(row.name) + '</strong></td>' +
@@ -688,53 +733,77 @@
           '<td><span class="social-rivalry-delta">' + _escape(_muscleExerciseDeltaLabel(row)) + '</span></td>' +
         '</tr>'
       )),
-      'No weighted exercise records published for this muscle yet.'
+      _socialTx('no_compare_data', 'No compare data yet.')
     );
   }
   function _renderBodyweightRivalries(meSummary, friendSummary) {
-    const rows = _bodyweightRivalRows(meSummary, friendSummary);
+    const sortKey = state.compareSort.bodyweight || 'delta';
+    const rows = _bodyweightRivalRows(meSummary, friendSummary).sort((a, b) => {
+      if (sortKey === 'last') return new Date(b.my.lastAt || 0).getTime() - new Date(a.my.lastAt || 0).getTime();
+      if (sortKey === 'reps') return Math.max(_num(b.my.maxReps, 0), _num(b.rival.maxReps, 0)) - Math.max(_num(a.my.maxReps, 0), _num(a.rival.maxReps, 0));
+      if (sortKey === 'hold') return Math.max(_num(b.my.maxDurationSec, 0), _num(b.rival.maxDurationSec, 0)) - Math.max(_num(a.my.maxDurationSec, 0), _num(a.rival.maxDurationSec, 0));
+      return b.gap - a.gap;
+    });
     if (!rows.length) {
       return '<div class="social-card"><div class="social-card-title">EXERCISE RIVALRY</div><div class="social-card-sub">No bodyweight exercise rivalry data yet. Log pull-ups, holds, or skills to start the battle board.</div></div>';
     }
     return '<div class="social-card social-premium-table">' +
       '<div class="social-card-title">EXERCISE RIVALRY</div>' +
       '<div class="social-card-sub">Compare max reps and hold times exercise by exercise.</div>' +
+      _sortBar('bodyweight', [
+        { key: 'delta', label: _socialTx('delta', 'Delta') },
+        { key: 'reps', label: _socialTx('reps', 'Reps') },
+        { key: 'hold', label: _socialTx('hold', 'Hold') },
+        { key: 'last', label: _socialTx('last', 'Last') }
+      ]) +
       + _renderPremiumTable(
-        ['Exercise', 'Best Reps', 'Best Hold', 'Last', 'Lead', 'Delta'],
+        [_socialTx('exercise', 'Exercise'), _socialTx('reps', 'Best Reps'), _socialTx('hold', 'Best Hold'), _socialTx('last', 'Last'), _socialTx('lead', 'Lead'), _socialTx('delta', 'Delta')],
         rows.map((row) => (
           '<tr onclick=\'window.FORGE_SOCIAL.openBodyweightRivalry(' + JSON.stringify(row.key) + ')\'>' +
             '<td><strong>' + _escape(row.label) + '</strong></td>' +
             '<td>' + _escape(_metricOrDash(row.my.maxReps, '')) + ' / ' + _escape(_metricOrDash(row.rival.maxReps, '')) + '</td>' +
             '<td>' + _escape(_metricOrDash(row.my.maxDurationSec, 's')) + ' / ' + _escape(_metricOrDash(row.rival.maxDurationSec, 's')) + '</td>' +
             '<td>' + _escape(_dayText(row.my.lastAt)) + ' / ' + _escape(_dayText(row.rival.lastAt)) + '</td>' +
-            '<td>' + _escape(row.lead) + '</td>' +
+            '<td>' + _escape(row.lead === 'YOU' ? _socialTx('you', 'You') : row.lead === 'RIVAL' ? _socialTx('rival', 'Rival') : _socialTx('even', 'Even')) + '</td>' +
             '<td><span class="social-rivalry-delta">' + _escape(_bodyweightDeltaLabel(row)) + '</span></td>' +
           '</tr>'
         )),
-        'No bodyweight exercise rivalry data yet.'
+        _socialTx('no_compare_data', 'No compare data yet.')
       ) + '</div>';
   }
   function _renderCardioRivalries(meSummary, friendSummary) {
-    const rows = _cardioRivalRows(meSummary, friendSummary);
+    const sortKey = state.compareSort.cardio || 'delta';
+    const rows = _cardioRivalRows(meSummary, friendSummary).sort((a, b) => {
+      if (sortKey === 'last') return new Date(b.my.lastAt || 0).getTime() - new Date(a.my.lastAt || 0).getTime();
+      if (sortKey === 'best') return Math.max(_num(b.my.bestMinutes, 0), _num(b.rival.bestMinutes, 0), _num(b.my.bestDistanceKm, 0), _num(b.rival.bestDistanceKm, 0)) - Math.max(_num(a.my.bestMinutes, 0), _num(a.rival.bestMinutes, 0), _num(a.my.bestDistanceKm, 0), _num(a.rival.bestDistanceKm, 0));
+      if (sortKey === 'weekly') return (_num(b.my.weeklyMinutes, 0) + _num(b.rival.weeklyMinutes, 0)) - (_num(a.my.weeklyMinutes, 0) + _num(a.rival.weeklyMinutes, 0));
+      return b.gap - a.gap;
+    });
     if (!rows.length) {
       return '<div class="social-card"><div class="social-card-title">ACTIVITY RIVALRY</div><div class="social-card-sub">No cardio rivalry data yet. Log runs, rides, or walks to light up the leaderboard.</div></div>';
     }
     return '<div class="social-card social-premium-table">' +
       '<div class="social-card-title">ACTIVITY RIVALRY</div>' +
       '<div class="social-card-sub">Compare best single sessions and weekly totals by activity.</div>' +
+      _sortBar('cardio', [
+        { key: 'delta', label: _socialTx('delta', 'Delta') },
+        { key: 'best', label: _socialTx('best', 'Best') },
+        { key: 'weekly', label: _socialTx('weekly', 'Weekly') },
+        { key: 'last', label: _socialTx('last', 'Last') }
+      ]) +
       + _renderPremiumTable(
-        ['Activity', 'Best Session', 'Weekly Total', 'Last', 'Lead', 'Delta'],
+        [_socialTx('activity', 'Activity'), _socialTx('best_session', 'Best Session'), _socialTx('weekly_total', 'Weekly Total'), _socialTx('last', 'Last'), _socialTx('lead', 'Lead'), _socialTx('delta', 'Delta')],
         rows.map((row) => (
           '<tr onclick=\'window.FORGE_SOCIAL.openCardioRivalry(' + JSON.stringify(row.key) + ')\'>' +
             '<td><strong>' + _escape(row.label) + '</strong></td>' +
             '<td>' + _escape(_metricOrDash(row.my.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.bestMinutes, 'm')) + ' | ' + _escape(_metricOrDash(row.my.bestDistanceKm, 'km')) + ' / ' + _escape(_metricOrDash(row.rival.bestDistanceKm, 'km')) + '</td>' +
             '<td>' + _escape(_metricOrDash(row.my.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.weeklyMinutes, 'm')) + '</td>' +
             '<td>' + _escape(_dayText(row.my.lastAt)) + ' / ' + _escape(_dayText(row.rival.lastAt)) + '</td>' +
-            '<td>' + _escape(row.lead) + '</td>' +
+            '<td>' + _escape(row.lead === 'YOU' ? _socialTx('you', 'You') : row.lead === 'RIVAL' ? _socialTx('rival', 'Rival') : _socialTx('even', 'Even')) + '</td>' +
             '<td><span class="social-rivalry-delta">' + _escape(_cardioDeltaLabel(row)) + '</span></td>' +
           '</tr>'
         )),
-        'No cardio rivalry data yet.'
+        _socialTx('no_compare_data', 'No compare data yet.')
       ) + '</div>';
   }
 
@@ -899,6 +968,11 @@
     state.compareView = String(view || 'body');
     renderCompare();
     _bindBodyCompareZones();
+  }
+  function setCompareSort(view, key) {
+    if (!view) return;
+    state.compareSort[String(view)] = String(key || 'delta');
+    renderCompare();
   }
   function _bindBodyCompareZones() {
     document.querySelectorAll('.social-body-zone').forEach((node) => {
@@ -1097,6 +1171,7 @@
     selectFriend,
     selectBodyMuscle,
     setCompareView,
+    setCompareSort,
     toggleBodyShellMode,
     toggleShareStats,
     openMuscleCompare,

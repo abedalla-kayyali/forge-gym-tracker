@@ -232,6 +232,8 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-muscle-exercise-list')) fail('Social muscle compare is missing exercise leaderboard hook');
   if (!socialUi.includes('social-premium-table')) fail('Social compare is missing premium table hook');
   if (!socialUi.includes('social-capsule-board')) fail('Social compare is missing capsule body board hook');
+  if (!socialUi.includes('social-sortbar')) fail('Social compare is missing sort-bar hook');
+  if (!socialUi.includes('_socialTx')) fail('Social compare is missing localized label helper');
   if (!socialUi.includes('toggleBodyShellMode')) fail('Social compare is missing body shell mode toggle');
   if (!socialUi.includes('closeCompareSheet')) fail('Social compare is missing unified sheet close action');
   if (!socialUi.includes('social-body-rival-header')) fail('Social body compare is missing rivalry header hook');

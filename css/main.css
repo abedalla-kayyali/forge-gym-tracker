@@ -1612,6 +1612,34 @@ body.deload-active .body-zone.zone-selected{
   overflow:auto;
   background:linear-gradient(180deg, rgba(8,16,23,.98), rgba(7,12,18,1));
 }
+.social-sortbar{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.social-sortbar span{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:.12em;
+  color:var(--text3);
+  text-transform:uppercase;
+}
+.social-sortpill{
+  border:1px solid rgba(159,230,255,.12);
+  border-radius:999px;
+  padding:6px 10px;
+  background:rgba(255,255,255,.03);
+  color:#dff8ff;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+}
+.social-sortpill.active{
+  border-color:rgba(99,231,176,.36);
+  background:rgba(99,231,176,.12);
+  color:#9df8c8;
+}
 .social-premium-table-grid{
   width:100%;
   border-collapse:collapse;
