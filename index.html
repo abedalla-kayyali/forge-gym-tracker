@@ -2077,6 +2077,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/auth-ui.js"></script>
 <script src="js/sync.js"></script>
+<script src="js/community-library.js"></script>
 <script src="js/ghost-autocomplete.js"></script>
 <script src="js/exercises.js"></script>
 <script src="js/dashboard-history.js"></script>
@@ -6439,15 +6440,18 @@ function _normalizeMealName(name) {
 
 function _findSavedMealByName(name) {
   const k = _normalizeMealName(name);
-  if (!k || !mealLibrary || typeof mealLibrary !== 'object') return null;
-  return mealLibrary[k] || null;
+  if (!k) return null;
+  if (mealLibrary && typeof mealLibrary === 'object' && mealLibrary[k]) return mealLibrary[k] || null;
+  if (typeof findCommunityMealByName === 'function') return findCommunityMealByName(name);
+  return null;
 }
 
 function _getSavedMealEntries() {
-  if (!mealLibrary || typeof mealLibrary !== 'object') return [];
-  return Object.values(mealLibrary)
+  const localEntries = (!mealLibrary || typeof mealLibrary !== 'object') ? [] : Object.values(mealLibrary)
     .filter(v => v && v.name)
     .sort((a, b) => (b.uses || 0) - (a.uses || 0) || (b.lastUsed || 0) - (a.lastUsed || 0));
+  if (typeof getCommunityMealEntries === 'function') return getCommunityMealEntries(localEntries);
+  return localEntries;
 }
 
 function _saveMealToLibrary(entry) {
@@ -6752,6 +6756,12 @@ function _cnAddMeal() {
     dateKey: k
   });
   _saveMealToLibrary({ name, qty, kcal, p, c, f, ts });
+  if (typeof addCommunityMeal === 'function') {
+    addCommunityMeal({ name, kcal, p, c, f }).then(() => {
+      if (typeof ensureCommunityMealsLoaded === 'function') ensureCommunityMealsLoaded();
+      renderCoachNutrition();
+    }).catch(err => console.warn('[FORGE community] add meal failed', err));
+  }
   save();
   if (typeof sndSetLog === 'function') sndSetLog();
   if (typeof hapSetLog === 'function') hapSetLog();

@@ -11,8 +11,88 @@ let _currentBwReps = 10; // tracks reps stepper value
 let _bwStep = 1; // 1=pick muscle, 2=pick exercise, 3=log sets
 let _bwSessionMax = 0; // in-session high-water mark; reset when new exercise selected
 let _bwSearchQuery = ''; // bodyweight picker search text
+let _bwSetStreak = 0;
+let _bwBestRun = 0;
+let _bwLastExerciseForStreak = '';
 function _bwL(en, ar) {
   return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
+}
+
+function _ensureBwStreakStrip() {
+  const zone = document.getElementById('bw-arcade-zone');
+  if (!zone) return null;
+  let strip = document.getElementById('bw-set-streak-strip');
+  if (strip) return strip;
+  strip = document.createElement('div');
+  strip.id = 'bw-set-streak-strip';
+  strip.className = 'bw-set-streak';
+  strip.innerHTML = `
+    <div class="bw-set-streak-card">
+      <span>SET STREAK</span>
+      <strong id="bw-set-streak-val">0</strong>
+    </div>
+    <div class="bw-set-streak-card">
+      <span>BEST RUN</span>
+      <strong id="bw-best-run-val">0</strong>
+    </div>
+    <div class="bw-set-streak-chip" id="bw-set-streak-chip">Cold start</div>
+  `;
+  const prStrip = document.getElementById('bw-pr-strip');
+  if (prStrip && prStrip.parentNode === zone) zone.insertBefore(strip, prStrip.nextSibling);
+  else zone.appendChild(strip);
+  return strip;
+}
+
+function _renderBwStreak() {
+  _ensureBwStreakStrip();
+  const streakEl = document.getElementById('bw-set-streak-val');
+  const bestEl = document.getElementById('bw-best-run-val');
+  const chipEl = document.getElementById('bw-set-streak-chip');
+  if (streakEl) streakEl.textContent = String(_bwSetStreak);
+  if (bestEl) bestEl.textContent = String(_bwBestRun);
+  if (chipEl) {
+    let label = _bwSetStreak <= 0 ? 'Cold start' : `${_bwSetStreak}-set run`;
+    if (_bwSetStreak >= 8) label = 'Boss run';
+    else if (_bwSetStreak >= 5) label = 'Hot streak';
+    else if (_bwSetStreak >= 3) label = 'Momentum';
+    chipEl.textContent = label;
+    chipEl.classList.toggle('active', _bwSetStreak >= 3);
+  }
+}
+
+function _resetBwSetStreak() {
+  _bwSetStreak = 0;
+  _bwBestRun = 0;
+  _bwLastExerciseForStreak = '';
+  _renderBwStreak();
+}
+
+function _syncBwStreakFromRenderedSets(exName) {
+  const nextExercise = String(exName || '').trim().toLowerCase();
+  const count = document.querySelectorAll('#bw-sets-container .bw-dot-row').length;
+  _bwLastExerciseForStreak = nextExercise;
+  _bwSetStreak = count;
+  _bwBestRun = Math.max(_bwBestRun, count);
+  _renderBwStreak();
+}
+
+function _celebrateBwStreak() {
+  if (_bwSetStreak >= 8) {
+    if (typeof sndCombo === 'function') sndCombo(3);
+    if (typeof hapCombo === 'function') hapCombo(3);
+  } else if (_bwSetStreak >= 5) {
+    if (typeof sndCombo === 'function') sndCombo(2);
+    if (typeof hapCombo === 'function') hapCombo(2);
+  } else if (_bwSetStreak >= 3) {
+    if (typeof sndCombo === 'function') sndCombo(1);
+    if (typeof hapCombo === 'function') hapCombo(1);
+  }
+  const chipEl = document.getElementById('bw-set-streak-chip');
+  if (chipEl) {
+    chipEl.classList.remove('burst');
+    void chipEl.offsetWidth;
+    chipEl.classList.add('burst');
+  }
 }
 
 function setWorkoutMode(mode) {
@@ -72,6 +152,7 @@ function setWorkoutMode(mode) {
     document.getElementById('bw-ring-pct').textContent = '0%';
     _currentBwReps = 10;
     _currentBwEffort = 'medium';
+    _resetBwSetStreak();
     _renderBwRepsVal();
     // Reset effort button active state
     document.querySelectorAll('.bw-eff-btn').forEach(b => b.classList.remove('active'));
@@ -87,6 +168,7 @@ function setWorkoutMode(mode) {
     // Clear BW sets
     document.getElementById('bw-sets-container').innerHTML = '';
     bwSetCount = 0;
+    _resetBwSetStreak();
     _updateSetBadge(0);
     selectedMuscle = '';
   }
@@ -282,6 +364,7 @@ function renderBwExercisePicker() {
 
 function pickBwExercise(name, muscle, type) {
   _bwSessionMax = 0; // reset in-session high-water mark for new exercise
+  _resetBwSetStreak();
   document.getElementById('exercise-name').value = name;
   selectedMuscle = muscle;
   _currentBwType = type || 'reps';
@@ -322,6 +405,7 @@ function pickBwExercise(name, muscle, type) {
   if (todaySets.length) {
     todaySets.forEach(s => _addBwDot(s.reps || s.secs, s.effort));
     bwSetCount = todaySets.length;
+    _syncBwStreakFromRenderedSets(name);
     _updateSetBadge(bwSetCount);
     // Pre-fill reps stepper from last today set
     const lastSet = todaySets[todaySets.length - 1];
@@ -332,6 +416,7 @@ function pickBwExercise(name, muscle, type) {
   _renderBwRepsVal();
 
   _renderBwActiveDot();
+  _renderBwStreak();
   _updateBwRing(name);
   _updateBwPrStrip(name); // show RECORD + TODAY in arcade header
 }
@@ -460,10 +545,19 @@ function addBwSet() {
   bwSetCount++;
   _updateSetBadge(bwSetCount);
   _addBwDot(_currentBwReps, _currentBwEffort);
+  const exName  = ((document.getElementById('exercise-name') || {}).value || '').trim();
+  const streakExercise = exName.toLowerCase();
+  if (_bwLastExerciseForStreak !== streakExercise) {
+    _bwSetStreak = 0;
+    _bwBestRun = 0;
+    _bwLastExerciseForStreak = streakExercise;
+  }
+  _bwSetStreak += 1;
+  _bwBestRun = Math.max(_bwBestRun, _bwSetStreak);
+  _renderBwStreak();
   _renderBwActiveDot();
 
   // PR check — fires at most once per new session peak
-  const exName  = (document.getElementById('exercise-name') || {}).value || '';
   const savedPR = _getBwPR(exName.trim());
   const isNewPR = exName.trim() && _currentBwReps > Math.max(savedPR, _bwSessionMax);
 
@@ -482,6 +576,7 @@ function addBwSet() {
     if (typeof sndSetLog === 'function') sndSetLog();
     if (typeof hapSetLog === 'function') hapSetLog();
   }
+  if (_bwSetStreak === 3 || _bwSetStreak === 5 || _bwSetStreak >= 8) _celebrateBwStreak();
   _updateBwPrStrip(exName.trim());
   renderBwExercisePicker();
 }
@@ -517,6 +612,7 @@ function removeBwSet(btn) {
     .map(el => parseInt(el.dataset.val, 10))
     .filter(v => Number.isFinite(v) && v > 0);
   _bwSessionMax = vals.length ? Math.max(...vals) : 0;
+  _syncBwStreakFromRenderedSets(exName);
   _renderBwActiveDot();
   if (exName) {
     _updateBwPrStrip(exName);

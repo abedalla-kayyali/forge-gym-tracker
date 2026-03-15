@@ -111,14 +111,21 @@ function showAutocomplete(query) {
     if (!seen.has(key)) seen.set(key, { name: w.exercise, muscle: w.muscle });
   });
   // Also add matching exercises from DB not already in history
-  if (typeof EXERCISE_DB !== 'undefined') {
-    EXERCISE_DB.filter(e => e.n.toLowerCase().includes(q)).forEach(e => {
+  const exerciseCatalog = (typeof _exerciseCatalog === 'function') ? _exerciseCatalog() : (typeof EXERCISE_DB !== 'undefined' ? EXERCISE_DB : []);
+  if (Array.isArray(exerciseCatalog)) {
+    exerciseCatalog.filter(e => e.n.toLowerCase().includes(q)).forEach(e => {
       const key = e.n.toLowerCase();
       if (!seen.has(key)) seen.set(key, { name: e.n, muscle: e.m });
     });
   }
   const matches = [...seen.values()].filter(e => e.name.toLowerCase().includes(q)).slice(0, 8);
-  if (!matches.length) { closeAutocomplete(); return; }
+  if (!matches.length) {
+    ac.innerHTML = (typeof _exerciseAddCta === 'function')
+      ? _exerciseAddCta(query, 'autocomplete')
+      : '';
+    ac.style.display = ac.innerHTML ? 'block' : 'none';
+    return;
+  }
   ac.innerHTML = matches.map(e =>
     `<div class="ex-ac-item" onmousedown="pickExercise('${e.name.replace(/'/g, "\\'")}')">
        <span>${e.name}</span>

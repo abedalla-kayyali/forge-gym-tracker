@@ -36,6 +36,8 @@ const EXERCISE_DB = [
   {n:'Machine Shoulder Press',m:'Shoulders',e:'machine',t:'Seated, press handles overhead, adjust seat for 90° at bottom'},
   {n:'Reverse Pec Deck',m:'Shoulders',e:'machine',t:'Face machine, arms wide — targets rear deltoids and upper back'},
   {n:'Band Pull-Apart',m:'Shoulders',e:'band',t:'Arms extended, pull band apart to chest, squeeze shoulder blades'},
+  {n:'Cable Rear Delt Fly',m:'Shoulders',e:'cable',t:'Cross cables or dual handles, sweep out and back to isolate rear delts'},
+  {n:'Machine Lateral Raise',m:'Shoulders',e:'machine',t:'Seated machine path for strict lateral delt loading without momentum'},
   // BICEPS
   {n:'Barbell Curl',m:'Biceps',e:'barbell',t:'Elbows fixed at sides, curl to shoulder, squeeze hard at top'},
   {n:'Dumbbell Curl',m:'Biceps',e:'dumbbell',t:'Alternate or together — supinate wrist as you curl for full contraction'},
@@ -76,6 +78,10 @@ const EXERCISE_DB = [
   {n:'Calf Raise (Seated)',m:'Calves',e:'machine',t:'Seated version targets soleus (deeper calf) more than gastrocnemius'},
   {n:'Lunges',m:'Legs',e:'dumbbell',t:'Step forward, lower back knee toward floor, push through front heel'},
   {n:'Walking Lunges',m:'Legs',e:'dumbbell',t:'Continuous forward lunges — great for coordination and quad burn'},
+  {n:'Smith Machine Squat',m:'Legs',e:'smith',t:'Use the fixed path to push quad volume with stable setup and deep ROM'},
+  {n:'Pendulum Squat',m:'Legs',e:'machine',t:'Machine squat arc that lets you bias quads with deep knee flexion'},
+  {n:'Sissy Squat',m:'Legs',e:'bodyweight',t:'Knees travel forward while torso stays long — brutal quad isolation'},
+  {n:'Adductor Machine',m:'Legs',e:'machine',t:'Seated hip adduction for inner-thigh volume and groin strength'},
   // GLUTES
   {n:'Hip Thrust',m:'Glutes',e:'barbell',t:'Shoulders on bench, drive hips up, squeeze glutes hard at top'},
   {n:'Romanian Deadlift (DB)',m:'Glutes',e:'dumbbell',t:'Hip hinge, feel hamstring stretch, drive hips forward to stand'},
@@ -85,22 +91,69 @@ const EXERCISE_DB = [
   {n:'Step-Up',m:'Glutes',e:'dumbbell',t:'Step onto bench or box, drive through heel, fully extend hip at top'},
   {n:'Abductor Machine',m:'Glutes',e:'machine',t:'Seated, push knees out against pads — targets glute med'},
   {n:'Donkey Kick',m:'Glutes',e:'bodyweight',t:'On all fours, kick heel toward ceiling — squeeze glute at top'},
+  {n:'Cable Pull-Through',m:'Glutes',e:'cable',t:'Hip hinge with cable behind you — strong glute lockout without spinal load'},
+  {n:'Smith Hip Thrust',m:'Glutes',e:'smith',t:'Use the smith path for stable hip thrust loading and high-rep glute work'},
   // TRAPS / UPPER BACK
   {n:'Barbell Shrug',m:'Traps',e:'barbell',t:'Hold bar at thighs, shrug shoulders straight up — no rolling'},
   {n:'Dumbbell Shrug',m:'Traps',e:'dumbbell',t:'Dumbbells at sides, shrug up and hold 1 second at top'},
   {n:'Behind-the-Back Shrug',m:'Traps',e:'barbell',t:'Bar behind glutes, shrug up — unique rear trap activation'},
+  {n:'Trap Bar Carry',m:'Traps',e:'barbell',t:'Heavy loaded carries with trap bar to build traps, grip, and posture under load'},
+  {n:'Cable Upright Row',m:'Traps',e:'cable',t:'Cable path keeps tension on upper traps and delts through the whole pull'},
   // LOWER BACK
   {n:'Back Extension',m:'Lower Back',e:'machine',t:'45° or flat bench, hinge at hips, extend to neutral spine'},
   {n:'Good Morning',m:'Lower Back',e:'barbell',t:'Bar on upper back, hinge forward keeping back flat, drive hips'},
   {n:'Hyperextension',m:'Lower Back',e:'bodyweight',t:'On GHD or 45° bench, extend until body is straight — don\'t hyperextend'},
+  {n:'Reverse Hyper',m:'Lower Back',e:'machine',t:'Swing the legs under control for posterior-chain work with low spinal fatigue'},
   // FOREARMS
   {n:'Wrist Curl',m:'Forearms',e:'barbell',t:'Forearms on thighs, wrist curls with full range of motion'},
   {n:'Reverse Wrist Curl',m:'Forearms',e:'barbell',t:'Overhand grip, curl wrists up — targets extensors'},
   {n:'Farmer\'s Carry',m:'Forearms',e:'dumbbell',t:'Heavy dumbbells at sides, walk with upright posture — grip killer'},
+  {n:'Plate Pinch Hold',m:'Forearms',e:'plate',t:'Pinch smooth plates together and hold for thumb and crushing-grip strength'},
+  {n:'Behind-The-Back Wrist Curl',m:'Forearms',e:'barbell',t:'Bar held behind hips for direct forearm flexor burn and pump'},
 ];
 
 const _EX_LIB_MUSCLES = ['All','Chest','Back','Shoulders','Biceps','Triceps','Core','Legs','Glutes','Calves','Traps','Lower Back','Forearms'];
 let _exLibMuscle = 'All';
+let communityExercises = [];
+
+function _exerciseCatalog() {
+  if (typeof getMergedExerciseCatalog === 'function') {
+    const merged = getMergedExerciseCatalog(EXERCISE_DB);
+    communityExercises = merged.filter(e => e && e.shared);
+    return merged;
+  }
+  return EXERCISE_DB;
+}
+
+async function _refreshCommunityExercises(onDone) {
+  if (typeof ensureCommunityExercisesLoaded === 'function') {
+    try { await ensureCommunityExercisesLoaded(); } catch (_e) {}
+  }
+  const merged = _exerciseCatalog();
+  if (typeof onDone === 'function') onDone(merged);
+  return merged;
+}
+
+function _exerciseAddCta(query, context) {
+  const safeQuery = String(query || '').trim().replace(/"/g, '&quot;');
+  const muscle = selectedMuscle || (_exLibMuscle !== 'All' ? _exLibMuscle : 'Core');
+  const ctx = context === 'autocomplete' ? 'autocomplete' : 'library';
+  return `<div class="ex-lib-empty-state">
+    <div class="ex-lib-empty-title">Workout not found? Add it</div>
+    <div class="ex-lib-empty-sub">Save it once and make it available for all users immediately.</div>
+    <input id="ex-add-name-${ctx}" class="ex-lib-search" value="${safeQuery}" placeholder="Exercise name">
+    <div class="ex-lib-add-grid">
+      <select id="ex-add-muscle-${ctx}" class="meal-input">
+        ${_EX_LIB_MUSCLES.filter(m => m !== 'All').map(m => `<option value="${m}"${m===muscle?' selected':''}>${m}</option>`).join('')}
+      </select>
+      <select id="ex-add-equipment-${ctx}" class="meal-input">
+        ${['barbell','dumbbell','machine','cable','bodyweight','band','smith','other'].map(e => `<option value="${e}">${e}</option>`).join('')}
+      </select>
+    </div>
+    <input id="ex-add-tip-${ctx}" class="ex-lib-search" placeholder="Optional tip for other users">
+    <button class="meal-btn" type="button" onclick="addMissingWeightedExercise('${ctx}')">Add workout</button>
+  </div>`;
+}
 
 function openExLib() {
   _exLibMuscle = 'All';
@@ -108,6 +161,7 @@ function openExLib() {
   if (srch) srch.value = '';
   renderExLibFilters();
   renderExLib();
+  _refreshCommunityExercises(() => renderExLib());
   document.getElementById('ex-lib-modal').classList.add('open');
   setTimeout(() => { if (srch) srch.focus(); }, 300);
 }
@@ -126,13 +180,13 @@ function renderExLibFilters() {
 
 function renderExLib() {
   const q = (document.getElementById('ex-lib-search')?.value || '').toLowerCase();
-  let results = EXERCISE_DB;
+  let results = _exerciseCatalog();
   if (_exLibMuscle !== 'All') results = results.filter(e => e.m === _exLibMuscle);
   if (q) results = results.filter(e => e.n.toLowerCase().includes(q) || e.e.toLowerCase().includes(q) || e.m.toLowerCase().includes(q));
   const list = document.getElementById('ex-lib-list');
   if (!list) return;
   if (!results.length) {
-    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text3);font-family:\'DM Mono\',monospace;font-size:12px;">No exercises found</div>';
+    list.innerHTML = _exerciseAddCta(q, 'library');
     return;
   }
   list.innerHTML = results.map(e =>
@@ -161,7 +215,32 @@ function pickExLibExercise(name, muscle) {
   }
 }
 
+async function addMissingWeightedExercise(context) {
+  const ctx = context === 'autocomplete' ? 'autocomplete' : 'library';
+  const name = (document.getElementById(`ex-add-name-${ctx}`)?.value || '').trim();
+  const muscle = (document.getElementById(`ex-add-muscle-${ctx}`)?.value || selectedMuscle || 'Core').trim();
+  const equipment = (document.getElementById(`ex-add-equipment-${ctx}`)?.value || 'other').trim();
+  const tip = (document.getElementById(`ex-add-tip-${ctx}`)?.value || '').trim();
+  if (!name) {
+    if (typeof showToast === 'function') showToast('Enter an exercise name first', 'warn');
+    return;
+  }
+  try {
+    const created = typeof addCommunityExercise === 'function'
+      ? await addCommunityExercise({ name, muscle, equipment, tip })
+      : { n: name, m: muscle, e: equipment, t: tip };
+    _exerciseCatalog();
+    pickExLibExercise(created.n || name, created.m || muscle);
+    renderExLib();
+    if (typeof showToast === 'function') showToast('Workout added for all users', 'success');
+  } catch (err) {
+    console.warn('[FORGE community] add exercise failed', err);
+    if (typeof showToast === 'function') showToast('Unable to add workout right now', 'warn');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  _refreshCommunityExercises();
   // Wire SVG zone clicks → open overlay
   document.querySelectorAll('.body-zone').forEach(zone => {
     zone.addEventListener('click', () => selectMuscle(zone.dataset.muscle, false));

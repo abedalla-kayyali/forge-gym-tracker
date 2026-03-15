@@ -8,6 +8,7 @@ const requiredFiles = [
   'sw.js',
   'css/main.css',
   'js/storage.js',
+  'js/community-library.js',
   'js/ghost-autocomplete.js',
   'js/feedback-ui.js',
   'js/recovery-plate.js',
@@ -79,6 +80,7 @@ if (fs.existsSync(indexPath)) {
 
   const requiredSnippets = [
     '<script src="js/storage.js"></script>',
+    '<script src="js/community-library.js"></script>',
     '<script src="js/ghost-autocomplete.js"></script>',
     '<script src="js/feedback-ui.js"></script>',
     '<script src="js/recovery-plate.js"></script>',
@@ -215,9 +217,33 @@ if (fs.existsSync(duelsPath)) {
 }
 
 const socialUiPath = path.join(ROOT, 'js', 'social-ui.js');
+const communityLibraryPath = path.join(ROOT, 'js', 'community-library.js');
+const exercisesPath = path.join(ROOT, 'js', 'exercises.js');
+const bodyweightPath = path.join(ROOT, 'js', 'bodyweight-mode.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
   if (!html.includes('<script src="js/social-ui.js"></script>')) fail('Missing social UI script include in index.html');
+}
+
+if (fs.existsSync(communityLibraryPath)) {
+  const community = fs.readFileSync(communityLibraryPath, 'utf8');
+  if (!community.includes('community_exercises')) fail('Missing shared exercise catalog hook');
+  if (!community.includes('community_meals')) fail('Missing shared meal catalog hook');
+  if (!community.includes('addCommunityExercise')) fail('Missing shared exercise create hook');
+  if (!community.includes('addCommunityMeal')) fail('Missing shared meal create hook');
+}
+
+if (fs.existsSync(exercisesPath)) {
+  const exercises = fs.readFileSync(exercisesPath, 'utf8');
+  if (!exercises.includes('Workout not found? Add it')) fail('Missing weighted workout miss-state add CTA');
+  if (!exercises.includes('communityExercises')) fail('Missing weighted shared exercise merge hook');
+}
+
+if (fs.existsSync(bodyweightPath)) {
+  const bodyweight = fs.readFileSync(bodyweightPath, 'utf8');
+  if (!bodyweight.includes('_bwSetStreak')) fail('Missing bodyweight live set streak state');
+  if (!bodyweight.includes('_bwBestRun')) fail('Missing bodyweight best run state');
+  if (!bodyweight.includes('bw-set-streak')) fail('Missing bodyweight streak UI hook');
 }
 if (fs.existsSync(socialUiPath)) {
   const socialUi = fs.readFileSync(socialUiPath, 'utf8');
