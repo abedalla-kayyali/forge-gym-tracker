@@ -220,6 +220,7 @@ const socialUiPath = path.join(ROOT, 'js', 'social-ui.js');
 const communityLibraryPath = path.join(ROOT, 'js', 'community-library.js');
 const exercisesPath = path.join(ROOT, 'js', 'exercises.js');
 const bodyweightPath = path.join(ROOT, 'js', 'bodyweight-mode.js');
+const dashboardHistoryPath = path.join(ROOT, 'js', 'dashboard-history.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
   if (!html.includes('<script src="js/social-ui.js"></script>')) fail('Missing social UI script include in index.html');
@@ -244,6 +245,15 @@ if (fs.existsSync(bodyweightPath)) {
   if (!bodyweight.includes('_bwSetStreak')) fail('Missing bodyweight live set streak state');
   if (!bodyweight.includes('_bwBestRun')) fail('Missing bodyweight best run state');
   if (!bodyweight.includes('bw-set-streak')) fail('Missing bodyweight streak UI hook');
+}
+if (fs.existsSync(dashboardHistoryPath)) {
+  const dash = fs.readFileSync(dashboardHistoryPath, 'utf8');
+  if (!dash.includes('prg-ready-dashboard')) fail('Readiness dashboard shell is missing');
+  if (!dash.includes('prg-ready-tile-grid')) fail('Readiness decomposition tile grid is missing');
+  if (!dash.includes('prg-ready-contribs')) fail('Readiness contribution rail is missing');
+  if (!dash.includes('prg-ready-insights')) fail('Readiness insight rail is missing');
+  if (!dash.includes('Cardio Support')) fail('Readiness cardio support metric is missing');
+  if (!dash.includes('Momentum')) fail('Readiness momentum metric is missing');
 }
 if (fs.existsSync(socialUiPath)) {
   const socialUi = fs.readFileSync(socialUiPath, 'utf8');

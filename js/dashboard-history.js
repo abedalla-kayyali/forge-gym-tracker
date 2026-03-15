@@ -735,89 +735,268 @@ function _renderProgressReadinessHub() {
   const checkin = clamp(state.readiness?.checkinScore ?? 60, 0, 100);
   const freshness = clamp(state.readiness?.freshnessScore ?? 60, 0, 100);
   const vol14 = clamp(state.trends?.weightedVol14 ?? 0, 0, 200000);
+  const volPrev14 = clamp(state.trends?.weightedVolPrev14 ?? 0, 0, 200000);
   const cardio14 = clamp(state.trends?.cardioMins14 ?? 0, 0, 3000);
+  const cardioPrev14 = clamp(state.trends?.cardioMinsPrev14 ?? 0, 0, 3000);
+  const active7 = clamp(state.consistency?.activeDays7 ?? 0, 0, 7);
+  const active28 = clamp(state.consistency?.activeDays28 ?? 0, 0, 28);
   const strain = clamp(Math.round(((vol14 / 12000) * 70) + ((cardio14 / 240) * 30)), 0, 100);
   const load = strain;
+  const consistency = clamp(Math.round(((active7 / 5) * 72) + ((active28 / 18) * 28)), 0, 100);
+  const cardioSupport = clamp(Math.round(((cardio14 / 180) * 70) + (cardio14 >= cardioPrev14 ? 22 : 10)), 0, 100);
+  const weightedMomentum = volPrev14 > 0 ? ((vol14 - volPrev14) / volPrev14) * 100 : (vol14 > 0 ? 18 : 0);
+  const cardioMomentum = cardioPrev14 > 0 ? ((cardio14 - cardioPrev14) / cardioPrev14) * 100 : (cardio14 > 0 ? 14 : 0);
+  const momentum = clamp(Math.round(50 + (weightedMomentum * 0.35) + (cardioMomentum * 0.25)), 0, 100);
+  const positiveBaseline = Math.round((checkin + freshness + consistency + cardioSupport + momentum + (100 - load)) / 6);
+  const trendDelta = readiness - positiveBaseline;
   const ringColor = readiness >= 75 ? '#2ecc71' : (readiness >= 55 ? '#f39c12' : '#e74c3c');
+  const readinessTone = readiness >= 85
+    ? tx('Primed', 'جاهز بقوة')
+    : readiness >= 70
+      ? tx('Stable', 'مستقر')
+      : readiness >= 55
+        ? tx('Manage Load', 'اضبط الحمل')
+        : tx('Recover First', 'استعد أولًا');
+  const readinessChip = `${trendDelta >= 0 ? '+' : ''}${trendDelta} ${tx('vs baseline', 'مقارنة بالخط الأساسي')}`;
+  const detailStatus = (score, invert) => {
+    const val = invert ? 100 - score : score;
+    if (val >= 75) return tx('Strong', 'قوي');
+    if (val >= 55) return tx('Neutral', 'متوسط');
+    return tx('Watch', 'انتبه');
+  };
+  const leadClass = (score, invert) => {
+    const val = invert ? 100 - score : score;
+    if (val >= 75) return 'good';
+    if (val >= 55) return 'warn';
+    return 'alert';
+  };
+  const metrics = [
+    {
+      key: 'checkin',
+      label: tx('Check-in Quality', 'جودة التقييم اليومي'),
+      score: checkin,
+      invert: false,
+      detail: tx(
+        'Built from sleep, energy, and mood. Better sleep quality and stable pre-workout fueling move this up fastest.',
+        'تعتمد على النوم والطاقة والمزاج. أسرع طريقة لرفعها هي نوم أفضل وتغذية ثابتة قبل التمرين.'
+      ),
+      why: tx(
+        `Current check-in is ${checkin}/100 from your daily self-report.`,
+        `التقييم الحالي ${checkin}/100 بناءً على تسجيلك اليومي.`
+      ),
+      next: tx(
+        'Protect sleep, hydrate earlier, and avoid starting heavy sessions under-fueled.',
+        'حافظ على النوم، وابدأ الترطيب مبكرًا، ولا تدخل جلسة ثقيلة دون طاقة كافية.'
+      )
+    },
+    {
+      key: 'freshness',
+      label: tx('Freshness', 'الاستشفاء'),
+      score: freshness,
+      invert: false,
+      detail: tx(
+        'Tracks how fresh you are from recent work. Lower freshness means you should bias toward quality and technique today.',
+        'تقيس مدى جاهزيتك من الحمل الأخير. انخفاضها يعني أن الأفضل اليوم هو الجودة والتقنية بدل الدفع الكامل.'
+      ),
+      why: tx(
+        `Freshness sits at ${freshness}/100 based on recent session timing.`,
+        `الاستشفاء عند ${freshness}/100 بناءً على توقيت الجلسات الأخيرة.`
+      ),
+      next: tx(
+        'If this stays low, reduce session density or split heavy work more intelligently.',
+        'إذا بقيت منخفضة، خفف كثافة الجلسات أو وزع العمل الثقيل بشكل أذكى.'
+      )
+    },
+    {
+      key: 'load',
+      label: tx('Load Pressure', 'ضغط الحمل'),
+      score: load,
+      invert: true,
+      detail: tx(
+        'Derived from 14-day weighted volume and cardio minutes. Higher pressure is useful for growth, but it pushes readiness down.',
+        'مستخرجة من حجم الأوزان ودقائق الكارديو خلال 14 يوم. ارتفاع الضغط مفيد للتطور لكنه يخفض الجاهزية.'
+      ),
+      why: tx(
+        `Recent weighted load is ${vol14.toLocaleString()}kg and cardio support is ${cardio14}m over the last 14 days.`,
+        `الحمل الحديث هو ${vol14.toLocaleString()} كجم مع ${cardio14} دقيقة كارديو خلال آخر 14 يومًا.`
+      ),
+      next: tx(
+        'Use this to decide whether to push intensity or keep the day sharp and efficient.',
+        'استخدمه لتحديد ما إذا كان اليوم مناسبًا للدفع أو الأفضل أن يكون حادًا وفعالًا فقط.'
+      )
+    },
+    {
+      key: 'consistency',
+      label: tx('Consistency', 'الانتظام'),
+      score: consistency,
+      invert: false,
+      detail: tx(
+        'Built from active training days across the last week and month. Consistency stabilizes readiness even when sessions vary.',
+        'تعتمد على أيام النشاط في الأسبوع والشهر. الانتظام يثبت الجاهزية حتى عند تغير نوع الجلسات.'
+      ),
+      why: tx(
+        `You trained ${active7}/7 active days this week and ${active28}/28 over the last month.`,
+        `تدرّبت ${active7}/7 أيام هذا الأسبوع و${active28}/28 خلال آخر شهر.`
+      ),
+      next: tx(
+        'A stable 4 to 5 day rhythm lifts this faster than random heavy spikes.',
+        'إيقاع ثابت من 4 إلى 5 أيام يرفع هذا المؤشر أسرع من الطفرات الثقيلة العشوائية.'
+      )
+    },
+    {
+      key: 'cardio',
+      label: tx('Cardio Support', 'دعم الكارديو'),
+      score: cardioSupport,
+      invert: false,
+      detail: tx(
+        'Recent conditioning supports recovery quality and work capacity. This rises when cardio is present without overwhelming total load.',
+        'الحالة القلبية الحديثة تدعم الاستشفاء والقدرة على العمل. ترتفع عندما يوجد كارديو منظم دون إفراط في الحمل.'
+      ),
+      why: tx(
+        `Cardio support reflects ${cardio14} minutes in 14 days versus ${cardioPrev14} in the previous block.`,
+        `يعكس هذا ${cardio14} دقيقة خلال 14 يومًا مقابل ${cardioPrev14} في الفترة السابقة.`
+      ),
+      next: tx(
+        'Short steady sessions or recovery walks can lift readiness support without taxing strength progress.',
+        'الجلسات الهادئة القصيرة أو المشي الاستشفائي يرفع الدعم دون أن يضر بتقدم القوة.'
+      )
+    },
+    {
+      key: 'momentum',
+      label: tx('Momentum', 'الزخم'),
+      score: momentum,
+      invert: false,
+      detail: tx(
+        'Momentum compares this recent block against the previous one. Positive momentum means your recent rhythm is building forward.',
+        'يقارن الزخم هذه الفترة بالفترة السابقة. الزخم الإيجابي يعني أن الإيقاع الحالي يتجه للأمام.'
+      ),
+      why: tx(
+        `Weighted trend ${weightedMomentum >= 0 ? '+' : ''}${Math.round(weightedMomentum)}% and cardio trend ${cardioMomentum >= 0 ? '+' : ''}${Math.round(cardioMomentum)}%.`,
+        `اتجاه الأوزان ${weightedMomentum >= 0 ? '+' : ''}${Math.round(weightedMomentum)}٪ واتجاه الكارديو ${cardioMomentum >= 0 ? '+' : ''}${Math.round(cardioMomentum)}٪.`
+      ),
+      next: tx(
+        'Use positive momentum to push productive sessions. If momentum fades, tighten routine quality before adding more load.',
+        'استغل الزخم الإيجابي لدفع جلسات منتجة. وإذا ضعف الزخم، حسّن انتظام الروتين قبل زيادة الحمل.'
+      )
+    }
+  ];
+  const weakestMetric = metrics
+    .map((m) => ({ ...m, usableScore: m.invert ? 100 - m.score : m.score }))
+    .sort((a, b) => a.usableScore - b.usableScore)[0];
+  const strongestMetric = metrics
+    .map((m) => ({ ...m, usableScore: m.invert ? 100 - m.score : m.score }))
+    .sort((a, b) => b.usableScore - a.usableScore)[0];
+  const insightItems = [
+    strongestMetric
+      ? tx(
+          `${strongestMetric.label} is carrying today. Keep that rhythm stable.`,
+          `مؤشر ${strongestMetric.label} هو أقوى داعم اليوم. حافظ على هذا الإيقاع.`
+        )
+      : '',
+    load >= 72
+      ? tx('Load pressure is elevated. A sharper, shorter session could protect tomorrow.', 'ضغط الحمل مرتفع. جلسة أقصر وأكثر دقة قد تحمي جاهزية الغد.')
+      : tx('Load pressure is under control. This is a good window for quality output.', 'ضغط الحمل تحت السيطرة. هذه نافذة جيدة لإخراج قوي بجودة عالية.'),
+    weakestMetric
+      ? tx(
+          `${weakestMetric.label} is the main limiter. Fix this first for the fastest readiness gain.`,
+          `مؤشر ${weakestMetric.label} هو القيد الرئيسي الآن. إصلاحه أولًا يرفع الجاهزية أسرع.`
+        )
+      : ''
+  ].filter(Boolean);
 
   hub.innerHTML = `
     <div class="panel-header">
       <div class="panel-title">${tx('Readiness Breakdown', 'تفصيل الجاهزية')}</div>
       <div class="panel-sub">${tx('Interactive score composition', 'تفصيل تفاعلي لمكونات النتيجة')}</div>
     </div>
-    <div class="prg-ready-grid">
-      <div class="prg-ready-ring" style="--pct:${readiness};--ring-color:${ringColor};">
-        <div class="prg-ready-center">
-          <div class="prg-ready-score">${readiness}</div>
-          <div class="prg-ready-unit">/100</div>
+    <div class="prg-ready-dashboard">
+      <div class="prg-ready-grid">
+        <div class="prg-ready-ring" style="--pct:${readiness};--ring-color:${ringColor};">
+          <div class="prg-ready-center">
+            <div class="prg-ready-score">${readiness}</div>
+            <div class="prg-ready-unit">/100</div>
+          </div>
+        </div>
+        <div class="prg-ready-copy">
+          <div class="prg-ready-kicker">${tx('Today Readiness', 'جاهزية اليوم')}</div>
+          <div class="prg-ready-head">${readinessTone}</div>
+          <div class="prg-ready-msg">${state.readiness?.message || tx('Train with intent and smart load control.', 'تدرّب بذكاء وتحكم في الحمل التدريبي.')}</div>
+          <div class="prg-ready-tags">
+            <span class="prg-tag ${readiness >= 75 ? 'good' : readiness >= 55 ? 'warn' : 'alert'}">${tx('Overall', 'الإجمالي')}</span>
+            <span class="prg-tag ${checkin >= 70 ? 'good' : checkin >= 50 ? 'warn' : 'alert'}">${tx('Check-in', 'التقييم اليومي')}</span>
+            <span class="prg-tag ${freshness >= 70 ? 'good' : freshness >= 50 ? 'warn' : 'alert'}">${tx('Recovery', 'التعافي')}</span>
+            <span class="prg-trend-chip ${trendDelta >= 0 ? 'up' : 'down'}">${readinessChip}</span>
+          </div>
         </div>
       </div>
-      <div class="prg-ready-copy">
-        <div class="prg-ready-head">${tx('Today Readiness', 'جاهزية اليوم')}</div>
-        <div class="prg-ready-msg">${state.readiness?.message || tx('Train with intent and smart load control.', 'تدرّب بذكاء وتحكم في الحمل التدريبي.')}</div>
-        <div class="prg-ready-tags">
-          <span class="prg-tag ${readiness >= 75 ? 'good' : readiness >= 55 ? 'warn' : 'alert'}">${tx('Overall', 'الإجمالي')}</span>
-          <span class="prg-tag ${checkin >= 70 ? 'good' : checkin >= 50 ? 'warn' : 'alert'}">${tx('Check-in', 'التقييم اليومي')}</span>
-          <span class="prg-tag ${freshness >= 70 ? 'good' : freshness >= 50 ? 'warn' : 'alert'}">${tx('Recovery', 'التعافي')}</span>
+      <div class="prg-ready-tile-grid">
+        ${metrics.map((metric) => `
+          <button class="prg-factor ${leadClass(metric.score, metric.invert)}" data-factor="${metric.key}">
+            <span>${metric.label}</span>
+            <strong>${metric.score}</strong>
+            <small>${detailStatus(metric.score, metric.invert)}</small>
+            <em><i style="width:${metric.score}%;"></i></em>
+          </button>
+        `).join('')}
+      </div>
+      <div class="prg-ready-contribs">
+        <div class="prg-contrib-head">
+          <span>${tx('Contribution Mix', 'مزيج المساهمة')}</span>
+          <small>${tx('Gain and drain on readiness', 'ما يدعم أو يضغط الجاهزية')}</small>
+        </div>
+        <div class="prg-contrib-list">
+          ${metrics.map((metric) => `
+            <div class="prg-contrib ${metric.invert ? 'drain' : 'gain'}">
+              <span>${metric.label}</span>
+              <em><i style="width:${metric.invert ? metric.score : (metric.score)}%;"></i></em>
+              <strong>${metric.invert ? tx('Drain', 'ضغط') : tx('Support', 'دعم')}</strong>
+            </div>
+          `).join('')}
         </div>
       </div>
-    </div>
-    <div class="prg-factor-list">
-      <button class="prg-factor" data-factor="checkin">
-        <span>${tx('Check-in Quality', 'جودة التقييم اليومي')}</span>
-        <strong>${checkin}</strong>
-        <em><i style="width:${checkin}%;"></i></em>
-      </button>
-      <button class="prg-factor" data-factor="freshness">
-        <span>${tx('Freshness Window', 'نافذة الاستشفاء')}</span>
-        <strong>${freshness}</strong>
-        <em><i style="width:${freshness}%;"></i></em>
-      </button>
-      <button class="prg-factor" data-factor="load">
-        <span>${tx('Load Pressure', 'ضغط الحمل')}</span>
-        <strong>${load}</strong>
-        <em><i style="width:${load}%;"></i></em>
-      </button>
+      <div class="prg-ready-insights">
+        ${insightItems.map((line) => `<div class="prg-insight">${line}</div>`).join('')}
+      </div>
     </div>
     <div class="prg-ready-detail" id="progress-readiness-details"></div>
   `;
 
   const details = hub.querySelector('#progress-readiness-details');
-  const info = {
-    checkin: {
-      title: tx('Check-in Quality', 'جودة التقييم اليومي'),
-      text: tx(
-        'Built from sleep, energy, and mood. Improve this by prioritizing sleep quality and pre-workout nutrition.',
-        'تعتمد على النوم والطاقة والمزاج. حسّنها عبر نوم أفضل وتغذية مناسبة قبل التمرين.'
-      )
-    },
-    freshness: {
-      title: tx('Freshness Window', 'نافذة الاستشفاء'),
-      text: tx(
-        'Measures recent training recency. If low, reduce intensity and focus on technique plus mobility.',
-        'تقيس حداثة الجلسات الأخيرة. إذا كانت منخفضة، خفف الشدة وركز على التقنية والمرونة.'
-      )
-    },
-    load: {
-      title: tx('Load Pressure', 'ضغط الحمل'),
-      text: tx(
-        'Derived from 14-day weighted volume and cardio minutes. Lower pressure means better readiness to push.',
-        'مستخلصة من حجم الأوزان ودقائق الكارديو خلال 14 يوم. انخفاض الضغط يعني جاهزية أعلى للدفع.'
-      )
-    }
-  };
+  const info = metrics.reduce((acc, metric) => {
+    acc[metric.key] = metric;
+    return acc;
+  }, {});
 
   const paint = (key) => {
     const pack = info[key] || info.checkin;
     hub.querySelectorAll('.prg-factor').forEach(b => b.classList.toggle('active', b.dataset.factor === key));
     if (details) {
-      details.innerHTML = `<strong>${pack.title}</strong><p>${pack.text}</p>`;
+      details.innerHTML = `
+        <div class="prg-ready-detail-top">
+          <div>
+            <strong>${pack.label}</strong>
+            <small class="${leadClass(pack.score, pack.invert)}">${detailStatus(pack.score, pack.invert)}</small>
+          </div>
+          <div class="prg-ready-detail-score">${pack.score}</div>
+        </div>
+        <p>${pack.detail}</p>
+        <div class="prg-ready-detail-meta">
+          <div class="prg-ready-detail-card">
+            <span>${tx('Why it sits here', 'لماذا هو عند هذا المستوى')}</span>
+            <strong>${pack.why}</strong>
+          </div>
+          <div class="prg-ready-detail-card">
+            <span>${tx('Next move', 'الخطوة التالية')}</span>
+            <strong>${pack.next}</strong>
+          </div>
+        </div>
+      `;
     }
   };
   hub.querySelectorAll('.prg-factor').forEach(btn => {
     btn.onclick = () => paint(btn.dataset.factor);
   });
-  paint('checkin');
+  paint(weakestMetric?.key || 'checkin');
 }
 
 let _progressAccordionInit = false;
