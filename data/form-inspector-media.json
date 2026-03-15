@@ -1,0 +1,54 @@
+{
+  "barbell bench press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif"
+  },
+  "push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif"
+  },
+  "bulgarian split squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bulgarian-Split-Squat.gif"
+  },
+  "archer push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Archer-Push-Up.gif"
+  },
+  "pistol squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pistol-Squat.gif"
+  },
+  "bodyweight row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Inverted-Row.gif"
+  },
+  "elevated row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Decline-Inverted-Row.gif"
+  },
+  "archer row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Archer-Inverted-Row.gif"
+  },
+  "wall handstand": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Wall-Handstand.gif"
+  },
+  "freestanding handstand": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Handstand.gif"
+  },
+  "handstand push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Handstand-Push-Up.gif"
+  },
+  "dragon flag": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dragon-Flag.gif"
+  },
+  "jump squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Squat.gif"
+  }
+}

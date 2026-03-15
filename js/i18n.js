@@ -62,6 +62,7 @@ const LANGS = {
     'form.muscle': 'Muscle Group',
     'form.exercise': 'Exercise Name',
     'form.exercisePlaceholder': 'e.g. Bench Press, Squatâ€¦',
+    'form.form': 'Form',
     'form.set': 'SET',
     'form.sets': 'Sets',
     'form.weight': 'WEIGHT',
@@ -78,6 +79,8 @@ const LANGS = {
     'form.quickSelect': 'Quick Select',
     'form.recent': 'Recent',
     'form.targeting': 'Targeting',
+    'form.select': 'Select Exercise',
+    'form.viewTechnique': 'View Technique',
 
     // BW workout
     'bw.title': 'Bodyweight Workout',
@@ -796,6 +799,9 @@ const LANGS = {
     'form.quickSelect': 'ط§ط®طھظٹط§ط± ط³ط±ظٹط¹',
     'form.recent': 'ط§ظ„ط£ط®ظٹط±ط©',
     'form.targeting': 'ط§ط³طھظ‡ط¯ط§ظپ',
+    'form.form': 'ط§ظ„ط´ظƒظ„',
+    'form.select': 'ط§ط®طھط±',
+    'form.viewTechnique': 'ط¹ط±ط¶ ط§ظ„ط³ظ„ظƒط©',
 
     // BW workout
     'bw.title': 'طھظ…ط±ظٹظ† ظˆط²ظ† ط§ظ„ط¬ط³ظ…',

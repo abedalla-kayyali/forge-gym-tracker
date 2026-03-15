@@ -1,5 +1,6 @@
 node_modules/
 .playwright-cli/
+.worktrees/
 *.log
 check_output.txt
 .superpowers/
