@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v132';
-window.FORGE_BUILD   = '2026-03-15 (full premium coach redesign)';
+window.FORGE_VERSION = 'v133';
+window.FORGE_BUILD   = '2026-03-15 (premium stats nutrition console)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

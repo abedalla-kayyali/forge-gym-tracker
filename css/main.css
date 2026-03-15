@@ -2218,6 +2218,105 @@ body[data-theme="solar"] .lmb-sub{color:#b06020;}
 .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);}
 .panel-badge{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;background:var(--green-dim);color:var(--green);letter-spacing:1px;}
 .panel-body{padding:16px;}
+.nutri-control-shell{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.nutri-control-topline,
+.nutri-insights-topline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:2px 2px 0;
+}
+.nutri-control-kicker{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:1.9px;
+  text-transform:uppercase;
+  color:#99d2b0;
+}
+.nutri-control-live{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:#06261a;
+  background:linear-gradient(90deg,#56efae,#6fd0ff);
+  border-radius:999px;
+  padding:4px 8px;
+}
+.nutri-macro-command-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+.nutri-command-card{
+  padding:14px 14px 12px;
+  border-radius:16px;
+  border:1px solid rgba(111,196,162,.16);
+  background:
+    radial-gradient(circle at top right, rgba(95,215,255,.08), transparent 28%),
+    linear-gradient(180deg,rgba(13,27,23,.98),rgba(9,18,16,.98));
+  box-shadow:0 12px 28px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.nutri-command-card span{
+  display:block;
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:#8fbca8;
+}
+.nutri-command-card strong{
+  display:block;
+  margin-top:8px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:32px;
+  line-height:.95;
+  color:#f2fff8;
+}
+.nutri-command-card strong small{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  color:#9ac3b0;
+  margin-left:6px;
+}
+.nutri-command-card em{
+  display:block;
+  margin-top:7px;
+  font-style:normal;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#9cbfaf;
+}
+.nutri-command-bar{
+  margin-top:9px;
+  height:5px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  overflow:hidden;
+}
+.nutri-command-bar > div{
+  height:100%;
+  border-radius:999px;
+}
+.nutri-period-block{
+  border:1px solid rgba(111,196,162,.12);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(13,24,21,.96),rgba(9,16,14,.99));
+  padding:14px;
+}
+.nutri-period-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;
+  letter-spacing:1.4px;
+  color:#effff7;
+  margin-bottom:10px;
+}
 .nutri-ana-grid{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -2396,6 +2495,7 @@ body[data-theme="solar"] .lmb-sub{color:#b06020;}
   margin-bottom:10px;
 }
 @media (max-width:720px){
+  .nutri-macro-command-row{grid-template-columns:1fr 1fr;}
   .nutri-ana-grid{grid-template-columns:1fr;}
   .nutri-deep-grid{grid-template-columns:1fr;}
   .nutri-insight-body{font-size:12px;}
@@ -9574,7 +9674,147 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 }
 .nutri-icon svg{width:100%;height:100%;}
 /* Today zone */
-.nut-today-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:14px; margin:0 14px 14px; }
+.nut-today-card { background:var(--card); border:1px solid var(--border2); border-radius:12px; padding:14px; margin:0 0 14px; }
+.nutri-premium-hero{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(114,202,165,.18);
+  background:
+    radial-gradient(circle at top right, rgba(92,233,180,.16), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(95,215,255,.1), transparent 22%),
+    linear-gradient(180deg,rgba(11,27,23,.98),rgba(8,17,15,.99));
+  box-shadow:0 18px 34px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.nutri-premium-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:14px;
+}
+.nutri-premium-kicker{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:#9bd3b5;
+}
+.nutri-premium-live{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.1px;
+  text-transform:uppercase;
+  padding:4px 8px;
+  border-radius:999px;
+  color:#d9fff0;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.05);
+}
+.nutri-premium-main{
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:16px;
+  align-items:center;
+}
+.nutri-premium-scorecard{
+  min-height:118px;
+  border-radius:24px;
+  border:1px solid rgba(118,255,199,.18);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(95,255,191,.16), transparent 44%),
+    linear-gradient(180deg,rgba(15,38,32,.98),rgba(9,18,16,.98));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.nutri-premium-scorecard.good{box-shadow:0 0 24px rgba(87,232,167,.12);}
+.nutri-premium-scorecard.info{box-shadow:0 0 24px rgba(95,215,255,.12);}
+.nutri-premium-scorecard.warn{box-shadow:0 0 24px rgba(243,179,77,.12);}
+.nutri-premium-scorecard.alert{box-shadow:0 0 24px rgba(255,122,122,.12);}
+.nutri-premium-score{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:58px;
+  line-height:.9;
+  color:#f4fff9;
+}
+.nutri-premium-score-label{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:#8fbca8;
+  margin-top:6px;
+}
+.nutri-premium-copy{display:flex;flex-direction:column;gap:7px;}
+.nutri-premium-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:34px;
+  line-height:.95;
+  letter-spacing:1.2px;
+  color:#effff7;
+}
+.nutri-premium-sub{
+  font-size:13px;
+  line-height:1.6;
+  color:#9fc4b1;
+}
+.nutri-premium-actionline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  color:#cceada;
+}
+.nutri-premium-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+}
+.nutri-premium-badge.good{color:#86ffc8;background:rgba(76,255,177,.12);}
+.nutri-premium-badge.info{color:#7cdfff;background:rgba(95,215,255,.12);}
+.nutri-premium-badge.warn{color:#ffd36c;background:rgba(243,179,77,.12);}
+.nutri-premium-badge.alert{color:#ffabab;background:rgba(255,122,122,.12);}
+.nutri-premium-badge.neutral{color:#d9fff0;}
+.nutri-hero-progress{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+.nutri-hero-track{
+  position:relative;
+  min-height:44px;
+  border-radius:14px;
+  border:1px solid rgba(112,194,161,.12);
+  background:rgba(255,255,255,.03);
+  overflow:hidden;
+}
+.nutri-hero-track span{
+  position:absolute;
+  inset:0 auto 0 0;
+  opacity:.9;
+}
+.nutri-hero-track label{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  height:100%;
+  padding:0 12px;
+  margin:0;
+  color:#effff7;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
 .nut-today-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
 .nut-today-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; }
 .nut-today-meals-badge { font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); background:rgba(57,255,143,.12); border-radius:6px; padding:2px 7px; }
@@ -9633,6 +9873,9 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .sg-label .nutri-icon{width:12px;height:12px;opacity:.92;margin-right:5px;}
 .nut-chart-head .nut-chart-label{margin-bottom:0;}
 @media (max-width:720px){
+  .nutri-premium-main{grid-template-columns:1fr;gap:12px;}
+  .nutri-premium-title{font-size:28px;}
+  .nutri-hero-progress{grid-template-columns:1fr;}
   .nut-chart-card.wide { grid-column: span 1; }
 }
 

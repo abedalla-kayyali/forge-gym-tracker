@@ -255,6 +255,9 @@ if (fs.existsSync(dashboardHistoryPath)) {
   if (!dash.includes('prg-ready-insights')) fail('Readiness insight rail is missing');
   if (!dash.includes('Cardio Support')) fail('Readiness cardio support metric is missing');
   if (!dash.includes('Momentum')) fail('Readiness momentum metric is missing');
+  if (!dash.includes('nutri-control-shell')) fail('Stats nutrition premium shell is missing');
+  if (!dash.includes('nutri-macro-command-row')) fail('Stats nutrition macro command row is missing');
+  if (!dash.includes('nutri-premium-hero')) fail('Stats nutrition hero is missing');
 }
 if (fs.existsSync(coachStatePath)) {
   const coachState = fs.readFileSync(coachStatePath, 'utf8');

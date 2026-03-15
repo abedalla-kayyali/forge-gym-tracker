@@ -2364,25 +2364,45 @@ function _renderNutTodayZone(zone, targets) {
   const ml = typeof mealsLog !== 'undefined' ? mealsLog : {};
   const todayMeals = Array.isArray(ml[todayKey]) ? ml[todayKey] : [];
   if (!todayMeals.length) {
-    _dhSetHtml(zone, '<div class="nut-today-card"><div class="nut-today-empty">' + _nutriIcon('meal') + ' No meals logged today - <a onclick="if(window._coachFocusNutritionLog){window._coachFocusNutritionLog();}else{if(window.switchView){window.switchView(\'nutrition\',document.getElementById(\'bnav-nutrition\'));}else if(window.switchMainTab){window.switchMainTab(\'nutrition\');}setTimeout(()=>{const n=document.getElementById(\'meal-name-input\');if(n){try{n.focus();}catch(e){} n.scrollIntoView({behavior:\'smooth\',block:\'center\'});}},220);}" style="cursor:pointer">Log your first meal</a></div></div>');
+    _dhSetHtml(zone, '<div class="nutri-premium-hero nut-today-card"><div class="nutri-premium-head"><span class="nutri-premium-kicker">Nutrition Status</span><span class="nutri-premium-live">Live</span></div><div class="nutri-premium-main"><div class="nutri-premium-scorecard"><div class="nutri-premium-score">0</div><div class="nutri-premium-score-label">Today Score</div></div><div class="nutri-premium-copy"><div class="nutri-premium-title">Start logging meals</div><div class="nutri-premium-sub">No meals logged today yet. Add the first meal to unlock live fueling guidance.</div><div class="nutri-premium-actionline"><span class="nutri-premium-badge neutral">Empty</span><a onclick="if(window._coachFocusNutritionLog){window._coachFocusNutritionLog();}else{if(window.switchView){window.switchView(\'nutrition\',document.getElementById(\'bnav-nutrition\'));}else if(window.switchMainTab){window.switchMainTab(\'nutrition\');}setTimeout(()=>{const n=document.getElementById(\'meal-name-input\');if(n){try{n.focus();}catch(e){} n.scrollIntoView({behavior:\'smooth\',block:\'center\'});}},220);}" style="cursor:pointer">Log your first meal</a></div></div></div></div>');
     return;
   }
   const s = todayMeals.reduce((a, m) => { a.kcal += (+m.kcal||0); a.p += (+m.p||0); a.c += (+m.c||0); a.f += (+m.f||0); return a; }, { kcal:0, p:0, c:0, f:0 });
   const pct = (v, t) => Math.min(100, Math.round(v / Math.max(t, 1) * 100));
   const remaining = Math.max(0, Math.round(targets.targetCal - s.kcal));
+  const kcalPct = pct(s.kcal, targets.targetCal);
+  const pPct = pct(s.p, targets.proteinG);
+  const cPct = pct(s.c, targets.carbG);
+  const fPct = pct(s.f, targets.fatG);
+  const score = Math.round((kcalPct * 0.35) + (pPct * 0.4) + (cPct * 0.15) + (fPct * 0.1));
+  const verdict = score >= 90 ? 'Strong fueling day' : score >= 75 ? 'Fueling on track' : score >= 55 ? 'Coverage needs work' : 'Underfueled day';
+  const action = pPct < 90 ? 'Push protein in the next meal.' : remaining > 250 ? 'Calories are still under target.' : 'Hold the pace and close the day clean.';
+  const tone = score >= 90 ? 'good' : score >= 70 ? 'info' : score >= 50 ? 'warn' : 'alert';
   _dhSetHtml(zone, `
-<div class="nut-today-card">
-  <div class="nut-today-header">
-    <span class="nut-today-title">${_nutriIcon('meal')} TODAY</span>
-    <span class="nut-today-meals-badge">${todayMeals.length} meal${todayMeals.length !== 1 ? 's' : ''}</span>
+<div class="nutri-premium-hero nut-today-card">
+  <div class="nutri-premium-head">
+    <span class="nutri-premium-kicker">Nutrition Status</span>
+    <span class="nutri-premium-live">${todayMeals.length} meal${todayMeals.length !== 1 ? 's' : ''}</span>
   </div>
-  <div class="nut-today-kcal">${Math.round(s.kcal)}<span class="nut-today-kcal-target"> / ${Math.round(targets.targetCal)} kcal</span></div>
-  <div class="nut-today-remaining">${remaining > 0 ? remaining + ' kcal remaining' : 'Goal reached'}</div>
-  <div class="nut-cal-bar-wrap"><div class="nut-cal-bar-fill" style="width:${pct(s.kcal, targets.targetCal)}%"></div></div>
-  <div class="nut-macro-rows">
-    <div class="nut-macro-row"><span class="nut-macro-label">P</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.p, targets.proteinG)}%;background:#4ade80"></div></div><span class="nut-macro-val">${Math.round(s.p)}g / ${Math.round(targets.proteinG)}g</span></div>
-    <div class="nut-macro-row"><span class="nut-macro-label">C</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.c, targets.carbG)}%;background:#e6b84a"></div></div><span class="nut-macro-val">${Math.round(s.c)}g / ${Math.round(targets.carbG)}g</span></div>
-    <div class="nut-macro-row"><span class="nut-macro-label">F</span><div class="nut-macro-bar-wrap"><div class="nut-macro-bar-fill" style="width:${pct(s.f, targets.fatG)}%;background:#5b8dee"></div></div><span class="nut-macro-val">${Math.round(s.f)}g / ${Math.round(targets.fatG)}g</span></div>
+  <div class="nutri-premium-main">
+    <div class="nutri-premium-scorecard ${tone}">
+      <div class="nutri-premium-score">${score}</div>
+      <div class="nutri-premium-score-label">Today Score</div>
+    </div>
+    <div class="nutri-premium-copy">
+      <div class="nutri-premium-title">${verdict}</div>
+      <div class="nutri-premium-sub">${Math.round(s.kcal)} / ${Math.round(targets.targetCal)} kcal | ${Math.round(s.p)}g protein | ${Math.round(s.c)}g carbs | ${Math.round(s.f)}g fats</div>
+      <div class="nutri-premium-actionline">
+        <span class="nutri-premium-badge ${tone}">${remaining > 0 ? remaining + ' kcal left' : 'Goal reached'}</span>
+        <span>${action}</span>
+      </div>
+    </div>
+  </div>
+  <div class="nutri-hero-progress">
+    <div class="nutri-hero-track"><span style="width:${kcalPct}%;background:#5be4ff"></span><label>Calories ${kcalPct}%</label></div>
+    <div class="nutri-hero-track"><span style="width:${pPct}%;background:#4ade80"></span><label>Protein ${pPct}%</label></div>
+    <div class="nutri-hero-track"><span style="width:${cPct}%;background:#f3b34d"></span><label>Carbs ${cPct}%</label></div>
+    <div class="nutri-hero-track"><span style="width:${fPct}%;background:#8fb2ff"></span><label>Fats ${fPct}%</label></div>
   </div>
 </div>`);
 }
@@ -2558,6 +2578,17 @@ function renderNutritionAnalyticsPanel() {
 
   const targets = _calcNutritionTargetsForStats();
 
+  bodyEl.innerHTML = `
+    <div class="nutri-control-shell">
+      <div class="nutri-control-topline">
+        <span class="nutri-control-kicker">${tx('Nutrition Control Center','مركز التحكم الغذائي')}</span>
+        <span class="nutri-control-live">${tx('Live','مباشر')}</span>
+      </div>
+      <div id="nut-today-zone"></div>
+      <div id="nut-stats-zone"></div>
+      <div id="nut-charts-zone"></div>
+    </div>`;
+
   // Zone 0: Today (always rendered, ignores period)
   _renderNutTodayZone(document.getElementById('nut-today-zone'), targets);
 
@@ -2616,11 +2647,41 @@ function renderNutritionAnalyticsPanel() {
 
   const calPct  = Math.min(100, Math.round(avgKcal / Math.max(targets.targetCal,1) * 100));
   const mkBar   = (pct, col) => `<div style="height:4px;background:var(--border2);border-radius:2px;margin-top:6px"><div style="height:4px;background:${col};border-radius:2px;width:${pct}%"></div></div>`;
+  const macroCommandHtml = `
+<div class="nutri-macro-command-row">
+  <div class="nutri-command-card">
+    <span>${tx('Protein','البروتين')}</span>
+    <strong>${Math.round(avgP)}<small> / ${Math.round(targets.proteinG)}g</small></strong>
+    <em>${proteinDays}/${nDays} ${tx('days on target','أيام على الهدف')}</em>
+    <div class="nutri-command-bar"><div style="width:${Math.min(100, Math.round(avgP / Math.max(targets.proteinG,1) * 100))}%;background:#4ade80"></div></div>
+  </div>
+  <div class="nutri-command-card">
+    <span>${tx('Calories','السعرات')}</span>
+    <strong>${Math.round(avgKcal)}<small> / ${Math.round(targets.targetCal)}</small></strong>
+    <em>${calPct}% ${tx('of target','من الهدف')}</em>
+    <div class="nutri-command-bar"><div style="width:${calPct}%;background:#5be4ff"></div></div>
+  </div>
+  <div class="nutri-command-card">
+    <span>${tx('Carbs','الكربوهيدرات')}</span>
+    <strong>${Math.round(avgC)}<small> / ${Math.round(targets.carbG)}g</small></strong>
+    <em>${Math.round(avgC / Math.max(targets.carbG,1) * 100)}% ${tx('fuel coverage','تغطية الوقود')}</em>
+    <div class="nutri-command-bar"><div style="width:${Math.min(100, Math.round(avgC / Math.max(targets.carbG,1) * 100))}%;background:#f3b34d"></div></div>
+  </div>
+  <div class="nutri-command-card">
+    <span>${tx('Fats','الدهون')}</span>
+    <strong>${Math.round(avgF)}<small> / ${Math.round(targets.fatG)}g</small></strong>
+    <em>${Math.round(avgF / Math.max(targets.fatG,1) * 100)}% ${tx('recovery base','قاعدة التعافي')}</em>
+    <div class="nutri-command-bar"><div style="width:${Math.min(100, Math.round(avgF / Math.max(targets.fatG,1) * 100))}%;background:#8fb2ff"></div></div>
+  </div>
+</div>`;
 
   // Zone 1: Period stat cards
   const statsZone = document.getElementById('nut-stats-zone');
   if (statsZone) _dhSetHtml(statsZone, `
-<div class="stats-grid" style="margin-bottom:14px">
+${macroCommandHtml}
+<div class="nutri-period-block">
+  <div class="nutri-period-title">${tx('Period Performance','أداء الفترة')}</div>
+  <div class="stats-grid nutri-period-grid" style="margin-bottom:14px">
   <div class="sg-card">
     <div class="sg-label">${tx('Avg Calories','ظ…طھظˆط³ط· ط§ظ„ط³ط¹ط±ط§طھ')}</div>
     <div class="sg-val">${Math.round(avgKcal)}<span class="sg-unit"> / ${Math.round(targets.targetCal)}</span></div>
@@ -2666,6 +2727,7 @@ function renderNutritionAnalyticsPanel() {
     <div class="sg-val sg-neutral">${mealRepeat.longest > 0 ? mealRepeat.longest : '--'}<span class="sg-unit">${mealRepeat.longest > 0 ? ' d' : ''}</span></div>
     <div class="sg-sub">${mealRepeat.name ? esc(mealRepeat.name) : tx('No repeated meals yet','لا توجد وجبة متكررة بعد')}</div>
   </div>
+</div>
 </div>`);
 
   // Zone 2: Charts HTML scaffold
@@ -2786,6 +2848,10 @@ function renderNutritionAnalyticsPanel() {
   ].filter(Boolean);
 
   const quickSummaryHtml = `
+<div class="nutri-insights-topline">
+  <span class="nutri-control-kicker">${tx('Deep Nutrition View','الرؤية الغذائية العميقة')}</span>
+  <span class="nutri-control-live">${tx('Period','الفترة')}</span>
+</div>
 <div class="nutri-pill-row nutri-quick-pills">
   <span class="nutri-pill">${_nutriIcon('protein')} ${tx('Protein hit','تحقيق البروتين')}: ${proteinDays}/${nDays}</span>
   <span class="nutri-pill">${_nutriIcon('streak')} ${tx('Current streak','الإنجاز الحالي')}: ${currentStreak || 0} ${tx('days','أيام')}</span>
