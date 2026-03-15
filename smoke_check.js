@@ -221,6 +221,7 @@ const communityLibraryPath = path.join(ROOT, 'js', 'community-library.js');
 const exercisesPath = path.join(ROOT, 'js', 'exercises.js');
 const bodyweightPath = path.join(ROOT, 'js', 'bodyweight-mode.js');
 const dashboardHistoryPath = path.join(ROOT, 'js', 'dashboard-history.js');
+const coachStatePath = path.join(ROOT, 'js', 'coach-state.js');
 if (fs.existsSync(indexPath)) {
   const html = fs.readFileSync(indexPath, 'utf8');
   if (!html.includes('<script src="js/social-ui.js"></script>')) fail('Missing social UI script include in index.html');
@@ -254,6 +255,12 @@ if (fs.existsSync(dashboardHistoryPath)) {
   if (!dash.includes('prg-ready-insights')) fail('Readiness insight rail is missing');
   if (!dash.includes('Cardio Support')) fail('Readiness cardio support metric is missing');
   if (!dash.includes('Momentum')) fail('Readiness momentum metric is missing');
+}
+if (fs.existsSync(coachStatePath)) {
+  const coachState = fs.readFileSync(coachStatePath, 'utf8');
+  if (!coachState.includes('coach-command-deck')) fail('Coach premium command deck is missing');
+  if (!coachState.includes('coach-signal-board')) fail('Coach premium signal board is missing');
+  if (!coachState.includes('coach-action-lane')) fail('Coach premium action lane is missing');
 }
 if (fs.existsSync(socialUiPath)) {
   const socialUi = fs.readFileSync(socialUiPath, 'utf8');

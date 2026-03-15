@@ -663,19 +663,73 @@
     const old = host.querySelector('.ctoday-brief-card');
     if (old) old.remove();
     const s = buildCoachUnifiedState();
+    const score = typeof calcTrainingScoreUnified === 'function'
+      ? calcTrainingScoreUnified()
+      : { total: 50, balance: 50, consistency: 50, volume: 50, streak: 50 };
     const sessionsToday = Number(s.today.weighted) + Number(s.today.bw) + Number(s.today.cardio);
+    const verdict = s.readiness.score >= 82
+      ? _cx('High-output window', '\u0646\u0627\u0641\u0630\u0629 \u0623\u062f\u0627\u0621 \u0639\u0627\u0644\u064a')
+      : s.readiness.score >= 65
+        ? _cx('Controlled push day', '\u064a\u0648\u0645 \u062f\u0641\u0639 \u0645\u0636\u0628\u0648\u0637')
+        : _cx('Recovery-biased day', '\u064a\u0648\u0645 \u0645\u064a\u0644\u0647 \u0644\u0644\u062a\u0639\u0627\u0641\u064a');
+    const primaryMode = s.readiness.score >= 70
+      ? { label: _cx('Launch Weighted', '\u0627\u0646\u0637\u0644\u0642 \u0623\u0648\u0632\u0627\u0646'), action: '_coachStartWeightedFromCoach()' }
+      : s.readiness.score >= 55
+        ? { label: _cx('Launch Bodyweight', '\u0627\u0646\u0637\u0644\u0642 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645'), action: '_coachStartBodyweightFromCoach()' }
+        : { label: _cx('Recovery Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648 \u0627\u0633\u062a\u0634\u0641\u0627\u0621'), action: '_coachStartCardioFromCoach()' };
+    const trendLift = s.trends.weightedVolPrev14 > 0
+      ? Math.round(((s.trends.weightedVol14 - s.trends.weightedVolPrev14) / s.trends.weightedVolPrev14) * 100)
+      : (s.trends.weightedVol14 > 0 ? 12 : 0);
+    const trendCardio = s.trends.cardioMinsPrev14 > 0
+      ? Math.round(((s.trends.cardioMins14 - s.trends.cardioMinsPrev14) / s.trends.cardioMinsPrev14) * 100)
+      : (s.trends.cardioMins14 > 0 ? 10 : 0);
+    const signals = [
+      { label: _cx('Balance', '\u0627\u0644\u062a\u0648\u0627\u0632\u0646'), value: score.balance, cls: score.balance >= 70 ? 'good' : score.balance >= 50 ? 'warn' : 'alert' },
+      { label: _cx('Consistency', '\u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0645'), value: score.consistency, cls: score.consistency >= 70 ? 'good' : score.consistency >= 50 ? 'warn' : 'alert' },
+      { label: _cx('Volume', '\u0627\u0644\u062d\u062c\u0645'), value: score.volume, cls: score.volume >= 70 ? 'good' : score.volume >= 50 ? 'warn' : 'alert' },
+      { label: _cx('Streak', '\u0627\u0644\u0633\u0644\u0633\u0644\u0629'), value: score.streak, cls: score.streak >= 70 ? 'good' : score.streak >= 50 ? 'warn' : 'alert' }
+    ];
     const brief =
-      '<div class="ctoday-card ctoday-brief-card">' +
-        '<div class="ctoday-card-title">' + _cx('Daily Brief', '\u0627\u0644\u0645\u0644\u062e\u0635 \u0627\u0644\u064a\u0648\u0645\u064a') + '</div>' +
-        '<div class="ctoday-plan-note"><strong>' + _cx('Readiness:', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629:') + '</strong> ' + s.readiness.score + '/100 - ' + s.readiness.message + '</div>' +
-        '<div class="ctoday-plan-note"><strong>' + _cx('Today sessions:', '\u062c\u0644\u0633\u0627\u062a \u0627\u0644\u064a\u0648\u0645:') + '</strong> ' + sessionsToday + ' (W:' + Number(s.today.weighted) + ' BW:' + Number(s.today.bw) + ' C:' + Number(s.today.cardio) + ')</div>' +
-        '<div class="ctoday-plan-note"><strong>' + _cx('Cardio week:', '\u0643\u0627\u0631\u062f\u064a\u0648 \u0627\u0644\u0623\u0633\u0628\u0648\u0639:') + '</strong> ' + s.weekly.cardioMins + ' ' + _cx('min', '\u062f\u0642\u064a\u0642\u0629') + '</div>' +
-        '<div class="ctoday-plan-note"><strong>' + _cx('Nutrition:', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629:') + '</strong> ' + s.nutrition.note + '</div>' +
-        '<div class="coach-dual-actions" style="margin-top:10px;">' +
-          '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">' + _cx('Weighted', '\u0623\u0648\u0632\u0627\u0646') + '</button>' +
-          '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">' + _cx('Bodyweight', '\u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
+      '<div class="ctoday-card ctoday-brief-card coach-command-deck">' +
+        '<div class="coach-deck-topline">' +
+          '<span class="coach-deck-kicker">' + _cx('Command Deck', '\u0644\u0648\u062d\u0629 \u0627\u0644\u0642\u064a\u0627\u062f\u0629') + '</span>' +
+          '<span class="coach-deck-chip ' + (s.readiness.score >= 70 ? 'good' : s.readiness.score >= 55 ? 'warn' : 'alert') + '">' + _cx('Ready ' + s.readiness.score, '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629 ' + s.readiness.score) + '</span>' +
         '</div>' +
-        '<div style="margin-top:8px;"><button class="coach-action-btn" style="width:100%;" onclick="_coachStartCardioFromCoach()">' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + '</button></div>' +
+        '<div class="coach-deck-hero">' +
+          '<div class="coach-deck-score">' +
+            '<div class="coach-deck-score-num">' + score.total + '</div>' +
+            '<div class="coach-deck-score-lbl">' + _cx('Training Score', '\u0646\u062a\u064a\u062c\u0629 \u0627\u0644\u062a\u062f\u0631\u064a\u0628') + '</div>' +
+          '</div>' +
+          '<div class="coach-deck-copy">' +
+            '<div class="coach-deck-title">' + verdict + '</div>' +
+            '<div class="coach-deck-sub">' + s.readiness.message + '</div>' +
+            '<div class="coach-deck-trend">' +
+              '<span>' + _cx('Lift trend', '\u0627\u062a\u062c\u0627\u0647 \u0627\u0644\u0623\u0648\u0632\u0627\u0646') + ': ' + (trendLift >= 0 ? '+' : '') + trendLift + '%</span>' +
+              '<span>' + _cx('Cardio trend', '\u0627\u062a\u062c\u0627\u0647 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + ': ' + (trendCardio >= 0 ? '+' : '') + trendCardio + '%</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="coach-signal-board">' +
+          signals.map(sig =>
+            '<button class="coach-signal-card ' + sig.cls + '" type="button">' +
+              '<span>' + sig.label + '</span>' +
+              '<strong>' + sig.value + '%</strong>' +
+              '<em><i style="width:' + sig.value + '%;"></i></em>' +
+            '</button>'
+          ).join('') +
+        '</div>' +
+        '<div class="coach-action-lane">' +
+          '<button class="coach-action-btn primary coach-action-hero" onclick="' + primaryMode.action + '">' + primaryMode.label + '</button>' +
+          '<div class="coach-action-grid">' +
+            '<button class="coach-action-btn coach-action-sub" onclick="_coachStartBodyweightFromCoach()">' + _cx('Bodyweight', '\u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
+            '<button class="coach-action-btn coach-action-sub" onclick="_coachStartCardioFromCoach()">' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="coach-deck-summary">' +
+          '<div class="coach-deck-summary-item"><span>' + _cx('Today sessions', '\u062c\u0644\u0633\u0627\u062a \u0627\u0644\u064a\u0648\u0645') + '</span><strong>' + sessionsToday + ' | W:' + Number(s.today.weighted) + ' BW:' + Number(s.today.bw) + ' C:' + Number(s.today.cardio) + '</strong></div>' +
+          '<div class="coach-deck-summary-item"><span>' + _cx('Cardio week', '\u0643\u0627\u0631\u062f\u064a\u0648 \u0627\u0644\u0623\u0633\u0628\u0648\u0639') + '</span><strong>' + s.weekly.cardioMins + ' ' + _cx('min', '\u062f\u0642\u064a\u0642\u0629') + '</strong></div>' +
+          '<div class="coach-deck-summary-item"><span>' + _cx('Nutrition', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629') + '</span><strong>' + s.nutrition.note + '</strong></div>' +
+        '</div>' +
       '</div>';
     const greeting = host.querySelector('.ctoday-greeting');
     if (greeting) greeting.insertAdjacentHTML('afterend', brief);

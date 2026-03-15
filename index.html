@@ -6185,11 +6185,17 @@ function renderCoachScore(score) {
       [_csAr ? 'الحجم'       : 'Volume',      score.volume,      '#ff9f5a'],
       [_csAr ? 'السلسلة'     : 'Streak',      score.streak,      '#e879f9']
     ];
+    const toneEn = score.total >= 80 ? 'Prime output window' : score.total >= 60 ? 'Strong build day' : score.total >= 40 ? 'Momentum can improve' : 'Reset and rebuild';
+    const toneAr = score.total >= 80 ? 'نافذة أداء قوية' : score.total >= 60 ? 'يوم بناء قوي' : score.total >= 40 ? 'الزخم يحتاج دعمًا' : 'أعد الضبط وابدأ من جديد';
     details.innerHTML = `
-      <div class="score-title">${_csAr ? 'نتيجة التدريب' : 'Training Score'}</div>
-      <div class="score-breakdown">
+      <div class="coach-premium-hero">
+        <div class="coach-premium-kicker">${_csAr ? 'لوحة الأداء' : 'Performance Console'}</div>
+        <div class="score-title">${_csAr ? 'نتيجة التدريب' : 'Training Score'}</div>
+        <div class="coach-premium-sub">${_csAr ? toneAr : toneEn}</div>
+      </div>
+      <div class="score-breakdown coach-signal-breakdown">
         ${breakdownRows.map(([lbl, val, col]) => `
-          <div class="score-row">
+          <div class="score-row coach-score-row">
             <span>${lbl}</span>
             <div class="score-bar-mini"><div class="score-bar-mini-fill" style="width:${val}%;background:${col};"></div></div>
             <span>${val}%</span>
