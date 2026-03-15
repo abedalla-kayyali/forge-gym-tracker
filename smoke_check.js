@@ -230,9 +230,12 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('toggleShareStats')) fail('Social UI is missing share-stats toggle action');
   if (!socialUi.includes('openMuscleCompare')) fail('Social UI is missing muscle compare detail action');
   if (!socialUi.includes('social-muscle-exercise-list')) fail('Social muscle compare is missing exercise leaderboard hook');
+  if (!socialUi.includes('social-premium-table')) fail('Social compare is missing premium table hook');
+  if (!socialUi.includes('social-capsule-board')) fail('Social compare is missing capsule body board hook');
+  if (!socialUi.includes('toggleBodyShellMode')) fail('Social compare is missing body shell mode toggle');
+  if (!socialUi.includes('closeCompareSheet')) fail('Social compare is missing unified sheet close action');
   if (!socialUi.includes('social-body-rival-header')) fail('Social body compare is missing rivalry header hook');
   if (!socialUi.includes('social-spotlight-rail')) fail('Social body compare is missing spotlight rail hook');
-  if (!socialUi.includes('social-anatomy-board')) fail('Social body compare is missing anatomy board hook');
   if (!socialUi.includes('social-rivalry-list')) fail('Social compare is missing rivalry list hook');
   if (!socialUi.includes('social-rivalry-delta')) fail('Social compare is missing rivalry delta hook');
   if (!socialUi.includes('openCardioRivalry')) fail('Social compare is missing cardio rivalry detail action');

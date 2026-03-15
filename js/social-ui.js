@@ -4,6 +4,8 @@
   const state = {
     currentTab: 'hub',
     selectedFriendId: '',
+    selectedBodyMuscle: 'Chest',
+    bodyShellMode: 'show',
     compareView: 'body',
     lastResults: [],
     profileDirectory: [],
@@ -102,28 +104,8 @@
       '<button class="social-compare-subtab' + (state.compareView === tab[0] ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.setCompareView("' + tab[0] + '")\'>' + tab[1] + '</button>'
     )).join('') + '</div>';
   }
-  function _muscleZones() {
-    return [
-      { key: 'Neck', path: 'M124 30 Q140 22 156 30 L152 52 Q140 56 128 52 Z' },
-      { key: 'Traps', path: 'M98 58 Q112 44 140 44 Q168 44 182 58 L176 84 Q154 90 140 90 Q126 90 104 84 Z' },
-      { key: 'Chest', path: 'M96 92 Q114 80 140 80 Q166 80 184 92 L178 138 Q160 154 140 154 Q120 154 102 138 Z' },
-      { key: 'Shoulders', path: 'M60 94 Q70 78 92 80 L96 136 Q78 138 62 126 Q52 112 60 94 Z' },
-      { key: 'Shoulders', path: 'M220 94 Q210 78 188 80 L184 136 Q202 138 218 126 Q228 112 220 94 Z' },
-      { key: 'Biceps', path: 'M62 136 Q76 132 88 142 L82 188 Q72 198 58 190 Q50 176 62 136 Z' },
-      { key: 'Biceps', path: 'M218 136 Q204 132 192 142 L198 188 Q208 198 222 190 Q230 176 218 136 Z' },
-      { key: 'Triceps', path: 'M54 190 Q68 182 80 188 L78 230 Q66 240 52 230 Q46 214 54 190 Z' },
-      { key: 'Triceps', path: 'M226 190 Q212 182 200 188 L202 230 Q214 240 228 230 Q234 214 226 190 Z' },
-      { key: 'Forearms', path: 'M48 230 Q60 224 72 230 L68 292 Q56 300 46 288 Q42 258 48 230 Z' },
-      { key: 'Forearms', path: 'M232 230 Q220 224 208 230 L212 292 Q224 300 234 288 Q238 258 232 230 Z' },
-      { key: 'Core', path: 'M110 152 Q124 146 140 146 Q156 146 170 152 L166 224 Q156 236 140 236 Q124 236 114 224 Z' },
-      { key: 'Back', path: 'M96 92 Q114 84 140 84 Q166 84 184 92 L176 152 Q158 164 140 164 Q122 164 104 152 Z' },
-      { key: 'Lower Back', path: 'M110 164 Q124 158 140 158 Q156 158 170 164 L166 210 Q154 220 140 220 Q126 220 114 210 Z' },
-      { key: 'Glutes', path: 'M106 220 Q122 212 140 212 Q158 212 174 220 L170 258 Q158 270 140 270 Q122 270 110 258 Z' },
-      { key: 'Legs', path: 'M110 260 Q124 252 132 260 L130 364 Q120 378 106 366 Q98 344 110 260 Z' },
-      { key: 'Legs', path: 'M170 260 Q156 252 148 260 L150 364 Q160 378 174 366 Q182 344 170 260 Z' },
-      { key: 'Calves', path: 'M108 364 Q118 356 126 364 L124 418 Q114 428 104 420 Q100 390 108 364 Z' },
-      { key: 'Calves', path: 'M172 364 Q162 356 154 364 L156 418 Q166 428 176 420 Q180 390 172 364 Z' }
-    ];
+  function _compareMuscleOrder() {
+    return ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Forearms', 'Core', 'Lower Back', 'Glutes', 'Legs', 'Calves', 'Traps', 'Neck'];
   }
   function _musclePower(summary, key) {
     const row = summary && summary[key] ? summary[key] : null;
@@ -132,30 +114,29 @@
     const maxWeight = _num(row.maxWeight, 0);
     return Math.max(Math.min(1, sessions / 8), Math.min(1, maxWeight / 120));
   }
-  function _renderBodyMap(summary, who) {
-    const zones = _muscleZones();
-    const dominant = Object.keys(summary || {}).sort((a, b) => _musclePower(summary, b) - _musclePower(summary, a))[0] || '';
-    return '' +
-      '<div class="social-body-map-card social-anatomy-board">' +
-        '<div class="social-body-map-label">' + who + '</div>' +
-        '<svg class="social-body-map-svg" viewBox="0 0 280 430" role="img" aria-label="' + _escape(who + ' body map') + '">' +
-          '<defs>' +
-            '<linearGradient id="social-board-shell" x1="0" x2="0" y1="0" y2="1">' +
-              '<stop offset="0%" stop-color="rgba(15,25,36,0.98)"/>' +
-              '<stop offset="100%" stop-color="rgba(7,12,18,1)"/>' +
-            '</linearGradient>' +
-          '</defs>' +
-          '<rect x="58" y="16" width="164" height="400" rx="38" fill="url(#social-board-shell)" stroke="rgba(159,230,255,0.14)" stroke-width="2"/>' +
-          '<rect x="76" y="34" width="128" height="364" rx="30" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.06)"/>' +
-          zones.map((zone) => {
-            const power = _musclePower(summary, zone.key);
-            const dominantGlow = zone.key === dominant ? 0.28 : 0;
-            const fill = power <= 0 ? 'rgba(255,255,255,0.04)' : 'rgba(99,231,176,' + (0.16 + power * 0.34).toFixed(2) + ')';
-            const stroke = power <= 0 ? 'rgba(255,255,255,0.10)' : 'rgba(159,230,255,' + (0.24 + power * 0.34 + dominantGlow).toFixed(2) + ')';
-            return '<path class="social-body-zone" data-muscle="' + _escape(zone.key) + '" d="' + zone.path + '" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + (zone.key === dominant ? '3' : '2') + '"/>';
-          }).join('') +
-        '</svg>' +
-      '</div>';
+  function _renderCapsuleBoard(meSummary, friendSummary) {
+    const muscles = _compareMuscleOrder();
+    const shellOn = state.bodyShellMode !== 'focus';
+    return '<div class="social-card social-capsule-board">' +
+      '<div class="social-card-title">BODY CONTROL BOARD</div>' +
+      '<div class="social-card-sub">Use the same capsule muscle logic as the log page. Focus mode hides the shell and keeps the board clean.</div>' +
+      '<div class="social-body-toolbar">' +
+        '<button class="social-action-btn' + (shellOn ? ' primary' : '') + '" type="button" onclick="window.FORGE_SOCIAL.toggleBodyShellMode(\'show\')">Show Body</button>' +
+        '<button class="social-action-btn' + (!shellOn ? ' primary' : '') + '" type="button" onclick="window.FORGE_SOCIAL.toggleBodyShellMode(\'focus\')">Focus Mode</button>' +
+      '</div>' +
+      '<div class="social-capsule-board-shell' + (shellOn ? '' : ' focus-only') + '">' +
+        (shellOn ? '<div class="social-capsule-ghost"></div>' : '') +
+        '<div class="social-capsule-grid">' + muscles.map((muscle) => {
+          const myPower = _musclePower(meSummary, muscle);
+          const rivalPower = _musclePower(friendSummary, muscle);
+          const lead = myPower === rivalPower ? 'EVEN' : myPower > rivalPower ? 'YOU' : 'RIVAL';
+          return '<button class="social-capsule-chip' + (state.selectedBodyMuscle === muscle ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.selectBodyMuscle(' + JSON.stringify(muscle) + ')\'>' +
+            '<span>' + _escape(muscle) + '</span>' +
+            '<strong>' + _escape(lead) + '</strong>' +
+          '</button>';
+        }).join('') + '</div>' +
+      '</div>' +
+    '</div>';
   }
   function _spotlightMetrics(meSummary, friendSummary) {
     const keys = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Forearms'];
@@ -547,22 +528,20 @@
 
   function _renderCompareBody(me, friend) {
     const spots = _spotlightMetrics(me.muscleSummary, friend.muscleSummary);
+    const selectedMuscle = state.selectedBodyMuscle || 'Chest';
     return '' +
       '<div class="social-card social-body-rival-header">' +
         '<div class="social-card-title">RIVALRY HEAT</div>' +
         '<div class="social-card-sub">Most contested: ' + _escape((spots[0] && spots[0].muscle) || 'Chest') + ' | ' + _escape(_muscleInsight(me.muscleSummary, friend.muscleSummary)) + '</div>' +
       '</div>' +
-      '<div class="social-card">' +
-        '<div class="social-card-title">BODY MAP RIVALRY</div>' +
-        '<div class="social-card-sub">Tap any muscle to compare max load, session count, and training recency.</div>' +
-        '<div class="social-body-map-grid">' +
-          _renderBodyMap(me.muscleSummary, 'You') +
-          _renderBodyMap(friend.muscleSummary, 'Rival') +
-        '</div>' +
-        '<div class="social-body-summary">' + _escape(_muscleInsight(me.muscleSummary, friend.muscleSummary)) + '</div>' +
+      _renderCapsuleBoard(me.muscleSummary, friend.muscleSummary) +
+      '<div class="social-card social-premium-table">' +
+        '<div class="social-card-title">MUSCLE TABLE</div>' +
+        '<div class="social-card-sub">Selected muscle: ' + _escape(selectedMuscle) + '. Tap any capsule to change the exercise table.</div>' +
+        _renderMuscleExerciseTable(selectedMuscle, me, friend) +
         '<div class="social-spotlight-rail">' +
           spots.map((spot) => (
-            '<button class="social-spotlight-chip" type="button" onclick=\'window.FORGE_SOCIAL.openMuscleCompare("' + _escape(spot.muscle) + '")\'>' +
+            '<button class="social-spotlight-chip" type="button" onclick=\'window.FORGE_SOCIAL.selectBodyMuscle(' + JSON.stringify(spot.muscle) + ')\'>' +
               '<span>' + _escape(spot.title) + '</span>' +
               '<strong>' + _escape(spot.muscle) + '</strong>' +
               '<em>' + _escape(spot.label) + '</em>' +
@@ -684,37 +663,79 @@
     if (kgGap > 0) return '+' + kgGap + 'kg';
     return 'Even';
   }
+  function _renderPremiumTable(headers, rows, emptyText) {
+    if (!rows.length) {
+      return '<div class="social-premium-empty">' + _escape(emptyText || 'No compare data yet.') + '</div>';
+    }
+    return '<div class="social-premium-table-wrap">' +
+      '<table class="social-premium-table-grid">' +
+        '<thead><tr>' + headers.map((h) => '<th>' + _escape(h) + '</th>').join('') + '</tr></thead>' +
+        '<tbody>' + rows.join('') + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+  function _renderMuscleExerciseTable(muscle, me, friend) {
+    const rows = _buildMuscleExerciseRows(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {});
+    return _renderPremiumTable(
+      ['Exercise', 'You', 'Rival', 'Last', 'Sessions', 'Delta'],
+      rows.map((row) => (
+        '<tr>' +
+          '<td><strong>' + _escape(row.name) + '</strong></td>' +
+          '<td>' + _escape(_metricOrDash(row.myWeight, 'kg')) + '</td>' +
+          '<td>' + _escape(_metricOrDash(row.rivalWeight, 'kg')) + '</td>' +
+          '<td>' + _escape(_dayText(row.myRow.lastAt)) + ' / ' + _escape(_dayText(row.rivalRow.lastAt)) + '</td>' +
+          '<td>' + _num(row.myRow.sessions, 0) + ' / ' + _num(row.rivalRow.sessions, 0) + '</td>' +
+          '<td><span class="social-rivalry-delta">' + _escape(_muscleExerciseDeltaLabel(row)) + '</span></td>' +
+        '</tr>'
+      )),
+      'No weighted exercise records published for this muscle yet.'
+    );
+  }
   function _renderBodyweightRivalries(meSummary, friendSummary) {
     const rows = _bodyweightRivalRows(meSummary, friendSummary);
     if (!rows.length) {
       return '<div class="social-card"><div class="social-card-title">EXERCISE RIVALRY</div><div class="social-card-sub">No bodyweight exercise rivalry data yet. Log pull-ups, holds, or skills to start the battle board.</div></div>';
     }
-    return '<div class="social-card">' +
+    return '<div class="social-card social-premium-table">' +
       '<div class="social-card-title">EXERCISE RIVALRY</div>' +
       '<div class="social-card-sub">Compare max reps and hold times exercise by exercise.</div>' +
-      '<div class="social-rivalry-list">' + rows.map((row) => (
-        '<button class="social-rivalry-row" type="button" onclick=\'window.FORGE_SOCIAL.openBodyweightRivalry(' + JSON.stringify(row.key) + ')\'>' +
-          '<div class="social-rivalry-main"><strong>' + _escape(row.label) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
-          '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.my.maxReps, ' reps')) + ' / ' + _escape(_metricOrDash(row.my.maxDurationSec, 's')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rival.maxReps, ' reps')) + ' / ' + _escape(_metricOrDash(row.rival.maxDurationSec, 's')) + '</b></div>' +
-          '<div class="social-rivalry-delta">' + _escape(_bodyweightDeltaLabel(row)) + '</div>' +
-        '</button>'
-      )).join('') + '</div></div>';
+      + _renderPremiumTable(
+        ['Exercise', 'Best Reps', 'Best Hold', 'Last', 'Lead', 'Delta'],
+        rows.map((row) => (
+          '<tr onclick=\'window.FORGE_SOCIAL.openBodyweightRivalry(' + JSON.stringify(row.key) + ')\'>' +
+            '<td><strong>' + _escape(row.label) + '</strong></td>' +
+            '<td>' + _escape(_metricOrDash(row.my.maxReps, '')) + ' / ' + _escape(_metricOrDash(row.rival.maxReps, '')) + '</td>' +
+            '<td>' + _escape(_metricOrDash(row.my.maxDurationSec, 's')) + ' / ' + _escape(_metricOrDash(row.rival.maxDurationSec, 's')) + '</td>' +
+            '<td>' + _escape(_dayText(row.my.lastAt)) + ' / ' + _escape(_dayText(row.rival.lastAt)) + '</td>' +
+            '<td>' + _escape(row.lead) + '</td>' +
+            '<td><span class="social-rivalry-delta">' + _escape(_bodyweightDeltaLabel(row)) + '</span></td>' +
+          '</tr>'
+        )),
+        'No bodyweight exercise rivalry data yet.'
+      ) + '</div>';
   }
   function _renderCardioRivalries(meSummary, friendSummary) {
     const rows = _cardioRivalRows(meSummary, friendSummary);
     if (!rows.length) {
       return '<div class="social-card"><div class="social-card-title">ACTIVITY RIVALRY</div><div class="social-card-sub">No cardio rivalry data yet. Log runs, rides, or walks to light up the leaderboard.</div></div>';
     }
-    return '<div class="social-card">' +
+    return '<div class="social-card social-premium-table">' +
       '<div class="social-card-title">ACTIVITY RIVALRY</div>' +
       '<div class="social-card-sub">Compare best single sessions and weekly totals by activity.</div>' +
-      '<div class="social-rivalry-list">' + rows.map((row) => (
-        '<button class="social-rivalry-row" type="button" onclick=\'window.FORGE_SOCIAL.openCardioRivalry(' + JSON.stringify(row.key) + ')\'>' +
-          '<div class="social-rivalry-main"><strong>' + _escape(row.label) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
-          '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.my.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.my.bestDistanceKm, 'km')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rival.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.bestDistanceKm, 'km')) + '</b></div>' +
-          '<div class="social-rivalry-delta">' + _escape(_cardioDeltaLabel(row)) + '</div>' +
-        '</button>'
-      )).join('') + '</div></div>';
+      + _renderPremiumTable(
+        ['Activity', 'Best Session', 'Weekly Total', 'Last', 'Lead', 'Delta'],
+        rows.map((row) => (
+          '<tr onclick=\'window.FORGE_SOCIAL.openCardioRivalry(' + JSON.stringify(row.key) + ')\'>' +
+            '<td><strong>' + _escape(row.label) + '</strong></td>' +
+            '<td>' + _escape(_metricOrDash(row.my.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.bestMinutes, 'm')) + ' | ' + _escape(_metricOrDash(row.my.bestDistanceKm, 'km')) + ' / ' + _escape(_metricOrDash(row.rival.bestDistanceKm, 'km')) + '</td>' +
+            '<td>' + _escape(_metricOrDash(row.my.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.weeklyMinutes, 'm')) + '</td>' +
+            '<td>' + _escape(_dayText(row.my.lastAt)) + ' / ' + _escape(_dayText(row.rival.lastAt)) + '</td>' +
+            '<td>' + _escape(row.lead) + '</td>' +
+            '<td><span class="social-rivalry-delta">' + _escape(_cardioDeltaLabel(row)) + '</span></td>' +
+          '</tr>'
+        )),
+        'No cardio rivalry data yet.'
+      ) + '</div>';
   }
 
   function renderCompare() {
@@ -881,8 +902,20 @@
   }
   function _bindBodyCompareZones() {
     document.querySelectorAll('.social-body-zone').forEach((node) => {
-      node.onclick = function () { openMuscleCompare(node.getAttribute('data-muscle')); };
+      node.onclick = function () { selectBodyMuscle(node.getAttribute('data-muscle')); };
     });
+  }
+  function toggleBodyShellMode(mode) {
+    state.bodyShellMode = String(mode || 'show') === 'focus' ? 'focus' : 'show';
+    renderCompare();
+  }
+  function selectBodyMuscle(muscle) {
+    state.selectedBodyMuscle = String(muscle || 'Chest');
+    renderCompare();
+  }
+  function closeCompareSheet() {
+    closeMuscleCompare();
+    closeRivalryDetail();
   }
   function openMuscleCompare(muscle) {
     const modal = byId('social-compare-muscle-modal');
@@ -1062,12 +1095,15 @@
     removeFriend,
     copyFriendCode,
     selectFriend,
+    selectBodyMuscle,
     setCompareView,
+    toggleBodyShellMode,
     toggleShareStats,
     openMuscleCompare,
     closeMuscleCompare,
     openCardioRivalry,
     openBodyweightRivalry,
+    closeCompareSheet,
     closeRivalryDetail,
     startDuel,
     getState: function () { return { ...state }; }
