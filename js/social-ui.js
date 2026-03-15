@@ -5,7 +5,6 @@
     currentTab: 'hub',
     selectedFriendId: '',
     selectedBodyMuscle: 'Chest',
-    bodyShellMode: 'show',
     compareView: 'body',
     compareSort: { body: 'delta', cardio: 'delta', bodyweight: 'delta' },
     lastResults: [],
@@ -86,6 +85,9 @@
     if ((typeof currentLang !== 'undefined') && currentLang === 'ar' && Object.prototype.hasOwnProperty.call(ar, key)) return ar[key];
     return fallback;
   }
+  function _socialIsRtl() {
+    return (typeof currentLang !== 'undefined') && currentLang === 'ar';
+  }
 
   function _maybeToast(msg, tone) {
     if (typeof showToast === 'function') showToast(msg, tone || 'success');
@@ -143,16 +145,10 @@
   }
   function _renderCapsuleBoard(meSummary, friendSummary) {
     const muscles = _compareMuscleOrder();
-    const shellOn = state.bodyShellMode !== 'focus';
     return '<div class="social-card social-capsule-board">' +
       '<div class="social-card-title">BODY CONTROL BOARD</div>' +
-      '<div class="social-card-sub">Use the same capsule muscle logic as the log page. Focus mode hides the shell and keeps the board clean.</div>' +
-      '<div class="social-body-toolbar">' +
-        '<button class="social-action-btn' + (shellOn ? ' primary' : '') + '" type="button" onclick="window.FORGE_SOCIAL.toggleBodyShellMode(\'show\')">Show Body</button>' +
-        '<button class="social-action-btn' + (!shellOn ? ' primary' : '') + '" type="button" onclick="window.FORGE_SOCIAL.toggleBodyShellMode(\'focus\')">Focus Mode</button>' +
-      '</div>' +
-      '<div class="social-capsule-board-shell' + (shellOn ? '' : ' focus-only') + '">' +
-        (shellOn ? '<div class="social-capsule-ghost"></div>' : '') +
+      '<div class="social-card-sub">Capsule-only muscle control board for faster compare selection on mobile.</div>' +
+      '<div class="social-capsule-board-shell focus-only">' +
         '<div class="social-capsule-grid">' + muscles.map((muscle) => {
           const myPower = _musclePower(meSummary, muscle);
           const rivalPower = _musclePower(friendSummary, muscle);
@@ -692,7 +688,7 @@
   }
   function _sortBar(view, options) {
     const current = state.compareSort[view] || 'delta';
-    return '<div class="social-sortbar"><span>' + _escape(_socialTx('sort_by', 'Sort by')) + '</span>' +
+    return '<div class="social-sortbar' + (_socialIsRtl() ? ' rtl' : '') + '"><span>' + _escape(_socialTx('sort_by', 'Sort by')) + '</span>' +
       options.map((opt) => (
         '<button class="social-sortpill' + (current === opt.key ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.setCompareSort(' + JSON.stringify(view) + ',' + JSON.stringify(opt.key) + ')\'>' + _escape(opt.label) + '</button>'
       )).join('') + '</div>';
@@ -701,8 +697,8 @@
     if (!rows.length) {
       return '<div class="social-premium-empty">' + _escape(emptyText || 'No compare data yet.') + '</div>';
     }
-    return '<div class="social-premium-table-wrap">' +
-      '<table class="social-premium-table-grid">' +
+    return '<div class="social-premium-table-wrap' + (_socialIsRtl() ? ' rtl' : '') + '">' +
+      '<table class="social-premium-table-grid' + (_socialIsRtl() ? ' rtl' : '') + '">' +
         '<thead><tr>' + headers.map((h) => '<th>' + _escape(h) + '</th>').join('') + '</tr></thead>' +
         '<tbody>' + rows.join('') + '</tbody>' +
       '</table>' +
@@ -756,7 +752,7 @@
         { key: 'hold', label: _socialTx('hold', 'Hold') },
         { key: 'last', label: _socialTx('last', 'Last') }
       ]) +
-      + _renderPremiumTable(
+      _renderPremiumTable(
         [_socialTx('exercise', 'Exercise'), _socialTx('reps', 'Best Reps'), _socialTx('hold', 'Best Hold'), _socialTx('last', 'Last'), _socialTx('lead', 'Lead'), _socialTx('delta', 'Delta')],
         rows.map((row) => (
           '<tr onclick=\'window.FORGE_SOCIAL.openBodyweightRivalry(' + JSON.stringify(row.key) + ')\'>' +
@@ -791,7 +787,7 @@
         { key: 'weekly', label: _socialTx('weekly', 'Weekly') },
         { key: 'last', label: _socialTx('last', 'Last') }
       ]) +
-      + _renderPremiumTable(
+      _renderPremiumTable(
         [_socialTx('activity', 'Activity'), _socialTx('best_session', 'Best Session'), _socialTx('weekly_total', 'Weekly Total'), _socialTx('last', 'Last'), _socialTx('lead', 'Lead'), _socialTx('delta', 'Delta')],
         rows.map((row) => (
           '<tr onclick=\'window.FORGE_SOCIAL.openCardioRivalry(' + JSON.stringify(row.key) + ')\'>' +
@@ -978,10 +974,6 @@
     document.querySelectorAll('.social-body-zone').forEach((node) => {
       node.onclick = function () { selectBodyMuscle(node.getAttribute('data-muscle')); };
     });
-  }
-  function toggleBodyShellMode(mode) {
-    state.bodyShellMode = String(mode || 'show') === 'focus' ? 'focus' : 'show';
-    renderCompare();
   }
   function selectBodyMuscle(muscle) {
     state.selectedBodyMuscle = String(muscle || 'Chest');
@@ -1172,7 +1164,6 @@
     selectBodyMuscle,
     setCompareView,
     setCompareSort,
-    toggleBodyShellMode,
     toggleShareStats,
     openMuscleCompare,
     closeMuscleCompare,

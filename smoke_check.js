@@ -234,7 +234,6 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-capsule-board')) fail('Social compare is missing capsule body board hook');
   if (!socialUi.includes('social-sortbar')) fail('Social compare is missing sort-bar hook');
   if (!socialUi.includes('_socialTx')) fail('Social compare is missing localized label helper');
-  if (!socialUi.includes('toggleBodyShellMode')) fail('Social compare is missing body shell mode toggle');
   if (!socialUi.includes('closeCompareSheet')) fail('Social compare is missing unified sheet close action');
   if (!socialUi.includes('social-body-rival-header')) fail('Social body compare is missing rivalry header hook');
   if (!socialUi.includes('social-spotlight-rail')) fail('Social body compare is missing spotlight rail hook');
@@ -242,6 +241,9 @@ if (fs.existsSync(socialUiPath)) {
   if (!socialUi.includes('social-rivalry-delta')) fail('Social compare is missing rivalry delta hook');
   if (!socialUi.includes('openCardioRivalry')) fail('Social compare is missing cardio rivalry detail action');
   if (!socialUi.includes('openBodyweightRivalry')) fail('Social compare is missing bodyweight rivalry detail action');
+  if (!socialUi.includes('Capsule-only muscle control board')) fail('Social compare body board did not switch to capsule-only mode');
+  if (socialUi.includes('bodyShellMode')) fail('Social compare still contains removed body shell mode state');
+  if (socialUi.includes('toggleBodyShellMode')) fail('Social compare still contains removed body shell mode toggle');
 } else {
   fail('Missing file: js/social-ui.js');
 }

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v124';
-window.FORGE_BUILD   = '2026-03-15 (social compare sorting + Arabic safety)';
+window.FORGE_VERSION = 'v125';
+window.FORGE_BUILD   = '2026-03-15 (social compare table fix + capsule only body board)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
