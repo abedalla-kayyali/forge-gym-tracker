@@ -4065,25 +4065,46 @@ input:checked+.toggle-thumb::before{transform:translateX(20px);background:var(--
    COACH PANEL
 ══════════════════════════════════════════ */
 .coach-panel{
-  background:var(--panel);border:1px solid var(--border2);border-radius:14px;
+  background:
+    radial-gradient(circle at top right, rgba(90,232,170,.08), transparent 26%),
+    linear-gradient(180deg,rgba(8,20,17,.98),rgba(7,15,13,.995));
+  border:1px solid rgba(100,189,146,.18);border-radius:18px;
   margin-bottom:14px;overflow:hidden;
-  box-shadow:0 4px 20px rgba(0,0,0,.3);
+  box-shadow:0 20px 40px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.03);
 }
 .coach-header{
-  padding:14px 16px;
-  background:linear-gradient(90deg,#0a1e10,#0d2218,var(--panel2));
-  border-bottom:1px solid rgba(46,204,113,.1);
+  padding:16px 18px;
+  background:
+    radial-gradient(circle at right top, rgba(83,168,255,.09), transparent 22%),
+    linear-gradient(90deg,#0a1e10,#0d2218,var(--panel2));
+  border-bottom:1px solid rgba(46,204,113,.12);
   display:flex;align-items:center;gap:12px;
 }
 .coach-avatar{
-  width:38px;height:38px;border-radius:10px;
-  background:linear-gradient(135deg,#0d3a1f,#1a7a3f);
+  width:42px;height:42px;border-radius:12px;
+  background:linear-gradient(135deg,#0d3a1f,#1fb96a);
   border:1px solid rgba(57,255,143,.3);
   display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
-  box-shadow:0 0 12px rgba(46,204,113,.2);
+  box-shadow:0 0 16px rgba(46,204,113,.2);
+}
+.coach-header-copy{flex:1;min-width:0;display:flex;flex-direction:column;}
+.coach-header-kicker,
+.coach-header-meta{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  color:#8fc9aa;
+}
+.coach-header-side{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+  flex-shrink:0;
 }
 .coach-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;color:var(--accent);}
-.coach-status{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:1px;margin-top:2px;}
+.coach-status{font-family:'DM Mono',monospace;font-size:10px;color:#a3c6b3;letter-spacing:.8px;margin-top:4px;line-height:1.5;}
 .coach-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
 .coach-insight{
   background:rgba(0,0,0,.25);border-left:3px solid var(--green3);border-radius:0 10px 10px 0;
@@ -6783,6 +6804,90 @@ body[data-theme="solar"] .xp-fill {
   background:linear-gradient(90deg,#49f5a3,#5ecfff);
   color:#06271a;
   border-color:#91ffd0;
+}
+.coach-module-card{
+  margin:12px 14px 0;
+  padding:16px;
+  border-radius:18px;
+  border:1px solid rgba(106,194,160,.16);
+  background:
+    radial-gradient(circle at top right, rgba(77,232,164,.08), transparent 26%),
+    linear-gradient(180deg,rgba(12,24,21,.96),rgba(8,16,15,.99));
+  box-shadow:0 16px 32px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.coach-module-head{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin-bottom:12px;
+}
+.coach-module-kicker{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:1.9px;
+  text-transform:uppercase;
+  color:#8fd1ac;
+}
+.coach-module-title{
+  margin:0;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  line-height:.95;
+  letter-spacing:1.3px;
+  color:#effff7;
+}
+.coach-module-sub{
+  font-size:12px;
+  line-height:1.55;
+  color:#97bca9;
+}
+.coach-module-body{min-width:0;}
+.coach-module-inline{
+  font-size:12px;
+  line-height:1.7;
+  color:#d4ecdf;
+}
+.coach-module-card .coach-kpi-grid{
+  margin-top:0 !important;
+}
+.coach-module-card .coach-action-btn{
+  min-height:48px;
+  border-radius:14px;
+}
+.coach-module-card .coach-action-btn.primary{
+  box-shadow:0 10px 24px rgba(87,218,178,.14);
+}
+.coach-integration-insights,
+.coach-integration-train,
+.coach-integration-plan,
+.coach-integration-nutrition,
+.coach-integration-cali{
+  display:block;
+}
+.coach-chat-wrap .coach-module-card{
+  margin:0 0 12px;
+}
+.coach-module-insights .coach-mini-tags{
+  margin-top:10px;
+}
+.coach-module-insights .coach-kpi-value{
+  color:#7cebc8;
+}
+.coach-module-nutrition .coach-kpi-value{
+  color:#71dcff;
+}
+.coach-module-plan .coach-kpi-value,
+.coach-module-cali .coach-kpi-value,
+.coach-module-train .coach-kpi-value{
+  color:#effff7;
+}
+.coach-module-card .coach-kpi-card{
+  border-radius:14px;
+  border-color:rgba(108,191,159,.14);
+  background:linear-gradient(180deg,rgba(18,33,29,.96),rgba(11,20,18,.98));
+}
+.coach-module-card .coach-kpi-sub{
+  line-height:1.55;
 }
 .coach-command-deck{
   padding:18px;

@@ -458,18 +458,30 @@
     else host.insertAdjacentHTML('afterbegin', html);
   }
 
+  function _coachModuleShell(kind, kicker, title, sub, body) {
+    return '' +
+      '<section class="coach-module-card coach-module-' + kind + '">' +
+        '<div class="coach-module-head">' +
+          '<span class="coach-module-kicker">' + kicker + '</span>' +
+          '<h3 class="coach-module-title">' + title + '</h3>' +
+          (sub ? '<div class="coach-module-sub">' + sub + '</div>' : '') +
+        '</div>' +
+        '<div class="coach-module-body">' + body + '</div>' +
+      '</section>';
+  }
+
   function _enhanceInsightsTab() {
     const host = document.getElementById('coach-tab-insights');
     if (!host) return;
     const s = buildCoachUnifiedState();
     const cDiff = s.trends.cardioMins14 - s.trends.cardioMinsPrev14;
     const wDiff = s.trends.weightedVol14 - s.trends.weightedVolPrev14;
-    const card =
-      '<div class="coach-bubble coach-integration-insights">' +
-        '<strong>' + _cx('Performance Snapshot', '\u0644\u0642\u0637\u0629 \u0627\u0644\u0623\u062f\u0627\u0621') + '</strong><br>' +
+    const body =
+      '<div class="coach-module-inline">' +
         _cx('Readiness', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629') + ' ' + s.readiness.score + '/100 | ' +
         _cx('Nutrition', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629') + ' ' + s.nutrition.score + '/100 | ' +
         _cx('Active days (7d):', '\u0627\u0644\u0623\u064a\u0627\u0645 \u0627\u0644\u0646\u0634\u0637\u0629 (7 \u0623\u064a\u0627\u0645):') + ' ' + s.consistency.activeDays7 +
+        '</div>' +
         '<div class="coach-mini-tags">' +
           '<span class="coach-mini-tag ' + (s.readiness.score >= 70 ? 'good' : s.readiness.score >= 55 ? 'warn' : 'alert') + '">' + _cx('Readiness', '\u0627\u0644\u062c\u0627\u0647\u0632\u064a\u0629') + '</span>' +
           '<span class="coach-mini-tag ' + (s.nutrition.score >= 70 ? 'good' : s.nutrition.score >= 55 ? 'warn' : 'alert') + '">' + _cx('Nutrition', '\u0627\u0644\u062a\u063a\u0630\u064a\u0629') + '</span>' +
@@ -482,23 +494,29 @@
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
           '<button class="coach-action-btn primary" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.open){window.FORGE_DUELS.open();}">' + _cx('Open 1v1 Duel', '\u0627\u0641\u062a\u062d \u062a\u062d\u062f\u064a 1v1') + '</button>' +
           '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.startXp){window.FORGE_DUELS.startXp();}">' + _cx('Start New Duel', '\u0627\u0628\u062f\u0623 \u062a\u062d\u062f\u064a \u062c\u062f\u064a\u062f') + '</button>' +
-        '</div>' +
-      '</div>';
+        '</div>';
+    const card = _coachModuleShell(
+      'insights',
+      _cx('Performance Snapshot', '\u0644\u0642\u0637\u0629 \u0627\u0644\u0623\u062f\u0627\u0621'),
+      _cx('Signals And Pressure', '\u0627\u0644\u0625\u0634\u0627\u0631\u0627\u062a \u0648\u0627\u0644\u0636\u063a\u0637'),
+      _cx('Use this lane to read momentum before choosing the next push.', '\u0627\u0633\u062a\u062e\u062f\u0645 \u0647\u0630\u0627 \u0627\u0644\u0645\u0633\u0627\u0631 \u0644\u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0632\u062e\u0645 \u0642\u0628\u0644 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062f\u0641\u0639\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629.'),
+      body
+    );
     const wrap = host.querySelector('.coach-chat-wrap');
     if (!wrap) return;
     const old = host.querySelector('.coach-integration-insights');
     if (old) old.remove();
-    wrap.insertAdjacentHTML('afterbegin', card);
+    wrap.insertAdjacentHTML('afterbegin', '<div class="coach-integration-insights">' + card + '</div>');
   }
   function _enhanceTrainTab() {
     const host = document.getElementById('coach-tab-train');
     if (!host) return;
     const s = buildCoachUnifiedState();
-    const card =
-      '<div class="coach-bubble coach-integration-train">' +
-        '<strong>' + _cx('Mode Launcher', '\u0645\u0634\u063a\u0644 \u0627\u0644\u0623\u0646\u0645\u0627\u0637') + '</strong><br>' +
+    const body =
+        '<div class="coach-module-inline">' +
         _cx('Pick your session type directly from Coach. Weekly mix:', '\u0627\u062e\u062a\u0631 \u0646\u0648\u0639 \u0627\u0644\u062c\u0644\u0633\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 \u0645\u0646 \u0627\u0644\u0645\u062f\u0631\u0628. \u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0623\u0633\u0628\u0648\u0639:') + ' ' +
         'W ' + s.weekly.weightedSessions + ' | BW ' + s.weekly.bwSessions + ' | ' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + ' ' + s.weekly.cardioSessions +
+        '</div>' +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
           '<button class="coach-action-btn primary" onclick="_coachStartWeightedFromCoach()">' + _cx('Start Weighted', '\u0627\u0628\u062f\u0623 \u0623\u0648\u0632\u0627\u0646') + '</button>' +
           '<button class="coach-action-btn" onclick="_coachStartBodyweightFromCoach()">' + _cx('Start Bodyweight', '\u0627\u0628\u062f\u0623 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
@@ -510,8 +528,14 @@
         '<div class="coach-dual-actions" style="margin-top:8px;">' +
           '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.open){window.FORGE_DUELS.open();}">' + _cx('Open 1v1 Duel', '\u0627\u0641\u062a\u062d \u062a\u062d\u062f\u064a 1v1') + '</button>' +
           '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.startVolume){window.FORGE_DUELS.startVolume();}">' + _cx('Volume Duel', '\u062a\u062d\u062f\u064a \u0627\u0644\u062d\u062c\u0645') + '</button>' +
-        '</div>' +
-      '</div>';
+        '</div>';
+    const card = _coachModuleShell(
+      'train',
+      _cx('Mode Launcher', '\u0645\u0634\u063a\u0644 \u0627\u0644\u0623\u0646\u0645\u0627\u0637'),
+      _cx('Choose Your Session', '\u0627\u062e\u062a\u0631 \u062c\u0644\u0633\u062a\u0643'),
+      _cx('Launch the right mode fast instead of hunting through the app.', '\u0627\u0637\u0644\u0642 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0645\u0646\u0627\u0633\u0628 \u0628\u0633\u0631\u0639\u0629 \u0628\u062f\u0644 \u0627\u0644\u0628\u062d\u062b \u0639\u0628\u0631 \u0627\u0644\u062a\u0637\u0628\u064a\u0642.'),
+      body
+    );
     _replaceCoachInject(host, 'coach-integration-train', card, 'prepend');
   }
   function _enhancePlanTab() {
@@ -524,16 +548,20 @@
     const wp = Math.min(100, Math.round((s.weekly.weightedSessions / wTarget) * 100));
     const bp = Math.min(100, Math.round((s.weekly.bwSessions / bwTarget) * 100));
     const cp = Math.min(100, Math.round((s.weekly.cardioSessions / cTarget) * 100));
-    const card =
-      '<div class="coach-bubble coach-integration-plan">' +
-        '<strong>' + _cx('Integrated Weekly Targets', '\u0623\u0647\u062f\u0627\u0641 \u0623\u0633\u0628\u0648\u0639\u064a\u0629 \u0645\u062a\u0643\u0627\u0645\u0644\u0629') + '</strong><br>' +
+    const body =
         '<div class="coach-kpi-grid" style="margin-top:10px;">' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Weighted', '\u0623\u0648\u0632\u0627\u0646') + '</div><div class="coach-kpi-value">' + s.weekly.weightedSessions + '/' + wTarget + '</div><div class="coach-kpi-sub">' + wp + '% ' + _cx('complete', '\u0645\u0643\u062a\u0645\u0644') + '</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Bodyweight', '\u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</div><div class="coach-kpi-value">' + s.weekly.bwSessions + '/' + bwTarget + '</div><div class="coach-kpi-sub">' + bp + '% ' + _cx('complete', '\u0645\u0643\u062a\u0645\u0644') + '</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Cardio', '\u0643\u0627\u0631\u062f\u064a\u0648') + '</div><div class="coach-kpi-value">' + s.weekly.cardioSessions + '/' + cTarget + '</div><div class="coach-kpi-sub">' + cp + '% ' + _cx('complete', '\u0645\u0643\u062a\u0645\u0644') + '</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Cardio Minutes', '\u062f\u0642\u0627\u0626\u0642 \u0627\u0644\u0643\u0627\u0631\u062f\u064a\u0648') + '</div><div class="coach-kpi-value">' + s.weekly.cardioMins + '</div><div class="coach-kpi-sub">' + _cx('target 120 min', '\u0627\u0644\u0647\u062f\u0641 120 \u062f\u0642\u064a\u0642\u0629') + '</div></div>' +
-        '</div>' +
-      '</div>';
+        '</div>';
+    const card = _coachModuleShell(
+      'plan',
+      _cx('Integrated Weekly Targets', '\u0623\u0647\u062f\u0627\u0641 \u0623\u0633\u0628\u0648\u0639\u064a\u0629 \u0645\u062a\u0643\u0627\u0645\u0644\u0629'),
+      _cx('Target Board', '\u0644\u0648\u062d\u0629 \u0627\u0644\u0623\u0647\u062f\u0627\u0641'),
+      _cx('See where the week is full, thin, or off-balance before scheduling the next block.', '\u0627\u0631\u0623 \u0623\u064a\u0646 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0645\u0643\u062a\u0645\u0644 \u0623\u0648 \u0636\u0639\u064a\u0641 \u0642\u0628\u0644 \u062c\u062f\u0648\u0644\u0629 \u0627\u0644\u0643\u062a\u0644\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629.'),
+      body
+    );
     _replaceCoachInject(host, 'coach-integration-plan', card, 'prepend');
   }
   function _enhanceNutritionTab() {
@@ -555,9 +583,7 @@
             ? _cx('You are above target calories today.', '\u0633\u0639\u0631\u0627\u062a\u0643 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u064a\u0648\u0645.')
             : _cx('Calories are in range.', '\u0633\u0639\u0631\u0627\u062a\u0643 \u0636\u0645\u0646 \u0627\u0644\u0646\u0637\u0627\u0642.')))
       : _cx('No meals logged today yet. Log your first meal to activate today actions.', '\u0644\u0627 \u062a\u0648\u062c\u062f \u0648\u062c\u0628\u0627\u062a \u0645\u0633\u062c\u0644\u0629 \u0627\u0644\u064a\u0648\u0645. \u0633\u062c\u0651\u0644 \u0623\u0648\u0644 \u0648\u062c\u0628\u0629 \u0644\u062a\u0641\u0639\u064a\u0644 \u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u064a\u0648\u0645.');
-    const card =
-      '<div class="coach-bubble coach-integration-nutrition">' +
-        '<strong>' + _cx('Today Nutrition Actions', '\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u062a\u063a\u0630\u064a\u0629 \u0627\u0644\u064a\u0648\u0645') + '</strong>' +
+    const body =
         '<div class="coach-kpi-grid" style="margin-top:10px;">' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('Meals', '\u0648\u062c\u0628\u0627\u062a') + '</div><div class="coach-kpi-value">' + (tn.mealCount || 0) + '</div><div class="coach-kpi-sub">' + _cx('logged today', '\u0645\u0633\u062c\u0644\u0629 \u0627\u0644\u064a\u0648\u0645') + '</div></div>' +
           '<div class="coach-kpi-card"><div class="coach-kpi-label">' + _cx('protein', '\u0628\u0631\u0648\u062a\u064a\u0646') + '</div><div class="coach-kpi-value">' + Math.round(tn.p || 0) + 'g</div><div class="coach-kpi-sub">' + p + '% ' + _cx('of target', '\u0645\u0646 \u0627\u0644\u0647\u062f\u0641') + '</div></div>' +
@@ -579,8 +605,14 @@
         '</div>' +
         '<div style="margin-top:6px;">' +
           guidance +
-        '</div>' +
-      '</div>';
+        '</div>';
+    const card = _coachModuleShell(
+      'nutrition',
+      _cx('Today Nutrition Actions', '\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u062a\u063a\u0630\u064a\u0629 \u0627\u0644\u064a\u0648\u0645'),
+      _cx('Fuel And Recovery', '\u0627\u0644\u0648\u0642\u0648\u062f \u0648\u0627\u0644\u062a\u0639\u0627\u0641\u064a'),
+      _cx('Close the protein and calorie gaps that are holding back the next session.', '\u0623\u063a\u0644\u0642 \u0641\u062c\u0648\u0627\u062a \u0627\u0644\u0628\u0631\u0648\u062a\u064a\u0646 \u0648\u0627\u0644\u0633\u0639\u0631\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u0624\u062e\u0631 \u0627\u0644\u062c\u0644\u0633\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629.'),
+      body
+    );
     _replaceCoachInject(host, 'coach-integration-nutrition', card, 'prepend');
   }
   function _enhanceCaliTab() {
@@ -589,15 +621,21 @@
     const s = buildCoachUnifiedState();
     const goal = 2;
     const pct = Math.min(100, Math.round((s.weekly.bwSessions / goal) * 100));
-    const card =
-      '<div class="coach-bubble coach-integration-cali">' +
-        '<strong>' + _cx('Calisthenics Weekly Focus', '\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u0643\u0627\u0644\u064a\u0633\u062b\u064a\u0646\u0643\u0633 \u0627\u0644\u0623\u0633\u0628\u0648\u0639\u064a') + '</strong><br>' +
+    const body =
+        '<div class="coach-module-inline">' +
         _cx('BW sessions this week:', '\u062c\u0644\u0633\u0627\u062a \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645 \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639:') + ' ' + s.weekly.bwSessions + '/' + goal + ' (' + pct + '%)' +
+        '</div>' +
         '<div class="coach-dual-actions" style="margin-top:10px;">' +
           '<button class="coach-action-btn primary" onclick="_coachStartBodyweightFromCoach()">' + _cx('Start BW Session', '\u0627\u0628\u062f\u0623 \u062c\u0644\u0633\u0629 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645') + '</button>' +
           '<button class="coach-action-btn" onclick="_coachStartCardioFromCoach()">' + _cx('Add Cardio Finish', '\u0623\u0636\u0641 \u062e\u0627\u062a\u0645\u0629 \u0643\u0627\u0631\u062f\u064a\u0648') + '</button>' +
-        '</div>' +
-      '</div>';
+        '</div>';
+    const card = _coachModuleShell(
+      'cali',
+      _cx('Calisthenics Weekly Focus', '\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u0643\u0627\u0644\u064a\u0633\u062b\u064a\u0646\u0643\u0633 \u0627\u0644\u0623\u0633\u0628\u0648\u0639\u064a'),
+      _cx('Bodyweight Lane', '\u0645\u0633\u0627\u0631 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645'),
+      _cx('Use bodyweight days to build control, skill, and cleaner weekly balance.', '\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u064a\u0627\u0645 \u0648\u0632\u0646 \u0627\u0644\u062c\u0633\u0645 \u0644\u0628\u0646\u0627\u0621 \u0627\u0644\u062a\u062d\u0643\u0645 \u0648\u0627\u0644\u0645\u0647\u0627\u0631\u0629 \u0648\u062a\u0648\u0627\u0632\u0646 \u0623\u0641\u0636\u0644 \u0644\u0644\u0623\u0633\u0628\u0648\u0639.'),
+      body
+    );
     _replaceCoachInject(host, 'coach-integration-cali', card, 'prepend');
   }
   function renderCoachCardio() {

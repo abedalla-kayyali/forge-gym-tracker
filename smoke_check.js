@@ -261,6 +261,11 @@ if (fs.existsSync(coachStatePath)) {
   if (!coachState.includes('coach-command-deck')) fail('Coach premium command deck is missing');
   if (!coachState.includes('coach-signal-board')) fail('Coach premium signal board is missing');
   if (!coachState.includes('coach-action-lane')) fail('Coach premium action lane is missing');
+  if (!coachState.includes('coach-module-card')) fail('Coach premium module shell is missing');
+}
+if (fs.existsSync(indexPath)) {
+  const html = fs.readFileSync(indexPath, 'utf8');
+  if (!html.includes('coach-header-kicker')) fail('Coach premium header kicker is missing');
 }
 if (fs.existsSync(socialUiPath)) {
   const socialUi = fs.readFileSync(socialUiPath, 'utf8');

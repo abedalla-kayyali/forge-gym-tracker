@@ -1776,11 +1776,15 @@
       <div class="coach-panel" id="coach-panel">
         <div class="coach-header">
           <div class="coach-avatar" id="coach-avatar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.96-3 2.5 2.5 0 0 1-1.32-4.24 3 3 0 0 1 .34-5.58 2.5 2.5 0 0 1 1.96-3A2.5 2.5 0 0 1 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.96-3 2.5 2.5 0 0 0 1.32-4.24 3 3 0 0 0-.34-5.58 2.5 2.5 0 0 0-1.96-3A2.5 2.5 0 0 0 14.5 2z"/></svg></div>
-          <div style="flex:1;">
+          <div class="coach-header-copy">
+            <div class="coach-header-kicker">Performance Console</div>
             <div class="coach-name" id="coach-name-label" data-i18n="hdr.coach">FORGE COACH</div>
             <div class="coach-status" id="coach-status" data-i18n="coach.status.init">Analysing your training?</div>
           </div>
-          <div id="coach-score-badge" style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);line-height:1;"></div>
+          <div class="coach-header-side">
+            <div class="coach-header-meta">TODAY</div>
+            <div id="coach-score-badge" style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);line-height:1;"></div>
+          </div>
         </div>
         <div class="coach-score-wrap" id="coach-score-wrap" style="display:none;">
           <svg class="score-ring-svg" width="68" height="68" viewBox="0 0 68 68">
