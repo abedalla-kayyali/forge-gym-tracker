@@ -88,6 +88,16 @@
   function _socialIsRtl() {
     return (typeof currentLang !== 'undefined') && currentLang === 'ar';
   }
+  function _athleteName(obj, fallback) {
+    const raw = obj && (obj.name || obj.displayName || obj.email);
+    return String(raw || fallback || 'Athlete').trim();
+  }
+  function _leadLabel(token, meObj, friendObj) {
+    if (token === 'YOU') return _athleteName(meObj, 'You');
+    if (token === 'FRIEND' || token === 'RIVAL') return _athleteName(friendObj, 'Friend');
+    if (token === 'TIE' || token === 'EVEN') return _socialTx('even', 'Even');
+    return String(token || '');
+  }
 
   function _maybeToast(msg, tone) {
     if (typeof showToast === 'function') showToast(msg, tone || 'success');
@@ -145,6 +155,8 @@
   }
   function _renderCapsuleBoard(meSummary, friendSummary) {
     const muscles = _compareMuscleOrder();
+    const me = _localSummary();
+    const friend = _friendCompareSummary(state.selectedFriendId);
     return '<div class="social-card social-capsule-board">' +
       '<div class="social-card-title">BODY CONTROL BOARD</div>' +
       '<div class="social-card-sub">Capsule-only muscle control board for faster compare selection on mobile.</div>' +
@@ -155,13 +167,15 @@
           const lead = myPower === rivalPower ? 'EVEN' : myPower > rivalPower ? 'YOU' : 'RIVAL';
           return '<button class="social-capsule-chip' + (state.selectedBodyMuscle === muscle ? ' active' : '') + '" type="button" onclick=\'window.FORGE_SOCIAL.selectBodyMuscle(' + JSON.stringify(muscle) + ')\'>' +
             '<span>' + _escape(muscle) + '</span>' +
-            '<strong>' + _escape(lead) + '</strong>' +
+            '<strong>' + _escape(_leadLabel(lead, me, friend)) + '</strong>' +
           '</button>';
         }).join('') + '</div>' +
       '</div>' +
     '</div>';
   }
   function _spotlightMetrics(meSummary, friendSummary) {
+    const me = _localSummary();
+    const friend = _friendCompareSummary(state.selectedFriendId);
     const keys = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Forearms'];
     const rows = keys.map((key) => {
       const mine = meSummary?.[key] || {};
@@ -179,13 +193,15 @@
     const heavy = rows.slice().sort((a, b) => b.myMax - a.myMax)[0];
     const recent = rows.slice().sort((a, b) => new Date(b.myLast || 0).getTime() - new Date(a.myLast || 0).getTime())[0];
     return [
-      { title: 'Strongest Lead', muscle: lead?.key || 'Chest', label: lead?.diff > 0 ? 'You lead' : 'Even' },
-      { title: 'Biggest Gap', muscle: trail?.key || 'Legs', label: trail?.diff < 0 ? 'Rival leads' : 'Even' },
+      { title: 'Strongest Lead', muscle: lead?.key || 'Chest', label: lead?.diff > 0 ? (_athleteName(me, 'You') + ' leads') : 'Even' },
+      { title: 'Biggest Gap', muscle: trail?.key || 'Legs', label: trail?.diff < 0 ? (_athleteName(friend, 'Friend') + ' leads') : 'Even' },
       { title: 'Heaviest Plate', muscle: heavy?.key || 'Chest', label: heavy?.myMax ? (heavy.myMax + ' kg') : 'No max yet' },
       { title: 'Most Recent', muscle: recent?.key || 'Core', label: _dayText(recent?.myLast || '') }
     ];
   }
   function _muscleInsight(meSummary, friendSummary) {
+    const me = _localSummary();
+    const friend = _friendCompareSummary(state.selectedFriendId);
     const keys = ['Chest', 'Back', 'Shoulders', 'Legs', 'Core', 'Glutes', 'Calves', 'Biceps', 'Triceps', 'Forearms'];
     const scored = keys.map((key) => {
       const mine = meSummary?.[key] || {};
@@ -197,8 +213,8 @@
     const lead = scored.slice().sort((a, b) => b.diff - a.diff)[0];
     const trail = scored.slice().sort((a, b) => a.diff - b.diff)[0];
     const parts = [];
-    if (lead && lead.diff > 0) parts.push(lead.key + ': You lead');
-    if (trail && trail.diff < 0) parts.push(trail.key + ': Rival leads');
+    if (lead && lead.diff > 0) parts.push(lead.key + ': ' + _athleteName(me, 'You') + ' leads');
+    if (trail && trail.diff < 0) parts.push(trail.key + ': ' + _athleteName(friend, 'Friend') + ' leads');
     return parts.length ? parts.join(' | ') : 'Even body-map rivalry right now.';
   }
   function _buildMuscleExerciseRows(muscle, meSummary, friendSummary) {
@@ -232,6 +248,8 @@
   }
   function _renderMuscleExerciseLeaderboard(muscle, meSummary, friendSummary) {
     const rows = _buildMuscleExerciseRows(muscle, meSummary, friendSummary);
+    const me = _localSummary();
+    const friend = _friendCompareSummary(state.selectedFriendId);
     if (!rows.length) {
       return '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">EXERCISE LEADERBOARD</div><div class="social-card-sub">No weighted exercise records published for this muscle yet.</div></div>';
     }
@@ -245,7 +263,7 @@
             ? 'One focused session can start closing this gap.'
             : 'Next strong session decides this exercise.';
         return '<div class="social-rivalry-row">' +
-          '<div class="social-rivalry-main"><strong>' + _escape(row.name) + '</strong><span>' + _escape(row.lead === 'YOU' ? 'You lead' : row.lead === 'RIVAL' ? 'Rival leads' : 'Even') + '</span></div>' +
+          '<div class="social-rivalry-main"><strong>' + _escape(row.name) + '</strong><span>' + _escape(row.lead === 'YOU' ? (_athleteName(me, 'You') + ' leads') : row.lead === 'RIVAL' ? (_athleteName(friend, 'Friend') + ' leads') : 'Even') + '</span></div>' +
           '<div class="social-rivalry-metrics"><b>' + _escape(_metricOrDash(row.myWeight, 'kg')) + '</b><span>vs</span><b>' + _escape(_metricOrDash(row.rivalWeight, 'kg')) + '</b></div>' +
           '<div class="social-rivalry-delta">' + _escape(_muscleExerciseDeltaLabel(row)) + '</div>' +
           '<div class="social-card-sub">Last: ' + _escape(_dayText(row.myRow.lastAt)) + ' vs ' + _escape(_dayText(row.rivalRow.lastAt)) + ' | Sessions: ' + _num(row.myRow.sessions, 0) + ' vs ' + _num(row.rivalRow.sessions, 0) + '<br>' + _escape(tip) + '</div>' +
@@ -323,19 +341,20 @@
       if (diff > 0 && (!bestLead || diff > bestLead.diff)) bestLead = { ...lane, diff };
       if (diff < 0 && (!bestTrail || Math.abs(diff) > Math.abs(bestTrail.diff))) bestTrail = { ...lane, diff };
     });
-    if (bestLead && bestTrail) return 'You lead in ' + bestLead.label + '. Catch up lane: ' + bestTrail.label + '.';
-    if (bestLead) return 'You lead in ' + bestLead.label + '. Push a duel before the gap closes.';
-    if (bestTrail) return 'You trail in ' + bestTrail.label + '. Best catch-up lane is clear.';
+    if (bestLead && bestTrail) return _athleteName(me, 'You') + ' leads in ' + bestLead.label + '. Catch up lane: ' + bestTrail.label + '.';
+    if (bestLead) return _athleteName(me, 'You') + ' leads in ' + bestLead.label + '. Push a duel before the gap closes.';
+    if (bestTrail) return _athleteName(friend, 'Friend') + ' leads in ' + bestTrail.label + '. Best catch-up lane is clear.';
     return 'Even matchup. One strong session can swing this rivalry.';
   }
 
-  function _compareMetric(label, me, friend, unit) {
+  function _compareMetric(label, me, friend, unit, meObj, friendObj) {
     const meVal = _num(me, 0);
     const friendVal = _num(friend, 0);
     const lead = meVal === friendVal ? 'TIE' : meVal > friendVal ? 'YOU' : 'FRIEND';
+    const leadText = _leadLabel(lead, meObj || _localSummary(), friendObj || _friendCompareSummary(state.selectedFriendId));
     return '' +
       '<div class="social-compare-metric">' +
-        '<div class="social-compare-top"><span>' + label + '</span><strong>' + lead + '</strong></div>' +
+        '<div class="social-compare-top"><span>' + label + '</span><strong>' + _escape(leadText) + '</strong></div>' +
         '<div class="social-compare-values"><b>' + meVal + (unit || '') + '</b><span>vs</span><b>' + friendVal + (unit || '') + '</b></div>' +
       '</div>';
   }
@@ -409,13 +428,13 @@
           '<div class="social-card-title">ACTIVE DUEL</div>' +
           '<div class="social-card-sub">' + _escape(active.modeLabel || 'Workout Sessions') + ' | ' + _num(active.daysLeft, 0) + ' day(s) left</div>' +
           '<div class="social-compare-head">' +
-            '<div class="social-compare-side"><span>YOU</span><strong>' + _escape(active.myName || 'You') + '</strong></div>' +
+            '<div class="social-compare-side"><span>ATHLETE</span><strong>' + _escape(active.myName || 'You') + '</strong></div>' +
             '<div class="social-compare-vs">VS</div>' +
-            '<div class="social-compare-side"><span>RIVAL</span><strong>' + _escape(active.theirName || 'Friend') + '</strong></div>' +
+            '<div class="social-compare-side"><span>ATHLETE</span><strong>' + _escape(active.theirName || 'Friend') + '</strong></div>' +
           '</div>' +
           '<div class="social-compare-grid">' +
-            _compareMetric('Progress', active.mine, active.theirs, '') +
-            _compareMetric('Target', active.target, active.target, '') +
+            _compareMetric('Progress', active.mine, active.theirs, '', { name: active.myName || 'You' }, { name: active.theirName || 'Friend' }) +
+            _compareMetric('Target', active.target, active.target, '', { name: active.myName || 'You' }, { name: active.theirName || 'Friend' }) +
           '</div>' +
         '</div>'
       : '<div class="social-card"><div class="social-card-title">NO ACTIVE DUEL</div><div class="social-card-sub">Add a rival and start a competitive lane from Friends or Duels.</div></div>';
@@ -535,8 +554,8 @@
   function _renderCompareOverview(me, friend) {
     const compareMeta = '' +
       '<div class="social-empty-grid">' +
-        '<div class="social-card"><div class="social-card-title">RANK</div><div class="social-card-sub">You: ' + _escape(me.rank || 'Unranked') + ' | Rival: ' + _escape(friend.rank || 'Unranked') + '</div></div>' +
-        '<div class="social-card"><div class="social-card-title">STRONGEST AREA</div><div class="social-card-sub">You: ' + _escape(me.strongestArea || 'N/A') + ' | Rival: ' + _escape(friend.strongestArea || 'N/A') + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">RANK</div><div class="social-card-sub">' + _escape(_athleteName(me, 'You')) + ': ' + _escape(me.rank || 'Unranked') + ' | ' + _escape(_athleteName(friend, 'Friend')) + ': ' + _escape(friend.rank || 'Unranked') + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">STRONGEST AREA</div><div class="social-card-sub">' + _escape(_athleteName(me, 'You')) + ': ' + _escape(me.strongestArea || 'N/A') + ' | ' + _escape(_athleteName(friend, 'Friend')) + ': ' + _escape(friend.strongestArea || 'N/A') + '</div></div>' +
       '</div>';
     return compareMeta +
       '<div class="social-compare-grid">' +
@@ -584,8 +603,8 @@
       : _num(my.minutes7d, 0) === _num(rival.minutes7d, 0)
       ? 'Cardio rivalry is even.'
       : _num(my.minutes7d, 0) > _num(rival.minutes7d, 0)
-        ? 'You lead cardio volume.'
-        : 'Rival leads cardio volume.';
+        ? (_athleteName(me, 'You') + ' leads cardio volume.')
+        : (_athleteName(friend, 'Friend') + ' leads cardio volume.');
     return '' +
       '<div class="social-card"><div class="social-card-title">CARDIO COMPARE</div><div class="social-card-sub">' + verdict + '</div></div>' +
       '<div class="social-compare-grid">' +
@@ -595,8 +614,8 @@
         _compareMetric('Activity Pulse', myHas ? 1 : 0, rivalHas ? 1 : 0, '') +
       '</div>' +
       '<div class="social-empty-grid">' +
-        '<div class="social-card"><div class="social-card-title">YOUR CARDIO SNAPSHOT</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(my.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(my.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(my.distance7d, 'km')) + '</div></div>' +
-        '<div class="social-card"><div class="social-card-title">RIVAL CARDIO SNAPSHOT</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(rival.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(rival.distance7d, 'km')) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(me, 'You')) + ' CARDIO</div><div class="social-card-sub">' + _escape(my.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(my.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(my.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(my.distance7d, 'km')) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(friend, 'Friend')) + ' CARDIO</div><div class="social-card-sub">' + _escape(rival.topMode || 'No cardio logged') + ' | Last: ' + _escape(_fmtShortDate(rival.lastCardioAt)) + '<br>Minutes: ' + _escape(_metricOrDash(rival.minutes7d, 'm')) + ' | Distance: ' + _escape(_metricOrDash(rival.distance7d, 'km')) + '</div></div>' +
       '</div>' +
       _renderCardioRivalries(me.cardioActivitySummary || {}, friend.cardioActivitySummary || {});
   }
@@ -611,8 +630,8 @@
       : _num(my.skillsDone, 0) === _num(rival.skillsDone, 0)
       ? 'Bodyweight skill output is even.'
       : _num(my.skillsDone, 0) > _num(rival.skillsDone, 0)
-        ? 'You lead on bodyweight skill variety.'
-        : 'Rival leads on bodyweight skill variety.';
+        ? (_athleteName(me, 'You') + ' leads on bodyweight skill variety.')
+        : (_athleteName(friend, 'Friend') + ' leads on bodyweight skill variety.');
     return '' +
       '<div class="social-card"><div class="social-card-title">BODYWEIGHT COMPARE</div><div class="social-card-sub">' + verdict + '</div></div>' +
       '<div class="social-compare-grid">' +
@@ -622,8 +641,8 @@
         _compareMetric('Best Hold', my.bestDurationSec, rival.bestDurationSec, 's') +
       '</div>' +
       '<div class="social-empty-grid">' +
-        '<div class="social-card"><div class="social-card-title">YOUR BODYWEIGHT SNAPSHOT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(my.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(my.bestDurationSec, 's')) + '</div></div>' +
-        '<div class="social-card"><div class="social-card-title">RIVAL BODYWEIGHT SNAPSHOT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(rival.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(rival.bestDurationSec, 's')) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(me, 'You')) + ' BODYWEIGHT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(my.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(my.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(my.bestDurationSec, 's')) + '</div></div>' +
+        '<div class="social-card"><div class="social-card-title">' + _escape(_athleteName(friend, 'Friend')) + ' BODYWEIGHT</div><div class="social-card-sub">Last: ' + _escape(_fmtShortDate(rival.lastBodyweightAt)) + '<br>Best reps: ' + _escape(_metricOrDash(rival.bestReps, '')) + ' | Hold: ' + _escape(_metricOrDash(rival.bestDurationSec, 's')) + '</div></div>' +
       '</div>' +
       _renderBodyweightRivalries(me.bodyweightExerciseSummary || {}, friend.bodyweightExerciseSummary || {});
   }
@@ -706,6 +725,8 @@
   }
   function _renderMuscleExerciseTable(muscle, me, friend) {
     const sortKey = state.compareSort.body || 'delta';
+    const meName = _athleteName(me, 'You');
+    const friendName = _athleteName(friend, 'Friend');
     const rows = _buildMuscleExerciseRows(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {}).sort((a, b) => {
       if (sortKey === 'last') return new Date(b.myRow.lastAt || 0).getTime() - new Date(a.myRow.lastAt || 0).getTime();
       if (sortKey === 'sessions') return (_num(b.myRow.sessions, 0) + _num(b.rivalRow.sessions, 0)) - (_num(a.myRow.sessions, 0) + _num(a.rivalRow.sessions, 0));
@@ -718,7 +739,7 @@
       { key: 'sessions', label: _socialTx('sessions', 'Sessions') },
       { key: 'max', label: _socialTx('max', 'Max') }
     ]) + _renderPremiumTable(
-      [_socialTx('exercise', 'Exercise'), _socialTx('you', 'You'), _socialTx('rival', 'Rival'), _socialTx('last', 'Last'), _socialTx('sessions', 'Sessions'), _socialTx('delta', 'Delta')],
+      [_socialTx('exercise', 'Exercise'), meName, friendName, _socialTx('last', 'Last'), _socialTx('sessions', 'Sessions'), _socialTx('delta', 'Delta')],
       rows.map((row) => (
         '<tr>' +
           '<td><strong>' + _escape(row.name) + '</strong></td>' +
@@ -734,6 +755,8 @@
   }
   function _renderBodyweightRivalries(meSummary, friendSummary) {
     const sortKey = state.compareSort.bodyweight || 'delta';
+    const me = _localSummary();
+    const friend = _friendCompareSummary(state.selectedFriendId);
     const rows = _bodyweightRivalRows(meSummary, friendSummary).sort((a, b) => {
       if (sortKey === 'last') return new Date(b.my.lastAt || 0).getTime() - new Date(a.my.lastAt || 0).getTime();
       if (sortKey === 'reps') return Math.max(_num(b.my.maxReps, 0), _num(b.rival.maxReps, 0)) - Math.max(_num(a.my.maxReps, 0), _num(a.rival.maxReps, 0));
@@ -760,7 +783,7 @@
             '<td>' + _escape(_metricOrDash(row.my.maxReps, '')) + ' / ' + _escape(_metricOrDash(row.rival.maxReps, '')) + '</td>' +
             '<td>' + _escape(_metricOrDash(row.my.maxDurationSec, 's')) + ' / ' + _escape(_metricOrDash(row.rival.maxDurationSec, 's')) + '</td>' +
             '<td>' + _escape(_dayText(row.my.lastAt)) + ' / ' + _escape(_dayText(row.rival.lastAt)) + '</td>' +
-            '<td>' + _escape(row.lead === 'YOU' ? _socialTx('you', 'You') : row.lead === 'RIVAL' ? _socialTx('rival', 'Rival') : _socialTx('even', 'Even')) + '</td>' +
+            '<td>' + _escape(_leadLabel(row.lead, me, friend)) + '</td>' +
             '<td><span class="social-rivalry-delta">' + _escape(_bodyweightDeltaLabel(row)) + '</span></td>' +
           '</tr>'
         )),
@@ -769,6 +792,8 @@
   }
   function _renderCardioRivalries(meSummary, friendSummary) {
     const sortKey = state.compareSort.cardio || 'delta';
+    const me = _localSummary();
+    const friend = _friendCompareSummary(state.selectedFriendId);
     const rows = _cardioRivalRows(meSummary, friendSummary).sort((a, b) => {
       if (sortKey === 'last') return new Date(b.my.lastAt || 0).getTime() - new Date(a.my.lastAt || 0).getTime();
       if (sortKey === 'best') return Math.max(_num(b.my.bestMinutes, 0), _num(b.rival.bestMinutes, 0), _num(b.my.bestDistanceKm, 0), _num(b.rival.bestDistanceKm, 0)) - Math.max(_num(a.my.bestMinutes, 0), _num(a.rival.bestMinutes, 0), _num(a.my.bestDistanceKm, 0), _num(a.rival.bestDistanceKm, 0));
@@ -795,7 +820,7 @@
             '<td>' + _escape(_metricOrDash(row.my.bestMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.bestMinutes, 'm')) + ' | ' + _escape(_metricOrDash(row.my.bestDistanceKm, 'km')) + ' / ' + _escape(_metricOrDash(row.rival.bestDistanceKm, 'km')) + '</td>' +
             '<td>' + _escape(_metricOrDash(row.my.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(row.rival.weeklyMinutes, 'm')) + '</td>' +
             '<td>' + _escape(_dayText(row.my.lastAt)) + ' / ' + _escape(_dayText(row.rival.lastAt)) + '</td>' +
-            '<td>' + _escape(row.lead === 'YOU' ? _socialTx('you', 'You') : row.lead === 'RIVAL' ? _socialTx('rival', 'Rival') : _socialTx('even', 'Even')) + '</td>' +
+            '<td>' + _escape(_leadLabel(row.lead, me, friend)) + '</td>' +
             '<td><span class="social-rivalry-delta">' + _escape(_cardioDeltaLabel(row)) + '</span></td>' +
           '</tr>'
         )),
@@ -837,9 +862,9 @@
         _leadCopy(me, friend),
         _compareSubtabs() +
         '<div class="social-compare-head">' +
-          '<div class="social-compare-side"><span>YOU</span><strong>' + _escape(me.name) + '</strong></div>' +
+          '<div class="social-compare-side"><span>ATHLETE</span><strong>' + _escape(me.name) + '</strong></div>' +
           '<div class="social-compare-vs">VS</div>' +
-          '<div class="social-compare-side"><span>RIVAL</span><strong>' + _escape(friend.name) + '</strong></div>' +
+          '<div class="social-compare-side"><span>ATHLETE</span><strong>' + _escape(friend.name) + '</strong></div>' +
         '</div>'
       ) + body;
   }
@@ -994,31 +1019,33 @@
     if (!modal || !selected) return;
     const me = _localSummary();
     const friend = _friendCompareSummary(selected.id);
+    const myName = _athleteName(me, 'You');
+    const friendName = _athleteName(friend, 'Friend');
     const myRow = me.muscleSummary?.[muscle] || {};
     const rivalRow = friend.muscleSummary?.[muscle] || {};
     const myWeight = _num(myRow.maxWeight, 0);
     const rivalWeight = _num(rivalRow.maxWeight, 0);
     const lead = myWeight === rivalWeight
-      ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? 'Even rivalry' : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? 'You lead consistency' : 'Rival leads consistency')
-      : myWeight > rivalWeight ? 'You lead max load' : 'Rival leads max load';
+      ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? 'Even rivalry' : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? (myName + ' leads consistency') : (friendName + ' leads consistency'))
+      : myWeight > rivalWeight ? (myName + ' leads max load') : (friendName + ' leads max load');
     const verdict = myWeight === rivalWeight
-      ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? (muscle + ' is contested') : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? ('You own ' + muscle + ' consistency') : ('Rival owns ' + muscle + ' consistency'))
-      : myWeight > rivalWeight ? ('You own ' + muscle + ' power') : ('Rival owns ' + muscle + ' power');
+      ? (_num(myRow.sessions, 0) === _num(rivalRow.sessions, 0) ? (muscle + ' is contested') : _num(myRow.sessions, 0) > _num(rivalRow.sessions, 0) ? (myName + ' owns ' + muscle + ' consistency') : (friendName + ' owns ' + muscle + ' consistency'))
+      : myWeight > rivalWeight ? (myName + ' owns ' + muscle + ' power') : (friendName + ' owns ' + muscle + ' power');
     if (title) title.textContent = muscle || 'Muscle';
     if (sub) sub.textContent = verdict;
     if (body) {
       body.innerHTML = '' +
         '<div class="social-empty-grid">' +
-          '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Max: ' + _escape(myWeight ? (myWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(myRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(myRow.lastTrainedAt)) + '</div></div>' +
-          '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Max: ' + _escape(rivalWeight ? (rivalWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(rivalRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(rivalRow.lastTrainedAt)) + '</div></div>' +
+          '<div class="social-card"><div class="social-card-title">' + _escape(myName) + '</div><div class="social-card-sub">Max: ' + _escape(myWeight ? (myWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(myRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(myRow.lastTrainedAt)) + '</div></div>' +
+          '<div class="social-card"><div class="social-card-title">' + _escape(friendName) + '</div><div class="social-card-sub">Max: ' + _escape(rivalWeight ? (rivalWeight + ' kg') : 'No weighted max') + '<br>Sessions: ' + _num(rivalRow.sessions, 0) + '<br>Last: ' + _escape(_dayText(rivalRow.lastTrainedAt)) + '</div></div>' +
         '</div>' +
         '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">MUSCLE VERDICT</div><div class="social-card-sub">' + _escape(lead) + '</div></div>' +
         _renderMuscleExerciseLeaderboard(muscle, me.muscleExerciseSummary || {}, friend.muscleExerciseSummary || {}) +
         '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CATCH-UP TIP</div><div class="social-card-sub">' +
           _escape(
             myWeight < rivalWeight
-              ? ('Add 2 focused ' + muscle + ' sessions this week to close the load gap.')
-              : ('Keep ' + muscle + ' frequency high to protect your lead.')
+              ? ('Add 2 focused ' + muscle + ' sessions this week to close ' + friendName + '\'s lead.')
+              : ('Keep ' + muscle + ' frequency high to protect your lead over ' + friendName + '.')
           ) +
         '</div></div>';
     }
@@ -1039,6 +1066,8 @@
     if (!modal || !selected) return;
     const me = _localSummary();
     const friend = _friendCompareSummary(selected.id);
+    const myName = _athleteName(me, 'You');
+    const friendName = _athleteName(friend, 'Friend');
     if (kind === 'cardio') {
       const mine = me.cardioActivitySummary?.[key] || {};
       const rival = friend.cardioActivitySummary?.[key] || {};
@@ -1046,20 +1075,20 @@
       const lead = (_num(mine.bestMinutes, 0) + _num(mine.bestDistanceKm, 0)) === (_num(rival.bestMinutes, 0) + _num(rival.bestDistanceKm, 0))
         ? 'Even cardio rivalry'
         : (_num(mine.bestMinutes, 0) + _num(mine.bestDistanceKm, 0)) > (_num(rival.bestMinutes, 0) + _num(rival.bestDistanceKm, 0))
-          ? 'You lead this activity'
-          : 'Rival leads this activity';
+          ? (myName + ' leads this activity')
+          : (friendName + ' leads this activity');
       if (title) title.textContent = label;
       if (sub) sub.textContent = lead;
       if (body) {
         body.innerHTML = '' +
           '<div class="social-empty-grid">' +
-            '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Best minutes: ' + _escape(_metricOrDash(mine.bestMinutes, 'm')) + '<br>Best distance: ' + _escape(_metricOrDash(mine.bestDistanceKm, 'km')) + '<br>Weekly total: ' + _escape(_metricOrDash(mine.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(mine.weeklyDistanceKm, 'km')) + '<br>Last: ' + _escape(_fmtMaybeDate(mine.lastAt)) + '</div></div>' +
-            '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Best minutes: ' + _escape(_metricOrDash(rival.bestMinutes, 'm')) + '<br>Best distance: ' + _escape(_metricOrDash(rival.bestDistanceKm, 'km')) + '<br>Weekly total: ' + _escape(_metricOrDash(rival.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(rival.weeklyDistanceKm, 'km')) + '<br>Last: ' + _escape(_fmtMaybeDate(rival.lastAt)) + '</div></div>' +
+            '<div class="social-card"><div class="social-card-title">' + _escape(myName) + '</div><div class="social-card-sub">Best minutes: ' + _escape(_metricOrDash(mine.bestMinutes, 'm')) + '<br>Best distance: ' + _escape(_metricOrDash(mine.bestDistanceKm, 'km')) + '<br>Weekly total: ' + _escape(_metricOrDash(mine.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(mine.weeklyDistanceKm, 'km')) + '<br>Last: ' + _escape(_fmtMaybeDate(mine.lastAt)) + '</div></div>' +
+            '<div class="social-card"><div class="social-card-title">' + _escape(friendName) + '</div><div class="social-card-sub">Best minutes: ' + _escape(_metricOrDash(rival.bestMinutes, 'm')) + '<br>Best distance: ' + _escape(_metricOrDash(rival.bestDistanceKm, 'km')) + '<br>Weekly total: ' + _escape(_metricOrDash(rival.weeklyMinutes, 'm')) + ' / ' + _escape(_metricOrDash(rival.weeklyDistanceKm, 'km')) + '<br>Last: ' + _escape(_fmtMaybeDate(rival.lastAt)) + '</div></div>' +
           '</div>' +
           '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CHASE TIP</div><div class="social-card-sub">' +
             _escape(_num(mine.bestMinutes, 0) >= _num(rival.bestMinutes, 0)
-              ? 'Protect your lead with one more strong session this week.'
-              : 'Beat the rival by adding one longer session or one farther effort this week.') +
+              ? ('Protect your lead over ' + friendName + ' with one more strong session this week.')
+              : ('Beat ' + friendName + ' by adding one longer session or one farther effort this week.')) +
           '</div></div>';
       }
     } else {
@@ -1069,19 +1098,19 @@
       const lead = Math.max(_num(mine.maxReps, 0), _num(mine.maxDurationSec, 0)) === Math.max(_num(rival.maxReps, 0), _num(rival.maxDurationSec, 0))
         ? 'Even bodyweight rivalry'
         : Math.max(_num(mine.maxReps, 0), _num(mine.maxDurationSec, 0)) > Math.max(_num(rival.maxReps, 0), _num(rival.maxDurationSec, 0))
-          ? 'You lead this exercise'
-          : 'Rival leads this exercise';
+          ? (myName + ' leads this exercise')
+          : (friendName + ' leads this exercise');
       if (title) title.textContent = label;
       if (sub) sub.textContent = lead;
       if (body) {
         body.innerHTML = '' +
           '<div class="social-empty-grid">' +
-            '<div class="social-card"><div class="social-card-title">YOU</div><div class="social-card-sub">Max reps: ' + _escape(_metricOrDash(mine.maxReps, '')) + '<br>Best hold: ' + _escape(_metricOrDash(mine.maxDurationSec, 's')) + '<br>Sessions: ' + _num(mine.sessions, 0) + '<br>Last: ' + _escape(_fmtMaybeDate(mine.lastAt)) + '</div></div>' +
-            '<div class="social-card"><div class="social-card-title">RIVAL</div><div class="social-card-sub">Max reps: ' + _escape(_metricOrDash(rival.maxReps, '')) + '<br>Best hold: ' + _escape(_metricOrDash(rival.maxDurationSec, 's')) + '<br>Sessions: ' + _num(rival.sessions, 0) + '<br>Last: ' + _escape(_fmtMaybeDate(rival.lastAt)) + '</div></div>' +
+            '<div class="social-card"><div class="social-card-title">' + _escape(myName) + '</div><div class="social-card-sub">Max reps: ' + _escape(_metricOrDash(mine.maxReps, '')) + '<br>Best hold: ' + _escape(_metricOrDash(mine.maxDurationSec, 's')) + '<br>Sessions: ' + _num(mine.sessions, 0) + '<br>Last: ' + _escape(_fmtMaybeDate(mine.lastAt)) + '</div></div>' +
+            '<div class="social-card"><div class="social-card-title">' + _escape(friendName) + '</div><div class="social-card-sub">Max reps: ' + _escape(_metricOrDash(rival.maxReps, '')) + '<br>Best hold: ' + _escape(_metricOrDash(rival.maxDurationSec, 's')) + '<br>Sessions: ' + _num(rival.sessions, 0) + '<br>Last: ' + _escape(_fmtMaybeDate(rival.lastAt)) + '</div></div>' +
           '</div>' +
           '<div class="social-card" style="margin-top:12px;"><div class="social-card-title">CHASE TIP</div><div class="social-card-sub">' +
             _escape(_num(mine.maxReps, 0) >= _num(rival.maxReps, 0) && _num(mine.maxDurationSec, 0) >= _num(rival.maxDurationSec, 0)
-              ? 'Hold your lead by repeating this skill again this week.'
+              ? ('Hold your lead over ' + friendName + ' by repeating this skill again this week.')
               : 'Close the gap with one focused practice block and a max-effort set this week.') +
           '</div></div>';
       }

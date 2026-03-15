@@ -22,6 +22,10 @@
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (_e) {}
   }
 
+  function _emit(type) {
+    try { window.dispatchEvent(new CustomEvent(type)); } catch (_e) {}
+  }
+
   function normalizeCommunityNameKey(name) {
     return String(name || '')
       .toLowerCase()
@@ -93,6 +97,7 @@
       if (error) throw error;
       _exerciseCache = Array.isArray(data) ? data.map(_mapExerciseRow) : [];
       _writeCache(EXERCISE_CACHE_KEY, _exerciseCache);
+      _emit('forge:community-exercises-updated');
       return _exerciseCache;
     } catch (err) {
       console.warn('[FORGE community] exercise fetch failed', err?.message || err);
@@ -109,6 +114,7 @@
       if (error) throw error;
       _mealCache = Array.isArray(data) ? data.map(_mapMealRow) : [];
       _writeCache(MEAL_CACHE_KEY, _mealCache);
+      _emit('forge:community-meals-updated');
       return _mealCache;
     } catch (err) {
       console.warn('[FORGE community] meal fetch failed', err?.message || err);
@@ -141,6 +147,7 @@
     if (!_sb()) {
       _exerciseCache = _mergeExercises(_exerciseCache, [localFallback]);
       _writeCache(EXERCISE_CACHE_KEY, _exerciseCache);
+      _emit('forge:community-exercises-updated');
       return localFallback;
     }
     try {
@@ -152,11 +159,13 @@
       const mapped = _mapExerciseRow(data || payload);
       _exerciseCache = _mergeExercises(_exerciseCache, [mapped]);
       _writeCache(EXERCISE_CACHE_KEY, _exerciseCache);
+      _emit('forge:community-exercises-updated');
       return mapped;
     } catch (err) {
       console.warn('[FORGE community] exercise upsert failed', err?.message || err);
       _exerciseCache = _mergeExercises(_exerciseCache, [localFallback]);
       _writeCache(EXERCISE_CACHE_KEY, _exerciseCache);
+      _emit('forge:community-exercises-updated');
       return localFallback;
     }
   }
@@ -178,6 +187,7 @@
     if (!_sb()) {
       _mealCache = _mergeMealEntries(_mealCache, [localFallback]);
       _writeCache(MEAL_CACHE_KEY, _mealCache);
+      _emit('forge:community-meals-updated');
       return localFallback;
     }
     try {
@@ -189,11 +199,13 @@
       const mapped = _mapMealRow(data || payload);
       _mealCache = _mergeMealEntries(_mealCache, [mapped]);
       _writeCache(MEAL_CACHE_KEY, _mealCache);
+      _emit('forge:community-meals-updated');
       return mapped;
     } catch (err) {
       console.warn('[FORGE community] meal upsert failed', err?.message || err);
       _mealCache = _mergeMealEntries(_mealCache, [localFallback]);
       _writeCache(MEAL_CACHE_KEY, _mealCache);
+      _emit('forge:community-meals-updated');
       return localFallback;
     }
   }

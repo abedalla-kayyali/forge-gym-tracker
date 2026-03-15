@@ -6454,6 +6454,12 @@ function _getSavedMealEntries() {
   return localEntries;
 }
 
+window.addEventListener('forge:community-meals-updated', function () {
+  try {
+    if (typeof renderCoachNutrition === 'function') renderCoachNutrition();
+  } catch (_e) {}
+});
+
 function _saveMealToLibrary(entry) {
   if (!entry || !entry.name) return;
   const key = _normalizeMealName(entry.name);
@@ -7238,10 +7244,10 @@ function renderCoachNutrition() {
         <button class="nutri-save-btn" onclick="_nutriSaveCustomTargets()">${tx('Save Targets','حفظ الأهداف')}</button>
       </div>
       <div class="nutri-custom-grid">
-        <input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}" ${customTargets.enabled ? '' : 'disabled'}>
-        <input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Protein (g)','البروتين (غ)')}" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
-        <input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Carbs (g)','الكربوهيدرات (غ)')}" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
-        <input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Fats (g)','الدهون (غ)')}" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Calories','السعرات')}</span><input id="nutri-target-kcal" class="meal-input" type="number" min="0" placeholder="${tx('Calories','السعرات')}" value="${customTargets.kcal || ''}" ${customTargets.enabled ? '' : 'disabled'}></label>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Protein (g)','البروتين (غ)')}</span><input id="nutri-target-p" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Protein (g)','البروتين (غ)')}" value="${customTargets.p || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}></label>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Carbs (g)','الكربوهيدرات (غ)')}</span><input id="nutri-target-c" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Carbs (g)','الكربوهيدرات (غ)')}" value="${customTargets.c || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}></label>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Fats (g)','الدهون (غ)')}</span><input id="nutri-target-f" class="meal-input" type="number" min="0" step="1" placeholder="${tx('Fats (g)','الدهون (غ)')}" value="${customTargets.f || ''}" oninput="_nutriRecalcTargetCalories()" ${customTargets.enabled ? '' : 'disabled'}></label>
       </div>
       <div class="nutri-custom-meta ${customSyncClass}">
         <span>${tx('Last saved','آخر حفظ')}: <strong>${customSavedAtLabel}</strong></span>
@@ -7306,10 +7312,10 @@ function renderCoachNutrition() {
         <button class="meal-btn" onclick="_cnAddMeal()">${tx('Add Meal','إضافة وجبة')}</button>
       </div>
       <div class="meal-macro-edit">
-        <input id="meal-kcal-input" class="meal-input" type="number" min="0" placeholder="kcal">
-        <input id="meal-p-input" class="meal-input" type="number" min="0" step="0.1" placeholder="P (g)" oninput="_cnRecalcMealCaloriesFromMacros()">
-        <input id="meal-c-input" class="meal-input" type="number" min="0" step="0.1" placeholder="C (g)" oninput="_cnRecalcMealCaloriesFromMacros()">
-        <input id="meal-f-input" class="meal-input" type="number" min="0" step="0.1" placeholder="F (g)" oninput="_cnRecalcMealCaloriesFromMacros()">
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Calories','السعرات')}</span><input id="meal-kcal-input" class="meal-input" type="number" min="0" placeholder="kcal"></label>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Protein (g)','البروتين (غ)')}</span><input id="meal-p-input" class="meal-input" type="number" min="0" step="0.1" placeholder="P (g)" oninput="_cnRecalcMealCaloriesFromMacros()"></label>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Carbs (g)','الكربوهيدرات (غ)')}</span><input id="meal-c-input" class="meal-input" type="number" min="0" step="0.1" placeholder="C (g)" oninput="_cnRecalcMealCaloriesFromMacros()"></label>
+        <label class="meal-field-stack"><span class="meal-field-label">${tx('Fats (g)','الدهون (غ)')}</span><input id="meal-f-input" class="meal-input" type="number" min="0" step="0.1" placeholder="F (g)" oninput="_cnRecalcMealCaloriesFromMacros()"></label>
       </div>
       <div id="meal-estimate-note" class="meal-est-note"></div>
 

@@ -99,6 +99,10 @@ const EXERCISE_DB = [
   {n:'Behind-the-Back Shrug',m:'Traps',e:'barbell',t:'Bar behind glutes, shrug up — unique rear trap activation'},
   {n:'Trap Bar Carry',m:'Traps',e:'barbell',t:'Heavy loaded carries with trap bar to build traps, grip, and posture under load'},
   {n:'Cable Upright Row',m:'Traps',e:'cable',t:'Cable path keeps tension on upper traps and delts through the whole pull'},
+  // NECK
+  {n:'Neck Flexion',m:'Neck',e:'machine',t:'Controlled neck flexion through a short safe range with no jerking'},
+  {n:'Neck Extension',m:'Neck',e:'machine',t:'Brace the torso and extend slowly to build neck strength safely'},
+  {n:'Band Neck Isometric',m:'Neck',e:'band',t:'Hold against band tension without losing stacked head and neck posture'},
   // LOWER BACK
   {n:'Back Extension',m:'Lower Back',e:'machine',t:'45° or flat bench, hinge at hips, extend to neutral spine'},
   {n:'Good Morning',m:'Lower Back',e:'barbell',t:'Bar on upper back, hinge forward keeping back flat, drive hips'},
@@ -112,7 +116,7 @@ const EXERCISE_DB = [
   {n:'Behind-The-Back Wrist Curl',m:'Forearms',e:'barbell',t:'Bar held behind hips for direct forearm flexor burn and pump'},
 ];
 
-const _EX_LIB_MUSCLES = ['All','Chest','Back','Shoulders','Biceps','Triceps','Core','Legs','Glutes','Calves','Traps','Lower Back','Forearms'];
+const _EX_LIB_MUSCLES = ['All','Chest','Back','Shoulders','Biceps','Triceps','Forearms','Core','Lower Back','Glutes','Legs','Calves','Traps','Neck'];
 let _exLibMuscle = 'All';
 let communityExercises = [];
 
@@ -1236,3 +1240,4 @@ function playSessionCeremony() {
   }
   _nextStep();
 }
+

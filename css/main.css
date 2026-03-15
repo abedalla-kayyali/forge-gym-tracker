@@ -1477,6 +1477,11 @@ body.deload-active .body-zone.zone-selected{
 .social-capsule-chip strong{
   color:#9df8c8;
   font-size:10px;
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 .social-body-map-card{
   border:1px solid rgba(255,255,255,.08);
@@ -1578,6 +1583,11 @@ body.deload-active .body-zone.zone-selected{
   letter-spacing:.12em;
   color:var(--accent);
   text-transform:uppercase;
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 .social-rivalry-metrics{
   display:grid;
@@ -5902,6 +5912,19 @@ body[data-theme="solar"] .xp-fill {
   grid-template-columns:repeat(4,1fr);
   gap:8px;
   margin-top:8px;
+}
+.meal-field-stack{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.meal-field-label{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#9ec7a8;
+  padding-inline:6px;
 }
 .meal-input{
   width:100%;
