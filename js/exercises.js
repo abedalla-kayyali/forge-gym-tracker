@@ -951,10 +951,13 @@ function _exerciseAddCta(query, context) {
       <svg class="ex-add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M6.5 6.5h2M15.5 6.5h2M6.5 17.5h2M15.5 17.5h2M3 12h3M18 12h3M6.5 6.5v11M17.5 6.5v11M9 12h6"/>
       </svg>
-      <div>
+      <div style="flex:1">
         <div class="ex-add-title">Add New Exercise</div>
         <div class="ex-add-sub">Save it once — available for everyone</div>
       </div>
+      <button class="ex-add-close" type="button" onclick="closeAutocomplete()" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <input id="ex-add-name-${ctx}" class="ex-add-input" value="${safeQuery}" placeholder="Exercise name">
     <div class="ex-add-row">

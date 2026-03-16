@@ -142,24 +142,24 @@ function closeAutocomplete() {
   if (ac) { ac.style.display = 'none'; ac.classList.remove('ex-ac-add-mode'); }
 }
 
-// Close dropdown when tapping/clicking outside the autocomplete or its input
+// Close the regular suggestions dropdown when tapping outside.
+// In add-form mode we NEVER auto-close — the user intentionally opened
+// the form and must dismiss it via the × button, submitting, or clearing
+// the exercise-name input.
 (function () {
   function _outsideTap(e) {
     var ac  = document.getElementById('exercise-autocomplete');
     var inp = document.getElementById('exercise-name');
     if (!ac || ac.style.display === 'none') return;
+    // Add-form is open — never close on outside tap
+    if (ac.classList.contains('ex-ac-add-mode')) return;
     var t = e.target;
-    // Touched inside the dropdown or the input — keep open
     if (ac.contains(t) || t === inp) return;
-    // An element inside the form has focus (e.g. native select picker dismissing)
-    if (document.activeElement && ac.contains(document.activeElement)) return;
-    // allow onmousedown inside ac to fire first, then re-check focus
     setTimeout(function () {
       if (!ac || ac.style.display === 'none') return;
-      if (document.activeElement && ac.contains(document.activeElement)) return;
+      if (ac.classList.contains('ex-ac-add-mode')) return;
       ac.style.display = 'none';
-      ac.classList.remove('ex-ac-add-mode');
-    }, 80);
+    }, 50);
   }
   document.addEventListener('touchstart', _outsideTap, { passive: true });
   document.addEventListener('mousedown',  _outsideTap);

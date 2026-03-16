@@ -1096,6 +1096,26 @@
   margin-top: 2px !important;
 }
 
+.ex-add-close {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  background: rgba(255,255,255,.04) !important;
+  color: rgba(255,255,255,.4) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: background .15s, color .15s !important;
+}
+
+.ex-add-close:active {
+  background: rgba(239,68,68,.15) !important;
+  color: #ef4444 !important;
+}
+
 .ex-add-title {
   font-size: 14px !important;
   font-weight: 700 !important;
