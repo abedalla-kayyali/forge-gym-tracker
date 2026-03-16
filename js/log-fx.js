@@ -223,7 +223,9 @@
     '#save-btn,.btn.btn-primary,' +
     '.muscle-chip,.body-zone,' +
     '#wgt-muscle-history-grid .bw-ex-btn,' +
-    '.btn-ex-browse,.btn-ex-form,.btn-ex-swap';
+    '.btn-ex-browse,.btn-ex-form,.btn-ex-swap,' +
+    '.wp-key,.wp-preset-btn,.wp-btn-done,.wp-btn-cancel,' +
+    '.bw-reps-btn,.bw-add-custom-btn';
 
   function dispatch(btn, cx, cy) {
     if (!btn || btn.disabled) return;
@@ -273,6 +275,31 @@
       _n(1400,'sine', 0.03, 0.0001, 0.04, 0.07);
       _vib(10);
     }
+    else if (has('wp-key')) {
+      // Numpad keys — crisp click, delete is lower
+      var key = btn.getAttribute('data-key') || '';
+      if (key === 'del') {
+        _n(220,'sine',0.08,0.0001,0,0.06); _vib(8);
+      } else if (key === '.') {
+        _n(1000,'triangle',0.05,0.0001,0,0.05); _vib(6);
+      } else {
+        _n(1200,'triangle',0.07,0.0001,0,0.04); _vib(6);
+      }
+    }
+    else if (has('wp-preset-btn')) {
+      _n(880,'sine',0.07,0.0001,0,0.07); _n(1320,'sine',0.04,0.0001,0.04,0.08);
+      _vib(10);
+    }
+    else if (has('wp-btn-done')) {
+      _n(523,'sine',0.12,0.0001,0,0.12); _n(659,'sine',0.08,0.0001,0.07,0.12); _n(784,'sine',0.06,0.0001,0.14,0.14);
+      _vib([10,5,20]);
+    }
+    else if (has('wp-btn-cancel')) {
+      _n(330,'sine',0.06,0.0001,0,0.08); _vib(8);
+    }
+    else if (has('bw-add-custom-btn')) {
+      sndTap(); _vib(10);
+    }
   }
 
   // ── Event listeners ─────────────────────────────────────────────────────
@@ -299,6 +326,26 @@
     if (btn === _lastTouchBtn) { _lastTouchBtn = null; return; } // already handled
     dispatch(btn, e.clientX, e.clientY);
   });
+
+  // ── Numpad overlay (outside #view-log) — add separate listeners ────────
+  var numpadSheet = document.getElementById('wheel-picker-sheet');
+  if (numpadSheet) {
+    var _numLastTouchBtn = null;
+    numpadSheet.addEventListener('touchend', function(e) {
+      var t = e.changedTouches && e.changedTouches[0]; if (!t) return;
+      var btn = document.elementFromPoint(t.clientX, t.clientY);
+      btn = btn && typeof btn.closest === 'function' ? btn.closest(SEL) : null;
+      if (!btn || btn.disabled) return;
+      _numLastTouchBtn = btn;
+      dispatch(btn, t.clientX, t.clientY);
+    }, { passive: true });
+    numpadSheet.addEventListener('click', function(e) {
+      var btn = e.target && typeof e.target.closest === 'function' ? e.target.closest(SEL) : null;
+      if (!btn || btn.disabled) return;
+      if (btn === _numLastTouchBtn) { _numLastTouchBtn = null; return; }
+      dispatch(btn, e.clientX, e.clientY);
+    });
+  }
 
   // ── Animate new set rows ───────────────────────────────────────────────
   var obs = new MutationObserver(function(muts) {
