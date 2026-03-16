@@ -1483,6 +1483,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       setTimeout(() => {
 
+        // Don't close if the add-exercise form is active — focus moved into the form
+        const _ac = document.getElementById('exercise-autocomplete');
+        if (_ac && _ac.classList.contains('ex-ac-add-mode')) return;
+
         closeAutocomplete();
 
         const name = exInput.value.trim();
