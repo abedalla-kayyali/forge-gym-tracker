@@ -6645,6 +6645,8 @@ let _foodSearchTimer = null;
 function _foodSearchNow(query) {
   query = (query || '').trim();
   if (!query || query.length < 2) return;
+  if (typeof sndFoodSearch === 'function') sndFoodSearch();
+  if (typeof hapTap === 'function') hapTap();
   _foodSearchRenderResults(null); // show spinner
   _foodSearch(query);
 }
@@ -6678,7 +6680,7 @@ function _foodSearchRenderResults(foods) {
   if (!el) return;
   if (foods === null) {
     el.style.display = 'block';
-    el.innerHTML = '<div class="meal-search-spinner">...</div>';
+    el.innerHTML = '<div class="mtr-search-dots"><span></span><span></span><span></span></div>';
     return;
   }
   if (foods === 'error') {
@@ -6709,12 +6711,16 @@ function _foodSearchSelect(food) {
   const nameEl = document.getElementById('meal-name-input');
   if (nameEl) nameEl.value = food.name;
   _foodSearchRenderResults([]);
-  // Set default qty to 100g (or serving weight if available)
   const qtyEl = document.getElementById('meal-qty-input');
   if (qtyEl) qtyEl.value = 100;
   const unitEl = document.getElementById('meal-portion-unit');
   if (unitEl) unitEl.value = 'g';
   _foodSearchScaleOnQtyChange();
+  // Sound + haptic
+  if (typeof sndFoodPick === 'function') sndFoodPick();
+  if (typeof hapTap === 'function') hapTap();
+  // Flash macro cards to signal they were filled
+  _mtrFlashMacros();
 }
 
 function _foodSearchScaleOnQtyChange() {
@@ -6745,19 +6751,57 @@ function _mtrQtyStep(delta) {
   const v = Math.max(1, (parseFloat(el.value) || 100) + delta);
   el.value = v;
   _foodSearchScaleOnQtyChange();
+  if (typeof sndQtyTick === 'function') sndQtyTick();
+  if (typeof hapTap === 'function') hapTap();
+  // brief visual pulse on the display
+  const d = el.closest('.mtr-qty-display');
+  if (d) { d.classList.add('mtr-qty-pulse'); setTimeout(() => d.classList.remove('mtr-qty-pulse'), 180); }
 }
 function _mtrQtySet(val) {
   const el = document.getElementById('meal-qty-input');
   if (!el) return;
   el.value = val;
   _foodSearchScaleOnQtyChange();
+  if (typeof sndQtyTick === 'function') sndQtyTick();
+  if (typeof hapTap === 'function') hapTap();
+  // highlight active preset
+  document.querySelectorAll('.mtr-qty-preset').forEach(b => b.classList.remove('mtr-qty-preset-active'));
+  document.querySelectorAll('.mtr-qty-preset').forEach(b => {
+    if (parseInt(b.textContent) === val) b.classList.add('mtr-qty-preset-active');
+  });
 }
 function _mtrQtyInputed(val) {
-  // accept text input, strip non-numeric, then scale
   const el = document.getElementById('meal-qty-input');
   if (!el) return;
   const clean = parseFloat(val);
   if (!isNaN(clean) && clean > 0) _foodSearchScaleOnQtyChange();
+}
+
+/* Flash macro cards green when food is selected */
+function _mtrFlashMacros() {
+  document.querySelectorAll('.mtr-macro-card').forEach((card, i) => {
+    setTimeout(() => {
+      card.classList.add('mtr-macro-filled');
+      setTimeout(() => card.classList.remove('mtr-macro-filled'), 600);
+    }, i * 60);
+  });
+}
+
+/* Ripple + floating kcal badge on successful Add Meal */
+function _mtrAddMealFx(name, kcal) {
+  const btn = document.querySelector('.mtr-add-btn');
+  if (btn) {
+    btn.classList.add('mtr-add-success');
+    setTimeout(() => btn.classList.remove('mtr-add-success'), 700);
+  }
+  // Floating kcal badge
+  const wrap = document.querySelector('.mtr-v2');
+  if (!wrap) return;
+  const badge = document.createElement('div');
+  badge.className = 'mtr-kcal-float';
+  badge.textContent = '+' + Math.round(kcal) + ' kcal';
+  wrap.appendChild(badge);
+  setTimeout(() => badge.remove(), 1200);
 }
 // ── End nutrition food search ──────────────────────────────────────────────
 
@@ -6906,9 +6950,10 @@ function _cnAddMeal() {
     }).catch(err => console.warn('[FORGE community] add meal failed', err));
   }
   save();
-  if (typeof sndSetLog === 'function') sndSetLog();
-  if (typeof hapSetLog === 'function') hapSetLog();
-  if (typeof showToast === 'function') showToast(`Meal added to ${k}`, 'success');
+  if (typeof sndMealLogged === 'function') sndMealLogged(); else if (typeof sndSetLog === 'function') sndSetLog();
+  if (typeof hapSave === 'function') hapSave(); else if (typeof hapSetLog === 'function') hapSetLog();
+  _mtrAddMealFx(name, kcal);
+  if (typeof showToast === 'function') showToast(`✅ ${name} — ${Math.round(kcal)} kcal logged`, 'success');
 
   nameEl.value = '';
   const noteEl = document.getElementById('meal-estimate-note');

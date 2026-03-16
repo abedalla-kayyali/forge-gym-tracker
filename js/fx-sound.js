@@ -365,3 +365,54 @@ function sndSocialWin() {
   _note(1318.51, 'sine', 0.10, 0.0001, 0.1, 0.22);
   _note(1568, 'triangle', 0.08, 0.0001, 0.18, 0.24);
 }
+
+/* ── Nutrition sound effects ── */
+
+/* sndFoodSearch — subtle whoosh when search fires */
+function sndFoodSearch() {
+  if (!soundOn) return;
+  const ctx = _ctx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(300, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.12);
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.10, ctx.currentTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 0.16);
+}
+
+/* sndFoodPick — satisfying soft pop when a result is selected */
+function sndFoodPick() {
+  if (!soundOn) return;
+  _note(523.25, 'sine',     0.14, 0.0001, 0,    0.10);
+  _note(783.99, 'triangle', 0.10, 0.0001, 0.06, 0.12);
+  _note(1046.5, 'sine',     0.06, 0.0001, 0.11, 0.14);
+}
+
+/* sndQtyTick — light click for stepper buttons */
+function sndQtyTick() {
+  if (!soundOn) return;
+  _note(1400, 'triangle', 0.07, 0.0001, 0, 0.04);
+}
+
+/* sndMealLogged — rewarding chime: upgrade of sndSetLog */
+function sndMealLogged() {
+  if (!soundOn) return;
+  _note(392,    'triangle', 0.16, 0.0001, 0,    0.12);
+  _note(523.25, 'sine',     0.18, 0.0001, 0.08, 0.14);
+  _note(659.25, 'sine',     0.14, 0.0001, 0.16, 0.18);
+  _note(783.99, 'sine',     0.10, 0.0001, 0.24, 0.22);
+}
+
+/* sndMacroGoal — fanfare when a macro hits 100% */
+function sndMacroGoal() {
+  if (!soundOn) return;
+  [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((f, i) => {
+    _note(f,   'sine',     0.16, 0.0001, i * 0.07, 0.20);
+    _note(f*2, 'sine',     0.05, 0.0001, i * 0.07, 0.15);
+  });
+}

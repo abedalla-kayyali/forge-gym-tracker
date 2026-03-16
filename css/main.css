@@ -12775,6 +12775,70 @@ body[data-theme="solar"] .xp-fill {
 .mtr-prog-c    .mtr-prog-fill{ background:linear-gradient(90deg,#4fc3f7,#00b0ff); }
 .mtr-prog-f    .mtr-prog-fill{ background:linear-gradient(90deg,#ff9f5a,#ff6b35); }
 
+/* ── MTR visual FX ── */
+
+/* Macro card flash when food is selected */
+@keyframes mtrMacroFill {
+  0%   { box-shadow: 0 0 0 0 rgba(57,255,143,0); border-color: var(--border2); }
+  40%  { box-shadow: 0 0 0 6px rgba(57,255,143,.18); border-color: rgba(57,255,143,.6); }
+  100% { box-shadow: 0 0 0 0 rgba(57,255,143,0); border-color: var(--border2); }
+}
+.mtr-macro-filled { animation: mtrMacroFill .6s ease-out; }
+
+/* Qty display pulse on step */
+@keyframes mtrQtyPulse {
+  0%   { background: var(--panel); }
+  40%  { background: rgba(57,255,143,.12); }
+  100% { background: var(--panel); }
+}
+.mtr-qty-pulse { animation: mtrQtyPulse .18s ease-out; }
+
+/* Active preset highlight */
+.mtr-qty-preset-active {
+  background: rgba(57,255,143,.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Add Meal success burst */
+@keyframes mtrAddSuccess {
+  0%   { transform: scale(1);    box-shadow: 0 4px 20px rgba(57,255,143,.25); }
+  35%  { transform: scale(.96);  box-shadow: 0 0 0 8px rgba(57,255,143,.12); }
+  70%  { transform: scale(1.02); box-shadow: 0 0 0 14px rgba(57,255,143,.04); }
+  100% { transform: scale(1);    box-shadow: 0 4px 20px rgba(57,255,143,.25); }
+}
+.mtr-add-success { animation: mtrAddSuccess .7s ease-out; }
+
+/* Floating kcal badge */
+@keyframes mtrKcalFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-52px) scale(.9); }
+}
+.mtr-kcal-float {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: 120px; z-index: 400;
+  background: var(--accent); color: #031209;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px;
+  padding: 5px 14px; border-radius: 20px;
+  pointer-events: none;
+  animation: mtrKcalFloat 1.2s ease-out forwards;
+}
+
+/* Spinner animation for search loading */
+@keyframes mtrDotPulse {
+  0%, 80%, 100% { opacity: .2; transform: scale(.8); }
+  40%            { opacity: 1;  transform: scale(1); }
+}
+.mtr-search-dots { display: flex; gap: 5px; justify-content: center; padding: 14px; }
+.mtr-search-dots span {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent); display: inline-block;
+  animation: mtrDotPulse 1.2s ease-in-out infinite;
+}
+.mtr-search-dots span:nth-child(2) { animation-delay: .2s; }
+.mtr-search-dots span:nth-child(3) { animation-delay: .4s; }
+
 /* ── mtr-v2 responsive tweaks ── */
 @media(max-width:400px){
   .mtr-macro-input{ font-size:22px; }
