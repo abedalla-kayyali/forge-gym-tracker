@@ -7508,6 +7508,7 @@ function renderCoachNutrition() {
           <svg class="mtr-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="meal-name-input" class="mtr-search-input" type="text" list="meal-saved-list"
             placeholder="${tx('food.searchPlaceholder','Search food or type meal name…')}"
+            oninput="_foodSearchClear()"
             onkeydown="if(event.key==='Enter'){_foodSearchNow(this.value);}"
             autocomplete="off">
           <button class="mtr-search-btn" onclick="_foodSearchNow(document.getElementById('meal-name-input').value)" type="button">${tx('Search','بحث')}</button>
