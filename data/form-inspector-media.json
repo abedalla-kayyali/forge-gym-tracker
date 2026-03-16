@@ -594,5 +594,81 @@
   "jump squat": {
     "type": "gif",
     "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Squat.gif"
+  },
+  "single-leg glute bridge": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Single-Leg-Glute-Bridge.gif"
+  },
+  "nordic curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Nordic-Curl.gif"
+  },
+  "bicycle crunch": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bicycle-Crunch.gif"
+  },
+  "windmill": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Kettlebell-Windmill.gif"
+  },
+  "dragon flag lateral": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dragon-Flag.gif"
+  },
+  "reverse lunge": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Lunge.gif"
+  },
+  "walking lunge": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Walking-Lunge.gif"
+  },
+  "lateral lunge": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Side-Lunge.gif"
+  },
+  "deficit lunge": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Lunge.gif"
+  },
+  "australian pull-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif"
+  },
+  "one-arm row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif"
+  },
+  "pike push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Pike-Push-Up.gif"
+  },
+  "decline push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/02/Decline-Push-Up.gif"
+  },
+  "wall handstand push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Wall-Handstand-Push-Up.gif"
+  },
+  "calf raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Standing-Calf-Raises.gif"
+  },
+  "single-leg calf raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Single-Leg-Calf-Raise.gif"
+  },
+  "donkey calf raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Donkey-Calf-Raise.gif"
+  },
+  "toes to bar": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Toes-To-Bar.gif"
+  },
+  "lying leg raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lying-Leg-Raise.gif"
   }
 }

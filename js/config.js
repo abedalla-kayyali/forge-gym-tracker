@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v141';
-window.FORGE_BUILD   = '2026-03-16 (Feat: scrollable form inspector, close btn, image lightbox)';
+window.FORGE_VERSION = 'v142';
+window.FORGE_BUILD   = '2026-03-16 (Feat: all 51 BW exercises with GIFs and step-by-step instructions)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
