@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v143';
-window.FORGE_BUILD   = '2026-03-16 (Feat: nutrition food search — USDA + Open Food Facts)';
+window.FORGE_VERSION = 'v144';
+window.FORGE_BUILD   = '2026-03-16 (Feat: premium mobile meal tracker UI v2)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

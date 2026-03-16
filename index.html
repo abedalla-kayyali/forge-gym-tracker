@@ -6738,6 +6738,14 @@ function _foodSearchScaleOnQtyChange() {
 function _foodSearchClear() {
   _selectedFood = null;
 }
+
+function _mtrQtyStep(delta) {
+  const el = document.getElementById('meal-qty-input');
+  if (!el) return;
+  const v = Math.max(1, (parseFloat(el.value) || 100) + delta);
+  el.value = v;
+  _foodSearchScaleOnQtyChange();
+}
 // ── End nutrition food search ──────────────────────────────────────────────
 
 function _cnRecalcMealCaloriesFromMacros() {
@@ -7410,52 +7418,121 @@ function renderCoachNutrition() {
       <span style="color:#4fc3f7;">${tx('Carbs','كربوهيدرات')} ${carbPct}%</span>
       <span style="color:#ff9f5a;">${tx('Fat','دهون')} ${fatPct}%</span>
     </div>
-    <div class="meal-tracker-wrap">
-      <div class="meal-tracker-title">${tx('Meal Tracker','متتبع الوجبات')}</div>
-      <div class="meal-datetime-row">
-        <input id="meal-date-input" class="meal-input" type="date" value="${mealKey}" onchange="_cnSetMealDate(this.value)">
-        <input id="meal-time-input" class="meal-input" type="time" value="${defaultMealTime}">
-      </div>
-      <div class="meal-saved-wrap">
-        <div class="meal-saved-title">${tx('Saved Meals','الوجبات المحفوظة')}</div>
-        <div class="meal-saved-row">${savedChipsHtml || `<span class="meal-saved-empty">${tx('No saved meals yet. Your meals will appear here after first add.','لا توجد وجبات محفوظة بعد. ستظهر هنا بعد أول إضافة.')}</span>`}</div>
-      </div>
-      <div class="meal-form-grid">
-        <div class="meal-search-wrap meal-search-full-row">
-          <div class="meal-search-input-row">
-            <input id="meal-name-input" class="meal-input" type="text" list="meal-saved-list"
-              placeholder="${tx('food.searchPlaceholder','Search food or type meal name\u2026')}"
-              onkeydown="if(event.key==='Enter'){_foodSearchNow(this.value);}"
-              autocomplete="off">
-            <button class="meal-btn meal-btn-search" onclick="_foodSearchNow(document.getElementById('meal-name-input').value)">${tx('Search','بحث')}</button>
-          </div>
-          <datalist id="meal-saved-list">${savedOptionsHtml}</datalist>
-          <div id="meal-search-results" class="meal-search-results" style="display:none"></div>
+    <div class="meal-tracker-wrap mtr-v2">
+
+      <!-- Top bar: title + compact date/time -->
+      <div class="mtr-topbar">
+        <span class="mtr-section-label">${tx('Meal Tracker','متتبع الوجبات')}</span>
+        <div class="mtr-dt-row">
+          <label class="mtr-dt-pill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input id="meal-date-input" type="date" value="${mealKey}" onchange="_cnSetMealDate(this.value)">
+          </label>
+          <label class="mtr-dt-pill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <input id="meal-time-input" type="time" value="${defaultMealTime}">
+          </label>
         </div>
-        <div class="meal-qty-row">
-          <input id="meal-qty-input" class="meal-input meal-qty" type="number" step="1" min="1" value="100"
-            placeholder="g" oninput="_foodSearchScaleOnQtyChange()">
-          <select id="meal-portion-unit" class="meal-portion-unit" onchange="_foodSearchScaleOnQtyChange()">
-            <option value="g">g</option>
-            <option value="serving">${tx('serving','حصة')}</option>
-          </select>
+      </div>
+
+      <!-- Saved meals horizontal scroll -->
+      <div class="mtr-saved-scroll">
+        ${savedChipsHtml || `<span class="mtr-no-saved">${tx('No saved meals yet','لا وجبات محفوظة بعد')}</span>`}
+      </div>
+      <datalist id="meal-saved-list">${savedOptionsHtml}</datalist>
+
+      <!-- Search card -->
+      <div class="mtr-search-card">
+        <div class="mtr-search-row">
+          <svg class="mtr-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="meal-name-input" class="mtr-search-input" type="text" list="meal-saved-list"
+            placeholder="${tx('food.searchPlaceholder','Search food or type meal name…')}"
+            onkeydown="if(event.key==='Enter'){_foodSearchNow(this.value);}"
+            autocomplete="off">
+          <button class="mtr-search-btn" onclick="_foodSearchNow(document.getElementById('meal-name-input').value)" type="button">${tx('Search','بحث')}</button>
         </div>
-        <button class="meal-btn meal-btn-ghost" onclick="_cnEstimateMealForm()">${tx('Estimate','تقدير')}</button>
-        <button class="meal-btn" onclick="_cnAddMeal()">${tx('Add Meal','إضافة وجبة')}</button>
+        <div id="meal-search-results" class="meal-search-results" style="display:none"></div>
       </div>
-      <div class="meal-macro-edit">
-        <label class="meal-field-stack"><span class="meal-field-label">${tx('Calories','السعرات')}</span><input id="meal-kcal-input" class="meal-input" type="number" min="0" placeholder="kcal"></label>
-        <label class="meal-field-stack"><span class="meal-field-label">${tx('Protein (g)','البروتين (غ)')}</span><input id="meal-p-input" class="meal-input" type="number" min="0" step="0.1" placeholder="P (g)" oninput="_cnRecalcMealCaloriesFromMacros()"></label>
-        <label class="meal-field-stack"><span class="meal-field-label">${tx('Carbs (g)','الكربوهيدرات (غ)')}</span><input id="meal-c-input" class="meal-input" type="number" min="0" step="0.1" placeholder="C (g)" oninput="_cnRecalcMealCaloriesFromMacros()"></label>
-        <label class="meal-field-stack"><span class="meal-field-label">${tx('Fats (g)','الدهون (غ)')}</span><input id="meal-f-input" class="meal-input" type="number" min="0" step="0.1" placeholder="F (g)" oninput="_cnRecalcMealCaloriesFromMacros()"></label>
+
+      <!-- Qty stepper -->
+      <div class="mtr-qty-bar">
+        <span class="mtr-qty-label">${tx('Amount','الكمية')}</span>
+        <div class="mtr-qty-stepper">
+          <button class="mtr-qty-step" onclick="_mtrQtyStep(-10)" type="button">&#8722;</button>
+          <input id="meal-qty-input" class="mtr-qty-input" type="number" step="1" min="1" value="100"
+            oninput="_foodSearchScaleOnQtyChange()">
+          <button class="mtr-qty-step" onclick="_mtrQtyStep(10)" type="button">+</button>
+        </div>
+        <select id="meal-portion-unit" class="mtr-unit-select" onchange="_foodSearchScaleOnQtyChange()">
+          <option value="g">g</option>
+          <option value="serving">${tx('serving','حصة')}</option>
+        </select>
       </div>
+
+      <!-- Macro cards 2x2 -->
+      <div class="mtr-macro-grid">
+        <label class="mtr-macro-card mtr-kcal">
+          <span class="mtr-macro-icon">&#128293;</span>
+          <span class="mtr-macro-name">${tx('Calories','السعرات')}</span>
+          <input id="meal-kcal-input" class="mtr-macro-input" type="number" min="0" placeholder="0">
+          <span class="mtr-macro-unit">kcal</span>
+        </label>
+        <label class="mtr-macro-card mtr-p">
+          <span class="mtr-macro-icon">&#128170;</span>
+          <span class="mtr-macro-name">${tx('Protein','بروتين')}</span>
+          <input id="meal-p-input" class="mtr-macro-input" type="number" min="0" step="0.1" placeholder="0.0" oninput="_cnRecalcMealCaloriesFromMacros()">
+          <span class="mtr-macro-unit">g</span>
+        </label>
+        <label class="mtr-macro-card mtr-c">
+          <span class="mtr-macro-icon">&#9889;</span>
+          <span class="mtr-macro-name">${tx('Carbs','كربوهيدرات')}</span>
+          <input id="meal-c-input" class="mtr-macro-input" type="number" min="0" step="0.1" placeholder="0.0" oninput="_cnRecalcMealCaloriesFromMacros()">
+          <span class="mtr-macro-unit">g</span>
+        </label>
+        <label class="mtr-macro-card mtr-f">
+          <span class="mtr-macro-icon">&#129703;</span>
+          <span class="mtr-macro-name">${tx('Fats','دهون')}</span>
+          <input id="meal-f-input" class="mtr-macro-input" type="number" min="0" step="0.1" placeholder="0.0" oninput="_cnRecalcMealCaloriesFromMacros()">
+          <span class="mtr-macro-unit">g</span>
+        </label>
+      </div>
+
       <div id="meal-estimate-note" class="meal-est-note"></div>
 
-      <div class="meal-progress-grid">
-        <div class="meal-progress-card"><span>${tx('Calories','السعرات')}</span><strong>${Math.round(mealTotals.kcal)} / ${targetCal}</strong><em>${rem.kcal} ${tx('left','متبقي')}</em><div class="meal-mini-bar"><div style="width:${mealPct.kcal}%"></div></div></div>
-        <div class="meal-progress-card"><span>${tx('Protein','البروتين')}</span><strong>${fmt2(mealTotals.p)} / ${proteinG}g</strong><em>${fmt2(rem.p)}g ${tx('left','متبقي')}</em><div class="meal-mini-bar"><div style="width:${mealPct.p}%"></div></div></div>
-        <div class="meal-progress-card"><span>${tx('Carbs','الكربوهيدرات')}</span><strong>${fmt2(mealTotals.c)} / ${Math.max(0, carbG)}g</strong><em>${fmt2(rem.c)}g ${tx('left','متبقي')}</em><div class="meal-mini-bar"><div style="width:${mealPct.c}%"></div></div></div>
-        <div class="meal-progress-card"><span>${tx('Fats','الدهون')}</span><strong>${fmt2(mealTotals.f)} / ${fatG}g</strong><em>${fmt2(rem.f)}g ${tx('left','متبقي')}</em><div class="meal-mini-bar"><div style="width:${mealPct.f}%"></div></div></div>
+      <!-- Action buttons -->
+      <button class="mtr-add-btn" onclick="_cnAddMeal()" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        ${tx('Add Meal','إضافة وجبة')}
+      </button>
+      <button class="mtr-estimate-btn" onclick="_cnEstimateMealForm()" type="button">
+        &#10024; ${tx('Estimate macros with AI','تقدير الماكروز بالذكاء الاصطناعي')}
+      </button>
+
+      <!-- Daily progress -->
+      <div class="mtr-progress-section">
+        <div class="mtr-progress-label">${tx("Today's Progress","تقدم اليوم")}</div>
+        <div class="mtr-progress-grid">
+          <div class="mtr-progress-card mtr-prog-kcal">
+            <div class="mtr-prog-top"><span>${tx('Calories','السعرات')}</span><em>${rem.kcal} ${tx('left','متبقي')}</em></div>
+            <strong>${Math.round(mealTotals.kcal)} <small>/ ${targetCal}</small></strong>
+            <div class="mtr-prog-bar"><div class="mtr-prog-fill" style="width:${mealPct.kcal}%"></div></div>
+          </div>
+          <div class="mtr-progress-card mtr-prog-p">
+            <div class="mtr-prog-top"><span>${tx('Protein','بروتين')}</span><em>${fmt2(rem.p)}g ${tx('left','متبقي')}</em></div>
+            <strong>${fmt2(mealTotals.p)} <small>/ ${proteinG}g</small></strong>
+            <div class="mtr-prog-bar"><div class="mtr-prog-fill" style="width:${mealPct.p}%"></div></div>
+          </div>
+          <div class="mtr-progress-card mtr-prog-c">
+            <div class="mtr-prog-top"><span>${tx('Carbs','كربوهيدرات')}</span><em>${fmt2(rem.c)}g ${tx('left','متبقي')}</em></div>
+            <strong>${fmt2(mealTotals.c)} <small>/ ${Math.max(0,carbG)}g</small></strong>
+            <div class="mtr-prog-bar"><div class="mtr-prog-fill" style="width:${mealPct.c}%"></div></div>
+          </div>
+          <div class="mtr-progress-card mtr-prog-f">
+            <div class="mtr-prog-top"><span>${tx('Fats','دهون')}</span><em>${fmt2(rem.f)}g ${tx('left','متبقي')}</em></div>
+            <strong>${fmt2(mealTotals.f)} <small>/ ${fatG}g</small></strong>
+            <div class="mtr-prog-bar"><div class="mtr-prog-fill" style="width:${mealPct.f}%"></div></div>
+          </div>
+        </div>
       </div>
 
       <div class="meal-list">${mealsHtml}</div>
