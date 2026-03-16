@@ -946,34 +946,36 @@ function _exerciseAddCta(query, context) {
 
   const ctx = context === 'autocomplete' ? 'autocomplete' : 'library';
 
-  return `<div class="ex-lib-empty-state">
-
-    <div class="ex-lib-empty-title">Workout not found? Add it</div>
-
-    <div class="ex-lib-empty-sub">Save it once and make it available for all users immediately.</div>
-
-    <input id="ex-add-name-${ctx}" class="ex-lib-search" value="${safeQuery}" placeholder="Exercise name">
-
-    <div class="ex-lib-add-grid">
-
-      <select id="ex-add-muscle-${ctx}" class="meal-input">
-
-        ${_EX_LIB_MUSCLES.filter(m => m !== 'All').map(m => `<option value="${m}"${m===muscle?' selected':''}>${m}</option>`).join('')}
-
-      </select>
-
-      <select id="ex-add-equipment-${ctx}" class="meal-input">
-
-        ${['barbell','dumbbell','machine','cable','bodyweight','band','smith','other'].map(e => `<option value="${e}">${e}</option>`).join('')}
-
-      </select>
-
+  return `<div class="ex-add-panel">
+    <div class="ex-add-header">
+      <svg class="ex-add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M6.5 6.5h2M15.5 6.5h2M6.5 17.5h2M15.5 17.5h2M3 12h3M18 12h3M6.5 6.5v11M17.5 6.5v11M9 12h6"/>
+      </svg>
+      <div>
+        <div class="ex-add-title">Add New Exercise</div>
+        <div class="ex-add-sub">Save it once — available for everyone</div>
+      </div>
     </div>
-
-    <input id="ex-add-tip-${ctx}" class="ex-lib-search" placeholder="Optional tip for other users">
-
-    <button class="meal-btn" type="button" onclick="addMissingWeightedExercise('${ctx}')">Add workout</button>
-
+    <input id="ex-add-name-${ctx}" class="ex-add-input" value="${safeQuery}" placeholder="Exercise name">
+    <div class="ex-add-row">
+      <div class="ex-add-field">
+        <span class="ex-add-label">MUSCLE</span>
+        <select id="ex-add-muscle-${ctx}" class="ex-add-select">
+          ${_EX_LIB_MUSCLES.filter(m => m !== 'All').map(m => `<option value="${m}"${m===muscle?' selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ex-add-field">
+        <span class="ex-add-label">EQUIPMENT</span>
+        <select id="ex-add-equipment-${ctx}" class="ex-add-select">
+          ${['barbell','dumbbell','machine','cable','bodyweight','band','smith','other'].map(e => `<option value="${e}">${e}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <input id="ex-add-tip-${ctx}" class="ex-add-input" placeholder="Tip for the community (optional)">
+    <button class="ex-add-btn" type="button" onclick="addMissingWeightedExercise('${ctx}')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Save Exercise
+    </button>
   </div>`;
 
 }

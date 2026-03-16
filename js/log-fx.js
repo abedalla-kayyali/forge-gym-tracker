@@ -225,7 +225,8 @@
     '#wgt-muscle-history-grid .bw-ex-btn,' +
     '.btn-ex-browse,.btn-ex-form,.btn-ex-swap,' +
     '.wp-key,.wp-preset-btn,.wp-btn-done,.wp-btn-cancel,' +
-    '.bw-reps-btn,.bw-add-custom-btn';
+    '.bw-reps-btn,.bw-add-custom-btn,' +
+    '.ex-add-btn';
 
   function dispatch(btn, cx, cy) {
     if (!btn || btn.disabled) return;
@@ -299,6 +300,16 @@
     }
     else if (has('bw-add-custom-btn')) {
       sndTap(); _vib(10);
+    }
+    else if (has('ex-add-btn')) {
+      // Exercise saved — ascending success chime
+      _n(523,'sine',0.10,0.0001,0,    0.10);
+      _n(659,'sine',0.08,0.0001,0.07, 0.12);
+      _n(784,'sine',0.07,0.0001,0.14, 0.14);
+      _n(1047,'sine',0.05,0.0001,0.22,0.18);
+      _vib([20,10,40]);
+      popClass(btn,'lf-save-pop',700);
+      scorePop(btn,'SAVED!','#39ff8f');
     }
   }
 

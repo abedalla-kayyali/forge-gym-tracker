@@ -123,9 +123,11 @@ function showAutocomplete(query) {
     ac.innerHTML = (typeof _exerciseAddCta === 'function')
       ? _exerciseAddCta(query, 'autocomplete')
       : '';
+    ac.classList.add('ex-ac-add-mode');
     ac.style.display = ac.innerHTML ? 'block' : 'none';
     return;
   }
+  ac.classList.remove('ex-ac-add-mode');
   ac.innerHTML = matches.map(e =>
     `<div class="ex-ac-item" onmousedown="pickExercise('${e.name.replace(/'/g, "\\'")}')">
        <span>${e.name}</span>
@@ -137,5 +139,23 @@ function showAutocomplete(query) {
 
 function closeAutocomplete() {
   const ac = document.getElementById('exercise-autocomplete');
-  if (ac) ac.style.display = 'none';
+  if (ac) { ac.style.display = 'none'; ac.classList.remove('ex-ac-add-mode'); }
 }
+
+// Close dropdown when tapping/clicking outside the autocomplete or its input
+(function () {
+  function _outsideTap(e) {
+    var ac  = document.getElementById('exercise-autocomplete');
+    var inp = document.getElementById('exercise-name');
+    if (!ac || ac.style.display === 'none') return;
+    var t = e.target;
+    if (ac.contains(t) || t === inp) return;
+    // allow onmousedown inside ac to fire first
+    setTimeout(function () {
+      if (ac) { ac.style.display = 'none'; ac.classList.remove('ex-ac-add-mode'); }
+    }, 50);
+  }
+  document.addEventListener('touchstart', _outsideTap, { passive: true });
+  document.addEventListener('mousedown',  _outsideTap);
+}());
+
