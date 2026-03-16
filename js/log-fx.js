@@ -174,7 +174,8 @@
 .body-zone:active,.body-zone.lf-zone-flash{animation:lfMuscleFlash .35s ease-out;}\
 @keyframes lfBodyZonePop{0%{filter:brightness(1) drop-shadow(0 0 0px rgba(57,255,143,0));}50%{filter:brightness(1.6) drop-shadow(0 0 8px rgba(57,255,143,.7));}100%{filter:brightness(1) drop-shadow(0 0 0px rgba(57,255,143,0));}}\
 .body-zone.lf-zone-pop{animation:lfBodyZonePop .4s ease-out;}\
-@media(prefers-reduced-motion:reduce){.lf-ripple,.lf-score-pop,.bw-log-btn.lf-set-pop,.btn.btn-primary.lf-save-pop,.bw-log-workout-btn.lf-save-pop,.set-row.lf-new,.bw-set-dot.lf-new{animation:none!important;}}';
+@media(prefers-reduced-motion:reduce){.lf-ripple,.lf-score-pop,.bw-log-btn.lf-set-pop,.btn.btn-primary.lf-save-pop,.bw-log-workout-btn.lf-save-pop,.set-row.lf-new,.bw-set-dot.lf-new{animation:none!important;}}\
+#wgt-muscle-history-grid .bw-ex-btn.ep-pressed{transform:scale(.93)!important;border-color:var(--accent)!important;}';
   document.head.appendChild(s);
 
   // ── Visual helpers ──────────────────────────────────────────────────────
@@ -220,7 +221,9 @@
     '.cardio-act-btn,.cardio-hz-btn,.cardio-log-btn,' +
     '.timer-preset-btn,.btn-ghost,' +
     '#save-btn,.btn.btn-primary,' +
-    '.muscle-chip,.body-zone';
+    '.muscle-chip,.body-zone,' +
+    '#wgt-muscle-history-grid .bw-ex-btn,' +
+    '.btn-ex-browse,.btn-ex-form,.btn-ex-swap';
 
   function dispatch(btn, cx, cy) {
     if (!btn || btn.disabled) return;
@@ -255,6 +258,20 @@
       var muscle = btn.getAttribute('data-muscle') || '';
       sndMuscleSelect(muscle); _vib(10);
       popClass(btn, 'lf-zone-pop', 450);
+    }
+    else if (has('bw-ex-btn')) {
+      // Exercise history card tap — crisp selection chime
+      _n(880, 'sine', 0.07, 0.0001, 0,    0.07);
+      _n(1320,'sine', 0.04, 0.0001, 0.05, 0.09);
+      _vib(10);
+      popClass(btn, 'ep-pressed', 200);
+      scorePop(btn, 'SELECT', 'var(--accent)');
+    }
+    else if (has('btn-ex-browse') || has('btn-ex-form') || has('btn-ex-swap')) {
+      // Form / Browse / Swap buttons
+      _n(1050,'sine', 0.06, 0.0001, 0,    0.06);
+      _n(1400,'sine', 0.03, 0.0001, 0.04, 0.07);
+      _vib(10);
     }
   }
 
@@ -299,5 +316,19 @@
   var bw = document.getElementById('bw-sets-container');
   if (sc) obs.observe(sc, { childList: true });
   if (bw) obs.observe(bw, { childList: true });
+
+  // ── Set count badge: glow when > 0 ─────────────────────────────
+  var badge = document.getElementById('set-count-badge');
+  if (badge) {
+    var _updateBadge = function() {
+      var n = parseInt(badge.textContent);
+      if (n > 0) { badge.classList.add('ep-active'); }
+      else        { badge.classList.remove('ep-active'); }
+    };
+    new MutationObserver(_updateBadge).observe(badge, {
+      childList: true, characterData: true, subtree: true
+    });
+    _updateBadge();
+  }
 
 })();
