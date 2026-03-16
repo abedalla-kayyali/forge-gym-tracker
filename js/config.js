@@ -5,7 +5,7 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v145';
+window.FORGE_VERSION = 'v146';
 window.FORGE_BUILD   = '2026-03-16 (Fix: qty stepper mobile-friendly with presets)';
 
 window.FORGE_CONFIG = {
