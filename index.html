@@ -873,7 +873,7 @@
         <span class="panel-badge" id="heatmap-legend-badge" style="font-size:9px;letter-spacing:.5px;" data-i18n="dash.heatmap.last30">LAST 30 DAYS</span>
       </div>
       <div id="muscle-heatmap-body" style="padding:12px 6px 6px;">
-        <div class="empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-title">No data yet</div></div>
+        <div class="empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-title">No data yet</div><button class="empty-cta-btn" style="margin-top:10px" onclick="_dashForceSync()">Sync data</button></div>
       </div>
     </div>
 
@@ -6640,6 +6640,27 @@ function _nutriOnCustomToggle() {
   });
 }
 
+// ── Stats force-sync (shown on empty-state Sync button) ───────────────────
+async function _dashForceSync() {
+  const btn = document.querySelector('#muscle-heatmap-body .empty-cta-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
+  try {
+    const { data: { session } } = await window._sb.auth.getSession();
+    if (session?.user?.id && typeof window._syncPull === 'function') {
+      await window._syncPull(session.user.id);
+      workouts   = _lsGet(STORAGE_KEYS.WORKOUTS,   []);
+      bodyWeight = _lsGet(STORAGE_KEYS.BODY_WEIGHT, []);
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderHistory   === 'function') renderHistory();
+    } else {
+      if (typeof showToast === 'function') showToast('Sign in to sync your data', 'warn');
+    }
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('Sync failed — check connection', 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Sync data'; }
+}
+
 // ── Nutrition food search ──────────────────────────────────────────────────
 let _selectedFood = null;       // NormalisedFood | null
 let _foodSearchController = null; // AbortController
@@ -9070,7 +9091,7 @@ if (document.readyState === 'loading') {
     <div class="pwa-sub" id="pwa-banner-sub">Add to home screen for the full app experience</div>
   </div>
   <button class="pwa-btn" id="pwa-install-btn">INSTALL</button>
-  <button class="pwa-dismiss" id="pwa-dismiss-btn" aria-label="Dismiss"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <button class="pwa-dismiss" id="pwa-dismiss-btn" aria-label="Dismiss">&#x2715;</button>
 </div>
 
 <!-- EXERCISE LIBRARY MODAL -->

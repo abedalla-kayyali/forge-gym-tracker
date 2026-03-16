@@ -2205,19 +2205,33 @@ document.addEventListener('wheel', function(e) {
   let _deferredPrompt = null;
   const BANNER_DISMISSED_KEY = 'forge_install_dismissed';
 
+  function _isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.matchMedia('(display-mode: minimal-ui)').matches
+      || window.navigator.standalone === true;
+  }
+
+  // Auto-dismiss if already installed (on page load)
+  if (_isStandalone()) {
+    localStorage.setItem(BANNER_DISMISSED_KEY, '1');
+  }
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     _deferredPrompt = e;
 
     // Don't show if user already dismissed or app is already installed
     if (localStorage.getItem(BANNER_DISMISSED_KEY)) return;
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
+    if (_isStandalone()) return;
 
-    // Show banner after 3 seconds
+    // Show banner after 8 seconds (less intrusive)
     setTimeout(() => {
+      // Re-check at show time in case user installed during delay
+      if (localStorage.getItem(BANNER_DISMISSED_KEY)) return;
+      if (_isStandalone()) return;
       const banner = document.getElementById('pwa-install-banner');
       if (banner) banner.classList.add('show');
-    }, 3000);
+    }, 8000);
   });
 
   // Install button click
@@ -2239,12 +2253,6 @@ document.addEventListener('wheel', function(e) {
       localStorage.setItem(BANNER_DISMISSED_KEY, '1');
     }
   });
-
-  // Hide banner if already installed
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    const banner = document.getElementById('pwa-install-banner');
-    if (banner) banner.classList.remove('show');
-  }
 })();
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
