@@ -380,33 +380,24 @@
     });
   }
 
-  // ── Header quick-add step buttons (outside #view-log) ──────────────────
-  var _hdrStepLastTouch = null;
-  document.addEventListener('touchend', function(e) {
-    var t = e.changedTouches && e.changedTouches[0]; if (!t) return;
-    var el = document.elementFromPoint(t.clientX, t.clientY);
-    var btn = el && typeof el.closest === 'function' ? el.closest('.hdr-sq-btn') : null;
-    if (!btn) return;
-    _hdrStepLastTouch = btn;
-    var amt = parseInt(btn.getAttribute('data-amt') || '0');
-    _n(160, 'triangle', 0.14, 0.001, 0, 0.07);
-    _n(900, 'sine', 0.05, 0.0001, 0.04, 0.06);
-    if (amt >= 5000) { _n(523, 'sine', 0.06, 0.0001, 0.09, 0.10); }
-    _vib(amt >= 5000 ? [20, 8, 30] : 12);
-    ripple(btn, t.clientX, t.clientY);
-    scorePop(btn, '+' + (amt / 1000).toFixed(0) + 'K', '#39ff8f');
-  }, { passive: true });
-  document.addEventListener('click', function(e) {
-    var btn = e.target && typeof e.target.closest === 'function' ? e.target.closest('.hdr-sq-btn') : null;
-    if (!btn) return;
-    if (btn === _hdrStepLastTouch) { _hdrStepLastTouch = null; return; }
-    var amt = parseInt(btn.getAttribute('data-amt') || '0');
-    _n(160, 'triangle', 0.14, 0.001, 0, 0.07);
-    _n(900, 'sine', 0.05, 0.0001, 0.04, 0.06);
-    if (amt >= 5000) { _n(523, 'sine', 0.06, 0.0001, 0.09, 0.10); }
-    ripple(btn, e.clientX, e.clientY);
-    scorePop(btn, '+' + (amt / 1000).toFixed(0) + 'K', '#39ff8f');
-  });
+  // ── Global step FX — called directly from logSteps() onclick chain ──────
+  // This runs inside the user gesture so iOS AudioContext unlock is guaranteed.
+  window._lfStepFX = function(amount, btnEl) {
+    try {
+      var amt = parseInt(amount) || 0;
+      // Footstep: low thud + bright tick
+      _n(160, 'triangle', 0.14, 0.001, 0,    0.07);
+      _n(900, 'sine',     0.05, 0.0001, 0.04, 0.06);
+      if (amt >= 5000)  { _n(523, 'sine', 0.06, 0.0001, 0.09, 0.10); }
+      if (amt >= 10000) { _n(659, 'sine', 0.05, 0.0001, 0.16, 0.12); _n(784, 'sine', 0.04, 0.0001, 0.23, 0.14); }
+      _vib(amt >= 5000 ? [20, 8, 30] : 12);
+      if (btnEl) {
+        popClass(btnEl, 'lf-pressed', 200);
+        var label = amt >= 1000 ? '+' + (amt / 1000).toFixed(0) + 'K' : '+' + amt;
+        scorePop(btnEl, label + ' STEPS', '#39ff8f');
+      }
+    } catch(e) {}
+  };
 
   // ── Animate new set rows ───────────────────────────────────────────────
   var obs = new MutationObserver(function(muts) {

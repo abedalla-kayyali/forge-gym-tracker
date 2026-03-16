@@ -94,6 +94,9 @@ function logSteps(amount, btnEl) {
   renderStepsPanel();
   postSaveHooks();
 
+  // Sound + visual FX — called here (inside onclick gesture) so iOS allows audio
+  if (typeof window._lfStepFX === 'function') window._lfStepFX(amount, btnEl);
+
   if (btnEl) {
     btnEl.classList.remove('step-btn-pumped');
     void btnEl.offsetWidth;
