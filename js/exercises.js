@@ -1110,21 +1110,61 @@ function _resolveFormInspectorMedia(exercise) {
   if (!exercise) return null;
   if (exercise.vid) return { type: 'video', url: exercise.vid };
 
-  // Prioritize GIFs from our manual mapping
+  // Prioritize GIFs/images from our manual mapping
   const key = _normalizeExerciseName(exercise.mediaKey || exercise.n);
   const fallback = FORM_INSPECTOR_MEDIA[key];
   if (fallback && fallback.src) {
-    return { type: fallback.type === 'gif' ? 'image' : fallback.type, url: fallback.src };
+    const images = (fallback.images && fallback.images.length) ? fallback.images : [];
+    return { type: fallback.type === 'gif' ? 'image' : fallback.type, url: fallback.src, images };
   }
 
   // Fallback to static images from the free database
   if (exercise.images && exercise.images.length) {
-    const candidate = exercise.images[0];
-    const url = candidate.startsWith('http') ? candidate : `${FREE_EXERCISE_MEDIA_BASE}${candidate}`;
-    return { type: 'image', url };
+    const imgs = exercise.images.map(img => img.startsWith('http') ? img : `${FREE_EXERCISE_MEDIA_BASE}${img}`);
+    return { type: 'image', url: imgs[0], images: imgs };
   }
 
   return null;
+}
+
+// Carousel state
+let _formCarouselIdx = 0;
+let _formCarouselImgs = [];
+
+function formCarouselNav(dir) {
+  _formCarouselIdx = (_formCarouselIdx + dir + _formCarouselImgs.length) % _formCarouselImgs.length;
+  _formCarouselUpdate();
+}
+
+function _formCarouselUpdate() {
+  const track = document.getElementById('form-carousel-track');
+  const dots = document.getElementById('form-carousel-dots');
+  const label = document.getElementById('form-carousel-step-label');
+  if (track) track.style.transform = `translateX(-${_formCarouselIdx * 100}%)`;
+  if (dots) Array.from(dots.children).forEach((d, i) => d.classList.toggle('active', i === _formCarouselIdx));
+  if (label) label.textContent = `Step ${_formCarouselIdx + 1} of ${_formCarouselImgs.length}`;
+}
+
+function _formCarouselOpen(images, exerciseName) {
+  _formCarouselImgs = images;
+  _formCarouselIdx = 0;
+  const carousel = document.getElementById('form-carousel');
+  const track = document.getElementById('form-carousel-track');
+  const dots = document.getElementById('form-carousel-dots');
+  if (!carousel || !track || !dots) return;
+  track.innerHTML = images.map((url, i) =>
+    `<div class="form-carousel-slide"><img src="${url}" alt="${exerciseName} step ${i + 1}" referrerpolicy="no-referrer" loading="${i === 0 ? 'eager' : 'lazy'}"></div>`
+  ).join('');
+  dots.innerHTML = images.map((_, i) => `<span class="form-carousel-dot${i === 0 ? ' active' : ''}"></span>`).join('');
+  _formCarouselUpdate();
+  carousel.style.display = 'block';
+  // Touch swipe
+  let touchStartX = 0;
+  carousel.ontouchstart = e => { touchStartX = e.touches[0].clientX; };
+  carousel.ontouchend = e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) formCarouselNav(dx < 0 ? 1 : -1);
+  };
 }
 
 
@@ -1201,17 +1241,23 @@ function openFormInspector(name) {
 
   const expandBtn = document.getElementById('form-expand-btn');
   if (expandBtn) expandBtn.style.display = 'none';
+  const carousel = document.getElementById('form-carousel');
+  if (carousel) carousel.style.display = 'none';
 
   if (media && media.type === 'video' && video) {
     video.style.display = 'block';
     video.src = media.url;
     video.load();
     video.play().catch(() => {});
-  } else if (media && media.type === 'image' && gif) {
-    gif.style.display = 'block';
-    gif.src = media.url;
-    gif.alt = exercise.n || name;
-    if (expandBtn) expandBtn.style.display = 'flex';
+  } else if (media && media.type === 'image') {
+    if (media.images && media.images.length > 1) {
+      _formCarouselOpen(media.images, exercise.n || name);
+    } else if (gif) {
+      gif.style.display = 'block';
+      gif.src = media.url;
+      gif.alt = exercise.n || name;
+      if (expandBtn) expandBtn.style.display = 'flex';
+    }
   } else if (empty) {
     empty.style.display = 'flex';
   }
@@ -1249,8 +1295,9 @@ function closeFormInspector() {
   }
 
   const spinner = document.getElementById('form-video-loading');
-
   if (spinner) spinner.style.display = 'none';
+  const carousel = document.getElementById('form-carousel');
+  if (carousel) carousel.style.display = 'none';
 
   closeFormLightbox();
 
