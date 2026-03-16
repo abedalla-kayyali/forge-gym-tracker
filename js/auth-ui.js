@@ -472,6 +472,85 @@
         color: rgba(100,140,100,.4);
         letter-spacing: 1px;
       }
+
+      /* ── Auth FX Enhancements ───────────────────────────────── */
+      /* iOS: 16px prevents auto-zoom on input focus */
+      .auth-field input { font-size: 16px; }
+
+      /* Minimum touch targets */
+      .auth-tab    { min-height: 44px; display: flex; align-items: center; justify-content: center; }
+      .auth-submit { min-height: 52px; }
+      .auth-guest-btn { min-height: 48px; }
+      .auth-back   { min-height: 44px; }
+      .auth-forgot { min-height: 44px; display: inline-flex; align-items: center; }
+
+      /* Password wrapper + eye toggle */
+      .auth-pw-wrap { position: relative; }
+      .auth-pw-eye {
+        position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        background: none; border: none; cursor: pointer; padding: 6px; line-height: 0;
+        color: rgba(57,255,143,.3); transition: color .2s;
+        -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+      }
+      .auth-pw-eye:hover, .auth-pw-eye:active { color: rgba(57,255,143,.75); }
+      .auth-pw-wrap input { padding-right: 42px !important; }
+
+      /* Input focus ring pulse */
+      @keyframes authFocusPulse {
+        0%   { box-shadow: 0 0 0 0 rgba(57,255,143,.38), 0 0 0 3px rgba(57,255,143,.08); }
+        65%  { box-shadow: 0 0 0 8px rgba(57,255,143,0),  0 0 0 3px rgba(57,255,143,.08); }
+        100% { box-shadow: 0 0 0 8px rgba(57,255,143,0),  0 0 0 3px rgba(57,255,143,.08); }
+      }
+      .auth-field input:focus { animation: authFocusPulse .55s ease-out; }
+
+      /* Error shake */
+      @keyframes authShake {
+        0%,100% { transform: translateX(0); }
+        18%  { transform: translateX(-7px); }
+        36%  { transform: translateX(7px); }
+        54%  { transform: translateX(-5px); }
+        72%  { transform: translateX(5px); }
+        88%  { transform: translateX(-2px); }
+      }
+      .auth-shake { animation: authShake .45s cubic-bezier(.36,.07,.19,.97) both; }
+
+      /* Button spinner + loading state */
+      .auth-spinner {
+        display: none; width: 16px; height: 16px;
+        border: 2px solid rgba(57,255,143,.22); border-top-color: #39ff8f;
+        border-radius: 50%; flex-shrink: 0;
+        animation: authSpin .6s linear infinite; vertical-align: middle; margin-right: 8px;
+      }
+      @keyframes authSpin { to { transform: rotate(360deg); } }
+      .auth-submit.auth-loading .auth-spinner { display: inline-block; }
+      .auth-submit.auth-loading { opacity: .72; pointer-events: none; }
+
+      /* Success flash overlay on card */
+      .auth-success-flash {
+        position: absolute; inset: 0; border-radius: 20px; pointer-events: none; z-index: 5;
+        background: radial-gradient(circle at 50% 38%, rgba(57,255,143,.22), rgba(57,255,143,0) 68%);
+        opacity: 0; transition: opacity .28s ease-out;
+      }
+      .auth-success-flash.lit { opacity: 1; }
+
+      /* Burst particles */
+      @keyframes authBurst {
+        0%   { transform: translate(0,0) scale(1); opacity: .9; }
+        100% { transform: translate(var(--bx),var(--by)) scale(0); opacity: 0; }
+      }
+      .auth-burst-dot {
+        position: fixed; width: 7px; height: 7px; border-radius: 50%;
+        pointer-events: none; z-index: 10002;
+        animation: authBurst .68s cubic-bezier(.22,1,.36,1) forwards;
+      }
+
+      /* Reduced motion: skip all auth animations */
+      @media (prefers-reduced-motion: reduce) {
+        .auth-field input:focus { animation: none; }
+        .auth-shake            { animation: none; }
+        .auth-burst-dot        { display: none; }
+        .auth-bg, .auth-particle, .auth-logo-icon { animation: none; }
+      }
     </style>
 
     <!-- Background effects -->
@@ -500,12 +579,15 @@
           <label for="auth-email-l" id="auth-label-email-l">Email</label>
           <input type="email" id="auth-email-l" autocomplete="email" placeholder="you@example.com">
         </div>
-        <div class="auth-field">
+        <div class="auth-field auth-pw-wrap">
           <label for="auth-pass-l" id="auth-label-pass-l">Password</label>
           <input type="password" id="auth-pass-l" autocomplete="current-password" placeholder="********">
+          <button type="button" class="auth-pw-eye" onclick="_authToggleEye('auth-pass-l',this)" aria-label="Show password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
         <button class="auth-forgot" id="auth-forgot-btn" onclick="_authSwitchTab('forgot')">Forgot password?</button>
-        <button class="auth-submit auth-submit-glow" id="auth-btn-login" onclick="_authLogin()">LOGIN</button>
+        <button class="auth-submit auth-submit-glow" id="auth-btn-login" onclick="_authLogin()"><span class="auth-spinner"></span>LOGIN</button>
         <div class="auth-error" id="auth-error-login"></div>
         <div class="auth-divider" id="auth-divider-login">or</div>
         <button class="auth-guest-btn" id="auth-guest-login" onclick="window._authGuestMode()">Continue as Guest</button>
@@ -522,11 +604,14 @@
           <label for="auth-email-s" id="auth-label-email-s">Email</label>
           <input type="email" id="auth-email-s" autocomplete="email" placeholder="you@example.com">
         </div>
-        <div class="auth-field">
+        <div class="auth-field auth-pw-wrap">
           <label for="auth-pass-s" id="auth-label-pass-s">Password</label>
           <input type="password" id="auth-pass-s" autocomplete="new-password" placeholder="Min 6 characters">
+          <button type="button" class="auth-pw-eye" onclick="_authToggleEye('auth-pass-s',this)" aria-label="Show password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
-        <button class="auth-submit auth-submit-glow" id="auth-btn-signup" onclick="_authSignup()">CREATE ACCOUNT</button>
+        <button class="auth-submit auth-submit-glow" id="auth-btn-signup" onclick="_authSignup()"><span class="auth-spinner"></span>CREATE ACCOUNT</button>
         <div class="auth-error" id="auth-error-signup"></div>
         <div class="auth-divider" id="auth-divider-signup">or</div>
         <button class="auth-guest-btn" id="auth-guest-signup" onclick="window._authGuestMode()">Continue as Guest</button>
@@ -543,12 +628,13 @@
           <label for="auth-email-r" id="auth-label-email-r">Email address</label>
           <input type="email" id="auth-email-r" autocomplete="email" placeholder="you@example.com">
         </div>
-        <button class="auth-submit auth-submit-glow" id="auth-btn-reset" onclick="_authResetPassword()">SEND RESET LINK</button>
+        <button class="auth-submit auth-submit-glow" id="auth-btn-reset" onclick="_authResetPassword()"><span class="auth-spinner"></span>SEND RESET LINK</button>
         <div class="auth-error" id="auth-error-forgot"></div>
         <div class="auth-success" id="auth-success-forgot"></div>
       </div>
 
       <div class="auth-version">${window.FORGE_VERSION || ''} &middot; ${window.FORGE_BUILD || ''}</div>
+      <div class="auth-success-flash" id="auth-success-flash"></div>
     </div>
   `;
   document.body.insertBefore(overlay, document.body.firstChild);
@@ -573,6 +659,108 @@
       container.appendChild(p);
     }
   })();
+
+  // ── Auth inline sound helper ──────────────────────────────────────────
+  // Works standalone; reuses _audioCtx from fx-sound.js if available at call time.
+  function _authNote(freq, type, vol, endVol, delay, dur) {
+    try {
+      const on = typeof soundOn !== 'undefined' ? soundOn
+        : localStorage.getItem('forge_sound') !== 'off';
+      if (!on) return;
+      const ctx = (typeof _audioCtx !== 'undefined' && _audioCtx)
+        ? _audioCtx
+        : new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(Math.max(endVol, 0.0001), ctx.currentTime + delay + dur);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + dur + 0.02);
+    } catch(e) {}
+  }
+
+  // Soft bell on input focus
+  function _sndFocus() {
+    _authNote(1100, 'sine', 0.05, 0.0001, 0, 0.07);
+  }
+  // Subtle swoosh on tab switch
+  function _sndTabSwitch() {
+    _authNote(550, 'sine', 0.07, 0.0001, 0,    0.06);
+    _authNote(850, 'sine', 0.04, 0.0001, 0.05, 0.07);
+  }
+  // Descending error tone
+  function _sndError() {
+    _authNote(340, 'sine', 0.11, 0.0001, 0,    0.09);
+    _authNote(230, 'sine', 0.09, 0.0001, 0.07, 0.11);
+    _authNote(170, 'sine', 0.07, 0.0001, 0.14, 0.14);
+  }
+  // Rising celebration on success
+  function _sndSuccess() {
+    [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((f, i) => {
+      _authNote(f,     'sine',     0.16, 0.0001, i * 0.07,        0.2);
+      _authNote(f * 1.5, 'sine',  0.04, 0.0001, i * 0.07 + 0.03, 0.12);
+    });
+  }
+  // Tiny tick for eye toggle
+  function _sndEyeTick() {
+    _authNote(1400, 'triangle', 0.04, 0.0001, 0, 0.04);
+  }
+
+  // ── Input focus sounds ────────────────────────────────────────────────
+  overlay.addEventListener('focusin', function(e) {
+    if (e.target && e.target.tagName === 'INPUT') _sndFocus();
+  });
+
+  // ── Password eye toggle ───────────────────────────────────────────────
+  window._authToggleEye = function(inputId, btn) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    _sndEyeTick();
+    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    btn.innerHTML = show
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  };
+
+  // ── Success burst + flash ─────────────────────────────────────────────
+  function _authSuccessCelebrate(callback) {
+    _sndSuccess();
+    const flash = document.getElementById('auth-success-flash');
+    if (flash) { flash.classList.add('lit'); }
+    const card = overlay.querySelector('.auth-card');
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top  + rect.height * 0.38;
+      const colors = ['#39ff8f','#2ecc71','#a8ffcb','#ffffff','#00ff88','#b5ffda'];
+      for (let i = 0; i < 20; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'auth-burst-dot';
+        const angle = (i / 20) * Math.PI * 2;
+        const dist  = 55 + Math.random() * 90;
+        dot.style.cssText = [
+          'left:'   + (cx - 3.5) + 'px',
+          'top:'    + (cy - 3.5) + 'px',
+          '--bx:'   + (Math.cos(angle) * dist).toFixed(1) + 'px',
+          '--by:'   + (Math.sin(angle) * dist).toFixed(1) + 'px',
+          'background:' + colors[i % colors.length],
+          'animation-duration:' + (0.48 + Math.random() * 0.28) + 's',
+          'animation-delay:'    + (Math.random() * 0.08) + 's'
+        ].join(';');
+        document.body.appendChild(dot);
+        dot.addEventListener('animationend', () => dot.remove());
+      }
+    }
+    setTimeout(() => {
+      if (flash) flash.classList.remove('lit');
+      if (typeof callback === 'function') callback();
+    }, 520);
+  }
 
   const _AUTH_I18N = {
     en: {
@@ -743,6 +931,9 @@
 
   // â”€â”€ Tab switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authSwitchTab = function (tab) {
+    const cur = document.getElementById('auth-form-signup').style.display !== 'none' ? 'signup'
+      : document.getElementById('auth-form-forgot').style.display !== 'none' ? 'forgot' : 'login';
+    if (cur !== tab) _sndTabSwitch();
     document.getElementById('auth-form-login').style.display  = tab === 'login'  ? '' : 'none';
     document.getElementById('auth-form-signup').style.display = tab === 'signup' ? '' : 'none';
     document.getElementById('auth-form-forgot').style.display = tab === 'forgot' ? '' : 'none';
@@ -760,6 +951,14 @@
   function _authShowError(id, msg) {
     const el = document.getElementById(id);
     if (el) { el.textContent = msg; el.classList.add('visible'); }
+    _sndError();
+    const card = overlay.querySelector('.auth-card');
+    if (card) {
+      card.classList.remove('auth-shake');
+      void card.offsetWidth; // trigger reflow
+      card.classList.add('auth-shake');
+      card.addEventListener('animationend', () => card.classList.remove('auth-shake'), { once: true });
+    }
   }
   function _authShowSuccess(id, msg) {
     const el = document.getElementById(id);
@@ -767,7 +966,9 @@
   }
   function _authSetLoading(btnId, loading) {
     const btn = document.getElementById(btnId);
-    if (btn) btn.disabled = loading;
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.classList.toggle('auth-loading', loading);
   }
   function _authSetUpdateLoading(loading) {
     document.querySelectorAll('.auth-update-btn').forEach(btn => { btn.disabled = loading; });
@@ -796,8 +997,10 @@
     try {
       const { data, error } = await window._sb.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
-      _authHideOverlay();
-      if (typeof window._authSuccess === 'function') window._authSuccess(data.session);
+      _authSuccessCelebrate(() => {
+        _authHideOverlay();
+        if (typeof window._authSuccess === 'function') window._authSuccess(data.session);
+      });
     } catch (e) {
       _authShowError('auth-error-login', e.message || _authT('errLogin'));
     } finally {
@@ -818,8 +1021,10 @@
       const { data, error } = await window._sb.auth.signUp({ email, password: pass });
       if (error) throw error;
       if (data.session) {
-        _authHideOverlay();
-        if (typeof window._authSuccess === 'function') window._authSuccess(data.session, true);
+        _authSuccessCelebrate(() => {
+          _authHideOverlay();
+          if (typeof window._authSuccess === 'function') window._authSuccess(data.session, true);
+        });
       } else {
         _authShowError('auth-error-signup', _authT('msgConfirmEmail'));
         _authSwitchTab('login');
