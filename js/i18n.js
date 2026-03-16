@@ -2180,22 +2180,24 @@ document.addEventListener('wheel', function(e) {
       position: fixed;
       bottom: calc(72px + env(safe-area-inset-bottom, 0px));
       left: 12px; right: 12px;
-      background: var(--panel);
-      border: 1px solid var(--green);
-      border-radius: 14px;
+      background: #0e1f16;
+      border: 1px solid rgba(46,204,113,.35);
+      border-radius: 16px;
       padding: 14px 16px;
       z-index: 9999;
-      box-shadow: 0 4px 24px #0008;
-      animation: slideUp .3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,.55), 0 0 0 1px rgba(46,204,113,.08) inset;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
-    #pwa-install-banner.show { display: flex; align-items: center; gap: 12px; }
-    #pwa-install-banner .pwa-icon { font-size: 28px; flex-shrink: 0; }
-    #pwa-install-banner .pwa-text { flex: 1; }
-    #pwa-install-banner .pwa-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: var(--green); letter-spacing: 1px; }
-    #pwa-install-banner .pwa-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
-    #pwa-install-banner .pwa-btn { background: var(--green); color: #000; border: none; border-radius: 8px; padding: 8px 14px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; cursor: pointer; flex-shrink: 0; }
-    #pwa-install-banner .pwa-dismiss { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 4px 8px; flex-shrink: 0; }
-    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    #pwa-install-banner.show { display: flex; align-items: center; gap: 12px; animation: pwaSlideUp .3s cubic-bezier(.22,.68,0,1.2) both; }
+    #pwa-install-banner .pwa-icon { flex-shrink: 0; opacity: .9; }
+    #pwa-install-banner .pwa-text { flex: 1; min-width: 0; }
+    #pwa-install-banner .pwa-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; color: #2ecc71; letter-spacing: 1.5px; }
+    #pwa-install-banner .pwa-sub { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; line-height: 1.3; }
+    #pwa-install-banner .pwa-btn { background: #2ecc71; color: #000; border: none; border-radius: 8px; padding: 8px 16px; font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1.5px; cursor: pointer; flex-shrink: 0; font-weight: 700; }
+    #pwa-install-banner .pwa-dismiss { background: rgba(255,255,255,.08); border: none; border-radius: 6px; color: rgba(255,255,255,.5); cursor: pointer; padding: 6px 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    #pwa-install-banner .pwa-dismiss:hover { background: rgba(255,255,255,.14); color: rgba(255,255,255,.8); }
+    @keyframes pwaSlideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   `;
   document.head.appendChild(style);
 })();
@@ -2213,11 +2215,11 @@ document.addEventListener('wheel', function(e) {
     if (localStorage.getItem(BANNER_DISMISSED_KEY)) return;
     if (window.matchMedia('(display-mode: standalone)').matches) return;
 
-    // Show banner after 3 seconds
+    // Show banner after 8 seconds (less intrusive)
     setTimeout(() => {
       const banner = document.getElementById('pwa-install-banner');
       if (banner) banner.classList.add('show');
-    }, 3000);
+    }, 8000);
   });
 
   // Install button click
