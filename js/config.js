@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v156';
-window.FORGE_BUILD   = '2026-03-16 (Fix+Feat: numpad icon, set-row fix, BW+Cardio premium UI+sounds)';
+window.FORGE_VERSION = 'v157';
+window.FORGE_BUILD   = '2026-03-16 (Fix: set-row grid narrowed, cardio full-width)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
