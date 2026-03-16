@@ -6645,17 +6645,41 @@ async function _dashForceSync() {
   const btn = document.querySelector('#muscle-heatmap-body .empty-cta-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
   try {
-    const { data: { session } } = await window._sb.auth.getSession();
+    if (!window._sb) throw new Error('Supabase client not initialised');
+    // Use cached session only — avoid a network round-trip that can fail
+    const { data, error: sessErr } = await window._sb.auth.getSession();
+    if (sessErr) throw sessErr;
+    const session = data?.session;
     if (session?.user?.id && typeof window._syncPull === 'function') {
-      await window._syncPull(session.user.id);
-      workouts   = _lsGet(STORAGE_KEYS.WORKOUTS,   []);
-      bodyWeight = _lsGet(STORAGE_KEYS.BODY_WEIGHT, []);
-      if (typeof renderDashboard === 'function') renderDashboard();
-      if (typeof renderHistory   === 'function') renderHistory();
+      const uid = session.user.id;
+      // Push any local-only data first (covers devices where data was logged offline)
+      if (typeof window._syncPush === 'function') await window._syncPush(uid);
+      // Then pull server data (server is source of truth)
+      await window._syncPull(uid);
+      // Reload ALL in-memory data (same as _authSuccess does)
+      workouts    = _lsGet(STORAGE_KEYS.WORKOUTS,    []);
+      bodyWeight  = _lsGet(STORAGE_KEYS.BODY_WEIGHT, []);
+      templates   = _lsGet(STORAGE_KEYS.TEMPLATES,  []);
+      settings    = _lsGet(STORAGE_KEYS.SETTINGS,   {});
+      mealsLog    = _lsGet(STORAGE_KEYS.MEALS,      {});
+      mealLibrary = _lsGet(STORAGE_KEYS.MEAL_LIBRARY, {});
+      userProfile = _lsGet('forge_profile', {});
+      if (typeof bwWorkouts !== 'undefined') bwWorkouts = _lsGet(STORAGE_KEYS.BW_WORKOUTS, []);
+      if (typeof cardioLog  !== 'undefined') cardioLog  = _lsGet(STORAGE_KEYS.CARDIO, []);
+      waterToday = _lsGet(STORAGE_KEYS.WATER_PREFIX + _waterDateKey, []);
+      if (typeof stepsData !== 'undefined') stepsData = _lsGet('forge_steps', {});
+      console.log('[FORGE sync-btn] reloaded — workouts:', workouts.length, 'bw:', bodyWeight.length,
+        'cardio:', (typeof cardioLog !== 'undefined' ? cardioLog.length : 'n/a'));
+      if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(_e) {}
+      if (typeof renderHistory   === 'function') try { renderHistory();   } catch(_e) {}
+      if (typeof renderProfile   === 'function') try { renderProfile();   } catch(_e) {}
+      const label = workouts.length ? workouts.length + ' workouts loaded' : 'no workout data found';
+      if (typeof showToast === 'function') showToast('Sync complete — ' + label, workouts.length ? 'success' : 'warn');
     } else {
       if (typeof showToast === 'function') showToast('Sign in to sync your data', 'warn');
     }
   } catch (e) {
+    console.error('[FORGE sync-btn] failed:', e);
     if (typeof showToast === 'function') showToast('Sync failed — check connection', 'error');
   }
   if (btn) { btn.disabled = false; btn.textContent = 'Sync data'; }
@@ -8600,11 +8624,18 @@ async function _authBoot() {
   }
   // Check for existing session
   let _bootSessionId = null;
-  const { data } = await window._sb.auth.getSession();
-  if (data?.session) {
+  let _bootData = null;
+  try {
+    const { data, error } = await window._sb.auth.getSession();
+    if (error) console.warn('[FORGE auth] getSession error at boot:', error.message);
+    _bootData = data;
+  } catch (e) {
+    console.error('[FORGE auth] getSession threw at boot:', e);
+  }
+  if (_bootData?.session) {
     // Already logged in — capture ID so SIGNED_IN event doesn't re-pull
-    _bootSessionId = data.session.user.id;
-    await window._authSuccess(data.session, false);
+    _bootSessionId = _bootData.session.user.id;
+    await window._authSuccess(_bootData.session, false);
   } else {
     // No session � check if user chose guest mode previously
     if (localStorage.getItem('forge_guest') === '1') {
