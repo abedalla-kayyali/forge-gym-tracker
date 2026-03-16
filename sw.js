@@ -1,6 +1,6 @@
 // FORGE Gym Tracker - Service Worker
 // Bump version to force cache refresh after updates
-const CACHE_NAME = 'forge-v142';
+const CACHE_NAME = 'forge-v143';
 
 const CORE_ASSETS = [
   './index.html',
@@ -85,6 +85,18 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Food search — always network-only, return empty results when offline
+  if (url.pathname.includes('/functions/v1/food-search')) {
+    event.respondWith(
+      fetch(event.request).catch(() =>
+        new Response(JSON.stringify({ results: [] }), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      )
+    );
+    return;
+  }
   const accept = event.request.headers.get('accept') || '';
   const isNavigation = event.request.mode === 'navigate' || accept.includes('text/html');
   const path = url.pathname || '';

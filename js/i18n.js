@@ -724,6 +724,12 @@ const LANGS = {
   'photos.add':      '+ ADD',
   'photos.empty':    'No photos yet. Add your first progress pic!',
 
+  // Nutrition food search
+  'food.searchPlaceholder': 'Search food or type meal name\u2026',
+  'food.noResults':         'No results \u2014 try a different name',
+  'food.searchError':       'Search unavailable \u2014 enter macros manually',
+  'food.per100g':           'per 100g',
+
   },
 
   ar: {
@@ -1451,6 +1457,12 @@ const LANGS = {
     'photos.title':    'طµظˆط± ط§ظ„طھظ‚ط¯ظ…',
     'photos.add':      '+ ط¥ط¶ط§ظپط©',
     'photos.empty':    'ظ„ط§ طھظˆط¬ط¯ طµظˆط± ط¨ط¹ط¯. ط£ط¶ظپ ط£ظˆظ„ظ‰ طµظˆط± طھظ‚ط¯ظ…ظƒ!',
+
+    // Nutrition food search
+    'food.searchPlaceholder': '\u0627\u0628\u062d\u062b \u0639\u0646 \u0637\u0639\u0627\u0645 \u0623\u0648 \u0627\u0643\u062a\u0628 \u0627\u0633\u0645 \u0627\u0644\u0648\u062c\u0628\u0629',
+    'food.noResults':         '\u0644\u0627 \u0646\u062a\u0627\u0626\u062c \u2014 \u062c\u0631\u0628 \u0627\u0633\u0645\u0627\u064b \u0622\u062e\u0631',
+    'food.searchError':       '\u0627\u0644\u0628\u062d\u062b \u063a\u064a\u0631 \u0645\u062a\u0627\u062d \u2014 \u0623\u062f\u062e\u0644 \u0627\u0644\u0642\u064a\u0645 \u064a\u062f\u0648\u064a\u0627\u064b',
+    'food.per100g':           '\u0644\u0643\u0644 100\u063a',
 
   }
 };

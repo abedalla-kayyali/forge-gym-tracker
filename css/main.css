@@ -12504,6 +12504,38 @@ body[data-theme="solar"] .xp-fill {
 
 .meal-qty{ text-align:center; }
 
+/* ── Food search dropdown ─────────────────────────── */
+.meal-search-full-row{ grid-column: 1 / -1; }
+.meal-search-input-row{ display:flex; gap:6px; align-items:center; }
+.meal-search-input-row .meal-input{ flex:1; }
+.meal-btn-search{
+  flex-shrink:0; border:none; border-radius:10px;
+  background:var(--accent2,#4fc3f7); color:#000;
+  font-size:13px; font-weight:600; padding:0 14px; height:44px; min-width:64px;
+  cursor:pointer; touch-action:manipulation;
+}
+.meal-search-wrap{ position:relative; }
+.meal-search-results{
+  position:absolute; top:100%; left:0; right:0; z-index:200;
+  background:var(--panel); border:1px solid var(--border2);
+  border-radius:0 0 12px 12px; max-height:260px; overflow-y:auto;
+}
+.meal-search-result{
+  padding:10px 14px; cursor:pointer;
+  border-bottom:1px solid var(--border1);
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.meal-search-result:active{ background:rgba(255,255,255,.06); }
+.meal-search-result-name{ font-size:13px; color:var(--text1); }
+.meal-search-result-meta{ font-size:11px; color:var(--text3); margin-top:2px; }
+.meal-search-spinner{ padding:12px; text-align:center; color:var(--text3); font-size:12px; }
+/* ── Qty + unit row ───────────────────────────────── */
+.meal-qty-row{ display:flex; gap:6px; align-items:center; }
+.meal-portion-unit{
+  background:var(--panel); border:1px solid var(--border2);
+  color:var(--text1); border-radius:8px; padding:8px; font-size:13px;
+}
+
 .meal-btn{
 
   border:none;
@@ -13065,6 +13097,11 @@ body[data-theme="solar"] .xp-fill {
   .meal-datetime-row { grid-template-columns:1fr; }
 
   .meal-form-grid { grid-template-columns:1fr 1fr; }
+  .meal-qty-row { grid-column: 1 / -1; }
+  .meal-qty-row .meal-input { flex:1; }
+  .meal-btn-search { height:44px; padding:0 16px; font-size:14px; }
+  .meal-search-result { padding:12px 14px; min-height:44px; }
+  .meal-search-results { max-height:220px; }
 
   .meal-macro-edit { grid-template-columns:repeat(2,1fr); }
 

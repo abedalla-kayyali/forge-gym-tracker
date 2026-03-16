@@ -6637,6 +6637,109 @@ function _nutriOnCustomToggle() {
   });
 }
 
+// ── Nutrition food search ──────────────────────────────────────────────────
+let _selectedFood = null;       // NormalisedFood | null
+let _foodSearchController = null; // AbortController
+let _foodSearchTimer = null;
+
+function _foodSearchNow(query) {
+  query = (query || '').trim();
+  if (!query || query.length < 2) return;
+  _foodSearchRenderResults(null); // show spinner
+  _foodSearch(query);
+}
+
+function _foodSearchDebounce(query) {
+  // kept for compatibility — no longer auto-fires search
+  clearTimeout(_foodSearchTimer);
+}
+
+async function _foodSearch(query) {
+  if (_foodSearchController) _foodSearchController.abort();
+  _foodSearchController = new AbortController();
+  const url = (window.FORGE_CONFIG?.FOOD_SEARCH_URL || 'https://mnqetnzdgtbeysqnmbkx.supabase.co/functions/v1/food-search')
+    + '?q=' + encodeURIComponent(query) + '&max=8';
+  try {
+    const res = await fetch(url, {
+      signal: _foodSearchController.signal,
+      headers: { Authorization: 'Bearer ' + (window.FORGE_CONFIG?.SUPABASE_ANON || '') }
+    });
+    if (!res.ok) throw new Error('non-ok');
+    const data = await res.json();
+    _foodSearchRenderResults((data.results || []).slice(0, 6));
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    _foodSearchRenderResults('error');
+  }
+}
+
+function _foodSearchRenderResults(foods) {
+  const el = document.getElementById('meal-search-results');
+  if (!el) return;
+  if (foods === null) {
+    el.style.display = 'block';
+    el.innerHTML = '<div class="meal-search-spinner">...</div>';
+    return;
+  }
+  if (foods === 'error') {
+    el.style.display = 'block';
+    el.innerHTML = '<div class="meal-search-spinner">' + (typeof tx === 'function' ? tx('food.searchError', 'Search unavailable \u2014 enter macros manually') : 'Search unavailable') + '</div>';
+    return;
+  }
+  if (!foods.length) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.style.display = 'block';
+  el.innerHTML = foods.map((f, i) => {
+    const brand = f.brand ? '<span style="color:var(--text3)"> \u00b7 ' + f.brand + '</span>' : '';
+    const per100 = typeof tx === 'function' ? tx('food.per100g', 'per 100g') : 'per 100g';
+    const meta = Math.round(f.per100g.kcal) + ' kcal \u00b7 P ' + f.per100g.p.toFixed(1) + 'g \u00b7 C ' + f.per100g.c.toFixed(1) + 'g \u00b7 F ' + f.per100g.f.toFixed(1) + 'g <em>' + per100 + '</em>';
+    const safe = JSON.stringify(f).replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    return '<div class="meal-search-result" onclick=\'_foodSearchSelect(' + safe + ')\'>' +
+      '<div class="meal-search-result-name">' + f.name + brand + '</div>' +
+      '<div class="meal-search-result-meta">' + meta + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function _foodSearchSelect(food) {
+  _selectedFood = food;
+  const nameEl = document.getElementById('meal-name-input');
+  if (nameEl) nameEl.value = food.name;
+  _foodSearchRenderResults([]);
+  // Set default qty to 100g (or serving weight if available)
+  const qtyEl = document.getElementById('meal-qty-input');
+  if (qtyEl) qtyEl.value = 100;
+  const unitEl = document.getElementById('meal-portion-unit');
+  if (unitEl) unitEl.value = 'g';
+  _foodSearchScaleOnQtyChange();
+}
+
+function _foodSearchScaleOnQtyChange() {
+  if (!_selectedFood) return;
+  const qty = parseFloat(document.getElementById('meal-qty-input')?.value) || 100;
+  const unit = document.getElementById('meal-portion-unit')?.value || 'g';
+  const sw = _selectedFood.serving?.weight || 100;
+  const grams = unit === 'serving' ? qty * sw : qty;
+  const factor = grams / 100;
+  const p100 = _selectedFood.per100g;
+  const kcalEl = document.getElementById('meal-kcal-input');
+  const pEl    = document.getElementById('meal-p-input');
+  const cEl    = document.getElementById('meal-c-input');
+  const fEl    = document.getElementById('meal-f-input');
+  if (kcalEl) kcalEl.value = Math.round(p100.kcal * factor);
+  if (pEl)    pEl.value    = (p100.p * factor).toFixed(1);
+  if (cEl)    cEl.value    = (p100.c * factor).toFixed(1);
+  if (fEl)    fEl.value    = (p100.f * factor).toFixed(1);
+}
+
+function _foodSearchClear() {
+  _selectedFood = null;
+}
+// ── End nutrition food search ──────────────────────────────────────────────
+
 function _cnRecalcMealCaloriesFromMacros() {
   const pEl = document.getElementById('meal-p-input');
   const cEl = document.getElementById('meal-c-input');
@@ -7318,9 +7421,25 @@ function renderCoachNutrition() {
         <div class="meal-saved-row">${savedChipsHtml || `<span class="meal-saved-empty">${tx('No saved meals yet. Your meals will appear here after first add.','لا توجد وجبات محفوظة بعد. ستظهر هنا بعد أول إضافة.')}</span>`}</div>
       </div>
       <div class="meal-form-grid">
-        <input id="meal-name-input" class="meal-input" type="text" list="meal-saved-list" placeholder="${tx('Meal name (e.g. chicken rice)','اسم الوجبة (مثال: دجاج مع رز)')}">
-        <datalist id="meal-saved-list">${savedOptionsHtml}</datalist>
-        <input id="meal-qty-input" class="meal-input meal-qty" type="number" step="0.25" min="0.25" value="1" placeholder="${tx('Qty','الكمية')}">
+        <div class="meal-search-wrap meal-search-full-row">
+          <div class="meal-search-input-row">
+            <input id="meal-name-input" class="meal-input" type="text" list="meal-saved-list"
+              placeholder="${tx('food.searchPlaceholder','Search food or type meal name\u2026')}"
+              onkeydown="if(event.key==='Enter'){_foodSearchNow(this.value);}"
+              autocomplete="off">
+            <button class="meal-btn meal-btn-search" onclick="_foodSearchNow(document.getElementById('meal-name-input').value)">${tx('Search','بحث')}</button>
+          </div>
+          <datalist id="meal-saved-list">${savedOptionsHtml}</datalist>
+          <div id="meal-search-results" class="meal-search-results" style="display:none"></div>
+        </div>
+        <div class="meal-qty-row">
+          <input id="meal-qty-input" class="meal-input meal-qty" type="number" step="1" min="1" value="100"
+            placeholder="g" oninput="_foodSearchScaleOnQtyChange()">
+          <select id="meal-portion-unit" class="meal-portion-unit" onchange="_foodSearchScaleOnQtyChange()">
+            <option value="g">g</option>
+            <option value="serving">${tx('serving','حصة')}</option>
+          </select>
+        </div>
         <button class="meal-btn meal-btn-ghost" onclick="_cnEstimateMealForm()">${tx('Estimate','تقدير')}</button>
         <button class="meal-btn" onclick="_cnAddMeal()">${tx('Add Meal','إضافة وجبة')}</button>
       </div>
