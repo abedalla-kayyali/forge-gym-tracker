@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v152';
-window.FORGE_BUILD   = '2026-03-16 (Fix: log-fx self-contained audio, no fx-sound.js dependency)';
+window.FORGE_VERSION = 'v153';
+window.FORGE_BUILD   = '2026-03-16 (Fix: log-fx iOS audio — unlock on touchstart, play on touchend)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
