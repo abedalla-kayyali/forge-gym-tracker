@@ -8530,6 +8530,9 @@ window._authSuccess = async function (session, isNewUser) {
   const userId = session?.user?.id;
   const _wasGuest = localStorage.getItem('forge_guest') === '1';
   if (!userId) return;
+  // Prevent concurrent double-calls (e.g. getSession + SIGNED_IN firing together)
+  if (window._authInProgress === userId) return;
+  window._authInProgress = userId;
 
   window._syncSetUser(userId);
 
@@ -8547,7 +8550,7 @@ window._authSuccess = async function (session, isNewUser) {
   if (!isNewUser) {
     // Returning user: pull latest data from Supabase into localStorage
     await _syncPull(userId);
-    // Reload in-memory arrays from updated localStorage
+    // Reload ALL in-memory arrays from updated localStorage
     workouts    = _lsGet(STORAGE_KEYS.WORKOUTS,    []);
     bodyWeight  = _lsGet(STORAGE_KEYS.BODY_WEIGHT, []);
     templates   = _lsGet(STORAGE_KEYS.TEMPLATES,  []);
@@ -8555,11 +8558,21 @@ window._authSuccess = async function (session, isNewUser) {
     mealsLog    = _lsGet(STORAGE_KEYS.MEALS,      {});
     mealLibrary = _lsGet(STORAGE_KEYS.MEAL_LIBRARY, {});
     userProfile = _lsGet('forge_profile', {});
-    // Refresh all currently rendered views
-    if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(e) {}
-    if (typeof renderHistory   === 'function') try { renderHistory();   } catch(e) {}
-    if (typeof renderProfile   === 'function') try { renderProfile();   } catch(e) {}
+    // bwWorkouts lives in workout-save.js — reload it here after sync
+    if (typeof bwWorkouts !== 'undefined') bwWorkouts = _lsGet(STORAGE_KEYS.BW_WORKOUTS, []);
+    // cardioLog lives in cardio-log.js — reload it here after sync
+    if (typeof cardioLog !== 'undefined') cardioLog = _lsGet(STORAGE_KEYS.CARDIO, []);
+    // waterToday lives in index.html but keyed by today's date — reload after sync
+    waterToday = _lsGet(STORAGE_KEYS.WATER_PREFIX + _waterDateKey, []);
+    // stepsData lives in steps-health.js — reload it here after sync
+    if (typeof stepsData !== 'undefined') stepsData = _lsGet('forge_steps', {});
+    console.log('[FORGE auth] data reloaded — workouts:', workouts.length, 'bw:', (typeof bwWorkouts !== 'undefined' ? bwWorkouts.length : 'n/a'), 'cardio:', (typeof cardioLog !== 'undefined' ? cardioLog.length : 'n/a'));
+    // Refresh all currently rendered views (log errors instead of silently swallowing)
+    if (typeof renderDashboard === 'function') try { renderDashboard(); } catch(e) { console.error('[FORGE] renderDashboard error:', e); }
+    if (typeof renderHistory   === 'function') try { renderHistory();   } catch(e) { console.error('[FORGE] renderHistory error:', e); }
+    if (typeof renderProfile   === 'function') try { renderProfile();   } catch(e) { console.error('[FORGE] renderProfile error:', e); }
   }
+  window._authInProgress = null;
 
   // Migrate guest data to account if upgrading from guest
   if (_wasGuest && isNewUser && typeof window._syncPush === 'function') {

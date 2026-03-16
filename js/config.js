@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v166';
-window.FORGE_BUILD   = '2026-03-16 (Fix: data not loading after fresh login — SIGNED_IN now triggers sync)';
+window.FORGE_VERSION = 'v167';
+window.FORGE_BUILD   = '2026-03-16 (Fix: all in-memory data reloaded after sync — cardio/water/steps now visible on login; i18n syntax error; steps crash guard; community table 404 silenced)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

@@ -88,36 +88,52 @@
     return out;
   }
 
+  // Track which tables are confirmed missing so we don't retry every load
+  const _missingTables = new Set();
+
+  function _isMissingTable(err) {
+    const msg = String(err?.message || err || '').toLowerCase();
+    return err?.code === 'PGRST205' || msg.includes('could not find') || msg.includes('relation') || msg.includes('schema cache');
+  }
+
   async function _fetchExercises() {
     if (!_sb()) return _exerciseCache;
+    if (_missingTables.has('community_exercises')) return _exerciseCache;
     try {
       const { data, error } = await _sb().from('community_exercises')
         .select('id,name,muscle,equipment,tip,created_at')
         .order('name', { ascending: true });
-      if (error) throw error;
+      if (error) {
+        if (_isMissingTable(error)) { _missingTables.add('community_exercises'); return _exerciseCache; }
+        throw error;
+      }
       _exerciseCache = Array.isArray(data) ? data.map(_mapExerciseRow) : [];
       _writeCache(EXERCISE_CACHE_KEY, _exerciseCache);
       _emit('forge:community-exercises-updated');
       return _exerciseCache;
     } catch (err) {
-      console.warn('[FORGE community] exercise fetch failed', err?.message || err);
+      if (!_isMissingTable(err)) console.warn('[FORGE community] exercise fetch failed', err?.message || err);
       return _exerciseCache;
     }
   }
 
   async function _fetchMeals() {
     if (!_sb()) return _mealCache;
+    if (_missingTables.has('community_meals')) return _mealCache;
     try {
       const { data, error } = await _sb().from('community_meals')
         .select('id,name,category,calories,protein,carbs,fat,created_at')
         .order('name', { ascending: true });
-      if (error) throw error;
+      if (error) {
+        if (_isMissingTable(error)) { _missingTables.add('community_meals'); return _mealCache; }
+        throw error;
+      }
       _mealCache = Array.isArray(data) ? data.map(_mapMealRow) : [];
       _writeCache(MEAL_CACHE_KEY, _mealCache);
       _emit('forge:community-meals-updated');
       return _mealCache;
     } catch (err) {
-      console.warn('[FORGE community] meal fetch failed', err?.message || err);
+      if (!_isMissingTable(err)) console.warn('[FORGE community] meal fetch failed', err?.message || err);
       return _mealCache;
     }
   }

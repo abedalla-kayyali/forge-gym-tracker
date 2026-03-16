@@ -266,9 +266,11 @@
     if (!window._sb || !userId) return;
     _currentUserId = userId;
     try {
-      const cardioReq = (await _hasTable('cardio'))
-        ? window._sb.from('cardio').select('data').eq('user_id', userId)
-        : Promise.resolve({ data: [], error: null });
+      // Run cardio table check in parallel with other queries using a safe fallback
+      const cardioReq = _tableCache && _tableCache.cardio === false
+        ? Promise.resolve({ data: [], error: null })
+        : window._sb.from('cardio').select('data').eq('user_id', userId);
+
       const [
         profileRes, workoutsRes, bwRes, cardioRes, bwWeightRes, tplRes,
         settingsRes, mealsRes, mealLibRes, checkinsRes, waterRes, stepsRes
@@ -287,13 +289,25 @@
         window._sb.from('steps').select('date,steps').eq('user_id', userId)
       ]);
 
+      // Log any per-table errors (RLS failures, missing tables, auth issues)
+      if (workoutsRes.error)  console.error('[FORGE sync] workouts error:',  workoutsRes.error);
+      if (bwRes.error)        console.error('[FORGE sync] bw_workouts error:', bwRes.error);
+      if (bwWeightRes.error)  console.error('[FORGE sync] body_weight error:', bwWeightRes.error);
+      if (cardioRes.error) {
+        const msg = String(cardioRes.error.message || '').toLowerCase();
+        if (!msg.includes('relation') && !msg.includes('does not exist')) {
+          console.error('[FORGE sync] cardio error:', cardioRes.error);
+        }
+        if (_tableCache) _tableCache.cardio = false;
+      }
+
       // Profiles (preserve freshest nutrition target overrides by timestamp)
       if (profileRes.data?.data) {
         const localProfile = _ls('forge_profile') || {};
         _lsSet('forge_profile', _mergeProfileData(localProfile, profileRes.data.data));
       }
 
-      // Arrays
+      // Arrays — only write if data came back (preserve existing LS if Supabase errored)
       if (workoutsRes.data?.length) _lsSet('forge_workouts', workoutsRes.data.map(r => r.data));
       if (bwRes.data?.length)       _lsSet('forge_bw_workouts', bwRes.data.map(r => r.data));
       if (cardioRes.data?.length)   _lsSet('forge_cardio', cardioRes.data.map(r => r.data));
@@ -328,9 +342,10 @@
         _lsSet('forge_steps', obj);
       }
 
-      console.log('[FORGE sync] pull complete');
+      console.log('[FORGE sync] pull complete — workouts:', workoutsRes.data?.length ?? 0,
+        'bw:', bwRes.data?.length ?? 0);
     } catch (e) {
-      console.warn('[FORGE sync] pull error', e);
+      console.error('[FORGE sync] pull FAILED (unexpected error):', e);
     }
   };
 

@@ -141,7 +141,7 @@ function renderStepsPanel() {
   const el = document.getElementById('steps-panel');
   if (!el) return;
   const ts = getTodaySteps();
-  const steps = ts.steps;
+  const steps = ts.steps ?? 0;
   const goal = ts.goal || STEP_DEFAULTS.goal;
   const pct = Math.min(100, Math.round((steps / goal) * 100));
   const remaining = Math.max(0, goal - steps);
