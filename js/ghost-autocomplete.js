@@ -149,11 +149,17 @@ function closeAutocomplete() {
     var inp = document.getElementById('exercise-name');
     if (!ac || ac.style.display === 'none') return;
     var t = e.target;
+    // Touched inside the dropdown or the input — keep open
     if (ac.contains(t) || t === inp) return;
-    // allow onmousedown inside ac to fire first
+    // An element inside the form has focus (e.g. native select picker dismissing)
+    if (document.activeElement && ac.contains(document.activeElement)) return;
+    // allow onmousedown inside ac to fire first, then re-check focus
     setTimeout(function () {
-      if (ac) { ac.style.display = 'none'; ac.classList.remove('ex-ac-add-mode'); }
-    }, 50);
+      if (!ac || ac.style.display === 'none') return;
+      if (document.activeElement && ac.contains(document.activeElement)) return;
+      ac.style.display = 'none';
+      ac.classList.remove('ex-ac-add-mode');
+    }, 80);
   }
   document.addEventListener('touchstart', _outsideTap, { passive: true });
   document.addEventListener('mousedown',  _outsideTap);
