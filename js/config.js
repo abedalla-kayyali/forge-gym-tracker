@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v136';
-window.FORGE_BUILD   = '2026-03-15 (fix media + workout screens)';
+window.FORGE_VERSION = 'v140';
+window.FORGE_BUILD   = '2026-03-16 (Fix: missing media keys for T-Bar/Pull-Up)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

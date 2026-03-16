@@ -3,33 +3,581 @@
     "type": "gif",
     "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bench-Press.gif"
   },
-  "push-up": {
+  "dumbbell bench press": {
     "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif"
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Bench-Press.gif"
+  },
+  "incline barbell press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Barbell-Bench-Press.gif"
+  },
+  "incline dumbbell press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Incline-Dumbbell-Press.gif"
+  },
+  "decline bench press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Decline-Chest-Press-Machine.gif"
+  },
+  "cable fly": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Low-Cable-Crossover.gif"
+  },
+  "pec deck / machine fly": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pec-Deck-Fly.gif"
+  },
+  "dip (chest)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Chest-Dips.gif"
+  },
+  "landmine press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Landmine-Press.gif"
+  },
+  "pull-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "chin-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/03/Chin-Up.gif"
+  },
+  "barbell row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Bent-Over-Row.gif"
+  },
+  "dumbbell row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Row.gif"
+  },
+  "seated cable row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Seated-Cable-Row.gif"
+  },
+  "lat pulldown": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lat-Pulldown.gif"
+  },
+  "t-bar row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/T-Bar-Row.gif"
+  },
+  "face pull": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Face-Pull.gif"
+  },
+  "barbell deadlift": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Deadlift.gif"
+  },
+  "romanian deadlift": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Romanian-Deadlift.gif"
+  },
+  "dumbbell shoulder press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif"
+  },
+  "barbell overhead press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/07/Barbell-Standing-Military-Press.gif"
+  },
+  "arnold press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Arnold-Press.gif"
+  },
+  "machine shoulder press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Lever-Shoulder-Press.gif"
+  },
+  "lateral raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif"
+  },
+  "front raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Front-Raise.gif"
+  },
+  "cable lateral raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Lateral-Raise.gif"
+  },
+  "upright row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Upright-Row.gif"
+  },
+  "band pull-apart": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Band-pull-apart.gif"
+  },
+  "cable rear delt fly": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/cable-rear-delt-fly.gif"
+  },
+  "machine lateral raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lateral-Raise.gif"
+  },
+  "barbell curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Curl.gif"
+  },
+  "dumbbell curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Curl.gif"
+  },
+  "hammer curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Hammer-Curl.gif"
+  },
+  "preacher curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Preacher-Curl.gif"
+  },
+  "cable curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/cable-curl.gif"
+  },
+  "concentration curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Concentration-Curl.gif"
+  },
+  "incline dumbbell curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Curl.gif"
+  },
+  "close-grip bench press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Close-Grip-Bench-Press.gif"
+  },
+  "skull crusher": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Skull-Crusher.gif"
+  },
+  "tricep pushdown": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pushdown.gif"
+  },
+  "overhead tricep extension": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Triceps-Extension.gif"
+  },
+  "dip (tricep)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Triceps-Dips.gif"
+  },
+  "cable overhead extension": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Cable-Rope-Overhead-Triceps-Extension.gif"
+  },
+  "plank": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2023/07/High-Plank.gif"
+  },
+  "crunch": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2015/11/Crunch.gif"
+  },
+  "leg raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Lying-Leg-Raise.gif"
+  },
+  "ab wheel rollout": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Ab-Wheel-Rollout.gif"
+  },
+  "cable crunch": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Kneeling-Cable-Crunch.gif"
+  },
+  "hanging leg raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/07/Ab-Straps-Leg-Raise.gif"
+  },
+  "pallof press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Kneeling-Cable-Crunch.gif"
+  },
+  "hollow body hold": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Weighted-Front-Plank.gif"
+  },
+  "russian twist": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Russian-Twist.gif"
+  },
+  "dead bug": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dead-Bug.gif"
+  },
+  "barbell back squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif"
+  },
+  "goblet squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2023/01/Dumbbell-Goblet-Squat.gif"
+  },
+  "hack squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Sled-Hack-Squat.gif"
+  },
+  "front squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/front-squat.gif"
+  },
+  "leg extension": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/LEG-EXTENSION.gif"
+  },
+  "leg curl (seated)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Seated-Leg-Curl.gif"
+  },
+  "leg curl (lying)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/04/Lying-Dumbbell-Leg-Curl.gif"
+  },
+  "calf raise (standing)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Standing-Calf-Raise.gif"
+  },
+  "calf raise (seated)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Lever-Seated-Calf-Raise.gif"
+  },
+  "leg press": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2015/11/Leg-Press.gif"
+  },
+  "lunges": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif"
+  },
+  "walking lunges": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2023/09/bodyweight-walking-lunge.gif"
+  },
+  "smith machine squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2024/10/smith-machine-squat.gif"
+  },
+  "pendulum squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Pendulum-Squat.gif"
+  },
+  "sissy squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/10/sissy-squat.gif"
+  },
+  "adductor machine": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Lever-Side-Hip-Adduction.gif"
+  },
+  "hip thrust": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Hip-Thrust.gif"
+  },
+  "romanian deadlift (db)": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Romanian-Deadlift.gif"
+  },
+  "glute bridge": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Glute-Bridge-.gif"
+  },
+  "cable kickback": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Donkey-Kicks.gif"
+  },
+  "sumo deadlift": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Barbell-Sumo-Deadlift.gif"
+  },
+  "step-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Step-Up.gif"
+  },
+  "abductor machine": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/04/Lever-Side-Hip-Abduction.gif"
+  },
+  "donkey kick": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Donkey-Kicks.gif"
+  },
+  "cable pull-through": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Cable-Pull-Through.gif"
+  },
+  "smith hip thrust": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/09/Smith-Machine-Hip-Thrust.gif"
   },
   "bulgarian split squat": {
     "type": "gif",
     "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bulgarian-Split-Squat.gif"
   },
+  "barbell shrug": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Shrug.gif"
+  },
+  "dumbbell shrug": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Dumbbell-Shrug.gif"
+  },
+  "behind-the-back shrug": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2023/03/Behind-The-Back-Barbell-Shrug-Reverse-Barbell-Shrug.gif"
+  },
+  "trap bar carry": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Shrug.gif"
+  },
+  "cable upright row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Cable-Upright-Row.gif"
+  },
+  "reverse pec deck": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Pec-Deck-Fly.gif"
+  },
+  "neck flexion": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Weighted-Lying-Neck-Flexion.gif"
+  },
+  "neck extension": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Weighted-Lying-Neck-Extension.gif"
+  },
+  "band neck isometric": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/08/Weighted-Lying-Neck-Flexion.gif"
+  },
+  "back extension": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Weighted-Back-Extension.gif"
+  },
+  "good morning": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Good-Morning.gif"
+  },
+  "hyperextension": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/hyperextension.gif"
+  },
+  "reverse hyper": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Reverse-Hyperextensions.gif"
+  },
+  "wrist curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Dumbbell-Wrist-Curl.gif"
+  },
+  "reverse wrist curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Barbell-Reverse-Wrist-Curl.gif"
+  },
+  "farmer's carry": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Shrug.gif"
+  },
+  "plate pinch hold": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Barbell-Curl.gif"
+  },
+  "behind-the-back wrist curl": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Behind-The-Back-Barbell-Wrist-Curl.gif"
+  },
+  "wall push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Wall-Push-ups.gif"
+  },
+  "incline push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Incline-Push-Up.gif"
+  },
+  "diamond push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Diamond-Push-up.gif"
+  },
+  "one-arm push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif"
+  },
+  "dead hang": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "negative pull-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "l-sit pull-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "archer pull-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "muscle-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/05/Muscle-up-vertical-bar.gif"
+  },
+  "bench dip": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Bench-Dips.gif"
+  },
+  "straight bar dip": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Triceps-Dips.gif"
+  },
+  "parallel bar dip": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/04/parallel-bar-dip.gif"
+  },
+  "ring dip": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/04/parallel-bar-dip.gif"
+  },
+  "tuck front lever": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "adv. tuck front lever": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "straddle front lever": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "full front lever": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-Up.gif"
+  },
+  "plank lean": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2023/07/High-Plank.gif"
+  },
+  "frog stand": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif"
+  },
+  "tuck planche": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2025/04/Full-Planche.gif"
+  },
+  "adv. tuck planche": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2025/04/Full-Planche.gif"
+  },
+  "straddle planche": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2025/04/Full-Planche.gif"
+  },
+  "full planche": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2025/04/Full-Planche.gif"
+  },
+  "bodyweight row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif"
+  },
+  "elevated row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif"
+  },
+  "inverted row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif"
+  },
+  "archer row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Archer-Push-Up.gif"
+  },
+  "one-arm body row": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Inverted-Row.gif"
+  },
+  "wall plank": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Wall-Push-ups.gif"
+  },
+  "wall kick-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Wall-Handstand.gif"
+  },
+  "hollow rock": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Weighted-Front-Plank.gif"
+  },
+  "hanging knee raise": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Hanging-Knee-Raises.gif"
+  },
+  "tuck dragon flag": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dragon-Flag.gif"
+  },
+  "alternating lunge jump": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Squat.gif"
+  },
+  "tuck jump": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Tuck-Jump.gif"
+  },
+  "single-leg box jump": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Jump-Squat.gif"
+  },
+  "assisted squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/05/bodyweight-squat-full-version.gif"
+  },
+  "bodyweight squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/05/bodyweight-squat-full-version.gif"
+  },
+  "assisted pistol squat": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pistol-Squat.gif"
+  },
+  "hollow body": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/04/Weighted-Front-Plank.gif"
+  },
+  "tuck l-sit": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/L-Sit.gif"
+  },
+  "l-sit": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/L-Sit.gif"
+  },
+  "v-sit": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/L-Sit.gif"
+  },
+  "push-up": {
+    "type": "gif",
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif"
+  },
   "archer push-up": {
     "type": "gif",
     "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Archer-Push-Up.gif"
   },
-  "pistol squat": {
+  "dragon flag": {
     "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pistol-Squat.gif"
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dragon-Flag.gif"
   },
-  "bodyweight row": {
+  "handstand push-up": {
     "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Inverted-Row.gif"
-  },
-  "elevated row": {
-    "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2022/10/Decline-Inverted-Row.gif"
-  },
-  "archer row": {
-    "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/09/Archer-Inverted-Row.gif"
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Handstand-Push-Up.gif"
   },
   "wall handstand": {
     "type": "gif",
@@ -39,13 +587,9 @@
     "type": "gif",
     "src": "https://fitnessprogramer.com/wp-content/uploads/2021/06/Handstand.gif"
   },
-  "handstand push-up": {
+  "pistol squat": {
     "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Handstand-Push-Up.gif"
-  },
-  "dragon flag": {
-    "type": "gif",
-    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dragon-Flag.gif"
+    "src": "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pistol-Squat.gif"
   },
   "jump squat": {
     "type": "gif",
