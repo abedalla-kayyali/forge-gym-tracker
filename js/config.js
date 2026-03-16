@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v165';
-window.FORGE_BUILD   = '2026-03-16 (Fix: PWA banner standalone guard, stats sync button, i18n encoding)';
+window.FORGE_VERSION = 'v166';
+window.FORGE_BUILD   = '2026-03-16 (Fix: data not loading after fresh login — SIGNED_IN now triggers sync)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

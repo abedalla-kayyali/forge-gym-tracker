@@ -8586,9 +8586,11 @@ async function _authBoot() {
     return;
   }
   // Check for existing session
+  let _bootSessionId = null;
   const { data } = await window._sb.auth.getSession();
   if (data?.session) {
-    // Already logged in
+    // Already logged in — capture ID so SIGNED_IN event doesn't re-pull
+    _bootSessionId = data.session.user.id;
     await window._authSuccess(data.session, false);
   } else {
     // No session � check if user chose guest mode previously
@@ -8603,8 +8605,15 @@ async function _authBoot() {
   window._sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
       if (typeof _authHideOverlay === 'function') _authHideOverlay();
-      window._syncSetUser(session.user.id);
+      // If this SIGNED_IN is for a session we already handled at boot, skip re-pull
+      if (session.user.id !== _bootSessionId) {
+        _bootSessionId = session.user.id;
+        await window._authSuccess(session, false);
+      } else {
+        window._syncSetUser(session.user.id);
+      }
     } else if (event === 'SIGNED_OUT') {
+      _bootSessionId = null;
       // Don't re-show overlay if user is in guest mode
       if (localStorage.getItem('forge_guest') !== '1') {
         if (typeof _authShowOverlay === 'function') _authShowOverlay();
