@@ -12608,40 +12608,60 @@ body[data-theme="solar"] .xp-fill {
 }
 
 /* Qty stepper */
-.mtr-qty-bar{
-  display:flex; align-items:center; gap:10px;
+.mtr-qty-card{
   background:var(--bg2); border:1px solid var(--border2);
-  border-radius:14px; padding:8px 12px;
+  border-radius:16px; padding:12px 14px; display:flex;
+  flex-direction:column; gap:10px;
+}
+.mtr-qty-header{
+  display:flex; align-items:center; justify-content:space-between;
 }
 .mtr-qty-label{
   font-family:'DM Mono',monospace; font-size:10px;
-  letter-spacing:.08em; text-transform:uppercase; color:var(--text3);
-  flex-shrink:0;
-}
-.mtr-qty-stepper{
-  display:flex; align-items:center; gap:4px;
-  background:var(--panel); border-radius:10px;
-  padding:2px; flex:1;
-}
-.mtr-qty-step{
-  width:36px; height:36px; border:none; border-radius:8px;
-  background:var(--bg2); color:var(--accent);
-  font-size:20px; font-weight:300; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  touch-action:manipulation; flex-shrink:0;
-}
-.mtr-qty-step:active{ background:rgba(57,255,143,.12); }
-.mtr-qty-input{
-  flex:1; background:transparent; border:none; outline:none;
-  color:var(--text1); font-family:'DM Mono',monospace;
-  font-size:18px; font-weight:600; text-align:center;
-  padding:0; min-width:0;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--text3);
 }
 .mtr-unit-select{
   background:var(--panel); border:1px solid var(--border2);
-  color:var(--text2); border-radius:10px; padding:6px 10px;
-  font-family:'DM Mono',monospace; font-size:12px;
-  flex-shrink:0; outline:none;
+  color:var(--text2); border-radius:20px; padding:5px 12px;
+  font-family:'DM Mono',monospace; font-size:11px;
+  outline:none; touch-action:manipulation;
+}
+.mtr-qty-stepper{
+  display:flex; align-items:stretch; gap:8px;
+}
+.mtr-qty-step-lg{
+  width:52px; min-height:52px; border:1px solid var(--border2);
+  border-radius:12px; background:var(--panel); color:var(--accent);
+  cursor:pointer; display:flex; align-items:center;
+  justify-content:center; touch-action:manipulation; flex-shrink:0;
+  transition:background .12s;
+}
+.mtr-qty-step-lg:active{ background:rgba(57,255,143,.15); }
+.mtr-qty-display{
+  flex:1; background:var(--panel); border:1px solid var(--border2);
+  border-radius:12px; display:flex; align-items:center;
+  justify-content:center; min-width:0;
+}
+.mtr-qty-input{
+  width:100%; background:transparent; border:none; outline:none;
+  color:var(--text1); font-family:'Barlow Condensed',sans-serif;
+  font-size:32px; font-weight:700; text-align:center;
+  padding:10px 4px; caret-color:var(--accent);
+}
+/* Preset quick-tap buttons */
+.mtr-qty-presets{
+  display:flex; gap:6px; justify-content:space-between;
+}
+.mtr-qty-preset{
+  flex:1; padding:8px 0; border:1px solid var(--border2);
+  border-radius:20px; background:transparent;
+  color:var(--text3); font-family:'DM Mono',monospace;
+  font-size:11px; cursor:pointer; touch-action:manipulation;
+  transition:all .12s;
+}
+.mtr-qty-preset:active{
+  background:rgba(57,255,143,.12);
+  border-color:var(--accent); color:var(--accent);
 }
 
 /* Macro cards 2x2 */

@@ -6746,6 +6746,19 @@ function _mtrQtyStep(delta) {
   el.value = v;
   _foodSearchScaleOnQtyChange();
 }
+function _mtrQtySet(val) {
+  const el = document.getElementById('meal-qty-input');
+  if (!el) return;
+  el.value = val;
+  _foodSearchScaleOnQtyChange();
+}
+function _mtrQtyInputed(val) {
+  // accept text input, strip non-numeric, then scale
+  const el = document.getElementById('meal-qty-input');
+  if (!el) return;
+  const clean = parseFloat(val);
+  if (!isNaN(clean) && clean > 0) _foodSearchScaleOnQtyChange();
+}
 // ── End nutrition food search ──────────────────────────────────────────────
 
 function _cnRecalcMealCaloriesFromMacros() {
@@ -7455,18 +7468,36 @@ function renderCoachNutrition() {
       </div>
 
       <!-- Qty stepper -->
-      <div class="mtr-qty-bar">
-        <span class="mtr-qty-label">${tx('Amount','الكمية')}</span>
-        <div class="mtr-qty-stepper">
-          <button class="mtr-qty-step" onclick="_mtrQtyStep(-10)" type="button">&#8722;</button>
-          <input id="meal-qty-input" class="mtr-qty-input" type="number" step="1" min="1" value="100"
-            oninput="_foodSearchScaleOnQtyChange()">
-          <button class="mtr-qty-step" onclick="_mtrQtyStep(10)" type="button">+</button>
+      <div class="mtr-qty-card">
+        <div class="mtr-qty-header">
+          <span class="mtr-qty-label">${tx('Amount','الكمية')}</span>
+          <select id="meal-portion-unit" class="mtr-unit-select" onchange="_foodSearchScaleOnQtyChange()">
+            <option value="g">grams (g)</option>
+            <option value="serving">${tx('serving','حصة')}</option>
+          </select>
         </div>
-        <select id="meal-portion-unit" class="mtr-unit-select" onchange="_foodSearchScaleOnQtyChange()">
-          <option value="g">g</option>
-          <option value="serving">${tx('serving','حصة')}</option>
-        </select>
+        <div class="mtr-qty-stepper">
+          <button class="mtr-qty-step mtr-qty-step-lg" onclick="_mtrQtyStep(-10)" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="mtr-qty-display">
+            <input id="meal-qty-input" class="mtr-qty-input"
+              type="text" inputmode="decimal" pattern="[0-9]*"
+              value="100"
+              oninput="_mtrQtyInputed(this.value)"
+              onfocus="this.select()">
+          </div>
+          <button class="mtr-qty-step mtr-qty-step-lg" onclick="_mtrQtyStep(10)" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <div class="mtr-qty-presets">
+          <button class="mtr-qty-preset" onclick="_mtrQtySet(30)" type="button">30g</button>
+          <button class="mtr-qty-preset" onclick="_mtrQtySet(50)" type="button">50g</button>
+          <button class="mtr-qty-preset" onclick="_mtrQtySet(100)" type="button">100g</button>
+          <button class="mtr-qty-preset" onclick="_mtrQtySet(150)" type="button">150g</button>
+          <button class="mtr-qty-preset" onclick="_mtrQtySet(200)" type="button">200g</button>
+        </div>
       </div>
 
       <!-- Macro cards 2x2 -->
