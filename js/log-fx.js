@@ -226,7 +226,8 @@
     '.btn-ex-browse,.btn-ex-form,.btn-ex-swap,' +
     '.wp-key,.wp-preset-btn,.wp-btn-done,.wp-btn-cancel,' +
     '.bw-reps-btn,.bw-add-custom-btn,' +
-    '.ex-add-btn';
+    '.ex-add-btn,' +
+    '.step-quick-btn,.steps-log-btn,.sp-log-btn,.sp-custom-btn';
 
   function dispatch(btn, cx, cy) {
     if (!btn || btn.disabled) return;
@@ -299,6 +300,27 @@
       _n(330,'sine',0.06,0.0001,0,0.08); _vib(8);
     }
     else if (has('bw-add-custom-btn')) {
+      sndTap(); _vib(10);
+    }
+    else if (has('step-quick-btn') || has('steps-log-btn') || has('sp-log-btn')) {
+      var amt = parseInt(btn.getAttribute('data-amt') || '0');
+      // Low thud + bright tick footstep sound
+      _n(160, 'triangle', 0.14, 0.001, 0,    0.07);
+      _n(900, 'sine',     0.05, 0.0001, 0.04, 0.06);
+      if (amt >= 5000) {
+        _n(523, 'sine', 0.06, 0.0001, 0.09, 0.10);
+      }
+      if (amt >= 10000) {
+        _n(659, 'sine', 0.05, 0.0001, 0.16, 0.12);
+        _n(784, 'sine', 0.04, 0.0001, 0.23, 0.14);
+      }
+      var vibPat = amt >= 5000 ? [20, 8, 30] : 12;
+      _vib(vibPat);
+      popClass(btn, 'lf-pressed', 200);
+      var label = amt >= 1000 ? '+' + (amt / 1000).toFixed(0) + 'K STEPS' : '+' + amt + ' STEPS';
+      if (amt > 0) scorePop(btn, label, '#39ff8f');
+    }
+    else if (has('sp-custom-btn')) {
       sndTap(); _vib(10);
     }
     else if (has('ex-add-btn')) {

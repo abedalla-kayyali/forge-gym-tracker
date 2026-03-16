@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v158';
-window.FORGE_BUILD   = '2026-03-16 (Fix: add-exercise premium UI, outside-tap close, sounds)';
+window.FORGE_VERSION = 'v159';
+window.FORGE_BUILD   = '2026-03-16 (Feat: premium steps panel with ring, stats, sounds)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

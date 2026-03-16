@@ -143,107 +143,128 @@ function renderStepsPanel() {
   const pct = Math.min(100, Math.round((steps / goal) * 100));
   const remaining = Math.max(0, goal - steps);
 
-  // Last 7 days streak
   let stepStreak = 0;
   for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = new Date(); d.setDate(d.getDate() - i);
     const k = d.toDateString();
     if (stepsData[k] && stepsData[k].steps >= (stepsData[k].goal || STEP_DEFAULTS.goal)) stepStreak++;
     else if (i > 0) break;
   }
 
   const kcal = Math.round(steps * 0.04);
-  const km = (steps * 0.00075).toFixed(1);
-
+  const km   = (steps * 0.00075).toFixed(1);
   const _lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
-  const stepsWord = _lang === 'ar' ? 'خطوة' : 'steps';
-  const goalWord = _lang === 'ar' ? 'الهدف' : 'Goal';
-  const complWord = _lang === 'ar' ? 'مكتمل' : 'complete';
-  const toGoWord = _lang === 'ar' ? 'متبقية' : 'to go';
-  const streakWord = _lang === 'ar' ? 'يوم' : 'd';
-  const logWord = _lang === 'ar' ? 'تسجيل' : 'Log';
-  const logBtnWord = _lang === 'ar' ? 'سجّل' : 'LOG';
-  const _stepsSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M13 4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z"/><path d="M7.5 18c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z"/><path d="M15 6l-4 6 4 4-5 6"/><path d="M9 6l1 4-3 2 1 6"/></svg>`;
-  const _gearSVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
-  const _fireSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:2px;"><path d="M12 2c0 0-7 6.5-7 12a7 7 0 0 0 14 0c0-5.5-7-12-7-12z"/><path d="M9.5 14.5c.5 1.5 2.5 2.5 4 1.5"/></svg>`;
-  const goalBtnWord = _lang === 'ar' ? `${_gearSVG} الهدف` : `${_gearSVG} Goal`;
-  const titleWord = _lang === 'ar' ? `${_stepsSVG} خطوات اليوم` : `${_stepsSVG} TODAY'S STEPS`;
-  const phWord = _lang === 'ar' ? 'خطوات للإضافة...' : 'Steps to add…';
+  const isAr  = _lang === 'ar';
+  const phWord = isAr ? 'خطوات للإضافة...' : 'Custom steps…';
   const _fatBurnZone = new Date().getHours() < 9 &&
     !getWorkouts().some(w => new Date(w.date).toDateString() === new Date().toDateString());
 
+  // SVG ring: r=50 → circumference ≈ 314.16
+  const circ   = 314.16;
+  const offset = (circ * (1 - pct / 100)).toFixed(2);
+  const fmtSteps = steps >= 10000
+    ? (steps / 1000).toFixed(0) + 'K'
+    : steps >= 1000 ? (steps / 1000).toFixed(1).replace('.0', '') + 'K'
+    : steps.toLocaleString();
+
   el.innerHTML = `
-    <div class="steps-header">
-      <div class="steps-title">${titleWord}</div>
-      <button class="steps-add-btn" onclick="openStepsInput()">+ ${logWord}</button>
+    <div class="sp-card">
+
+      <div class="sp-header">
+        <div class="sp-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z"/><path d="M7.5 18c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z"/><path d="M15 6l-4 6 4 4-5 6"/><path d="M9 6l1 4-3 2 1 6"/></svg>
+          ${isAr ? 'خطوات اليوم' : "TODAY'S STEPS"}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${stepStreak > 0 ? `<div class="sp-streak">🔥 ${stepStreak}${isAr ? 'ي' : 'd'}</div>` : ''}
+          ${_fatBurnZone ? '<div class="sp-fat-burn-badge">🔥 2× XP</div>' : ''}
+        </div>
+      </div>
+
+      <div class="sp-ring-wrap">
+        <svg class="sp-ring-svg" viewBox="0 0 120 120" fill="none">
+          <circle class="sp-ring-bg" cx="60" cy="60" r="50"/>
+          <circle class="sp-ring-fill${pct >= 100 ? ' sp-ring-done' : ''}" cx="60" cy="60" r="50"
+            stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="sp-ring-inner">
+          <div class="sp-big-num">${fmtSteps}</div>
+          <div class="sp-big-label">${isAr ? 'خطوة' : 'STEPS'}</div>
+          <div class="sp-big-pct${pct >= 100 ? ' sp-big-pct-done' : ''}">${pct}%</div>
+        </div>
+      </div>
+
+      <div class="sp-stat-row">
+        <div class="sp-stat">
+          <div class="sp-stat-val">${remaining > 0 ? (remaining >= 1000 ? (remaining/1000).toFixed(1).replace('.0','')+'K' : remaining.toLocaleString()) : '✓'}</div>
+          <div class="sp-stat-key">${isAr ? 'متبقي' : 'TO GO'}</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-stat-val">~${km}</div>
+          <div class="sp-stat-key">${isAr ? 'كم' : 'KM'}</div>
+        </div>
+        <div class="sp-stat">
+          <div class="sp-stat-val">${kcal}</div>
+          <div class="sp-stat-key">${isAr ? 'سعرة' : 'KCAL'}</div>
+        </div>
+        <div class="sp-stat sp-stat-goal" onclick="openGoalSetter()">
+          <div class="sp-stat-val">${goal >= 1000 ? (goal/1000).toFixed(0)+'K' : goal}</div>
+          <div class="sp-stat-key">${isAr ? 'الهدف ✎' : 'GOAL ✎'}</div>
+        </div>
+      </div>
+
+      <div class="sp-quick-row">
+        <button onclick="logSteps(1000,this)"  class="step-quick-btn sp-qa"            data-amt="1000">+1K</button>
+        <button onclick="logSteps(2000,this)"  class="step-quick-btn sp-qa"            data-amt="2000">+2K</button>
+        <button onclick="logSteps(5000,this)"  class="step-quick-btn sp-qa"            data-amt="5000">+5K</button>
+        <button onclick="logSteps(10000,this)" class="step-quick-btn sp-qa sp-qa-big"  data-amt="10000">+10K</button>
+      </div>
+
+      <div class="sp-custom-trigger">
+        <button class="sp-custom-btn steps-add-btn" onclick="openStepsInput()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          ${isAr ? 'أدخل عدد مخصص' : 'ENTER CUSTOM STEPS'}
+        </button>
+      </div>
+      <div class="sp-input-row steps-input-row" id="steps-input-row" style="display:none;">
+        <input type="number" id="steps-input" min="0" inputmode="numeric" placeholder="${phWord}" class="sp-input">
+        <button class="sp-log-btn steps-log-btn" onclick="submitStepsInput()">${isAr ? 'سجّل' : 'LOG'}</button>
+      </div>
+
+      ${_renderStepsHistory(_lang)}
     </div>
-    <div class="steps-big-number">${steps.toLocaleString()}<span>${stepsWord}</span></div>
-    <div class="steps-goal-label">${goalWord}: ${goal.toLocaleString()} · ${pct}% ${complWord}</div>
-    ${_fatBurnZone ? '<div><span class="fat-burn-badge">🔥 FAT BURN ZONE — 2× XP</span></div>' : ''}
-    <div class="steps-bar-wrap">
-      <div class="steps-bar-fill" style="width:${pct}%;"></div>
-    </div>
-    <div class="steps-sub-row">
-      <span class="steps-sub-stat"><b>${remaining.toLocaleString()}</b> ${toGoWord}</span>
-      <span class="steps-sub-stat"><b>~${km}</b> km</span>
-      <span class="steps-sub-stat"><b>${kcal}</b> kcal</span>
-      ${stepStreak > 0 ? `<span class="steps-sub-stat">${_fireSVG}<b>${stepStreak}${streakWord}</b> ${_sh('streak', 'تتالي')}</span>` : ''}
-    </div>
-    <div class="steps-input-row" id="steps-input-row" style="display:none;">
-      <input type="number" id="steps-input" min="0" inputmode="numeric" placeholder="${phWord}">
-      <button class="steps-log-btn" onclick="submitStepsInput()">${logBtnWord}</button>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-      <button onclick="logSteps(1000,this)" class="step-quick-btn" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 5px;color:var(--accent);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s;">+1K</button>
-      <button onclick="logSteps(2000,this)" class="step-quick-btn" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 5px;color:var(--text2);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s;">+2K</button>
-      <button onclick="logSteps(5000,this)" class="step-quick-btn" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 5px;color:var(--text2);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s;">+5K</button>
-      <button onclick="logSteps(10000,this)" class="step-quick-btn" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 5px;color:var(--text2);font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s;">+10K</button>
-      <button onclick="openGoalSetter()" style="flex:0 0 auto;background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;color:var(--text3);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;min-height:40px;">${goalBtnWord}</button>
-    </div>
-    ${_renderStepsHistory(_lang)}
   `;
   if (typeof _updateHdrSteps === 'function') _updateHdrSteps();
 }
 
 function _renderStepsHistory(_lang) {
+  const isAr = _lang === 'ar';
   const days = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = new Date(); d.setDate(d.getDate() - i);
     const key = d.toDateString();
     const data = stepsData[key] || { steps: 0, goal: STEP_DEFAULTS.goal };
-    const dayGoal = data.goal || STEP_DEFAULTS.goal;
-    const pct = Math.min(100, Math.round((data.steps / dayGoal) * 100));
-    const dayNames = _lang === 'ar'
+    const dayNames = isAr
       ? ['أحد', 'اثن', 'ثلا', 'أرب', 'خمس', 'جمع', 'سبت']
       : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    days.push({ label: dayNames[d.getDay()], steps: data.steps, pct, isToday: i === 0, goal: dayGoal });
+    days.push({ label: dayNames[d.getDay()], steps: data.steps, isToday: i === 0, goal: data.goal || STEP_DEFAULTS.goal });
   }
   const maxSteps = Math.max(...days.map(d => d.steps), 1);
-  const histWord = _lang === 'ar' ? '٧ أيام' : '7-DAY HISTORY';
 
   const bars = days.map(d => {
-    const barH = Math.max(4, Math.round((d.steps / maxSteps) * 52));
-    const reached = d.steps >= d.goal;
-    const barColor = d.isToday
-      ? 'var(--accent)'
-      : reached ? 'var(--green)' : 'var(--border2)';
-    const glowStyle = d.isToday
-      ? 'filter:drop-shadow(0 0 5px var(--accent));'
-      : reached ? 'filter:drop-shadow(0 0 4px var(--green3));' : '';
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;">
-      <div style="font-family:'DM Mono',monospace;font-size:7px;color:${d.steps > 0 ? 'var(--text2)' : 'var(--text3)'};letter-spacing:.5px;">${d.steps > 0 ? (d.steps >= 1000 ? (d.steps / 1000).toFixed(1) + 'k' : d.steps) : ''}</div>
-      <div style="width:100%;height:60px;display:flex;align-items:flex-end;justify-content:center;">
-        <div style="width:70%;height:${barH}px;background:${barColor};border-radius:3px 3px 2px 2px;transition:height .4s cubic-bezier(.4,0,.2,1);${glowStyle}${d.isToday ? 'border:1px solid var(--accent);' : ''}"></div>
-      </div>
-      <div style="font-family:'DM Mono',monospace;font-size:8px;color:${d.isToday ? 'var(--accent)' : 'var(--text3)'};font-weight:${d.isToday ? '700' : '400'};">${d.label}</div>
+    const barH  = Math.max(3, Math.round((d.steps / maxSteps) * 56));
+    const cls   = d.isToday ? 'sp-bar-today' : d.steps >= d.goal ? 'sp-bar-goal' : 'sp-bar-miss';
+    const val   = d.steps > 0 ? (d.steps >= 1000 ? (d.steps/1000).toFixed(1).replace('.0','')+'k' : d.steps) : '';
+    return `<div class="sp-bar-col">
+      <div class="sp-bar-val">${val}</div>
+      <div class="sp-bar-track"><div class="sp-bar ${cls}" style="height:${barH}px;"></div></div>
+      <div class="sp-bar-day${d.isToday ? ' sp-bar-day-today' : ''}">${d.label}</div>
     </div>`;
   }).join('');
 
-  return `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
-    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;">${histWord}</div>
-    <div style="display:flex;gap:4px;align-items:flex-end;">${bars}</div>
+  return `<div class="sp-history">
+    <div class="sp-hist-title">${isAr ? '٧ أيام' : '7-DAY HISTORY'}</div>
+    <div class="sp-hist-bars">${bars}</div>
   </div>`;
 }
 
