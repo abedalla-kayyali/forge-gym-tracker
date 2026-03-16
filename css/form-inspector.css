@@ -1,13 +1,4 @@
-.form-media-wrapper video,
-.form-media-wrapper img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: none;
-  z-index: 1;
-}
+/* Form Inspector — supplemental rules (main.css owns the layout) */
 #form-video-loading {
   position: absolute;
   top: 50%;
@@ -15,7 +6,4 @@
   transform: translate(-50%, -50%);
   display: none;
   z-index: 3;
-}
-.form-media-empty {
-  z-index: 2;
 }

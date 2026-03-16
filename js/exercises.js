@@ -1145,6 +1145,9 @@ function openFormInspector(name) {
   if (spinner) spinner.style.display = 'none';
   if (empty) empty.style.display = 'none';
 
+  const expandBtn = document.getElementById('form-expand-btn');
+  if (expandBtn) expandBtn.style.display = 'none';
+
   if (media && media.type === 'video' && video) {
     video.style.display = 'block';
     video.src = media.url;
@@ -1154,6 +1157,7 @@ function openFormInspector(name) {
     gif.style.display = 'block';
     gif.src = media.url;
     gif.alt = exercise.n || name;
+    if (expandBtn) expandBtn.style.display = 'flex';
   } else if (empty) {
     empty.style.display = 'flex';
   }
@@ -1194,6 +1198,24 @@ function closeFormInspector() {
 
   if (spinner) spinner.style.display = 'none';
 
+  closeFormLightbox();
+
+}
+
+function expandFormMedia() {
+  const gif = document.getElementById('form-media-gif');
+  const lightbox = document.getElementById('form-image-lightbox');
+  const lbImg = document.getElementById('lightbox-img');
+  if (!lightbox || !lbImg) return;
+  const src = gif && gif.style.display !== 'none' ? gif.src : null;
+  if (!src) return;
+  lbImg.src = src;
+  lightbox.classList.add('open');
+}
+
+function closeFormLightbox() {
+  const lightbox = document.getElementById('form-image-lightbox');
+  if (lightbox) lightbox.classList.remove('open');
 }
 
 
