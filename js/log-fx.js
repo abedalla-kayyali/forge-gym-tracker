@@ -81,6 +81,27 @@
   function sndCardioLog()   { _n(392,'triangle',0.16,0.0001,0,0.12); _n(523.25,'sine',0.18,0.0001,0.08,0.14); _n(659.25,'sine',0.14,0.0001,0.16,0.18); _n(783.99,'sine',0.10,0.0001,0.24,0.22); }
   function sndSessionStart(){ _n(261.63,'sawtooth',0.18,0.001,0,0.30); _n(329.63,'sawtooth',0.14,0.001,0.15,0.30); _n(523.25,'sine',0.20,0.001,0.30,0.50); _n(659.25,'sine',0.12,0.001,0.45,0.45); _n(783.99,'sine',0.08,0.001,0.60,0.40); }
   function sndSessionEnd()  { [[392,0],[523,0.18],[659,0.36],[784,0.54]].forEach(function(p){ _n(p[0],'sawtooth',0.22,0.001,p[1],0.32); _n(p[0]*2,'sine',0.10,0.001,p[1],0.40); }); [523.25,659.25,783.99,1046.5].forEach(function(f){ _n(f,'sine',0.12,0.001,0.9,0.35); }); }
+  // Muscle select: pitch varies by muscle group location
+  function sndMuscleSelect(muscle) {
+    var m = (muscle || '').toLowerCase();
+    var f, f2;
+    if (m==='chest'||m==='back'||m==='shoulders'||m==='traps') {
+      // Upper body — confident mid thud + shimmer
+      f=180; f2=540;
+    } else if (m==='biceps'||m==='triceps'||m==='forearms') {
+      // Arms — crisp higher pop
+      f=260; f2=780;
+    } else if (m==='core'||m==='lower back') {
+      // Core — grounded mid tone
+      f=140; f2=420;
+    } else {
+      // Legs / Glutes / Calves — deep low thud
+      f=100; f2=320;
+    }
+    _n(f, 'triangle', 0.18, 0.0001, 0,    0.12);
+    _n(f2,'sine',     0.10, 0.0001, 0.04, 0.14);
+    _n(f2*1.5,'sine', 0.05, 0.0001, 0.08, 0.10);
+  }
   function sndEffort(e)     {
     if      (e==='easy')    { _n(880,'sine',0.08,0.0001,0,0.10); _n(1046,'sine',0.05,0.0001,0.05,0.10); }
     else if (e==='medium')  { _n(660,'triangle',0.11,0.0001,0,0.09); _n(880,'sine',0.06,0.0001,0.04,0.10); }
@@ -144,6 +165,15 @@
 .bw-set-dot.lf-new{animation:lfSetIn .28s cubic-bezier(.22,1,.36,1) both;}\
 @keyframes lfScorePop{0%{opacity:1;transform:translateY(0) scale(1);}65%{opacity:.9;transform:translateY(-30px) scale(1.08);}100%{opacity:0;transform:translateY(-50px) scale(.9);}}\
 .lf-score-pop{position:fixed;pointer-events:none;z-index:9999;font-family:\'Bebas Neue\',sans-serif;font-size:21px;letter-spacing:1.5px;text-shadow:0 0 14px rgba(57,255,143,.55);animation:lfScorePop .75s cubic-bezier(.22,1,.36,1) forwards;}\
+\
+.muscle-chip{transition:background .15s,border-color .15s,color .15s,transform .12s,box-shadow .15s!important;}\
+.muscle-chip:active,.muscle-chip.lf-pressed{transform:scale(.88)!important;}\
+.muscle-chip.active{box-shadow:0 0 16px rgba(57,255,143,.35)!important;}\
+@keyframes lfMuscleFlash{0%{opacity:1;filter:brightness(1);}40%{opacity:.85;filter:brightness(1.8);}100%{opacity:1;filter:brightness(1);}}\
+.body-zone{transition:opacity .15s,filter .15s;cursor:pointer;}\
+.body-zone:active,.body-zone.lf-zone-flash{animation:lfMuscleFlash .35s ease-out;}\
+@keyframes lfBodyZonePop{0%{filter:brightness(1) drop-shadow(0 0 0px rgba(57,255,143,0));}50%{filter:brightness(1.6) drop-shadow(0 0 8px rgba(57,255,143,.7));}100%{filter:brightness(1) drop-shadow(0 0 0px rgba(57,255,143,0));}}\
+.body-zone.lf-zone-pop{animation:lfBodyZonePop .4s ease-out;}\
 @media(prefers-reduced-motion:reduce){.lf-ripple,.lf-score-pop,.bw-log-btn.lf-set-pop,.btn.btn-primary.lf-save-pop,.bw-log-workout-btn.lf-save-pop,.set-row.lf-new,.bw-set-dot.lf-new{animation:none!important;}}';
   document.head.appendChild(s);
 
@@ -189,7 +219,8 @@
     '.effort-btn,' +
     '.cardio-act-btn,.cardio-hz-btn,.cardio-log-btn,' +
     '.timer-preset-btn,.btn-ghost,' +
-    '#save-btn,.btn.btn-primary';
+    '#save-btn,.btn.btn-primary,' +
+    '.muscle-chip,.body-zone';
 
   function dispatch(btn, cx, cy) {
     if (!btn || btn.disabled) return;
@@ -215,6 +246,16 @@
     else if (has('cardio-hz-btn'))                             { sndTap();          _vib(10); popClass(btn,'lf-pressed',160); }
     else if (has('cardio-log-btn'))                            { sndCardioLog();    _vib([30,20,60]); scorePop(btn,'LOGGED!','#39ff8f'); }
     else if (has('timer-preset-btn') || has('btn-ghost'))      { sndTap();          _vib(10); }
+    else if (has('muscle-chip')) {
+      var muscle = btn.getAttribute('data-muscle') || '';
+      sndMuscleSelect(muscle); _vib(10);
+      popClass(btn, 'lf-pressed', 200);
+    }
+    else if (has('body-zone')) {
+      var muscle = btn.getAttribute('data-muscle') || '';
+      sndMuscleSelect(muscle); _vib(10);
+      popClass(btn, 'lf-zone-pop', 450);
+    }
   }
 
   // ── Event listeners ─────────────────────────────────────────────────────
