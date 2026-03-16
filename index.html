@@ -4316,7 +4316,7 @@ function renderProgressHighlights() {
     <div class="cons-strip">
       <div class="cons-header">
         <span class="cons-title">90-DAY CONSISTENCY</span>
-        <span class="cons-pct">${trained90}/90 ? ${consPct90}%</span>
+        <span class="cons-pct">${trained90}/90 &middot; ${consPct90}%</span>
       </div>
       <div class="cons-hmap-wrap">
         <div class="cons-dow-col">${dowHtml}</div>
@@ -4335,9 +4335,9 @@ function renderProgressHighlights() {
     insightText = 'No sessions logged this period | time to get moving!';
   } else {
     const freqLabel = freqPerWeek >= 5 ? 'Elite frequency' : freqPerWeek >= 4 ? 'High frequency' : freqPerWeek >= 3 ? 'Good frequency' : freqPerWeek >= 2 ? 'Moderate' : 'Low frequency';
-    const volTrend = volDelta === null ? '' : volDelta > 10 ? ' ? Volume surging ??' : volDelta > 0 ? ' ? Volume up ?' : volDelta < -10 ? ' ? Volume down ??' : ' ? Volume steady ?';
-    const prNote = periodPRs.length > 0 ? ` ? ${periodPRs.length} PR${periodPRs.length>1?'s':''} set ??` : '';
-    insightText = `${freqLabel} (${freqPerWeek.toFixed(1)}?/wk)${volTrend}${prNote}`;
+    const volTrend = volDelta === null ? '' : volDelta > 10 ? ' | Volume surging +' : volDelta > 0 ? ' | Volume up' : volDelta < -10 ? ' | Volume down' : ' | Volume steady';
+    const prNote = periodPRs.length > 0 ? ` | ${periodPRs.length} PR${periodPRs.length>1?'s':''} set` : '';
+    insightText = `${freqLabel} (${freqPerWeek.toFixed(1)}x/wk)${volTrend}${prNote}`;
   }
   const insightBar = `<div class="prog-insight-bar">${insightText}</div>`;
 
@@ -4360,7 +4360,7 @@ function renderProgressHighlights() {
     const growthRows = recent5.map((sess, idx) => {
       const prev = recent5[idx + 1];
       const delta = prev && prev.vol > 0 ? sess.vol - prev.vol : null;
-      const deltaStr = delta === null ? '?' : delta > 0 ? `+${Math.round(delta).toLocaleString()} ?` : delta < 0 ? `${Math.round(delta).toLocaleString()} ?` : '?';
+      const deltaStr = delta === null ? '-' : delta > 0 ? `+${Math.round(delta).toLocaleString()}` : delta < 0 ? `${Math.round(delta).toLocaleString()}` : '=';
       const deltaClass = delta === null ? '' : delta > 0 ? 'pos' : delta < 0 ? 'neg' : '';
       const dateLabel = new Date(sess.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
       const exLabel = sess.exNames.slice(0,2).join(', ') + (sess.exNames.length > 2 ? ` +${sess.exNames.length-2}` : '');
@@ -4369,7 +4369,7 @@ function renderProgressHighlights() {
       <div class="sess-prog-row" style="border-left-color:${mColor}">
         <span class="sess-prog-date">${dateLabel}</span>
         <div class="sess-prog-mid">
-          <span class="sess-prog-ex">${exLabel || '?'}</span>
+          <span class="sess-prog-ex">${exLabel || '-'}</span>
           <span class="sess-prog-muscle">${sess.muscles.join(', ') || ''}</span>
         </div>
         <div class="sess-prog-right">
@@ -4382,10 +4382,10 @@ function renderProgressHighlights() {
     const avgFirst = sessList.slice(0, half).reduce((s,x) => s + x.vol, 0) / Math.max(1, half);
     const avgSecond = sessList.slice(half).reduce((s,x) => s + x.vol, 0) / Math.max(1, sessList.length - half);
     const trendPct = avgFirst > 0 ? Math.round((avgSecond - avgFirst) / avgFirst * 100) : 0;
-    const trendEmoji = trendPct > 10 ? '??' : trendPct > 0 ? '??' : trendPct < -10 ? '??' : '?';
+    const trendArrow = trendPct > 10 ? '+' : trendPct > 0 ? '+' : trendPct < -10 ? '-' : '=';
     const trendTxt = trendPct !== 0
-      ? `${trendEmoji} Volume ${trendPct > 0 ? 'up' : 'down'} ${Math.abs(trendPct)}% vs early 90 days`
-      : '? Volume consistent over 90 days';
+      ? `${trendArrow} Volume ${trendPct > 0 ? 'up' : 'down'} ${Math.abs(trendPct)}% vs early 90 days`
+      : '= Volume consistent over 90 days';
     growthSection = `
       <div class="sess-prog-section">
         <div class="sess-prog-hdr">Session Progress <span class="sess-prog-hdr-sub">(last 5)</span></div>
@@ -4403,14 +4403,14 @@ function renderProgressHighlights() {
           ? `<span class="prog-pr-delta">+${(p.weight - p.prevBest).toFixed(1)}</span>` : '';
         return `
         <div class="prog-pr-item">
-          <span class="prog-pr-star">?</span>
+          <span class="prog-pr-star"><svg width="14" height="14" viewBox="0 0 24 24" fill="#f1c40f" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <span class="prog-pr-ex">${p.ex}</span>
           <span class="prog-pr-wt">${p.weight} ${p.unit}</span>
           ${delta}
           <span class="prog-pr-date">${new Date(p.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>
         </div>`;
       }).join('')}
-    </div>` : `<div class="prog-no-pr">No PRs this period ? keep pushing! ??</div>`;
+    </div>` : `<div class="prog-no-pr">No PRs this period — keep pushing!</div>`;
 
   wrap.innerHTML = hlGrid + consStrip + insightBar + growthSection + prSection;
   // Scroll calendar to bottom (most-recent days) after paint

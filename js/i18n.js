@@ -574,10 +574,10 @@ const LANGS = {
   'chip.fresh':      'Fresh',
 
   // Heatmap legend tiers
-  'heat.tier1': 'Trained 0â€“1d',
-  'heat.tier2': 'Recovering 2â€“3d',
-  'heat.tier3': 'Ready 4â€“6d',
-  'heat.tier4': 'Primed 7â€“13d',
+  'heat.tier1': 'Trained 0-1d',
+  'heat.tier2': 'Recovering 2-3d',
+  'heat.tier3': 'Ready 4-6d',
+  'heat.tier4': 'Primed 7-13d',
   'heat.tier5': 'Rested 14+d / never',
 
   // Recovery detail badge
@@ -1308,10 +1308,10 @@ const LANGS = {
     'chip.fresh':      'ظ†ط´ظٹط·',
 
     // Heatmap legend tiers
-    'heat.tier1': 'ظ…ظڈط¯ط±ظژظ‘ط¨ 0â€“1 ظٹظˆظ…',
-    'heat.tier2': 'ظٹطھط¹ط§ظپظ‰ 2â€“3 ط£ظٹط§ظ…',
-    'heat.tier3': 'ط¬ط§ظ‡ط² 4â€“6 ط£ظٹط§ظ…',
-    'heat.tier4': 'ظ…ط³طھط¹ط¯ 7â€“13 ظٹظˆظ…',
+    ‘heat.tier1’: ‘\u0645\u064F\u062F\u0631\u064E\u0651\u0628 0-1 \u064A\u0648\u0645’,
+    ‘heat.tier2’: ‘\u064A\u062A\u0639\u0627\u0641\u0649 2-3 \u0623\u064A\u0627\u0645’,
+    ‘heat.tier3’: ‘\u062C\u0627\u0647\u0632 4-6 \u0623\u064A\u0627\u0645’,
+    ‘heat.tier4’: ‘\u0645\u0633\u062A\u0639\u062F 7-13 \u064A\u0648\u0645’,
     'heat.tier5': 'ط±ط§ط­ط© 14+ ظٹظˆظ… / ط؛ظٹط± ظ…ظڈط¯ط±ظژظ‘ط¨',
 
     // Recovery detail badge

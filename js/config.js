@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v161';
-window.FORGE_BUILD   = '2026-03-16 (Fix: step sounds via window._lfStepFX inside gesture)';
+window.FORGE_VERSION = 'v162';
+window.FORGE_BUILD   = '2026-03-16 (Fix: PR icon SVG, encoding fixes, premium activity grid + consistency strip)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
