@@ -101,13 +101,13 @@
           <button class="hdr-water-undo" onclick="hdrUndoWater(event)" title="Remove last cup">-</button>
         </div>
       </div>
-      <!-- Steps row (full width, tappable) -->
-      <div style="display:flex;width:100%;">
-        <div class="hdr-steps-pill" id="hdr-steps-pill" style="width:100%;" onclick="
+      <!-- Steps row: info pill + quick-add buttons -->
+      <div style="display:flex;width:100%;gap:6px;align-items:stretch;">
+        <div class="hdr-steps-pill" id="hdr-steps-pill" style="flex:1;" onclick="
           const logBtn=document.querySelector('.bnav-btn[onclick*=\'log\']');
           switchView('log',logBtn);
           setTimeout(()=>{const el=document.getElementById('steps-panel');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},200);
-        " title="Today's steps ? tap to log">
+        " title="View steps — tap quick buttons to log">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z"/><path d="M7.5 18c0 1.1.9 2 2 2s2-.9 2-2-.9-2-2-2-2 .9-2 2z"/><path d="M15 6l-4 6 4 4-5 6"/><path d="M9 6l1 4-3 2 1 6"/></svg>
           <span id="hdr-steps-val">0</span>
           <span style="font-size:8px;opacity:.5;font-weight:400;" id="hdr-steps-label">STEPS</span>
@@ -115,6 +115,8 @@
           <span id="hdr-steps-next" style="font-family:'DM Mono',monospace;font-size:7px;color:var(--text3);margin-inline-start:auto;letter-spacing:.5px;"></span>
           <div class="hdr-steps-pill-bar" id="hdr-steps-bar" style="width:0%;"></div>
         </div>
+        <button class="hdr-sq-btn" onclick="logSteps(1000,this)" data-amt="1000" title="+1,000 steps">+1K</button>
+        <button class="hdr-sq-btn hdr-sq-5k" onclick="logSteps(5000,this)" data-amt="5000" title="+5,000 steps">+5K</button>
       </div>
     </div>
         <!-- COACH TICKER (below timer, above stat cards) -->

@@ -380,6 +380,34 @@
     });
   }
 
+  // ── Header quick-add step buttons (outside #view-log) ──────────────────
+  var _hdrStepLastTouch = null;
+  document.addEventListener('touchend', function(e) {
+    var t = e.changedTouches && e.changedTouches[0]; if (!t) return;
+    var el = document.elementFromPoint(t.clientX, t.clientY);
+    var btn = el && typeof el.closest === 'function' ? el.closest('.hdr-sq-btn') : null;
+    if (!btn) return;
+    _hdrStepLastTouch = btn;
+    var amt = parseInt(btn.getAttribute('data-amt') || '0');
+    _n(160, 'triangle', 0.14, 0.001, 0, 0.07);
+    _n(900, 'sine', 0.05, 0.0001, 0.04, 0.06);
+    if (amt >= 5000) { _n(523, 'sine', 0.06, 0.0001, 0.09, 0.10); }
+    _vib(amt >= 5000 ? [20, 8, 30] : 12);
+    ripple(btn, t.clientX, t.clientY);
+    scorePop(btn, '+' + (amt / 1000).toFixed(0) + 'K', '#39ff8f');
+  }, { passive: true });
+  document.addEventListener('click', function(e) {
+    var btn = e.target && typeof e.target.closest === 'function' ? e.target.closest('.hdr-sq-btn') : null;
+    if (!btn) return;
+    if (btn === _hdrStepLastTouch) { _hdrStepLastTouch = null; return; }
+    var amt = parseInt(btn.getAttribute('data-amt') || '0');
+    _n(160, 'triangle', 0.14, 0.001, 0, 0.07);
+    _n(900, 'sine', 0.05, 0.0001, 0.04, 0.06);
+    if (amt >= 5000) { _n(523, 'sine', 0.06, 0.0001, 0.09, 0.10); }
+    ripple(btn, e.clientX, e.clientY);
+    scorePop(btn, '+' + (amt / 1000).toFixed(0) + 'K', '#39ff8f');
+  });
+
   // ── Animate new set rows ───────────────────────────────────────────────
   var obs = new MutationObserver(function(muts) {
     muts.forEach(function(m) {

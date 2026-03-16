@@ -1589,6 +1589,40 @@
   font-weight: 700 !important;
 }
 
+/* Header quick-add step buttons (+1K / +5K) */
+.hdr-sq-btn {
+  flex-shrink: 0 !important;
+  width: 44px !important;
+  min-height: 36px !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.05) !important;
+  border: 1.5px solid rgba(255,255,255,.1) !important;
+  color: rgba(255,255,255,.55) !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .3px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background .15s, border-color .15s, color .15s, transform .1s, box-shadow .15s !important;
+}
+
+.hdr-sq-btn:active {
+  transform: scale(.88) !important;
+  background: rgba(57,255,143,.18) !important;
+  border-color: rgba(57,255,143,.5) !important;
+  color: var(--accent) !important;
+  box-shadow: 0 0 14px rgba(57,255,143,.25) !important;
+}
+
+.hdr-sq-5k {
+  color: var(--accent) !important;
+  border-color: rgba(57,255,143,.28) !important;
+  background: rgba(57,255,143,.07) !important;
+}
+
 /* Header pill premium polish */
 .hdr-steps-pill {
   border-radius: 10px !important;
