@@ -22944,3 +22944,30 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .vl-mev-label{position:absolute;transform:translateX(-50%);color:rgba(255,255,255,.35);}
 .vl-footnote{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:8px;margin-top:10px;letter-spacing:.3px;}
 
+
+/* ── Weekly Review Card (v181) ────────────────────────────────────────────── */
+.wrc-wrap{display:flex;flex-direction:column;gap:6px;}
+.wrc-kpi-header{display:grid;grid-template-columns:1fr 64px 18px 64px;align-items:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;padding:0 2px 4px;border-bottom:1px solid var(--border);}
+.wrc-col-label{text-align:right;}
+.wrc-kpi-row{display:grid;grid-template-columns:1fr 64px 18px 64px;align-items:center;padding:5px 2px;}
+.wrc-kpi-label{font-size:12px;color:var(--text2);}
+.wrc-kpi-this{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--accent);text-align:right;}
+.wrc-kpi-prev{font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--text3);text-align:right;}
+.wrc-arrow{text-align:center;font-size:9px;font-family:'DM Mono',monospace;}
+.wrc-arrow.wrc-up{color:var(--accent);}
+.wrc-arrow.wrc-down{color:#ff5050;}
+.wrc-arrow.wrc-flat{color:var(--text3);}
+.wrc-divider{height:1px;background:var(--border);margin:6px 0;}
+.wrc-win{display:flex;align-items:flex-start;gap:8px;background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.18);border-radius:8px;padding:8px 10px;}
+.wrc-win-label{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;color:var(--accent);letter-spacing:.5px;padding-top:2px;flex-shrink:0;}
+.wrc-win-text{font-size:12px;color:var(--text2);line-height:1.4;}
+.wrc-fix{display:flex;align-items:flex-start;gap:8px;background:rgba(255,159,42,.07);border:1px solid rgba(255,159,42,.2);border-radius:8px;padding:8px 10px;margin-top:4px;}
+.wrc-fix-label{font-family:'DM Mono',monospace;font-size:9px;font-weight:700;color:#ff9f2a;letter-spacing:.5px;padding-top:2px;flex-shrink:0;}
+.wrc-fix-text{font-size:12px;color:var(--text2);line-height:1.4;}
+.wrc-projection{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-top:4px;}
+.wrc-proj-icon{font-size:20px;flex-shrink:0;}
+.wrc-proj-text{font-size:13px;color:var(--text);line-height:1.4;}
+.wrc-proj-text strong{color:var(--accent);}
+.wrc-proj-detail{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px;}
+.wrc-proj-done .wrc-proj-text strong{color:var(--accent);}
+.wrc-proj-flat .wrc-proj-text{color:var(--text2);}

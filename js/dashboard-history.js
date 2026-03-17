@@ -685,6 +685,7 @@ function switchDashTab(name, btn) {
   if (name === 'body' && typeof renderInBodyPanel === 'function') renderInBodyPanel();
   if (name === 'body' && typeof renderMeasurementsPanel === 'function') renderMeasurementsPanel();
   if (name === 'overview' && typeof renderGoalDashboard === 'function') renderGoalDashboard();
+  if (name === 'overview' && typeof renderWeeklyReviewCard === 'function') renderWeeklyReviewCard();
   // Render Calisthenics Journey when progress tab opens
   if (name === 'progress' && typeof renderCaliJourney === 'function') renderCaliJourney();
   // Render Calisthenics Dashboard when cali tab opens
@@ -3518,4 +3519,186 @@ function renderVolumeLandmarks() {
     <div class="vl-footnote">MEV = Minimum Effective Volume · MRV = Maximum Recoverable Volume · Israetel model</div>`;
 }
 window.renderVolumeLandmarks = renderVolumeLandmarks;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEKLY REVIEW CARD  (leading KPI hit rates · win/fix · weight projection · P1 · v181)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderWeeklyReviewCard() {
+  const el = document.getElementById('weekly-review-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  const _meals    = (typeof mealsLog   !== 'undefined' ? mealsLog   : null) || _lsGet('forge_meals',      {});
+  const _workouts = (typeof workouts   !== 'undefined' ? workouts   : null) || _lsGet('forge_workouts',   []);
+  const _settings = (typeof settings   !== 'undefined' ? settings   : null) || _lsGet('forge_settings',   {});
+  const _up       = (typeof userProfile!== 'undefined' ? userProfile: null) || _lsGet('forge_profile',    {});
+  const _bw       = (typeof bodyWeight !== 'undefined' ? bodyWeight : null) || _lsGet('forge_bodyweight', []);
+
+  function _dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function _daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
+
+  // Build 7-day nutrition window starting `startDaysAgo` days ago
+  function _nutritionWindow(startDaysAgo) {
+    const days = [];
+    for (let i = startDaysAgo + 6; i >= startDaysAgo; i--) {
+      const dk      = _dateKey(_daysAgo(i));
+      const dayMeals = Array.isArray(_meals?.[dk]) ? _meals[dk] : [];
+      const kcal    = dayMeals.reduce((s, m) => s + (parseFloat(m.kcal)    || 0), 0);
+      const prot    = dayMeals.reduce((s, m) => s + (parseFloat(m.protein) || 0), 0);
+      days.push({ dk, kcal, prot, logged: dayMeals.length > 0 });
+    }
+    return days;
+  }
+
+  // Count unique training days in a 7-day window
+  function _trainingDays(startDaysAgo) {
+    const fromKey = _dateKey(_daysAgo(startDaysAgo + 7));
+    const toKey   = _dateKey(_daysAgo(startDaysAgo));
+    return new Set(
+      _workouts.filter(w => w.date > fromKey && w.date <= toKey).map(w => w.date)
+    ).size;
+  }
+
+  // Compute BMR/TDEE the same way the nutrition coach does
+  function _calcTDEE() {
+    const p = _up;
+    const wt = parseFloat(p.weight || 75);
+    const ht = parseFloat(p.height || 175);
+    const ag = parseFloat(p.age    || 25);
+    const sx = (p.sex || 'male') === 'female';
+    const bmr = sx ? (10*wt + 6.25*ht - 5*ag - 161) : (10*wt + 6.25*ht - 5*ag + 5);
+    const afMap = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725, very_active:1.9 };
+    const af = afMap[p.activity || _settings.activityLevel] || 1.55;
+    return Math.round(bmr * af);
+  }
+
+  const tdee = _calcTDEE();
+  const goalType = _up.goal || _settings.goal || 'muscle';
+  const goalCalAdjust = { fat_loss: -400, muscle: +200, recomp: 0, maintenance: 0 };
+  const kcalTarget = Math.round(tdee + (goalCalAdjust[goalType] || 0));
+  const protTarget = Math.round(parseFloat(_up.weight || 75) * 1.8);
+
+  const thisWeek = _nutritionWindow(0);
+  const prevWeek = _nutritionWindow(7);
+
+  // Protein hit rate: days logged with prot ≥ 90% of target
+  function _protHit(days) {
+    const logged = days.filter(d => d.logged);
+    if (!logged.length) return null;
+    return Math.round((logged.filter(d => d.prot >= protTarget * 0.9).length / logged.length) * 100);
+  }
+
+  // Calorie hit rate: days within ±15% of target (only logged days)
+  function _calHit(days) {
+    const logged = days.filter(d => d.logged);
+    if (!logged.length) return null;
+    return Math.round((logged.filter(d => Math.abs(d.kcal - kcalTarget) / Math.max(kcalTarget, 1) <= 0.15).length / logged.length) * 100);
+  }
+
+  function _delta(a, b) {
+    if (a === null || b === null) return null;
+    return a - b;
+  }
+  function _arrow(delta) {
+    if (delta === null) return '';
+    if (delta > 0)  return '<span class="wrc-arrow wrc-up">▲</span>';
+    if (delta < 0)  return '<span class="wrc-arrow wrc-down">▼</span>';
+    return '<span class="wrc-arrow wrc-flat">—</span>';
+  }
+  function _pct(v) { return v === null ? '—' : `${v}%`; }
+
+  const protThis  = _protHit(thisWeek),  protPrev  = _protHit(prevWeek);
+  const calThis   = _calHit(thisWeek),   calPrev   = _calHit(prevWeek);
+  const trainThis = _trainingDays(0),    trainPrev = _trainingDays(7);
+
+  const kpis = [
+    { label: 'Protein Target',  thisNum: protThis,  prevNum: protPrev,  thisStr: _pct(protThis),  prevStr: _pct(protPrev)  },
+    { label: 'Calorie Target',  thisNum: calThis,   prevNum: calPrev,   thisStr: _pct(calThis),   prevStr: _pct(calPrev)   },
+    { label: 'Training Days',   thisNum: trainThis, prevNum: trainPrev, thisStr: `${trainThis}d`, prevStr: `${trainPrev}d` },
+  ];
+
+  const kpiRows = kpis.map(k => {
+    const d = _delta(k.thisNum, k.prevNum);
+    return `
+      <div class="wrc-kpi-row">
+        <span class="wrc-kpi-label">${k.label}</span>
+        <span class="wrc-kpi-this">${k.thisStr}</span>
+        ${_arrow(d)}
+        <span class="wrc-kpi-prev">${k.prevStr}</span>
+      </div>`;
+  }).join('');
+
+  // ── Win & Fix ──────────────────────────────────────────────────────────────
+  const scored = kpis.filter(k => k.thisNum !== null);
+  let winHtml = '', fixHtml = '';
+  if (scored.length) {
+    const byThis = [...scored].sort((a, b) => b.thisNum - a.thisNum);
+    const win = byThis[0];
+    const fix = byThis[byThis.length - 1];
+    const fixSuggestions = {
+      'Protein Target': 'Prep a high-protein snack (cottage cheese, Greek yoghurt, or a shake) for the gap between meals.',
+      'Calorie Target': 'Log meals before eating — pre-logging keeps you within target more consistently.',
+      'Training Days':  'Schedule your next session now and set a phone reminder 30 min before.',
+    };
+    if (win.thisNum !== null) winHtml = `<div class="wrc-win"><span class="wrc-win-label">WIN</span><span class="wrc-win-text">${win.label} at <strong>${win.thisStr}</strong>${win.thisNum >= 80 ? ' — excellent!' : ' — solid effort.'}</span></div>`;
+    if (fix.thisNum !== null && fix.thisNum < 70) fixHtml = `<div class="wrc-fix"><span class="wrc-fix-label">FIX</span><span class="wrc-fix-text">${fixSuggestions[fix.label] || `Focus on ${fix.label} next week.`}</span></div>`;
+  }
+
+  // ── Weight projection ──────────────────────────────────────────────────────
+  let projHtml = '';
+  const goalWeight = parseFloat(_up.targetWeight || _settings.targetWeight || 0);
+  if (goalWeight > 0 && Array.isArray(_bw) && _bw.length >= 2) {
+    const cutoff = _dateKey(_daysAgo(14));
+    const recent = [..._bw].filter(e => (e.date || e.d || '') >= cutoff)
+                           .sort((a, b) => (a.date || a.d || '') < (b.date || b.d || '') ? -1 : 1);
+    if (recent.length >= 2) {
+      const wFirst  = parseFloat(recent[0].weight || recent[0].w || 0);
+      const wLast   = parseFloat(recent[recent.length - 1].weight || recent[recent.length - 1].w || 0);
+      const spanDays = Math.max(1, recent.length - 1);
+      const changePerWeek = ((wLast - wFirst) / spanDays) * 7;
+      const delta = goalWeight - wLast;
+      const unit  = _up.weightUnit || _settings.weightUnit || 'kg';
+      if (Math.abs(changePerWeek) >= 0.05) {
+        const weeks = delta / changePerWeek;
+        if (weeks > 0 && weeks < 200) {
+          projHtml = `
+            <div class="wrc-projection">
+              <div class="wrc-proj-icon">📈</div>
+              <div class="wrc-proj-text">At current pace, goal weight in <strong>${Math.round(weeks)} weeks</strong></div>
+              <div class="wrc-proj-detail">${wLast.toFixed(1)}${unit} → ${goalWeight}${unit} · ${changePerWeek > 0 ? '+' : ''}${changePerWeek.toFixed(2)}${unit}/wk</div>
+            </div>`;
+        } else if (weeks <= 0) {
+          projHtml = `<div class="wrc-projection wrc-proj-done"><div class="wrc-proj-icon">🏆</div><div class="wrc-proj-text"><strong>Goal weight reached!</strong> Set a new target to keep progressing.</div></div>`;
+        }
+      } else {
+        projHtml = `<div class="wrc-projection wrc-proj-flat"><div class="wrc-proj-icon">⚖️</div><div class="wrc-proj-text">Weight stable — adjust intake to make progress toward <strong>${goalWeight}${unit}</strong></div></div>`;
+      }
+    }
+  }
+
+  // ── Date header ────────────────────────────────────────────────────────────
+  const weekStart = _dateKey(_daysAgo(6));
+  const weekEnd   = _dateKey(new Date());
+  const badge = document.getElementById('weekly-review-badge');
+  if (badge) badge.textContent = `${weekStart.slice(5)} → ${weekEnd.slice(5)}`;
+
+  const hasData = scored.length > 0;
+  el.innerHTML = hasData ? `
+    <div class="wrc-wrap">
+      <div class="wrc-kpi-header">
+        <span></span><span class="wrc-col-label">This week</span>
+        <span></span><span class="wrc-col-label">Last week</span>
+      </div>
+      ${kpiRows}
+      <div class="wrc-divider"></div>
+      ${winHtml}
+      ${fixHtml}
+      ${projHtml}
+    </div>` : `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No data yet</div><div class="empty-sub">Log meals and workouts to see your weekly review.</div></div>`;
+}
+window.renderWeeklyReviewCard = renderWeeklyReviewCard;
 
