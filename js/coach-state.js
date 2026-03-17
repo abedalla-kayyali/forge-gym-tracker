@@ -495,12 +495,45 @@
           '<button class="coach-action-btn primary" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.open){window.FORGE_DUELS.open();}">' + _cx('Open 1v1 Duel', '\u0627\u0641\u062a\u062d \u062a\u062d\u062f\u064a 1v1') + '</button>' +
           '<button class="coach-action-btn" onclick="if(window.FORGE_DUELS&&window.FORGE_DUELS.startXp){window.FORGE_DUELS.startXp();}">' + _cx('Start New Duel', '\u0627\u0628\u062f\u0623 \u062a\u062d\u062f\u064a \u062c\u062f\u064a\u062f') + '</button>' +
         '</div>';
+
+    // Build plateau hint cards using overload engine
+    const _allExercises = [];
+    (window.workouts || (typeof workouts !== 'undefined' ? workouts : []) || []).forEach(w => {
+      if (w.exercise && !_allExercises.includes(w.exercise)) _allExercises.push(w.exercise);
+    });
+
+    const _esc2 = s => window.FORGE_STORAGE?.esc?.(s) || String(s).replace(/[<>"'&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c]));
+
+    const _plateauHints = [];
+    _allExercises.forEach(exName => {
+      const len = window.FORGE_OVERLOAD?.getPlateauLength?.(exName) ?? 0;
+      if (len >= 3) _plateauHints.push({ name: exName, sessions: len });
+    });
+    _plateauHints.sort((a, b) => b.sessions - a.sessions);
+    const _topPlateaus = _plateauHints.slice(0, 3);
+
+    const _plateauHtml = _topPlateaus.length
+      ? '<div class="coach-plateau-hints" style="margin-top:10px;">' +
+          '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;opacity:.5;margin-bottom:6px;">PLATEAU ALERTS</div>' +
+          _topPlateaus.map(p =>
+            '<div class="coach-bubble warn" style="margin-bottom:6px;cursor:pointer;"' +
+                 ' onclick="window.FORGE_ASK?.openWithQuery(\'I have a plateau on ' + _esc2(p.name).replace(/'/g, '&#39;') + ', ' + p.sessions + ' sessions at same weight. What should I change?\')">' +
+              '<span style="font-size:13px;">&#x26A0;&#xFE0F;</span>' +
+              '<div>' +
+                '<div style="font-size:12px;font-weight:600;">' + _esc2(p.name) + ' &mdash; ' + p.sessions + ' sessions plateaued</div>' +
+                '<div style="font-size:11px;opacity:.6;">Tap to ask AI coach for a fix &rarr;</div>' +
+              '</div>' +
+            '</div>'
+          ).join('') +
+        '</div>'
+      : '';
+
     const card = _coachModuleShell(
       'insights',
       _cx('Performance Snapshot', '\u0644\u0642\u0637\u0629 \u0627\u0644\u0623\u062f\u0627\u0621'),
       _cx('Signals And Pressure', '\u0627\u0644\u0625\u0634\u0627\u0631\u0627\u062a \u0648\u0627\u0644\u0636\u063a\u0637'),
       _cx('Use this lane to read momentum before choosing the next push.', '\u0627\u0633\u062a\u062e\u062f\u0645 \u0647\u0630\u0627 \u0627\u0644\u0645\u0633\u0627\u0631 \u0644\u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0632\u062e\u0645 \u0642\u0628\u0644 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062f\u0641\u0639\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629.'),
-      body
+      body + _plateauHtml
     );
     const wrap = host.querySelector('.coach-chat-wrap');
     if (!wrap) return;
