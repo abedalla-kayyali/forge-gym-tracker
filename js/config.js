@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v229';
-window.FORGE_BUILD   = '2026-03-17 (fix: v229 — steps push UTC off-by-one for UTC+ timezones)';
+window.FORGE_VERSION = 'v230';
+window.FORGE_BUILD   = '2026-03-17 (feat: v230 — steps habit manual toggle + step count indicator)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

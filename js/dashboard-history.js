@@ -3962,14 +3962,17 @@ function renderDailyNonNegotiables() {
   const _todayStepsData = (typeof getTodaySteps === 'function') ? getTodaySteps() : { steps: 0, goal: 10000 };
   const _stepsGoal     = _todayStepsData.goal || 10000;
   const _stepsGoalK    = (_stepsGoal / 1000) % 1 === 0 ? (_stepsGoal / 1000) + 'k' : (_stepsGoal / 1000).toFixed(1) + 'k';
-  const stepsDone      = _todayStepsData.steps >= _stepsGoal || !!todayDNN.steps;
+  const stepsDone      = !!todayDNN.steps;
+  const _stepsFmt      = _todayStepsData.steps > 0
+    ? (_todayStepsData.steps >= 1000 ? (_todayStepsData.steps/1000).toFixed(1).replace('.0','')+'k' : String(_todayStepsData.steps)) + ' / ' + _stepsGoalK
+    : null;
 
   const habits = [
     { id: 'weight', icon: '⚖️', label: 'Log weight',       done: weightLogged, auto: true,  required: true   },
     { id: 'protein',icon: '🥩', label: 'Hit protein',      done: proteinHit,   auto: true,  required: true   },
     { id: 'session',icon: '💪', label: 'Train today',      done: sessionDone,  auto: true,  required: !isWeekend },
     { id: 'sleep',  icon: '😴', label: '7h+ sleep',        done: sleepDone,    auto: true,  required: true   },
-    { id: 'steps',  icon: '👟', label: _stepsGoalK + '+ steps', done: stepsDone, auto: true, required: true   },
+    { id: 'steps',  icon: '👟', label: _stepsGoalK + '+ steps', sub: _stepsFmt, done: stepsDone, auto: false, toggle: true, required: true },
   ];
 
   const required  = habits.filter(h => h.required);
@@ -4020,14 +4023,17 @@ function renderDailyNonNegotiables() {
   // ── Render ─────────────────────────────────────────────────────────────────
   const pillsHtml = habits.map(h => {
     const isOptional = !h.required;
-    const navTitle = { weight: 'Tap to log weight', protein: 'Tap to log nutrition', session: 'Tap to log workout', sleep: 'Tap to enter sleep data', steps: 'Tap to add steps' };
+    const navTitle = { weight: 'Tap to log weight', protein: 'Tap to log nutrition', session: 'Tap to log workout', sleep: 'Tap to enter sleep data', steps: 'Tap to mark done' };
+    const clickAction = h.toggle
+      ? `window._dnnToggle&&window._dnnToggle('${h.id}')`
+      : `if(window._dnnNav&&window._dnnNav['${h.id}'])window._dnnNav['${h.id}']()`;
     return `
       <div class="dnn-pill ${h.done ? 'dnn-done' : 'dnn-open'}${h.auto ? ' dnn-auto' : ''}${isOptional ? ' dnn-optional' : ''}"
-           onclick="if(window._dnnNav&&window._dnnNav['${h.id}'])window._dnnNav['${h.id}']()"
+           onclick="${clickAction}"
            style="cursor:pointer"
            title="${isOptional ? 'Weekend — optional' : navTitle[h.id] || 'Tap to track'}">
         <span class="dnn-pill-icon">${h.icon}</span>
-        <span class="dnn-pill-label">${h.label}${isOptional ? '<br><span class="dnn-opt-tag">optional</span>' : ''}</span>
+        <span class="dnn-pill-label">${h.label}${h.sub ? '<br><span class="dnn-opt-tag">' + h.sub + '</span>' : ''}${isOptional ? '<br><span class="dnn-opt-tag">optional</span>' : ''}</span>
         <span class="dnn-pill-check">${h.done ? '✓' : ''}</span>
       </div>`;
   }).join('');
@@ -4063,7 +4069,7 @@ function renderDailyNonNegotiables() {
       <div class="dnn-grid">${pillsHtml}</div>
       ${shieldRow}
       ${shieldOfferHtml}
-      ${!habits[4].done ? `<div class="dnn-tap-hint">👟 ${_todayStepsData.steps > 0 ? (_todayStepsData.steps >= 1000 ? (_todayStepsData.steps/1000).toFixed(1).replace('.0','')+'K' : _todayStepsData.steps) + ' / ' + (_stepsGoal >= 1000 ? (_stepsGoal/1000).toFixed(0)+'K' : _stepsGoal) : '0 / ' + (_stepsGoal >= 1000 ? (_stepsGoal/1000).toFixed(0)+'K' : _stepsGoal)} steps — auto-updates</div>` : ''}
+      ${!habits[4].done ? `<div class="dnn-tap-hint">👟 Tap the steps pill to mark done</div>` : ''}
       <button class="dnn-challenge-btn" onclick="typeof FORGE_DUELS !== 'undefined' ? FORGE_DUELS.open() : (typeof showToast === 'function' && showToast('Connect with friends first in the Social tab', 'info'))">🏆 Challenge a Friend on Habits</button>
     </div>`;
 }
