@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v218';
-window.FORGE_BUILD   = '2026-03-17 (feat: Ask AI Coach button, FORGE_ASK public API, forge-ingest auth fix)';
+window.FORGE_VERSION = 'v219';
+window.FORGE_BUILD   = '2026-03-17 (feat: sleep auto-detect, coach today readiness card, LLM morning brief)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
