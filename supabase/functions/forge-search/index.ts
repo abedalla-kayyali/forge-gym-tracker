@@ -53,7 +53,7 @@ serve(async (req) => {
     if (body.user_context) userContext = String(body.user_context).slice(0, 2000);
     if (body.coach_mode) coach_mode = Boolean(body.coach_mode);
     if (body.coach_system) coach_system = String(body.coach_system).slice(0, 500);
-    if (body.max_tokens) max_tokens = Math.min(500, Math.max(10, Number(body.max_tokens)));
+    if (body.max_tokens) max_tokens = Math.min(2000, Math.max(10, Number(body.max_tokens)));
   } catch {
     return new Response('Bad request', { status: 400 });
   }
