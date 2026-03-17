@@ -3551,7 +3551,7 @@ function renderWeeklyReviewCard() {
       const dk      = _dateKey(_daysAgo(i));
       const dayMeals = Array.isArray(_meals?.[dk]) ? _meals[dk] : [];
       const kcal    = dayMeals.reduce((s, m) => s + (parseFloat(m.kcal)    || 0), 0);
-      const prot    = dayMeals.reduce((s, m) => s + (parseFloat(m.protein) || 0), 0);
+      const prot    = dayMeals.reduce((s, m) => s + (parseFloat(m.protein || m.p) || 0), 0);
       days.push({ dk, kcal, prot, logged: dayMeals.length > 0 });
     }
     return days;
@@ -3665,7 +3665,12 @@ function renderWeeklyReviewCard() {
       const changePerWeek = ((wLast - wFirst) / spanDays) * 7;
       const delta = goalWeight - wLast;
       const unit  = _up.weightUnit || _settings.weightUnit || 'kg';
-      if (Math.abs(changePerWeek) >= 0.05) {
+      // "Goal reached" only when current weight is actually at the goal (±0.5)
+      const isAtGoal = Math.abs(wLast - goalWeight) <= 0.5;
+      if (isAtGoal) {
+        projHtml = `<div class="wrc-projection wrc-proj-done"><div class="wrc-proj-icon">🏆</div><div class="wrc-proj-text"><strong>Goal weight reached!</strong> Set a new target to keep progressing.</div></div>`;
+      } else if (Math.abs(changePerWeek) >= 0.05) {
+        // weeks > 0 means trending toward goal; weeks < 0 means trending away
         const weeks = delta / changePerWeek;
         if (weeks > 0 && weeks < 200) {
           projHtml = `
@@ -3674,8 +3679,10 @@ function renderWeeklyReviewCard() {
               <div class="wrc-proj-text">At current pace, goal weight in <strong>${Math.round(weeks)} weeks</strong></div>
               <div class="wrc-proj-detail">${wLast.toFixed(1)}${unit} → ${goalWeight}${unit} · ${changePerWeek > 0 ? '+' : ''}${changePerWeek.toFixed(2)}${unit}/wk</div>
             </div>`;
-        } else if (weeks <= 0) {
-          projHtml = `<div class="wrc-projection wrc-proj-done"><div class="wrc-proj-icon">🏆</div><div class="wrc-proj-text"><strong>Goal weight reached!</strong> Set a new target to keep progressing.</div></div>`;
+        } else {
+          // Moving away from goal
+          const dir = delta > 0 ? 'losing' : 'gaining';
+          projHtml = `<div class="wrc-projection wrc-proj-flat"><div class="wrc-proj-icon">⚠️</div><div class="wrc-proj-text">Trending away from goal — currently ${dir} instead of ${delta > 0 ? 'gaining' : 'losing'}. Adjust intake.</div></div>`;
         }
       } else {
         projHtml = `<div class="wrc-projection wrc-proj-flat"><div class="wrc-proj-icon">⚖️</div><div class="wrc-proj-text">Weight stable — adjust intake to make progress toward <strong>${goalWeight}${unit}</strong></div></div>`;
@@ -3923,7 +3930,7 @@ function renderDailyNonNegotiables() {
 
   const protTarget = Math.round(parseFloat(_up.weight || 75) * 1.8);
   const todayMeals = Array.isArray(_meals?.[todayKey]) ? _meals[todayKey] : [];
-  const todayProt  = todayMeals.reduce((s, m) => s + (parseFloat(m.protein) || 0), 0);
+  const todayProt  = todayMeals.reduce((s, m) => s + (parseFloat(m.protein || m.p) || 0), 0);
   const proteinHit = protTarget > 0 && todayProt >= protTarget * 0.9;
 
   const sessionDone = Array.isArray(_wrk) && _wrk.some(w => w.date === todayKey);
