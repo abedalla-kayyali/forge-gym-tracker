@@ -4017,10 +4017,12 @@ function renderDailyNonNegotiables() {
   // ── Render ─────────────────────────────────────────────────────────────────
   const pillsHtml = habits.map(h => {
     const isOptional = !h.required;
+    const navTitle = { weight: 'Tap to log weight', protein: 'Tap to log nutrition', session: 'Tap to log workout', sleep: 'Tap to enter sleep data', steps: 'Tap to add steps' };
     return `
       <div class="dnn-pill ${h.done ? 'dnn-done' : 'dnn-open'}${h.auto ? ' dnn-auto' : ''}${isOptional ? ' dnn-optional' : ''}"
-           ${!h.auto ? `onclick="window._dnnToggle('${h.id}')"` : ''}
-           title="${isOptional ? 'Weekend — optional' : h.auto ? 'Auto-tracked' : 'Tap to mark complete'}">
+           onclick="if(window._dnnNav&&window._dnnNav['${h.id}'])window._dnnNav['${h.id}']()"
+           style="cursor:pointer"
+           title="${isOptional ? 'Weekend — optional' : navTitle[h.id] || 'Tap to track'}">
         <span class="dnn-pill-icon">${h.icon}</span>
         <span class="dnn-pill-label">${h.label}${isOptional ? '<br><span class="dnn-opt-tag">optional</span>' : ''}</span>
         <span class="dnn-pill-check">${h.done ? '✓' : ''}</span>
@@ -4079,6 +4081,49 @@ window._dnnToggle = function(habitId) {
   _dnn[todayKey] = todayDNN;
   _lsSave('forge_dnn', _dnn);
   renderDailyNonNegotiables();
+};
+
+// DNN card navigation — each habit taps through to the right input page
+window._dnnNav = {
+  weight: function() {
+    switchView('dashboard', document.getElementById('bnav-dashboard'));
+    setTimeout(function() {
+      if (typeof switchDashTab === 'function') switchDashTab('body', null);
+      setTimeout(function() {
+        const el = document.getElementById('bcomp-form-wrap');
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        if (typeof toggleBcompForm === 'function') toggleBcompForm();
+      }, 250);
+    }, 200);
+  },
+  protein: function() {
+    switchView('nutrition', document.getElementById('bnav-nutrition'));
+  },
+  session: function() {
+    switchView('log', document.getElementById('bnav-log'));
+  },
+  sleep: function() {
+    switchView('dashboard', document.getElementById('bnav-dashboard'));
+    setTimeout(function() {
+      if (typeof switchDashTab === 'function') switchDashTab('overview', null);
+      setTimeout(function() {
+        const rp = document.getElementById('readiness-panel');
+        if (rp) {
+          rp.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (typeof renderReadinessPanel === 'function') renderReadinessPanel();
+        }
+      }, 200);
+    }, 200);
+  },
+  steps: function() {
+    const sec = document.getElementById('section-steps');
+    if (sec) { sec.style.display = 'block'; if (typeof renderStepsPanel === 'function') renderStepsPanel(); }
+    switchView('log', document.getElementById('bnav-log'));
+    setTimeout(function() {
+      const el = document.getElementById('steps-panel');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  }
 };
 
 // Use a streak shield to protect yesterday

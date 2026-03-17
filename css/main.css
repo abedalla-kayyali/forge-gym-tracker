@@ -21692,9 +21692,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 
 
 
-/* Keep steps section hidden in log view */
-
-#section-steps{ display:none !important; }
+/* Steps section visibility is controlled via inline style by JS */
 
 
 
