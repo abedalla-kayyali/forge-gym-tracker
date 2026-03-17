@@ -356,6 +356,9 @@
           Object.keys(stepsData).forEach(k => delete stepsData[k]);
           Object.assign(stepsData, obj);
         }
+        // Re-render steps panel and DNN so checkmarks reflect synced steps
+        if (typeof renderStepsPanel === 'function') renderStepsPanel();
+        if (typeof renderDailyNonNegotiables === 'function') renderDailyNonNegotiables();
       }
 
       console.log('[FORGE sync] pull complete — workouts:', workoutsRes.data?.length ?? 0,
