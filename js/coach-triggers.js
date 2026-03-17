@@ -227,6 +227,20 @@
 
   // ── Daily readiness morning brief ────────────────────────────────────────────
   async function _checkDailyReadiness() {
+    // Render cached brief immediately (survives tab re-navigation within cooldown)
+    const _cached = sessionStorage.getItem('fct_dr_text');
+    if (_cached) {
+      const _elNow = document.getElementById('coach-tab-today');
+      if (_elNow && !document.getElementById('coach-daily-brief')) {
+        const _wrapNow = _elNow.querySelector('.ctoday-wrap') || _elNow;
+        const _c = document.createElement('div');
+        _c.id = 'coach-daily-brief'; _c.className = 'coach-intercept-card';
+        const _i = document.createElement('div'); _i.className = 'cic-icon'; _i.textContent = '🤖';
+        const _m = document.createElement('div'); _m.className = 'cic-message'; _m.textContent = _cached;
+        _c.appendChild(_i); _c.appendChild(_m);
+        _wrapNow.insertBefore(_c, _wrapNow.firstChild);
+      }
+    }
     const todayKey = new Date().toISOString().slice(0, 10);
     const rdy = (() => { try { return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[todayKey] || {}; } catch { return {}; } })();
     const profile = window.userProfile || {};
@@ -246,7 +260,7 @@
     const lastStr = lastWorkout ? `Last session: ${lastWorkout.muscle || 'unknown'} on ${lastWorkout.date}` : 'No recent sessions';
 
     await _fireCoachMessage(
-      'daily_readiness',
+      'daily_readiness_' + new Date().toDateString(),
       `You are FORGE, a concise elite coach. Give a 1-sentence morning brief based on the athlete's readiness data. Be direct and motivating. Max 80 tokens.`,
       `Athlete readiness today: ${metrics}. ${lastStr}. Goal: ${goal}. What's your one-line coaching brief for today?`,
       (text) => {
@@ -268,6 +282,7 @@
         const msg = document.createElement('div');
         msg.className = 'cic-message';
         msg.textContent = text;
+        sessionStorage.setItem('fct_dr_text', text);
         card.appendChild(icon);
         card.appendChild(msg);
         // Insert inside .ctoday-wrap so it gets correct padding/background
