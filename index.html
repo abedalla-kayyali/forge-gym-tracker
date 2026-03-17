@@ -5796,7 +5796,7 @@ function renderCoachToday() {
       <div style="margin-top:10px;"><button class="ctoday-ci-submit" onclick="_ctodayStartMinimumSession()">${_tx('Start Minimum Session','ابدأ جلسة الحد الأدنى')}</button></div>
     </div>` : '';
 
-  const sleepHours = (() => { try { return parseFloat(JSON.parse(localStorage.getItem('forge_readiness') || '{}')[new Date().toISOString().slice(0,10)]?.totalSleep) || 0; } catch { return 0; } })();
+  const sleepHours = parseFloat(_rdWell.totalSleep) || 0;
   const lowSleep  = sleepHours > 0 && sleepHours < 6;
   const lowEnergy = !!(ciDone && (ci.energy || 0) <= 2);
   const recoveryCard = (lowSleep || lowEnergy || consistencyState.momentum_state === 'recovery') ? `
