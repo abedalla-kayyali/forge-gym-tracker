@@ -23044,3 +23044,15 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .mti-miss .mti-detail{color:rgba(255,80,80,.7);}
 .mti-perfect{text-align:center;padding:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:.5px;}
 .mti-footnote{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:6px;margin-top:2px;}
+
+/* ── Streak Shields additions (v185) ──────────────────────────────────────── */
+.dnn-shield-row{display:flex;align-items:center;gap:4px;padding:4px 2px;}
+.dnn-shield-icon{font-size:16px;transition:opacity .2s;}
+.dnn-shield-active{opacity:1;}
+.dnn-shield-empty{opacity:.2;filter:grayscale(1);}
+.dnn-shield-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-left:4px;}
+.dnn-shield-btn{width:100%;padding:9px 12px;background:rgba(57,255,20,.08);border:1px solid rgba(57,255,20,.25);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;transition:background .2s;}
+.dnn-shield-btn:hover{background:rgba(57,255,20,.15);}
+.dnn-weekend-badge{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;color:#ff9f2a;background:rgba(255,159,42,.1);border:1px solid rgba(255,159,42,.25);border-radius:4px;padding:2px 6px;margin-bottom:4px;}
+.dnn-optional .dnn-pill-label{color:var(--text3);}
+.dnn-opt-tag{font-size:8px;color:var(--text3);font-style:italic;}

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v184';
-window.FORGE_BUILD   = '2026-03-17 (feat: Macro Timing Intelligence panel in Nutrition tab — morning protein, pre/post-WO, front-loading)';
+window.FORGE_VERSION = 'v185';
+window.FORGE_BUILD   = '2026-03-17 (feat: Streak Shields + Weekend Mode in Daily Non-Negotiables)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
