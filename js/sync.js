@@ -207,11 +207,16 @@
   async function _syncPushSteps(userId) {
     const steps = _ls('forge_steps');
     if (!steps || typeof steps !== 'object') return;
-    const rows = Object.entries(steps).map(([date, val]) => ({
-      user_id: userId,
-      date,
-      steps: typeof val === 'number' ? val : (val?.steps || 0)
-    }));
+    const rows = Object.entries(steps).map(([date, val]) => {
+      // Keys in stepsData use toDateString() format; convert to YYYY-MM-DD for Supabase
+      const d = new Date(date);
+      const isoDate = isNaN(d.getTime()) ? date : d.toISOString().slice(0, 10);
+      return {
+        user_id: userId,
+        date: isoDate,
+        steps: typeof val === 'number' ? val : (val?.steps || 0)
+      };
+    });
     if (rows.length === 0) return;
     const { error } = await window._sb.from('steps').upsert(rows, { onConflict: 'user_id,date' });
     if (error) console.warn('[FORGE sync] upsert error steps', error.message);
@@ -339,7 +344,12 @@
       if (stepsRes.data?.length) {
         const obj = {};
         const savedGoal = parseInt(localStorage.getItem('forge_step_goal') || '0') || 10000;
-        stepsRes.data.forEach(r => { obj[r.date] = { steps: r.steps, goal: savedGoal }; });
+        stepsRes.data.forEach(r => {
+          // r.date from Supabase is YYYY-MM-DD; parse in local time to match today() = toDateString()
+          const parts = r.date.split('-').map(Number);
+          const key = new Date(parts[0], parts[1] - 1, parts[2]).toDateString();
+          obj[key] = { steps: r.steps, goal: savedGoal };
+        });
         _lsSet('forge_steps', obj);
         // Sync in-memory stepsData so renderStepsPanel reads fresh values without reload
         if (typeof stepsData !== 'undefined') {

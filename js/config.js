@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v226';
-window.FORGE_BUILD   = '2026-03-17 (fix: v226 — steps count resets to 0 after login/sync)';
+window.FORGE_VERSION = 'v227';
+window.FORGE_BUILD   = '2026-03-17 (fix: v227 — steps date key mismatch toDateString vs ISO)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
