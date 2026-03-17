@@ -31,7 +31,7 @@ function _updateRowDelta(row, idx) {
   const rDelta = _formatDelta(repsEl?.value, ghost.reps, '');
 
   if (!weightEl?.value && !repsEl?.value) {
-    deltaEl.innerHTML = `<span class="gd-ghost">Ghost: ${ghost.weight}${unit} × ${ghost.reps}</span>`;
+    deltaEl.innerHTML = `<span class="gd-ghost">Ghost: ${ghost.weight ?? '?'}${unit} × ${ghost.reps ?? '?'}</span>`;
   } else {
     deltaEl.innerHTML = [wDelta, rDelta].filter(Boolean).join(' ');
   }
@@ -104,14 +104,17 @@ function _applyGhostToRow(row, idx) {
   // Initial delta display
   _updateRowDelta(row, idx);
 
-  // Live update on input
+  // Live update on input — guard against double-attach on re-renders
   const _wEl = row.querySelector('.set-weight');
   const _rEl = row.querySelector('.set-reps');
   [_rEl, _wEl].forEach(inp => {
-    if (inp) inp.addEventListener('input', () => {
-      _updateRowDelta(row, idx);
-      _checkAndCelebrateBeat(row, idx);
-    });
+    if (inp && !inp.dataset.ghostWired) {
+      inp.dataset.ghostWired = '1';
+      inp.addEventListener('input', () => {
+        _updateRowDelta(row, idx);
+        _checkAndCelebrateBeat(row, idx);
+      });
+    }
   });
 }
 
