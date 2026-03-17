@@ -338,7 +338,8 @@
       }
       if (stepsRes.data?.length) {
         const obj = {};
-        stepsRes.data.forEach(r => { obj[r.date] = r.steps; });
+        const savedGoal = parseInt(localStorage.getItem('forge_step_goal') || '0') || 10000;
+        stepsRes.data.forEach(r => { obj[r.date] = { steps: r.steps, goal: savedGoal }; });
         _lsSet('forge_steps', obj);
       }
 

@@ -9,11 +9,33 @@ function _sh(en, ar) {
 
 const STEP_DEFAULTS = { goal: 10000, xpPer1k: 2 };
 
+// Persistent goal store — survives logout (not in the sign-out clear list)
+function _getSavedStepGoal() {
+  return parseInt(localStorage.getItem('forge_step_goal') || '0') || STEP_DEFAULTS.goal;
+}
+
+// Normalize entries that sync pull stored as plain numbers { date: 5000 } → { steps: 5000, goal }
+(function _normalizeStepsData() {
+  let changed = false;
+  const goal = _getSavedStepGoal();
+  Object.keys(stepsData).forEach(k => {
+    if (typeof stepsData[k] === 'number') {
+      stepsData[k] = { steps: stepsData[k], goal };
+      changed = true;
+    }
+  });
+  if (changed) localStorage.setItem('forge_steps', JSON.stringify(stepsData));
+})();
+
 function todayStepsKey() { return today(); }
 
 function getTodaySteps() {
   const key = todayStepsKey();
-  return stepsData[key] || { steps: 0, goal: STEP_DEFAULTS.goal };
+  const entry = stepsData[key];
+  if (!entry) return { steps: 0, goal: _getSavedStepGoal() };
+  // Guard: if entry is still a plain number after normalization (edge case)
+  if (typeof entry === 'number') return { steps: entry, goal: _getSavedStepGoal() };
+  return { steps: entry.steps || 0, goal: entry.goal || _getSavedStepGoal() };
 }
 
 function saveSteps() {
@@ -80,7 +102,10 @@ function _showStepMilestone(milestone, isAr) {
 
 function logSteps(amount, btnEl) {
   const key = todayStepsKey();
-  if (!stepsData[key]) stepsData[key] = { steps: 0, goal: STEP_DEFAULTS.goal };
+  if (!stepsData[key] || typeof stepsData[key] === 'number') {
+    const prev = typeof stepsData[key] === 'number' ? stepsData[key] : 0;
+    stepsData[key] = { steps: prev, goal: _getSavedStepGoal() };
+  }
   const prevSteps = stepsData[key].steps;
   stepsData[key].steps = Math.max(0, prevSteps + amount);
   const newSteps = stepsData[key].steps;
@@ -134,6 +159,8 @@ function setStepsGoal(newGoal) {
   const key = todayStepsKey();
   if (!stepsData[key]) stepsData[key] = { steps: 0, goal: STEP_DEFAULTS.goal };
   stepsData[key].goal = newGoal;
+  // Persist goal separately — survives logout/login (not in sign-out clear list)
+  localStorage.setItem('forge_step_goal', String(newGoal));
   saveSteps();
   renderStepsPanel();
 }
