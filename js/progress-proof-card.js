@@ -312,12 +312,13 @@
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // back to Monday
     weekStart.setHours(0, 0, 0, 0);
-    const weekStartISO = weekStart.toISOString();
+    const weekStartISO = weekStart.toISOString().slice(0, 10); // YYYY-MM-DD for safe date comparison
     const wos = (typeof workouts !== 'undefined' ? workouts : _lsGet('forge_workouts', []));
     const thisWeek = wos.filter(w => w && w.date && w.date >= weekStartISO);
     if (!thisWeek.length) return;
 
     localStorage.setItem('forge_progress_card_last_sunday', todayKey);
+    // 1500ms: let app settle before showing toast; +100ms inner: wait for toast DOM element to render
     setTimeout(() => {
       if (typeof showToast === 'function') {
         showToast('🏆 Share your week?', 'var(--accent)');
