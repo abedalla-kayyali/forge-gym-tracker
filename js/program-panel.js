@@ -2,13 +2,20 @@
 // Extracted from index.html as part of modularization.
 
 let _activeProg = (() => {
-  try { return JSON.parse(localStorage.getItem('forge_active_program') || 'null'); } catch (e) { return null; }
+  try {
+    const ai = localStorage.getItem('forge_ai_program');
+    if (ai) return JSON.parse(ai);
+    return JSON.parse(localStorage.getItem('forge_active_program') || 'null');
+  } catch (e) { return null; }
 })();
 
 function _getProgramDayIndex() {
   if (!_activeProg) return 0;
-  const prog = TRAINING_PROGRAMS.find(p => p.id === _activeProg.id);
-  if (!prog) return 0;
+  // AI programs have days directly; static programs looked up by id
+  const prog = _activeProg.days
+    ? _activeProg
+    : TRAINING_PROGRAMS.find(p => p.id === _activeProg.id);
+  if (!prog || !prog.days || !prog.days.length) return 0;
   const start = new Date(_activeProg.startDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -23,20 +30,20 @@ function renderProgramPanel() {
   if (!body) return;
   if (!_activeProg) {
     if (badge) badge.style.display = 'none';
-    body.innerHTML = '<div class="prog-grid">' + TRAINING_PROGRAMS.map(p =>
-      `<div class="prog-card" onclick="activateProgram('${p.id}')">` +
-      `<div class="prog-card-short" style="color:${p.color}">${p.short}</div>` +
-      `<div class="prog-card-name">${p.name}</div>` +
-      `<div class="prog-card-desc">${p.desc}</div>` +
-      '<button class="prog-card-btn">Activate</button></div>'
-    ).join('') + '</div>';
+    if (typeof window.renderAIProgramGenerator === 'function') {
+      window.renderAIProgramGenerator();
+    }
     return;
   }
   if (badge) badge.style.display = '';
-  const prog = TRAINING_PROGRAMS.find(p => p.id === _activeProg.id);
+  // AI programs have days directly; static programs are found by id
+  const prog = _activeProg.days
+    ? _activeProg
+    : TRAINING_PROGRAMS.find(p => p.id === _activeProg.id);
   if (!prog) { _activeProg = null; renderProgramPanel(); return; }
   const dayIdx = _getProgramDayIndex();
-  const day = prog.days[dayIdx];
+  const rawDay = prog.days[dayIdx];
+  const day = (typeof window._adaptDay === 'function') ? window._adaptDay(rawDay) : rawDay;
   const chips = prog.days.map((d, i) =>
     `<span class="prog-sched-chip${i === dayIdx ? ' today' : ''}${!d.muscle ? ' rest-chip' : ''}">${d.label}</span>`
   ).join('');
@@ -82,9 +89,13 @@ function deactivateProgram() {
 
 function startProgramWorkout() {
   if (!_activeProg) return;
-  const prog = TRAINING_PROGRAMS.find(p => p.id === _activeProg.id);
+  // AI programs have days directly; static programs looked up by id
+  const prog = _activeProg.days
+    ? _activeProg
+    : TRAINING_PROGRAMS.find(p => p.id === _activeProg.id);
   if (!prog) return;
-  const day = prog.days[_getProgramDayIndex()];
+  const rawDay = prog.days[_getProgramDayIndex()];
+  const day = (typeof window._adaptDay === 'function') ? window._adaptDay(rawDay) : rawDay;
   if (!day.muscle) { showToast('Rest day — take it easy! 🛌'); return; }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
