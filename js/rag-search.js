@@ -1249,7 +1249,14 @@
   }
 
   function closeModal() {
-    document.getElementById('rag-modal')?.classList.remove('open');
+    const modal = document.getElementById('rag-modal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    // Reset any keyboard-shrink inline styles
+    modal.style.top    = '';
+    modal.style.height = '';
+    const sheet = modal.querySelector('.rag-sheet');
+    if (sheet) sheet.style.maxHeight = '';
   }
 
   function showStatus(msg) {
@@ -1528,6 +1535,22 @@
     createModal();
     createFab();
     setupVoiceInput();
+
+    // Mobile keyboard fix: shrink sheet so it stays visible above the keyboard
+    if (window.visualViewport) {
+      const onVPResize = () => {
+        const modal = document.getElementById('rag-modal');
+        if (!modal || !modal.classList.contains('open')) return;
+        const vvh = window.visualViewport.height;
+        const vvo = window.visualViewport.offsetTop;
+        modal.style.top    = vvo + 'px';
+        modal.style.height = vvh + 'px';
+        const sheet = modal.querySelector('.rag-sheet');
+        if (sheet) sheet.style.maxHeight = Math.min(vvh * 0.95, vvh - 12) + 'px';
+      };
+      window.visualViewport.addEventListener('resize', onVPResize);
+      window.visualViewport.addEventListener('scroll', onVPResize);
+    }
     // Auto re-index if stale (>3 days) or never indexed
     const lastIngest = localStorage.getItem(INGEST_KEY);
     const daysSince = lastIngest ? (Date.now() - Number(lastIngest)) / 86400000 : Infinity;
