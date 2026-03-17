@@ -89,5 +89,6 @@
   window._pcGetInBodyDelta  = _getInBodyDelta;
   window._pcGetTopPRGains   = _getTopPRGains;
   window._pcGetSessionCount = _getSessionCount;
+  window._pcGetGoal         = _getGoal;
 
 }());
