@@ -491,14 +491,18 @@
     const container = document.getElementById('rag-results');
     if (!container) return;
     if (!results || results.length === 0) {
-      container.innerHTML = '<p style="color:var(--text2);font-size:.85rem;text-align:center;padding:20px 0;">No results found. Try indexing your data first.</p>';
+      const p = document.createElement('p');
+      p.style.cssText = 'color:var(--text2);font-size:.85rem;text-align:center;padding:20px 0;';
+      p.textContent = 'No results found. Try indexing your data first.';
+      container.appendChild(p);
       return;
     }
     const TYPE_LABELS = {
       workout: 'Workout', bodyweight: 'Weight', meal: 'Meal',
       cardio: 'Cardio', bw_workout: 'Bodyweight', unknown: '?',
     };
-    container.innerHTML = results.map(r => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = results.map(r => {
       const sim = Math.round((r.similarity || 0) * 100);
       const label = TYPE_LABELS[r.type] || r.type;
       return `
@@ -511,6 +515,7 @@
           <div class="rag-card-content">${r.content || ''}</div>
         </div>`;
     }).join('');
+    container.appendChild(wrap);
   }
 
   async function handleSearch() {

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v197';
-window.FORGE_BUILD   = '2026-03-17 (feat: auto-ingest all data types + last indexed status in Ask FORGE)';
+window.FORGE_VERSION = 'v198';
+window.FORGE_BUILD   = '2026-03-17 (fix: Claude answer card now shows above result cards in Ask FORGE)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
