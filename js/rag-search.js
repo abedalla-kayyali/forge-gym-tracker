@@ -220,7 +220,14 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': authHeader,
                  'apikey': window.FORGE_CONFIG?.SUPABASE_ANON },
-      body: JSON.stringify({ query, n_results: 8, type_filter: typeFilter || null, history }),
+      body: JSON.stringify({
+        query,
+        n_results: 8,
+        type_filter: typeFilter || null,
+        history,
+        client_date: new Date().toISOString(),
+        client_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
     });
     if (!res.ok) throw new Error(`search ${res.status}`);
 
@@ -355,19 +362,168 @@
   let activeFilter = '';
   let conversationHistory = [];
 
-  const SUGGESTIONS = [
-    'Best bench press ever?',
-    'How has my squat progressed?',
-    'Protein intake this week',
-    'Last chest workout',
-    'Heaviest deadlift?',
-    'Cardio sessions this month',
-  ];
+  // ─── Page context detection ───────────────────────────────────────────────
+
+  const PAGE_CONTEXT = {
+    log: {
+      label: 'Workout Log',
+      placeholder: 'e.g. what muscle should I train today?',
+      suggestions: [
+        "What muscle haven't I hit in a while?",
+        'Best chest session ever?',
+        'What weight did I last bench?',
+        'How many sets did I do last leg day?',
+        'Any PRs recently?',
+        'What should I train today?',
+      ],
+    },
+    'dashboard/overview': {
+      label: 'Overview',
+      placeholder: 'e.g. most trained muscle this month?',
+      suggestions: [
+        'Most trained muscle this month?',
+        'Best workout week ever?',
+        'Total volume this week?',
+        'How many sessions this month?',
+        'Strongest lift overall?',
+        'What was my best month?',
+      ],
+    },
+    'dashboard/nutrition': {
+      label: 'Nutrition Stats',
+      placeholder: 'e.g. average protein this week?',
+      suggestions: [
+        'Average daily protein this week?',
+        'Best calorie day this month?',
+        'Highest protein meal ever?',
+        'Carbs vs fat balance this week?',
+        'Did I hit my protein goal today?',
+        'Lowest calorie day this month?',
+      ],
+    },
+    'dashboard/progress': {
+      label: 'Progress',
+      placeholder: 'e.g. how has my squat improved?',
+      suggestions: [
+        'How has my squat progressed?',
+        'Bench press improvement this month?',
+        'Volume trend over last 4 weeks?',
+        'When did I hit my deadlift PR?',
+        'Strength progress on shoulders?',
+        'Best progress month overall?',
+      ],
+    },
+    'dashboard/muscles': {
+      label: 'Muscle Stats',
+      placeholder: 'e.g. which muscle am I neglecting?',
+      suggestions: [
+        'Which muscle am I neglecting?',
+        'Best chest exercise by volume?',
+        'How often do I train legs?',
+        'Back volume this month?',
+        'Most worked muscle ever?',
+        'Shoulders vs chest volume?',
+      ],
+    },
+    'dashboard/body': {
+      label: 'Body Stats',
+      placeholder: 'e.g. weight trend this month?',
+      suggestions: [
+        'Weight trend this month?',
+        'Lowest weight recorded?',
+        'Body fat change over time?',
+        'When was my heaviest weight?',
+        'Muscle mass progress?',
+        'Weight this week vs last month?',
+      ],
+    },
+    'dashboard/cardio': {
+      label: 'Cardio Stats',
+      placeholder: 'e.g. total cardio this month?',
+      suggestions: [
+        'Total cardio sessions this month?',
+        'Best running session ever?',
+        'Average cardio duration?',
+        'Most calories burned in one session?',
+        'Cardio frequency this week?',
+        'Longest distance run?',
+      ],
+    },
+    history: {
+      label: 'History',
+      placeholder: 'e.g. what did I train last week?',
+      suggestions: [
+        'What did I train last week?',
+        'How many sessions this month?',
+        'Last time I trained back?',
+        'Workouts this week?',
+        'Most recent PR?',
+        'Busiest training week?',
+      ],
+    },
+    nutrition: {
+      label: 'Nutrition',
+      placeholder: 'e.g. how much protein today?',
+      suggestions: [
+        'How much protein did I eat today?',
+        'Calories today vs yesterday?',
+        'Best protein day this week?',
+        'What meals did I log today?',
+        'Average calories this week?',
+        'Did I hit my macros today?',
+      ],
+    },
+    coach: {
+      label: 'Coach',
+      placeholder: 'e.g. what should I focus on this week?',
+      suggestions: [
+        'What should I focus on this week?',
+        'Am I overtraining any muscle?',
+        'How is my recovery looking?',
+        'Which lift needs most work?',
+        'Training consistency this month?',
+        'Best week for effort?',
+      ],
+    },
+    default: {
+      label: null,
+      placeholder: 'e.g. best chest session, protein this week...',
+      suggestions: [
+        'Best bench press ever?',
+        'How has my squat progressed?',
+        'Protein intake this week',
+        'Last chest workout',
+        'Heaviest deadlift?',
+        'Cardio sessions this month',
+      ],
+    },
+  };
+
+  function getPageContext() {
+    const activeNav = document.querySelector('.bnav-btn.active');
+    const view = activeNav?.id?.replace('bnav-', '') || 'default';
+    if (view === 'dashboard') {
+      const subTab = document.querySelector('.dash-tab.active')?.dataset?.tab || 'overview';
+      return PAGE_CONTEXT[`dashboard/${subTab}`] || PAGE_CONTEXT['dashboard/overview'];
+    }
+    return PAGE_CONTEXT[view] || PAGE_CONTEXT.default;
+  }
 
   function renderSuggestions() {
-    const el = document.getElementById('rag-suggestions');
+    const ctx = getPageContext();
+    const el  = document.getElementById('rag-suggestions');
+    const inp = document.getElementById('rag-input');
+    const lbl = document.getElementById('rag-context-label');
     if (!el) return;
-    el.innerHTML = SUGGESTIONS.map(s =>
+
+    // Update placeholder and context label
+    if (inp) inp.placeholder = ctx.placeholder;
+    if (lbl) {
+      if (ctx.label) { lbl.textContent = ctx.label; lbl.style.display = 'inline-flex'; }
+      else lbl.style.display = 'none';
+    }
+
+    el.innerHTML = ctx.suggestions.map(s =>
       `<button class="rag-chip" data-query="${s}">${s}</button>`
     ).join('');
     el.querySelectorAll('.rag-chip').forEach(btn => {
@@ -415,7 +571,10 @@
       <div class="rag-backdrop" id="rag-backdrop"></div>
       <div class="rag-sheet">
         <div class="rag-header">
-          <span class="rag-title">Ask FORGE</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="rag-title">Ask FORGE</span>
+            <span class="rag-context-label" id="rag-context-label" style="display:none;"></span>
+          </div>
           <div style="display:flex;gap:4px;align-items:center;">
             <button class="rag-clear" id="rag-clear" title="New conversation" aria-label="New conversation">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
@@ -465,6 +624,11 @@
       @keyframes ragSlideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
       .rag-header { display:flex; align-items:center; justify-content:space-between; }
       .rag-title { font-size:1.1rem; font-weight:700; color:var(--accent); letter-spacing:.05em; }
+      .rag-context-label {
+        font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+        background:var(--green-dim); color:var(--accent); border-radius:6px;
+        padding:2px 8px; align-items:center;
+      }
       .rag-close { background:none; border:none; color:var(--text2); padding:4px; cursor:pointer; border-radius:8px; display:flex; }
       .rag-close:active { background:var(--border); }
       .rag-clear { background:none; border:none; color:var(--text3); padding:4px; cursor:pointer; border-radius:8px; display:flex; transition:color .15s; }
@@ -548,16 +712,28 @@
         animation: ragBlink .7s step-end infinite;
       }
       @keyframes ragBlink { 50% { opacity:0; } }
-      #rag-fab {
+      #rag-fab-wrap {
         position:fixed; right:16px; bottom:calc(74px + env(safe-area-inset-bottom,0px));
+        display:flex; align-items:center; gap:8px; z-index:1000;
+        flex-direction:row-reverse;
+      }
+      #rag-fab {
         width:46px; height:46px; border-radius:50%;
         background:var(--accent); color:#000;
-        border:none; cursor:pointer; z-index:1000;
+        border:none; cursor:pointer; flex-shrink:0;
         display:flex; align-items:center; justify-content:center;
         box-shadow:0 4px 16px rgba(57,255,143,.3);
-        transition:transform .15s, opacity .15s;
+        transition:transform .15s;
       }
       #rag-fab:active { transform:scale(.92); }
+      .rag-fab-pill {
+        background:var(--panel); border:1px solid var(--accent);
+        color:var(--accent); font-size:.7rem; font-weight:700;
+        padding:4px 10px; border-radius:20px;
+        white-space:nowrap; letter-spacing:.04em;
+        opacity:0; transition:opacity .4s ease;
+        pointer-events:none;
+      }
     `;
     document.head.appendChild(style);
 
@@ -735,13 +911,37 @@
 
   // ─── FAB button ──────────────────────────────────────────────────────────
 
+  function updateFabLabel() {
+    const pill = document.getElementById('rag-fab-pill');
+    if (!pill) return;
+    const ctx = getPageContext();
+    if (ctx.label) {
+      pill.textContent = ctx.label;
+      pill.style.opacity = '1';
+      setTimeout(() => { pill.style.opacity = '0'; }, 2500);
+    } else {
+      pill.style.opacity = '0';
+    }
+  }
+
   function createFab() {
-    const fab = document.createElement('button');
-    fab.id = 'rag-fab';
-    fab.setAttribute('aria-label', 'Ask FORGE');
-    fab.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
-    fab.addEventListener('click', openModal);
-    document.body.appendChild(fab);
+    // Wrapper so pill sits beside FAB
+    const wrap = document.createElement('div');
+    wrap.id = 'rag-fab-wrap';
+    wrap.innerHTML = `
+      <span id="rag-fab-pill" class="rag-fab-pill"></span>
+      <button id="rag-fab" aria-label="Ask FORGE">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+    `;
+    document.body.appendChild(wrap);
+    document.getElementById('rag-fab').addEventListener('click', openModal);
+
+    // Watch for page changes via MutationObserver on bottom nav
+    const nav = document.querySelector('.bottom-nav');
+    if (nav) {
+      new MutationObserver(updateFabLabel).observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    }
   }
 
   // ─── Init ────────────────────────────────────────────────────────────────

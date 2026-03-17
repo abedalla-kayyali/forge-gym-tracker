@@ -34,6 +34,8 @@ serve(async (req) => {
   let nResults = 8;
   let typeFilter: string | null = null;
   let history: Array<{ role: string; content: string }> = [];
+  let clientDate = new Date().toISOString();
+  let clientTz = 'UTC';
 
   try {
     const body = await req.json();
@@ -41,9 +43,16 @@ serve(async (req) => {
     if (body.n_results) nResults = Math.min(20, Math.max(1, Number(body.n_results)));
     if (body.type_filter) typeFilter = String(body.type_filter);
     if (Array.isArray(body.history)) history = body.history.slice(-6);
+    if (body.client_date) clientDate = String(body.client_date);
+    if (body.client_tz) clientTz = String(body.client_tz);
   } catch {
     return new Response('Bad request', { status: 400 });
   }
+
+  // Format human-readable date/time for Claude
+  const now = new Date(clientDate);
+  const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: clientTz });
+  const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: clientTz });
 
   if (!query || query.length < 2) {
     const enc = new TextEncoder();
@@ -127,7 +136,7 @@ serve(async (req) => {
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 300,
             stream: true,
-            system: `You are FORGE, a personal gym assistant. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and other numbers when relevant. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
+            system: `You are FORGE, a personal gym assistant. Today is ${dateStr} and the current time is ${timeStr}. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and other numbers when relevant. When the user asks about "today", "this week", or "recently", use the current date to interpret what that means. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
             messages: [
               ...history,
               {
