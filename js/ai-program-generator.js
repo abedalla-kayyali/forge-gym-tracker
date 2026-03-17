@@ -77,11 +77,11 @@
       lines.push(`Day ${i + 1}: ${day.muscles.join(', ')}`);
     });
     lines.push('');
-    lines.push('Return ONLY a JSON code block. Use EXACTLY this schema — no extra fields (no notes, no rest_seconds, no muscle_group):');
+    lines.push('Return ONLY a JSON code block. Use EXACTLY this schema — no extra fields, no notes, no rest_seconds:');
     lines.push('```json');
     lines.push('{"name":"Push Pull Legs","days":[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Overhead Press","sets":3,"reps":"8-12"},{"name":"Tricep Dips","sets":3,"reps":"10-12"}]},{"label":"Pull Day","muscles":["back","biceps"],"exercises":[{"name":"Pull-Up","sets":4,"reps":"6-10"},{"name":"Barbell Row","sets":3,"reps":"8-10"},{"name":"Bicep Curl","sets":3,"reps":"10-12"}]}]}');
     lines.push('```');
-    lines.push('Rules: top-level keys are ONLY "name" and "days". Each day has ONLY "label", "muscles", "exercises". Each exercise has ONLY "name", "sets", "reps". 4-6 exercises per day.');
+    lines.push('STRICT rules: top-level keys ONLY "name" and "days". Each exercise ONLY "name", "sets", "reps". Exactly 3 exercises per day. Short reps like "8-10", never more than 5 chars.');
     if (refinementNote && refinementNote.trim()) {
       lines.push(`User refinement note: ${refinementNote.trim()}`);
     }
@@ -163,9 +163,11 @@
       } catch {
         if (pass === 0) {
           // Repair 1: bare exercise name after closing brace — e.g. },\n  Chest Fly",\n  "sets":
-          // LLM omits the {"name": prefix on subsequent exercises
           jsonStr = jsonStr.replace(/}\s*,\s*\n(\s*)([A-Z][^"{\n,]{1,60})",/g, '},\n$1{"name": "$2",');
-          // Repair 2: missing opening quote on known string fields — e.g. "name": Fly" → "name": "Fly"
+          // Repair 2: reps merged with next exercise name — e.g. "reps": "8-Bicep Curl"
+          // Drop the corrupted portion: "reps": "8-ExerciseName..." → "reps": "8-12"
+          jsonStr = jsonStr.replace(/"reps":\s*"(\d+)-([A-Z][^"]+)"/g, '"reps": "$1-12"');
+          // Repair 3: missing opening quote on known string fields — e.g. "name": Fly" → "name": "Fly"
           jsonStr = jsonStr.replace(/"(name|reps|label)":\s*([A-Za-z(][^,}\]\n"]*?)"/g, '"$1": "$2"');
         }
       }
