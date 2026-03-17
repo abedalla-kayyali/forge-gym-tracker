@@ -41,26 +41,18 @@
   }
   window._adaptDay = _adaptDay;
 
-  // ── Per-half prompt builder ────────────────────────────────────────────────
-  // Generates prompt for 1-2 days at a time — smaller output = reliable JSON.
-  function _buildHalfPrompt(halfDays, refinementNote) {
-    const wkts = (typeof workouts !== 'undefined' ? workouts : null) || _lsGet('forge_workouts', []);
-    const recentEx = [...new Set(
-      (Array.isArray(wkts) ? wkts : []).slice(-10).map(w => w.exercise).filter(Boolean)
-    )].slice(0, 8).join(', ') || 'none';
-
+  // ── Single-day prompt builder ──────────────────────────────────────────────
+  // One LLM call per day — smallest possible output for maximum JSON reliability.
+  function _buildDayPrompt(muscles, refinementNote) {
     const lines = [
-      `Generate exercises for ${halfDays.length} training day(s).`,
-      `Recent exercises logged: ${recentEx}`,
-      '',
+      'Generate exercises for 1 training day.',
+      `Muscles: ${muscles.join(', ')}`,
+      'Return ONLY a JSON array with exactly 1 element:',
+      '```json',
+      '[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Overhead Press","sets":3,"reps":"8-12"},{"name":"Tricep Dips","sets":3,"reps":"10-12"}]}]',
+      '```',
+      'STRICT: Exactly 3 exercises. Each has ONLY "name","sets","reps". No other fields.',
     ];
-    halfDays.forEach((d, i) => lines.push(`Day ${i + 1}: ${d.muscles.join(', ')}`));
-    lines.push('');
-    lines.push('Return ONLY a JSON array:');
-    lines.push('```json');
-    lines.push('[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Overhead Press","sets":3,"reps":"8-12"},{"name":"Tricep Dips","sets":3,"reps":"10-12"}]}]');
-    lines.push('```');
-    lines.push('STRICT: Each exercise ONLY "name","sets","reps". Exactly 3 exercises per day. No other fields.');
     if (refinementNote && refinementNote.trim()) lines.push(`Note: ${refinementNote.trim()}`);
     return lines.join('\n');
   }
@@ -84,11 +76,11 @@
     return text;
   }
 
-  // ── Per-half LLM call — returns array of day objects or null ───────────────
-  const _HALF_PREFILL = '```json\n[';
+  // ── Single-day LLM call — returns one day object or null ──────────────────
+  const _DAY_PREFILL = '```json\n[';
 
-  async function _callHalfLLM(halfDays, token, refinementNote) {
-    const prompt = _buildHalfPrompt(halfDays, refinementNote);
+  async function _callDayLLM(muscles, token, refinementNote) {
+    const prompt = _buildDayPrompt(muscles, refinementNote);
     try {
       const resp = await fetch(SEARCH_FN, {
         method: 'POST',
@@ -97,22 +89,22 @@
           query: prompt,
           type_filter: null,
           coach_mode: true,
-          coach_system: 'Complete the JSON array. Each element: {"label":"...","muscles":[...],"exercises":[{"name":"...","sets":N,"reps":"..."}]}. NO extra fields.',
-          max_tokens: 1000,
-          prefill: _HALF_PREFILL
+          coach_system: 'Complete the 1-element JSON array: [{"label":"...","muscles":[...],"exercises":[{"name":"...","sets":N,"reps":"..."}]}]. NO extra fields.',
+          max_tokens: 400,
+          prefill: _DAY_PREFILL
         })
       });
       if (!resp.ok) return null;
       const text = await _readSSE(resp);
-      return _parseHalfResponse((_HALF_PREFILL + text).trim(), halfDays.length);
+      return _parseDayResponse((_DAY_PREFILL + text).trim());
     } catch (e) {
-      console.warn('[ai-program-generator] half LLM call failed:', e);
+      console.warn('[ai-program-generator] day LLM call failed:', e);
       return null;
     }
   }
 
-  // ── Half-response parser — validates array of day objects ─────────────────
-  function _parseHalfResponse(raw, minDays) {
+  // ── Single-day response parser ─────────────────────────────────────────────
+  function _parseDayResponse(raw) {
     if (!raw) return null;
     const m = raw.match(/```json\s*([\s\S]*?)```/);
     let jsonStr = m?.[1]?.trim();
@@ -120,23 +112,19 @@
     for (let pass = 0; pass < 2; pass++) {
       try {
         const arr = JSON.parse(jsonStr);
-        if (!Array.isArray(arr) || arr.length < minDays) return null;
-        for (const d of arr) {
-          if (!d.label || !Array.isArray(d.muscles) || !Array.isArray(d.exercises) || d.exercises.length < 1) return null;
-          for (const ex of d.exercises) {
-            if (!ex.name || !ex.sets || !ex.reps) return null;
-          }
-        }
-        return arr;
+        const d = Array.isArray(arr) ? arr[0] : null;
+        if (!d?.label || !Array.isArray(d.muscles) || !Array.isArray(d.exercises) || d.exercises.length < 1) return null;
+        for (const ex of d.exercises) { if (!ex.name || !ex.sets || !ex.reps) return null; }
+        return d;
       } catch {
         if (pass === 0) {
-          // Repair 1: muscles array dropped — "muscles":"exercises" → "muscles":[],"exercises"
+          // Repair 1: muscles array dropped — "muscles":"exercises"
           jsonStr = jsonStr.replace(/"muscles"\s*:\s*"exercises"/g, '"muscles": [], "exercises"');
           // Repair 2: bare exercise name after closing brace
           jsonStr = jsonStr.replace(/}\s*,\s*\n(\s*)([A-Z][^"{\n,]{1,60})",/g, '},\n$1{"name": "$2",');
-          // Repair 3: reps merged with next exercise name — "reps": "8-BicepCurl"
+          // Repair 3: reps merged with exercise name — "reps": "8-BicepCurl"
           jsonStr = jsonStr.replace(/"reps":\s*"(\d+)-([A-Z][^"]+)"/g, '"reps": "$1-12"');
-          // Repair 4: unclosed reps string with embedded newline — "reps": "10-15\n
+          // Repair 4: unclosed reps with embedded newline
           jsonStr = jsonStr.replace(/"reps":\s*"([0-9][^"\n]{0,8})\n/g, '"reps": "$1",\n');
           // Repair 5: missing opening quote on known string fields
           jsonStr = jsonStr.replace(/"(name|reps|label)":\s*([A-Za-z(][^,}\]\n"]*?)"/g, '"$1": "$2"');
@@ -271,22 +259,19 @@
     body.innerHTML = '<div class="apg-wrap"><div class="apg-generating"><span class="apg-spinner"></span>Building your program…</div></div>';
     const note = refinementNote || '';
 
-    // Split into two halves and generate in parallel — each half is ≤2 days,
-    // small enough that Haiku reliably produces valid JSON.
-    const mid = Math.ceil(_dayCount / 2);
-    const half1 = splitDays.slice(0, mid);
-    const half2 = splitDays.slice(mid);
+    // Generate all days in parallel — 1 LLM call per day, smallest possible output
+    let days = await Promise.all(
+      splitDays.map(d => _callDayLLM(d.muscles, token, note))
+    );
 
-    let [days1, days2] = await Promise.all([
-      _callHalfLLM(half1, token, note),
-      half2.length ? _callHalfLLM(half2, token, note) : Promise.resolve([])
-    ]);
+    // Retry only the failed days, in parallel
+    const failedIdx = days.map((d, i) => d ? null : i).filter(i => i !== null);
+    if (failedIdx.length > 0) {
+      const retries = await Promise.all(failedIdx.map(i => _callDayLLM(splitDays[i].muscles, token, note)));
+      failedIdx.forEach((idx, j) => { if (retries[j]) days[idx] = retries[j]; });
+    }
 
-    // Retry each failed half once
-    if (!days1) days1 = await _callHalfLLM(half1, token, note);
-    if (half2.length && !days2) days2 = await _callHalfLLM(half2, token, note);
-
-    if (!days1 || (half2.length && !days2)) {
+    if (days.some(d => !d)) {
       body.innerHTML = `<div class="apg-wrap">
         <div class="apg-error-msg">Couldn't generate program — try again.</div>
         <button class="apg-regen-btn" style="margin-top:12px;" onclick="window._apgGenerate()">↺ TRY AGAIN</button>
@@ -295,7 +280,7 @@
       return;
     }
 
-    const allDays = [...days1, ...(days2 || [])];
+    const allDays = days;
     // Derive program name from muscle groups (no extra LLM call needed)
     const topMuscles = splitDays.map(d => d.muscles[0] || '').filter(Boolean);
     const progName = topMuscles.length >= 4
