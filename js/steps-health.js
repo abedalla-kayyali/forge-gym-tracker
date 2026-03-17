@@ -93,6 +93,7 @@ function logSteps(amount, btnEl) {
   saveSteps();
   renderStepsPanel();
   postSaveHooks();
+  if (typeof renderDailyNonNegotiables === 'function') renderDailyNonNegotiables();
 
   // Sound + visual FX — called here (inside onclick gesture) so iOS allows audio
   if (typeof window._lfStepFX === 'function') window._lfStepFX(amount, btnEl);

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v219';
-window.FORGE_BUILD   = '2026-03-17 (feat: sleep auto-detect, coach today readiness card, LLM morning brief)';
+window.FORGE_VERSION = 'v220';
+window.FORGE_BUILD   = '2026-03-17 (feat: steps auto-integration — DNN 8k+ pill auto-tracks, steps card navigates to panel)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

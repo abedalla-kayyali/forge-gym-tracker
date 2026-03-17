@@ -3958,14 +3958,15 @@ function renderDailyNonNegotiables() {
   const _rdyToday   = _lsGet('forge_readiness', {})[todayKey] || {};
   const sleepHours  = parseFloat(_rdyToday.totalSleep) || 0;
   const sleepDone   = sleepHours >= 7;
-  const stepsDone   = !!todayDNN.steps;
+  const _todayStepsData = (typeof getTodaySteps === 'function') ? getTodaySteps() : { steps: 0, goal: 10000 };
+  const stepsDone   = _todayStepsData.steps >= 8000 || !!todayDNN.steps;
 
   const habits = [
     { id: 'weight', icon: '⚖️', label: 'Log weight',  done: weightLogged, auto: true,  required: true   },
     { id: 'protein',icon: '🥩', label: 'Hit protein', done: proteinHit,   auto: true,  required: true   },
     { id: 'session',icon: '💪', label: 'Train today', done: sessionDone,  auto: true,  required: !isWeekend },
     { id: 'sleep',  icon: '😴', label: '7h+ sleep',   done: sleepDone,    auto: true,  required: true   },
-    { id: 'steps',  icon: '👟', label: '8k+ steps',   done: stepsDone,    auto: false, required: true   },
+    { id: 'steps',  icon: '👟', label: '8k+ steps',   done: stepsDone,    auto: true,  required: true   },
   ];
 
   const required  = habits.filter(h => h.required);
@@ -4057,7 +4058,7 @@ function renderDailyNonNegotiables() {
       <div class="dnn-grid">${pillsHtml}</div>
       ${shieldRow}
       ${shieldOfferHtml}
-      ${!habits[4].done ? `<div class="dnn-tap-hint">Tap 👟 to mark steps when done</div>` : ''}
+      ${!habits[4].done ? `<div class="dnn-tap-hint">👟 ${_todayStepsData.steps > 0 ? (_todayStepsData.steps >= 1000 ? (_todayStepsData.steps/1000).toFixed(1).replace('.0','')+'K' : _todayStepsData.steps) + ' / 8K' : '0 / 8K'} steps — auto-updates</div>` : ''}
       <button class="dnn-challenge-btn" onclick="typeof FORGE_DUELS !== 'undefined' ? FORGE_DUELS.open() : (typeof showToast === 'function' && showToast('Connect with friends first in the Social tab', 'info'))">🏆 Challenge a Friend on Habits</button>
     </div>`;
 }
