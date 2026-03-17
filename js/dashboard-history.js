@@ -3955,14 +3955,16 @@ function renderDailyNonNegotiables() {
   const proteinHit = protTarget > 0 && todayProt >= protTarget * 0.9;
 
   const sessionDone = Array.isArray(_wrk) && _wrk.some(w => w.date === todayKey);
-  const sleepDone   = !!todayDNN.sleep;
+  const _rdyToday   = (() => { try { return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[todayKey] || {}; } catch { return {}; } })();
+  const sleepHours  = parseFloat(_rdyToday.totalSleep) || 0;
+  const sleepDone   = sleepHours >= 7;
   const stepsDone   = !!todayDNN.steps;
 
   const habits = [
     { id: 'weight', icon: '⚖️', label: 'Log weight',  done: weightLogged, auto: true,  required: true   },
     { id: 'protein',icon: '🥩', label: 'Hit protein', done: proteinHit,   auto: true,  required: true   },
     { id: 'session',icon: '💪', label: 'Train today', done: sessionDone,  auto: true,  required: !isWeekend },
-    { id: 'sleep',  icon: '😴', label: '7h+ sleep',   done: sleepDone,    auto: false, required: true   },
+    { id: 'sleep',  icon: '😴', label: '7h+ sleep',   done: sleepDone,    auto: true,  required: true   },
     { id: 'steps',  icon: '👟', label: '8k+ steps',   done: stepsDone,    auto: false, required: true   },
   ];
 
@@ -4490,6 +4492,7 @@ window._rdSave = function(field, rawValue) {
 
   _lsSave('forge_readiness', _ready);
   renderReadinessPanel();
+  if (typeof renderDailyNonNegotiables === 'function') renderDailyNonNegotiables();
 };
 
 window._rdSaveHM = function(field, hVal, mVal) {
