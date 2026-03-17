@@ -225,5 +225,59 @@
     } catch {}
   };
 
+  // ── Daily readiness morning brief ────────────────────────────────────────────
+  async function _checkDailyReadiness() {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const rdy = (() => { try { return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[todayKey] || {}; } catch { return {}; } })();
+    const profile = window.userProfile || {};
+    const goal = profile.goal || 'muscle';
+    const sleep = rdy.totalSleep ? `${rdy.totalSleep}h sleep` : 'sleep not logged';
+    const hrv = rdy.hrv ? `HRV ${rdy.hrv}` : '';
+    const rhr = rdy.rhr ? `RHR ${rdy.rhr}bpm` : '';
+    const metrics = [sleep, hrv, rhr].filter(Boolean).join(', ');
+
+    // Use last item as most-recent (array is push-appended)
+    const lastWorkout = (() => {
+      try {
+        const ws = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
+        return ws.length ? ws[ws.length - 1] : null;
+      } catch { return null; }
+    })();
+    const lastStr = lastWorkout ? `Last session: ${lastWorkout.muscle || 'unknown'} on ${lastWorkout.date}` : 'No recent sessions';
+
+    await _fireCoachMessage(
+      'daily_readiness',
+      `You are FORGE, a concise elite coach. Give a 1-sentence morning brief based on the athlete's readiness data. Be direct and motivating. Max 80 tokens.`,
+      `Athlete readiness today: ${metrics}. ${lastStr}. Goal: ${goal}. What's your one-line coaching brief for today?`,
+      (text) => {
+        const el = document.getElementById('coach-tab-today');
+        if (!el) return;
+        // Update existing card if present (avoids duplicate after re-render)
+        const existing = document.getElementById('coach-daily-brief');
+        if (existing) {
+          existing.querySelector('.cic-message').textContent = text;
+          return;
+        }
+        // Build card using textContent to prevent XSS from LLM output
+        const card = document.createElement('div');
+        card.id = 'coach-daily-brief';
+        card.className = 'coach-intercept-card';
+        const icon = document.createElement('div');
+        icon.className = 'cic-icon';
+        icon.textContent = '🤖';
+        const msg = document.createElement('div');
+        msg.className = 'cic-message';
+        msg.textContent = text;
+        card.appendChild(icon);
+        card.appendChild(msg);
+        // Insert inside .ctoday-wrap so it gets correct padding/background
+        const wrap = el.querySelector('.ctoday-wrap') || el;
+        wrap.insertBefore(card, wrap.firstChild);
+      }
+    );
+  }
+
+  window.FORGE_COACH.checkDailyReadiness = _checkDailyReadiness;
+
   console.log('[FORGE] Coach triggers loaded');
 })();

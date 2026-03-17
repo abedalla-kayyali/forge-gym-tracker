@@ -5421,7 +5421,12 @@ function coachSwitchTab(tab, btn) {
   });
   document.querySelectorAll('.coach-tab').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  if (tab === 'today')     renderCoachToday();
+  if (tab === 'today') {
+    renderCoachToday();
+    if (typeof window.FORGE_COACH?.checkDailyReadiness === 'function') {
+      window.FORGE_COACH.checkDailyReadiness();
+    }
+  }
   if (tab === 'train')     renderCoachTrain();
   if (tab === 'insights')  { if (typeof renderCoach === 'function') renderCoach(); if (typeof updateTips === 'function') updateTips(); }
   if (tab === 'plan')      renderCoachPlan();
