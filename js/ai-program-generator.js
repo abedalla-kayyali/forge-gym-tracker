@@ -188,9 +188,6 @@
     const body = document.getElementById('programs-panel-body');
     if (!body) return;
 
-    // Auth gate shown inside split builder — generate action also checks token
-    const isGuest = !window._forgeUser;
-
     const dayCountBtns = [3, 4, 5, 6].map(n =>
       `<button class="apg-day-count-btn${_dayCount === n ? ' active' : ''}" onclick="window._apgSetDayCount(${n})">${n}</button>`
     ).join('');
@@ -214,10 +211,7 @@
         <div class="apg-section-title" style="margin-top:14px;">Select muscles for each day</div>
         ${daySlots}
         ${anyEmpty ? '<div class="apg-error-msg">Select muscles for each day</div>' : ''}
-        ${isGuest
-          ? '<div class="apg-auth-gate">Sign in to generate your AI program.</div>'
-          : `<button class="apg-generate-btn"${anyEmpty ? ' disabled' : ''} onclick="window._apgGenerate()">GENERATE MY PROGRAM →</button>`
-        }
+        <button class="apg-generate-btn"${anyEmpty ? ' disabled' : ''} onclick="window._apgGenerate()">GENERATE MY PROGRAM →</button>
       </div>`;
   }
 
@@ -271,6 +265,18 @@
   window._apgGenerate = async function (refinementNote) {
     const body = document.getElementById('programs-panel-body');
     if (!body) return;
+
+    // Auth check — must have a Supabase session
+    const session = await window._sb?.auth?.getSession?.();
+    const token = session?.data?.session?.access_token;
+    if (!token) {
+      body.innerHTML = `<div class="apg-wrap">
+        <div class="apg-auth-gate">Sign in to generate your AI program.</div>
+        <button class="apg-regen-btn" style="margin-top:12px;" onclick="window.renderAIProgramGenerator()">← BACK</button>
+      </div>`;
+      return;
+    }
+
     const splitDays = Array.from({ length: _dayCount }, (_, i) => ({ muscles: _dayMuscles[i] || [] }));
     body.innerHTML = '<div class="apg-wrap"><div class="apg-generating"><span class="apg-spinner"></span>Building your program…</div></div>';
     const prompt = _buildProgramContext(splitDays, refinementNote || '');
@@ -293,7 +299,30 @@
   };
 
   window._apgActivate = function () {
-    if (_currentProgram) _aiProgramActivate(_currentProgram);
+    if (!_currentProgram) return;
+    _aiProgramActivate(_currentProgram);
+    // Show confirmation with where it takes effect
+    const body = document.getElementById('programs-panel-body');
+    if (!body) return;
+    body.innerHTML = `
+      <div class="apg-wrap">
+        <div class="apg-preview-name" style="color:var(--accent);">✓ Program Activated</div>
+        <div class="apg-section-title" style="margin-top:8px;margin-bottom:12px;">Your program is now live in:</div>
+        <div class="apg-day-card" style="margin-bottom:8px;">
+          <div class="apg-day-card-label">📋 Log Tab → Today's Session</div>
+          <div class="apg-exercise-row">Shows today's exercises at the top of the Log tab</div>
+        </div>
+        <div class="apg-day-card" style="margin-bottom:8px;">
+          <div class="apg-day-card-label">🏋 Coach → Train → Today's Session</div>
+          <div class="apg-exercise-row">Coach Train tab shows today's day with START SESSION button</div>
+        </div>
+        <div class="apg-day-card" style="margin-bottom:16px;">
+          <div class="apg-day-card-label">📅 Programs panel (here)</div>
+          <div class="apg-exercise-row">Returns here to show your active program schedule</div>
+        </div>
+        <button class="apg-activate-btn" onclick="if(typeof renderProgramPanel==='function')renderProgramPanel()">VIEW ACTIVE PROGRAM →</button>
+        <button class="apg-regen-btn" style="width:100%;margin-top:8px;" onclick="window._aiProgramDeactivate()">✕ Deactivate</button>
+      </div>`;
   };
 
   // ── Main entry point ───────────────────────────────────────────────────────
