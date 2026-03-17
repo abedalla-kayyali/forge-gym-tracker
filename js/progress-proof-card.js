@@ -13,7 +13,7 @@
   function _getWindow() {
     const meso = _lsGet('forge_mesocycle', {});
     const windowStart = meso.startDate || new Date(Date.now() - 30 * 86400000).toISOString();
-    const nWeeks = Math.max(1, Math.ceil((Date.now() - new Date(windowStart)) / (7 * 86400000)));
+    const nWeeks = Math.max(1, Math.ceil((Date.now() - new Date(windowStart).getTime()) / (7 * 86400000)));
     const phaseLabel = (meso.phase || (typeof userProfile !== 'undefined' && userProfile && userProfile.goal) || 'FORGE').toUpperCase();
     return { windowStart, nWeeks, phaseLabel };
   }
@@ -67,7 +67,7 @@
         before: beforeBest[ex],
         after: winBest[ex],
         gain: winBest[ex] - beforeBest[ex],
-        pct: Math.round((winBest[ex] - beforeBest[ex]) / beforeBest[ex] * 100)
+        pct: beforeBest[ex] > 0 ? Math.round((winBest[ex] - beforeBest[ex]) / beforeBest[ex] * 100) : 0
       }))
       .sort((a, b) => b.pct - a.pct)
       .slice(0, 3);
