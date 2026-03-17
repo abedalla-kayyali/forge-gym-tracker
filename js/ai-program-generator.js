@@ -106,7 +106,7 @@
           type_filter: null,
           coach_mode: true,
           coach_system: 'You are a personal training program generator. Return only valid JSON in a code block.',
-          max_tokens: 800
+          max_tokens: 1500
         })
       });
       if (!resp.ok) return null;
