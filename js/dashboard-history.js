@@ -4332,7 +4332,7 @@ window._mesoSetPhase = function(phase) {
   const today = new Date();
   const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
   const existing = _lsGet('forge_mesocycle', {});
-  _lsSave('forge_mesocycle', { ...existing, phase, startDate: todayKey, durationWeeks: existing.durationWeeks || 8 });
+  _lsSave('forge_mesocycle', { ...existing, phase, startDate: todayKey, durationWeeks: (existing && existing.durationWeeks) || 8 });
   if (typeof showToast === 'function') showToast(`Training phase set: ${phase.charAt(0).toUpperCase() + phase.slice(1)}`, 'success');
   renderMesocyclePanel();
 };
@@ -4349,7 +4349,7 @@ window._mesoSetDuration = function(weeks) {
 // Reset / change phase
 window._mesoReset = function() {
   function _lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {} }
-  _lsSave('forge_mesocycle', null);
+  _lsSave('forge_mesocycle', {});
   renderMesocyclePanel();
 };
 window.renderMesocyclePanel = renderMesocyclePanel;
