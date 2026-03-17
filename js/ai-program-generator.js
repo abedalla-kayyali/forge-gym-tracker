@@ -41,133 +41,100 @@
   }
   window._adaptDay = _adaptDay;
 
-  // ── Context builder ────────────────────────────────────────────────────────
-  function _buildProgramContext(splitDays, refinementNote) {
-    const up = (typeof userProfile !== 'undefined' ? userProfile : null) || _lsGet('forge_profile', {});
-    const meso = _lsGet('forge_mesocycle', {});
+  // ── Per-half prompt builder ────────────────────────────────────────────────
+  // Generates prompt for 1-2 days at a time — smaller output = reliable JSON.
+  function _buildHalfPrompt(halfDays, refinementNote) {
     const wkts = (typeof workouts !== 'undefined' ? workouts : null) || _lsGet('forge_workouts', []);
-
     const recentEx = [...new Set(
-      (Array.isArray(wkts) ? wkts : []).slice(-20).map(w => w.exercise).filter(Boolean)
-    )].slice(0, 15).join(', ') || 'none';
-
-    const lagging = [];
-    if (typeof window.FORGE_OVERLOAD !== 'undefined') {
-      ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'legs', 'glutes', 'core'].forEach(m => {
-        const s = window.FORGE_OVERLOAD.getMuscleOverloadScore(m);
-        if (s !== null && s < 50) lagging.push(m);
-      });
-    }
-
-    const inbody = _lsGet('forge_inbody', []);
-    const lastIb = Array.isArray(inbody) && inbody.length > 0 ? inbody[inbody.length - 1] : null;
+      (Array.isArray(wkts) ? wkts : []).slice(-10).map(w => w.exercise).filter(Boolean)
+    )].slice(0, 8).join(', ') || 'none';
 
     const lines = [
-      'You are a personal training coach. Generate a weekly training program.',
+      `Generate exercises for ${halfDays.length} training day(s).`,
+      `Recent exercises logged: ${recentEx}`,
       '',
-      `User profile: goal=${up.goal || 'recomp'}, weight=${up.weight || '?'}kg, age=${up.age || '?'}, gender=${up.gender || 'unknown'}`,
     ];
-    if (meso.phase) lines.push(`Current phase: ${meso.phase}${meso.durationWeeks ? ' (' + meso.durationWeeks + ' weeks)' : ''}`);
-    if (lastIb) lines.push(`Body composition: BF%=${lastIb.bf || '?'}, SMM=${lastIb.smm || '?'}kg`);
-    if (lagging.length) lines.push(`Lagging muscles (overload <50%): ${lagging.join(', ')}`);
-    lines.push(`Recent exercises: ${recentEx}`);
+    halfDays.forEach((d, i) => lines.push(`Day ${i + 1}: ${d.muscles.join(', ')}`));
     lines.push('');
-    lines.push('Training days requested:');
-    splitDays.forEach((day, i) => {
-      lines.push(`Day ${i + 1}: ${day.muscles.join(', ')}`);
-    });
-    lines.push('');
-    lines.push('Return ONLY a JSON code block. Use EXACTLY this schema — no extra fields, no notes, no rest_seconds:');
+    lines.push('Return ONLY a JSON array:');
     lines.push('```json');
-    lines.push('{"name":"Push Pull Legs","days":[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Overhead Press","sets":3,"reps":"8-12"},{"name":"Tricep Dips","sets":3,"reps":"10-12"}]},{"label":"Pull Day","muscles":["back","biceps"],"exercises":[{"name":"Pull-Up","sets":4,"reps":"6-10"},{"name":"Barbell Row","sets":3,"reps":"8-10"},{"name":"Bicep Curl","sets":3,"reps":"10-12"}]}]}');
+    lines.push('[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Overhead Press","sets":3,"reps":"8-12"},{"name":"Tricep Dips","sets":3,"reps":"10-12"}]}]');
     lines.push('```');
-    lines.push('STRICT rules: top-level keys ONLY "name" and "days". Each exercise ONLY "name", "sets", "reps". Exactly 3 exercises per day. Short reps like "8-10", never more than 5 chars.');
-    if (refinementNote && refinementNote.trim()) {
-      lines.push(`User refinement note: ${refinementNote.trim()}`);
-    }
+    lines.push('STRICT: Each exercise ONLY "name","sets","reps". Exactly 3 exercises per day. No other fields.');
+    if (refinementNote && refinementNote.trim()) lines.push(`Note: ${refinementNote.trim()}`);
     return lines.join('\n');
   }
 
-  // ── LLM call (SSE buffered decode — same pattern as coach-triggers.js) ──────
-  // Uses assistant prefill ('```json\n{') so the model is forced to complete
-  // a valid JSON object rather than starting from scratch (eliminates structural errors).
-  const _PROGRAM_PREFILL = '```json\n{';
+  // ── SSE reader helper ──────────────────────────────────────────────────────
+  async function _readSSE(resp) {
+    const reader = resp.body?.getReader();
+    if (!reader) return '';
+    let text = '', buf = '';
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const ln of lines) {
+        if (!ln.startsWith('data: ')) continue;
+        try { text += JSON.parse(ln.slice(6).trim())?.token || ''; } catch {}
+      }
+    }
+    return text;
+  }
 
-  async function _callProgramLLM(prompt) {
-    const session = await window._sb?.auth?.getSession?.();
-    const token = session?.data?.session?.access_token;
-    if (!token) return null;
+  // ── Per-half LLM call — returns array of day objects or null ───────────────
+  const _HALF_PREFILL = '```json\n[';
 
+  async function _callHalfLLM(halfDays, token, refinementNote) {
+    const prompt = _buildHalfPrompt(halfDays, refinementNote);
     try {
       const resp = await fetch(SEARCH_FN, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           query: prompt,
           type_filter: null,
           coach_mode: true,
-          coach_system: 'Complete the JSON training program. Schema: {"name":"...","days":[{"label":"...","muscles":[...],"exercises":[{"name":"...","sets":N,"reps":"..."}]}]}. NO extra fields.',
-          max_tokens: 2000,
-          prefill: _PROGRAM_PREFILL
+          coach_system: 'Complete the JSON array. Each element: {"label":"...","muscles":[...],"exercises":[{"name":"...","sets":N,"reps":"..."}]}. NO extra fields.',
+          max_tokens: 1000,
+          prefill: _HALF_PREFILL
         })
       });
       if (!resp.ok) return null;
-
-      const reader = resp.body?.getReader();
-      if (!reader) return null;
-      let text = '', buf = '';
-      const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n'); buf = lines.pop();
-        for (const ln of lines) {
-          if (!ln.startsWith('data: ')) continue;
-          const raw = ln.slice(6).trim();
-          if (raw === '[DONE]') break;
-          try { text += JSON.parse(raw)?.token || ''; } catch {}
-        }
-      }
-      // Prepend prefill — API streams only tokens AFTER the prefill content
-      return (_PROGRAM_PREFILL + text).trim() || null;
+      const text = await _readSSE(resp);
+      return _parseHalfResponse((_HALF_PREFILL + text).trim(), halfDays.length);
     } catch (e) {
-      console.warn('[ai-program-generator] LLM call failed:', e);
+      console.warn('[ai-program-generator] half LLM call failed:', e);
       return null;
     }
   }
 
-  // ── Response parser ────────────────────────────────────────────────────────
-  function _parseProgramResponse(raw, expectedDays) {
+  // ── Half-response parser — validates array of day objects ─────────────────
+  function _parseHalfResponse(raw, minDays) {
     if (!raw) return null;
     const m = raw.match(/```json\s*([\s\S]*?)```/);
     let jsonStr = m?.[1]?.trim();
     if (!jsonStr) return null;
     for (let pass = 0; pass < 2; pass++) {
       try {
-        let r = JSON.parse(jsonStr);
-        // Unwrap LLM-added "program" wrapper if present
-        if (r.program && typeof r.program.name === 'string' && Array.isArray(r.program.days)) r = r.program;
-        if (typeof r.name !== 'string') return null;
-        if (!Array.isArray(r.days) || r.days.length !== expectedDays) return null;
-        for (const d of r.days) {
+        const arr = JSON.parse(jsonStr);
+        if (!Array.isArray(arr) || arr.length < minDays) return null;
+        for (const d of arr) {
           if (!d.label || !Array.isArray(d.muscles) || !Array.isArray(d.exercises) || d.exercises.length < 1) return null;
           for (const ex of d.exercises) {
             if (!ex.name || !ex.sets || !ex.reps) return null;
           }
         }
-        return r;
+        return arr;
       } catch {
         if (pass === 0) {
-          // Repair 1: bare exercise name after closing brace — e.g. },\n  Chest Fly",\n  "sets":
+          // Repair 1: bare exercise name after closing brace
           jsonStr = jsonStr.replace(/}\s*,\s*\n(\s*)([A-Z][^"{\n,]{1,60})",/g, '},\n$1{"name": "$2",');
-          // Repair 2: reps merged with next exercise name — e.g. "reps": "8-Bicep Curl"
-          // Drop the corrupted portion: "reps": "8-ExerciseName..." → "reps": "8-12"
+          // Repair 2: reps merged with next exercise name — "reps": "8-BicepCurl"
           jsonStr = jsonStr.replace(/"reps":\s*"(\d+)-([A-Z][^"]+)"/g, '"reps": "$1-12"');
-          // Repair 3: missing opening quote on known string fields — e.g. "name": Fly" → "name": "Fly"
+          // Repair 3: missing opening quote on known string fields
           jsonStr = jsonStr.replace(/"(name|reps|label)":\s*([A-Za-z(][^,}\]\n"]*?)"/g, '"$1": "$2"');
         }
       }
@@ -298,16 +265,24 @@
 
     const splitDays = Array.from({ length: _dayCount }, (_, i) => ({ muscles: _dayMuscles[i] || [] }));
     body.innerHTML = '<div class="apg-wrap"><div class="apg-generating"><span class="apg-spinner"></span>Building your program…</div></div>';
-    const prompt = _buildProgramContext(splitDays, refinementNote || '');
+    const note = refinementNote || '';
 
-    // Retry once — LLM occasionally emits malformed JSON on first attempt
-    let program = null;
-    for (let attempt = 0; attempt < 2 && !program; attempt++) {
-      const raw = await _callProgramLLM(prompt);
-      program = _parseProgramResponse(raw, _dayCount);
-    }
+    // Split into two halves and generate in parallel — each half is ≤2 days,
+    // small enough that Haiku reliably produces valid JSON.
+    const mid = Math.ceil(_dayCount / 2);
+    const half1 = splitDays.slice(0, mid);
+    const half2 = splitDays.slice(mid);
 
-    if (!program) {
+    let [days1, days2] = await Promise.all([
+      _callHalfLLM(half1, token, note),
+      half2.length ? _callHalfLLM(half2, token, note) : Promise.resolve([])
+    ]);
+
+    // Retry each failed half once
+    if (!days1) days1 = await _callHalfLLM(half1, token, note);
+    if (half2.length && !days2) days2 = await _callHalfLLM(half2, token, note);
+
+    if (!days1 || (half2.length && !days2)) {
       body.innerHTML = `<div class="apg-wrap">
         <div class="apg-error-msg">Couldn't generate program — try again.</div>
         <button class="apg-regen-btn" style="margin-top:12px;" onclick="window._apgGenerate()">↺ TRY AGAIN</button>
@@ -315,7 +290,15 @@
       </div>`;
       return;
     }
-    _renderProgramPreview(program);
+
+    const allDays = [...days1, ...(days2 || [])];
+    // Derive program name from muscle groups (no extra LLM call needed)
+    const topMuscles = splitDays.map(d => d.muscles[0] || '').filter(Boolean);
+    const progName = topMuscles.length >= 4
+      ? topMuscles.slice(0, 2).join(' & ') + ' Split'
+      : topMuscles.join(' & ') + ' Program';
+
+    _renderProgramPreview({ name: progName, days: allDays });
   };
 
   window._apgRegenerate = function () {
