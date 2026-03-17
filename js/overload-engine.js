@@ -153,10 +153,23 @@
     const d = new Date(last.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
     const unit = (last.sets?.[0]?.unit) || _cfg.defaultUnit || 'kg';
 
-    // Sets display
+    // Sets display — OPT-1: show RPE tag per set
     const setsText = (last.sets || [])
-      .map((s, i) => `<span class="ol-set-chip">S${i + 1}: ${s.reps}×${s.weight}${s.unit || unit}</span>`)
+      .map((s, i) => {
+        const rpeTag = s.rpe ? `<span class="ol-rpe-tag">@${s.rpe === 'F' ? 'Fail' : 'RPE' + s.rpe}</span>` : '';
+        return `<span class="ol-set-chip${s.rpe ? ' ol-set-has-rpe' : ''}">S${i + 1}: ${s.reps}×${s.weight}${s.unit || unit}${rpeTag}</span>`;
+      })
       .join('');
+
+    // OPT-1: Compute RIR from highest RPE of working sets
+    const _rpeToNum = r => (r === 'F' || r === 'f') ? 10 : (parseFloat(r) || 0);
+    const _workingSets = (last.sets || []).filter(s => s.type !== 'warmup' && s.rpe);
+    let _rir = null;
+    if (_workingSets.length > 0) {
+      const _maxRpe = Math.max(..._workingSets.map(s => _rpeToNum(s.rpe)));
+      _rir = Math.round((10 - _maxRpe) * 2) / 2; // e.g. RPE8 → RIR2
+      if (_rir < 0) _rir = 0;
+    }
 
     // Overload status
     let statusHtml = '';
@@ -176,33 +189,41 @@
       streakHtml = `<span class="ol-streak-badge">🔥 ${ctx.overloadStreak} session streak</span>`;
     }
 
-    // Plateau warning with actionable suggestions
+    // Plateau warning — OPT-2: 1-tap action buttons
     let plateauHtml = '';
     if (ctx.plateauLength >= 3) {
-      const _unit = (last.sets?.[0]?.unit) || _cfg.defaultUnit || 'kg';
+      const _pUnit = (last.sets?.[0]?.unit) || _cfg.defaultUnit || 'kg';
       const _topW  = ctx.lastTopWeight || 0;
-      const _deload = _unit === 'lbs'
-        ? Math.round(_topW * 0.9 / 2.5) * 2.5
-        : Math.round(_topW * 0.9 * 2) / 2;
-      const _suggestions = [
-        `Deload to <strong>${_deload}${_unit}</strong> (−10%) for 1 week`,
-        'Switch rep range (e.g. 3×8 → 4×6 or 3×12)',
-        'Swap to a variation exercise for 3–4 weeks'
-      ];
+      const _safeName = (name || '').replace(/'/g, "\\'");
       plateauHtml = `
         <div class="ol-plateau-warn">
           <div class="ol-plateau-title">⚠️ Plateau — ${ctx.plateauLength} sessions without progress</div>
-          <ul class="ol-plateau-tips">
-            ${_suggestions.map(s => `<li>${s}</li>`).join('')}
-          </ul>
+          <div class="ol-plateau-actions">
+            <button class="ol-plateau-btn" onclick="window._plateauDeload(${_topW},'${_pUnit}')">⬇️ Deload 10%</button>
+            <button class="ol-plateau-btn" onclick="window._plateauSwapExercise('${_safeName}')">🔄 Swap Exercise</button>
+            <button class="ol-plateau-btn" onclick="window._plateauRepRange()">📊 Change Rep Range</button>
+          </div>
         </div>`;
     }
 
-    // Target for next session
+    // Target for next session — OPT-1: RIR-aware increment
     let targetHtml = '';
     if (ctx.lastTopWeight > 0) {
-      const suggestWeight = ctx.lastTopWeight + (unit === 'lbs' ? 5 : 2.5);
-      targetHtml = `<div class="ol-target">🎯 Target today: <strong>${suggestWeight}${unit}</strong></div>`;
+      let _inc, _rirBadge = '';
+      if (_rir === null) {
+        _inc = unit === 'lbs' ? 5 : 2.5;
+      } else if (_rir === 0) {
+        _inc = 0;
+        _rirBadge = `<span class="ol-rir-badge ol-rir-max">RIR 0 — maintain weight</span>`;
+      } else if (_rir <= 2) {
+        _inc = unit === 'lbs' ? 5 : 2.5;
+        _rirBadge = `<span class="ol-rir-badge ol-rir-close">RIR ${_rir} — ready to increase</span>`;
+      } else {
+        _inc = unit === 'lbs' ? 10 : 5;
+        _rirBadge = `<span class="ol-rir-badge ol-rir-easy">RIR ${_rir} — push harder</span>`;
+      }
+      const suggestWeight = ctx.lastTopWeight + _inc;
+      targetHtml = `<div class="ol-target">🎯 Target today: <strong>${suggestWeight}${unit}</strong> ${_rirBadge}</div>`;
     }
 
     if (contentEl) {
@@ -260,6 +281,45 @@
       <div class="ol-muscle-list">${rows.join('')}</div>
     `;
   }
+
+  // ── OPT-2: Plateau 1-tap action handlers ──────────────────────────────────
+  window._plateauDeload = function(topWeight, unit) {
+    const u = unit || 'kg';
+    const deloadW = u === 'lbs'
+      ? Math.round(topWeight * 0.9 / 2.5) * 2.5
+      : Math.round(topWeight * 0.9 * 2) / 2;
+    // Fill all weight inputs currently visible in the active exercise panel
+    document.querySelectorAll('.set-weight, input[data-field="weight"]').forEach(inp => {
+      inp.value = deloadW;
+    });
+    if (typeof showToast === 'function') showToast(`Deload set to ${deloadW}${u} — aim for 15–20 reps`, 'info');
+  };
+
+  window._plateauSwapExercise = function(exerciseName) {
+    const swaps = (typeof EXERCISE_SWAPS !== 'undefined' ? EXERCISE_SWAPS : {});
+    // Case-insensitive lookup
+    const key = Object.keys(swaps).find(k => k.toLowerCase() === (exerciseName || '').toLowerCase());
+    const alts = key ? swaps[key] : [];
+    if (alts && alts.length) {
+      const pick = alts[0];
+      const nameInput = document.getElementById('exercise-name');
+      if (nameInput) { nameInput.value = pick; nameInput.dispatchEvent(new Event('input')); }
+      if (typeof showToast === 'function') showToast(`Swapped to "${pick}" for 3–4 weeks`, 'info');
+    } else {
+      if (typeof showToast === 'function') showToast('Try: a dumbbell, cable, or machine variation of this movement', 'info');
+    }
+  };
+
+  window._plateauRepRange = function() {
+    const tips = [
+      '3×8 → try 4×6 (strength focus)',
+      '3×10 → try 3×15 (metabolic stress)',
+      '4×8 → try 5×5 (neural drive)',
+      'Drop set: last set reduce weight 20% and go to failure'
+    ];
+    const tip = tips[Math.floor(Math.random() * tips.length)];
+    if (typeof showToast === 'function') showToast(`Rep range tip: ${tip}`, 'info');
+  };
 
   // ── Global API ─────────────────────────────────────────────────────────────
   window.FORGE_OVERLOAD = {

@@ -22784,12 +22784,21 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .ol-streak-badge{font-size:11px;background:rgba(255,160,0,.15);color:#ffb800;border:1px solid rgba(255,160,0,.3);border-radius:10px;padding:3px 8px;}
 .ol-sets-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
 .ol-set-chip{font-family:'DM Mono',monospace;font-size:11px;background:rgba(57,255,143,.05);border:1px solid rgba(57,255,143,.2);border-radius:8px;padding:3px 10px;color:var(--text2);}
+.ol-set-has-rpe{border-color:rgba(255,160,0,.35);background:rgba(255,160,0,.06);}
+.ol-rpe-tag{font-size:10px;color:#ffb800;margin-left:3px;font-weight:600;}
 .ol-target{font-size:12px;color:var(--text2);margin-bottom:4px;}
 .ol-target strong{color:#39ff8f;font-size:14px;}
+.ol-rir-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;margin-left:4px;vertical-align:middle;}
+.ol-rir-max{background:rgba(255,107,107,.15);color:#ff6b6b;}
+.ol-rir-close{background:rgba(57,255,143,.12);color:#39ff8f;}
+.ol-rir-easy{background:rgba(255,160,0,.15);color:#ffb800;}
 .ol-plateau-warn{font-size:12px;color:#ffb800;background:rgba(255,180,0,.08);border-left:3px solid #ffb800;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:6px;}
-.ol-plateau-title{font-weight:700;margin-bottom:5px;}
+.ol-plateau-title{font-weight:700;margin-bottom:8px;}
 .ol-plateau-tips{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:3px;}
 .ol-plateau-tips li{color:var(--text2);font-size:11px;}
+.ol-plateau-actions{display:flex;flex-wrap:wrap;gap:6px;}
+.ol-plateau-btn{font-size:11px;font-weight:600;padding:5px 11px;border-radius:10px;border:1px solid rgba(255,180,0,.4);background:rgba(255,180,0,.1);color:#ffb800;cursor:pointer;transition:background .15s;}
+.ol-plateau-btn:hover{background:rgba(255,180,0,.22);}
 .ol-empty{padding:14px;text-align:center;color:var(--text3);font-size:12px;}
 .ol-overall-score{display:flex;flex-direction:column;align-items:center;padding:14px 0 10px;gap:3px;}
 .ol-overall-val{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:700;line-height:1;}
@@ -23056,6 +23065,32 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .dnn-weekend-badge{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;color:#ff9f2a;background:rgba(255,159,42,.1);border:1px solid rgba(255,159,42,.25);border-radius:4px;padding:2px 6px;margin-bottom:4px;}
 .dnn-optional .dnn-pill-label{color:var(--text3);}
 .dnn-opt-tag{font-size:8px;color:var(--text3);font-style:italic;}
+.dnn-challenge-btn{width:100%;margin-top:8px;padding:9px 12px;background:rgba(255,184,0,.07);border:1px solid rgba(255,184,0,.25);border-radius:8px;color:#ffb800;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.3px;cursor:pointer;transition:background .2s;}
+.dnn-challenge-btn:hover{background:rgba(255,184,0,.14);}
+
+/* ── Daily Readiness Score (OPT-3 · v193) ─────────────────────────────────── */
+.rd-wrap{display:flex;flex-direction:column;gap:12px;}
+.rd-score-row{display:flex;align-items:flex-start;gap:14px;}
+.rd-score-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;flex-shrink:0;}
+.rd-score-none{background:rgba(255,255,255,.06);color:var(--text3);border:2px solid rgba(255,255,255,.1);}
+.rd-score-high{background:rgba(57,255,143,.12);color:#39ff8f;border:2px solid rgba(57,255,143,.35);}
+.rd-score-med{background:rgba(255,184,0,.12);color:#ffb800;border:2px solid rgba(255,184,0,.35);}
+.rd-score-low{background:rgba(255,107,107,.12);color:#ff6b6b;border:2px solid rgba(255,107,107,.35);}
+.rd-score-right{display:flex;flex-direction:column;gap:5px;flex:1;}
+.rd-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.rd-chip{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:8px;border:1px solid;}
+.rd-chip-ok{background:rgba(57,255,143,.08);color:#39ff8f;border-color:rgba(57,255,143,.3);}
+.rd-chip-miss{background:rgba(255,255,255,.04);color:var(--text3);border-color:rgba(255,255,255,.1);}
+.rd-chip-warn{background:rgba(255,184,0,.08);color:#ffb800;border-color:rgba(255,184,0,.3);}
+.rd-msg{font-size:11px;color:var(--text2);line-height:1.4;}
+.rd-energy-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;}
+.rd-energy-row{display:flex;gap:6px;flex-wrap:wrap;}
+.rd-energy-btn{flex:1;min-width:52px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;cursor:pointer;transition:background .15s,border-color .15s;}
+.rd-energy-btn:hover{background:rgba(255,255,255,.08);}
+.rd-energy-active{background:rgba(57,255,143,.12)!important;border-color:rgba(57,255,143,.4)!important;}
+.rd-energy-emoji{font-size:18px;line-height:1;}
+.rd-energy-lbl{font-size:9px;color:var(--text3);white-space:nowrap;}
+.rd-energy-active .rd-energy-lbl{color:#39ff8f;}
 
 /* ── Mesocycle / Training Phase Tracker (v187) ────────────────────────────── */
 .meso-wrap{display:flex;flex-direction:column;gap:10px;}

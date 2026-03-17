@@ -381,14 +381,16 @@
   }
   function _formatScope(mode) {
     const parsed = _parseScope(mode);
-    if (parsed.scope === 'cardio') return _tx('Cardio Sessions', 'ط¬ظ„ط³ط§طھ ط§ظ„ظƒط§ط±ط¯ظٹظˆ');
-    if (parsed.scope === 'muscle') return _tx(`${parsed.muscle || 'Muscle'} Sessions`, `ط¬ظ„ط³ط§طھ ${parsed.muscle || 'ط¹ط¶ظ„ط©'}`);
-    return _tx('Workout Sessions', 'ط¬ظ„ط³ط§طھ ط§ظ„طھظ…ط±ظٹظ†');
+    if (parsed.scope === 'cardio') return _tx('Cardio Sessions', 'جلسات الكارديو');
+    if (parsed.scope === 'muscle') return _tx(`${parsed.muscle || 'Muscle'} Sessions`, `جلسات ${parsed.muscle || 'عضلة'}`);
+    if (parsed.scope === 'dnn') return _tx('Habit Streak', 'سلسلة العادات');
+    return _tx('Workout Sessions', 'جلسات التمرين');
   }
   function _targetFor(mode) {
     const parsed = _parseScope(mode);
     if (parsed.scope === 'cardio') return 5;
     if (parsed.scope === 'muscle') return 5;
+    if (parsed.scope === 'dnn') return 7;
     return 7;
   }
   function _defaultState() {
@@ -505,6 +507,15 @@
       const w = _workouts().filter(wk => dms(wk?.date) >= fromMs && String(wk?.muscle || '').toLowerCase() === muscle).length;
       const bw = _bwWorkouts().filter(wk => dms(wk?.date) >= fromMs && String(wk?.muscle || '').toLowerCase() === muscle).length;
       return w + bw;
+    }
+    if (parsed.scope === 'dnn') {
+      try {
+        const _dnn = JSON.parse(localStorage.getItem('forge_dnn') || '{}');
+        return Object.entries(_dnn).filter(([dk, v]) => {
+          if (typeof dk !== 'string' || !dk.match(/^\d{4}-\d{2}-\d{2}$/)) return false;
+          return dms(dk) >= fromMs && v && v.perfectDay === true;
+        }).length;
+      } catch (_e) { return 0; }
     }
     return _workouts().filter(wk => dms(wk?.date) >= fromMs).length + _bwWorkouts().filter(wk => dms(wk?.date) >= fromMs).length;
   }
@@ -1076,9 +1087,10 @@
           '<div class="duel-user-meta"><strong>' + _escapeHtml(u.name || 'Athlete') + '</strong><small>' + _escapeHtml(u.email || shortCode) + ' | ' + _escapeHtml(statLine) + '</small></div>' +
           '<div class="duel-user-actions">' +
             friendBtn +
-            '<button class="coach-action-btn" onclick=\'FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',"scope:workout")\'>' + _tx('Workout', 'طھظ…ط±ظٹظ†') + '</button>' +
-            '<button class="coach-action-btn" onclick=\'FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',"scope:cardio")\'>' + _tx('Cardio', 'ظƒط§ط±ط¯ظٹظˆ') + '</button>' +
-            '<button class="coach-action-btn primary" onclick=\'FORGE_DUELS.challengeMuscle(' + uid + ',' + un + ',' + ue + ')\'>' + _tx('Muscle', 'ط¹ط¶ظ„ط©') + '</button>' +
+            '<button class="coach-action-btn" onclick=\'FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',"scope:workout")\'>' + _tx('Workout', 'تمرين') + '</button>' +
+            '<button class="coach-action-btn" onclick=\'FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',"scope:cardio")\'>' + _tx('Cardio', 'كارديو') + '</button>' +
+            '<button class="coach-action-btn primary" onclick=\'FORGE_DUELS.challengeMuscle(' + uid + ',' + un + ',' + ue + ')\'>' + _tx('Muscle', 'عضلة') + '</button>' +
+            '<button class="coach-action-btn" onclick=\'FORGE_DUELS.challenge(' + uid + ',' + un + ',' + ue + ',"scope:dnn")\'>' + _tx('Habits', 'عادات') + '</button>' +
           '</div>' +
         '</div>'
       );

@@ -687,6 +687,7 @@ function switchDashTab(name, btn) {
   if (name === 'overview' && typeof renderGoalDashboard === 'function') renderGoalDashboard();
   if (name === 'overview' && typeof renderWeeklyReviewCard === 'function') renderWeeklyReviewCard();
   if (name === 'overview' && typeof renderDailyNonNegotiables === 'function') renderDailyNonNegotiables();
+  if (name === 'overview' && typeof renderReadinessPanel === 'function') renderReadinessPanel();
   // Render Calisthenics Journey when progress tab opens
   if (name === 'progress' && typeof renderCaliJourney === 'function') renderCaliJourney();
   // Render Calisthenics Dashboard when cali tab opens
@@ -4038,6 +4039,7 @@ function renderDailyNonNegotiables() {
       ${shieldRow}
       ${shieldOfferHtml}
       ${!habits[3].done || !habits[4].done ? `<div class="dnn-tap-hint">Tap 😴 / 👟 to mark when done</div>` : ''}
+      <button class="dnn-challenge-btn" onclick="typeof FORGE_DUELS !== 'undefined' ? FORGE_DUELS.open() : (typeof showToast === 'function' && showToast('Connect with friends first in the Social tab', 'info'))">🏆 Challenge a Friend on Habits</button>
     </div>`;
 }
 
@@ -4081,6 +4083,123 @@ window._dnnUseShield = function() {
   renderDailyNonNegotiables();
 };
 window.renderDailyNonNegotiables = renderDailyNonNegotiables;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DAILY READINESS SCORE  (OPT-3 · manual energy check-in · v193)
+// Score = Sleep 35% + Energy 45% + Recovery 20%
+// Storage: forge_readiness { "YYYY-MM-DD": { energy: 1-5, score: 0-100 } }
+// ─────────────────────────────────────────────────────────────────────────────
+function renderReadinessPanel() {
+  const el = document.getElementById('readiness-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const _dnn      = _lsGet('forge_dnn', {});
+  const _ready    = _lsGet('forge_readiness', {});
+  const _wrk      = _lsGet('forge_workouts', []);
+  const todayDNN  = _dnn[todayKey] || {};
+  const todayRdy  = _ready[todayKey] || {};
+
+  // ── Inputs ─────────────────────────────────────────────────────────────────
+  const sleepDone = !!todayDNN.sleep;
+  const energy    = todayRdy.energy || 0;  // 0 = not yet entered
+
+  // ── Recovery factor: days since last workout ──────────────────────────────
+  let recoveryPts = 20;  // default: well-rested
+  if (Array.isArray(_wrk) && _wrk.length) {
+    const sortedWrk = _wrk.map(w => w.date || '').filter(Boolean).sort().reverse();
+    const lastWrkDate = sortedWrk[0];
+    if (lastWrkDate === todayKey) {
+      recoveryPts = 10;   // trained today — moderate recovery
+    } else {
+      const diff = Math.round((new Date(todayKey) - new Date(lastWrkDate)) / 86400000);
+      recoveryPts = diff <= 1 ? 16 : 20;
+    }
+  }
+
+  // ── Sleep score ────────────────────────────────────────────────────────────
+  const sleepPts = sleepDone ? 35 : 0;
+
+  // ── Energy score ──────────────────────────────────────────────────────────
+  const energyPts = energy > 0 ? Math.round(((energy - 1) / 4) * 45) : 0;
+
+  // ── Total score (only meaningful when energy has been entered) ─────────────
+  const hasData   = energy > 0;
+  const score     = hasData ? (sleepPts + energyPts + recoveryPts) : null;
+
+  // ── Badge + message ───────────────────────────────────────────────────────
+  let scoreCls = 'rd-score-none', scoreLabel = '—', scoreMsg = 'Tap an energy level below to get your readiness score.';
+  if (score !== null) {
+    if (score >= 70) {
+      scoreCls = 'rd-score-high'; scoreLabel = 'HIGH';
+      scoreMsg = 'You\'re energized and recovered. Push hard today! 💪';
+    } else if (score >= 40) {
+      scoreCls = 'rd-score-med'; scoreLabel = 'MODERATE';
+      scoreMsg = 'Decent readiness. Train smart — listen to your body.';
+    } else {
+      scoreCls = 'rd-score-low'; scoreLabel = 'LOW';
+      scoreMsg = 'Low readiness today. Consider a lighter session or extra rest.';
+    }
+  }
+
+  const badge = document.getElementById('readiness-badge');
+  if (badge) badge.textContent = score !== null ? `${score} ${scoreLabel}` : 'CHECK IN';
+
+  // ── Energy tap buttons ────────────────────────────────────────────────────
+  const energyEmojis = ['😴','😐','🙂','😄','🚀'];
+  const energyLabels = ['Drained','Tired','OK','Good','Fired up'];
+  const energyBtns   = energyEmojis.map((emoji, i) => {
+    const lvl   = i + 1;
+    const isOn  = energy === lvl;
+    return `<button class="rd-energy-btn${isOn ? ' rd-energy-active' : ''}" onclick="window._setReadinessEnergy(${lvl})" title="${energyLabels[i]}">
+      <span class="rd-energy-emoji">${emoji}</span>
+      <span class="rd-energy-lbl">${energyLabels[i]}</span>
+    </button>`;
+  }).join('');
+
+  // ── Context chips ─────────────────────────────────────────────────────────
+  const sleepChip = `<span class="rd-chip ${sleepDone ? 'rd-chip-ok' : 'rd-chip-miss'}">😴 Sleep ${sleepDone ? '✓' : '—'}</span>`;
+  const recLabel  = recoveryPts === 10 ? 'Trained today' : recoveryPts === 16 ? 'Trained yesterday' : 'Well rested';
+  const recCls    = recoveryPts >= 16 ? 'rd-chip-ok' : 'rd-chip-warn';
+  const recChip   = `<span class="rd-chip ${recCls}">🔄 ${recLabel}</span>`;
+
+  el.innerHTML = `
+    <div class="rd-wrap">
+      <div class="rd-score-row">
+        <div class="rd-score-circle ${scoreCls}">${score !== null ? score : '?'}</div>
+        <div class="rd-score-right">
+          <div class="rd-chips">${sleepChip}${recChip}</div>
+          <div class="rd-msg">${scoreMsg}</div>
+        </div>
+      </div>
+      <div class="rd-energy-label">How do you feel today?</div>
+      <div class="rd-energy-row">${energyBtns}</div>
+    </div>`;
+}
+
+window._setReadinessEnergy = function(level) {
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _lsSave(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
+  }
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const _ready = _lsGet('forge_readiness', {});
+  _ready[todayKey] = _ready[todayKey] || {};
+  _ready[todayKey].energy = level;
+  _lsSave('forge_readiness', _ready);
+  renderReadinessPanel();
+};
+
+window.renderReadinessPanel = renderReadinessPanel;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MACRO TIMING INTELLIGENCE  (morning protein · pre-WO carbs · post-WO protein · P2 · v184)
