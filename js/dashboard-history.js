@@ -690,6 +690,7 @@ function switchDashTab(name, btn) {
   // Render Calisthenics Dashboard when cali tab opens
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
+  if (name === 'nutrition' && typeof renderWeeklyNutritionReport === 'function') renderWeeklyNutritionReport();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
     _renderProgressReadinessHub();
@@ -3234,4 +3235,178 @@ function renderPRs() {
     (sorted.length ? `<div style="font-family:'Barlow Condensed',Cairo,sans-serif;font-size:11px;letter-spacing:2px;color:var(--text3);padding:4px 0 4px;">${tFnPR('prs.weighted')}</div>` + wgtHTML : '') +
     bwHTML;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEKLY NUTRITION REPORT  (Pillar 4.4 / P1 · v176)
+// 7-day macro heat calendar + week-over-week comparison
+// ─────────────────────────────────────────────────────────────────────────────
+function renderWeeklyNutritionReport() {
+  const el = document.getElementById('weekly-nutrition-body');
+  if (!el) return;
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _isoDate(daysAgo) {
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().slice(0, 10);
+  }
+  function _dayName(iso) {
+    return new Date(iso + 'T12:00:00').toLocaleDateString('en', { weekday: 'short' });
+  }
+  function _esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+
+  // ── load data ─────────────────────────────────────────────────────────────
+  const mealsData  = _lsGet('forge_meals', {});
+  const profile    = (typeof userProfile !== 'undefined' ? userProfile : null)
+                     || _lsGet('forge_profile', {});
+
+  // TDEE & targets (mirror renderCoachNutrition logic)
+  const wtRaw = parseFloat(profile.weight || 70);
+  const unit  = profile.weightUnit || 'kg';
+  const wtKg  = unit === 'lbs' ? wtRaw * 0.4536 : wtRaw;
+  const htCm  = parseFloat(profile.height || 170);
+  const isFemale = (profile.gender || '') === 'female';
+  const age   = profile.dob ? Math.floor((Date.now() - new Date(profile.dob)) / 31557600000) : 25;
+  const formulaBmr = 10 * wtKg + 6.25 * htCm - 5 * age + (isFemale ? -161 : 5);
+  const inbodyBmr  = parseFloat(profile.inbodyBmr || 0);
+  const useInbody  = inbodyBmr >= 800 && inbodyBmr <= 3500;
+  const bmr  = useInbody ? inbodyBmr : formulaBmr;
+  const af   = Math.max(1.2, Math.min(1.9, parseFloat(profile.activityFactor || 1.55)));
+  const tdee = Math.round(bmr * af);
+  const goal = profile.goal || 'muscle';
+
+  const custom = profile.customNutritionTargets;
+  let proteinTarget = Math.round(wtKg * 1.8);
+  let kcalTarget = goal === 'fat_loss' ? Math.round(tdee - 400) : goal === 'muscle' ? Math.round(tdee + 200) : tdee;
+  if (custom?.enabled) {
+    if (custom.p > 0)    proteinTarget = Math.round(custom.p);
+    if (custom.kcal > 0) kcalTarget    = Math.round(custom.kcal);
+  }
+
+  // ── build 14-day window (this week = 0..6, prev week = 7..13) ────────────
+  function _weekData(startDaysAgo) {
+    let totalKcal = 0, totalProtein = 0, totalSurplus = 0;
+    let loggedDays = 0;
+    const days = [];
+    for (let i = startDaysAgo + 6; i >= startDaysAgo; i--) {
+      const dk = _isoDate(i);
+      const meals = Array.isArray(mealsData[dk]) ? mealsData[dk] : [];
+      const kcal = meals.reduce((s, m) => s + (parseFloat(m.kcal) || 0), 0);
+      const prot = meals.reduce((s, m) => s + (parseFloat(m.p)   || 0), 0);
+      const hasData = meals.length > 0;
+      if (hasData) {
+        totalKcal    += kcal;
+        totalProtein += prot;
+        totalSurplus += (kcal - tdee);
+        loggedDays++;
+      }
+      days.push({ date: dk, kcal: hasData ? Math.round(kcal) : null, protein: hasData ? Math.round(prot) : null, hasData });
+    }
+    const avg = (v) => loggedDays ? Math.round(v / loggedDays) : null;
+    return { days, avgKcal: avg(totalKcal), avgProtein: avg(totalProtein), avgSurplus: avg(totalSurplus), loggedDays };
+  }
+
+  const thisWeek = _weekData(0);
+  const prevWeek = _weekData(7);
+  const hasAny   = thisWeek.loggedDays > 0;
+
+  if (!hasAny) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Log meals this week to see your report</div></div>';
+    return;
+  }
+
+  // ── cell status helpers ───────────────────────────────────────────────────
+  function _kcalStatus(kcal) {
+    if (kcal === null) return 'wnr-na';
+    const delta = kcal - kcalTarget;
+    if (goal === 'fat_loss') {
+      if (delta <= -200 && delta >= -700) return 'wnr-hit';
+      if (delta <= 0)  return 'wnr-partial';
+      return 'wnr-miss';
+    }
+    if (goal === 'muscle' || goal === 'strength') {
+      if (delta >= 100 && delta <= 500) return 'wnr-hit';
+      if (delta >= 0)  return 'wnr-partial';
+      return 'wnr-miss';
+    }
+    // recomp / default: within ±200 of target
+    return Math.abs(delta) <= 200 ? 'wnr-hit' : Math.abs(delta) <= 400 ? 'wnr-partial' : 'wnr-miss';
+  }
+  function _protStatus(prot) {
+    if (prot === null) return 'wnr-na';
+    const ratio = prot / proteinTarget;
+    if (ratio >= 0.9)  return 'wnr-hit';
+    if (ratio >= 0.7)  return 'wnr-partial';
+    return 'wnr-miss';
+  }
+
+  // ── heat calendar HTML ────────────────────────────────────────────────────
+  const calendarRows = thisWeek.days.map(d => {
+    const ks = _kcalStatus(d.kcal);
+    const ps = _protStatus(d.protein);
+    return `
+      <div class="wnr-cal-row">
+        <span class="wnr-cal-day">${_esc(_dayName(d.date))}</span>
+        <div class="wnr-cal-cells">
+          <div class="wnr-cell ${ks}" title="Calories: ${d.kcal !== null ? d.kcal + ' kcal' : 'no data'}">
+            <span class="wnr-cell-val">${d.kcal !== null ? d.kcal : '—'}</span>
+            <span class="wnr-cell-lbl">kcal</span>
+          </div>
+          <div class="wnr-cell ${ps}" title="Protein: ${d.protein !== null ? d.protein + 'g' : 'no data'}">
+            <span class="wnr-cell-val">${d.protein !== null ? d.protein + 'g' : '—'}</span>
+            <span class="wnr-cell-lbl">prot</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // ── week-over-week comparison ─────────────────────────────────────────────
+  function _wowRow(label, thisVal, prevVal, unit, lowerIsBetter) {
+    if (thisVal === null) return '';
+    const sign = (n) => n > 0 ? '+' : '';
+    const arrow = prevVal !== null
+      ? (thisVal > prevVal ? (lowerIsBetter ? '↑' : '↑') : thisVal < prevVal ? (lowerIsBetter ? '↓' : '↓') : '→')
+      : '';
+    const arrowCls = prevVal === null ? '' : (thisVal > prevVal ? (lowerIsBetter ? 'wnr-down' : 'wnr-up') : thisVal < prevVal ? (lowerIsBetter ? 'wnr-up' : 'wnr-down') : 'wnr-neutral');
+    const delta = prevVal !== null ? Math.round(thisVal - prevVal) : null;
+    return `
+      <div class="wnr-wow-row">
+        <span class="wnr-wow-label">${_esc(label)}</span>
+        <span class="wnr-wow-val">${thisVal}${unit}</span>
+        ${delta !== null ? `<span class="wnr-wow-delta ${arrowCls}">${arrow} ${sign(delta)}${delta}${unit}</span>` : '<span class="wnr-wow-delta wnr-neutral">no prev data</span>'}
+      </div>`;
+  }
+
+  const surplusLabel = goal === 'fat_loss' ? 'Avg deficit' : 'Avg surplus';
+  const surplusSign  = thisWeek.avgSurplus !== null && thisWeek.avgSurplus > 0 ? '+' : '';
+
+  el.innerHTML = `
+    <div class="wnr-section-label">7-DAY MACRO CALENDAR</div>
+    <div class="wnr-legend">
+      <span class="wnr-dot wnr-hit"></span>On target
+      <span class="wnr-dot wnr-partial"></span>Partial
+      <span class="wnr-dot wnr-miss"></span>Off track
+      <span class="wnr-dot wnr-na"></span>No data
+    </div>
+    <div class="wnr-calendar">${calendarRows}</div>
+    <div class="wnr-section-label" style="margin-top:16px;">THIS WEEK vs LAST WEEK</div>
+    <div class="wnr-wow-grid">
+      ${_wowRow('Avg protein/day', thisWeek.avgProtein, prevWeek.avgProtein, 'g', false)}
+      ${_wowRow('Avg calories/day', thisWeek.avgKcal, prevWeek.avgKcal, ' kcal', goal === 'fat_loss')}
+      ${_wowRow(surplusLabel, thisWeek.avgSurplus, prevWeek.avgSurplus, ' kcal', goal === 'fat_loss')}
+      <div class="wnr-wow-row">
+        <span class="wnr-wow-label">Days logged</span>
+        <span class="wnr-wow-val">${thisWeek.loggedDays}/7</span>
+        ${prevWeek.loggedDays > 0 ? `<span class="wnr-wow-delta ${thisWeek.loggedDays >= prevWeek.loggedDays ? 'wnr-up' : 'wnr-down'}">${thisWeek.loggedDays >= prevWeek.loggedDays ? '↑' : '↓'} ${thisWeek.loggedDays - prevWeek.loggedDays > 0 ? '+' : ''}${thisWeek.loggedDays - prevWeek.loggedDays} days</span>` : '<span class="wnr-wow-delta wnr-neutral">—</span>'}
+      </div>
+    </div>
+    <div class="wnr-targets-row">
+      <span>Targets: <strong>${kcalTarget} kcal</strong> · <strong>${proteinTarget}g protein</strong> · TDEE ${tdee} kcal</span>
+    </div>`;
+}
+window.renderWeeklyNutritionReport = renderWeeklyNutritionReport;
 
