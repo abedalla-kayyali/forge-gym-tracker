@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v210';
-window.FORGE_BUILD   = '2026-03-17 (feat: Ask FORGE premium UI overhaul — depth, FORGE AI badge, sources toggle, unified buttons)';
+window.FORGE_VERSION = 'v212';
+window.FORGE_BUILD   = '2026-03-17 (feat: dashboard FX — DNN/energy/ring sounds+ripple, readiness action plan)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

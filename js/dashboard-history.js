@@ -4299,6 +4299,49 @@ function renderReadinessPanel() {
     ? 'linear-gradient(90deg,#ff6b6b 0%,#ffb800 45%,' + accentColor + ' 100%)'
     : 'rgba(255,255,255,.06)';
 
+  // ── Action recommendations ───────────────────────────────────────────────
+  var _recs = [];
+  var _warns = [];
+  if (score !== null) {
+    if (score >= 70) {
+      _recs.push({ icon: '🏋️', text: 'Optimal for heavy compound lifts', color: '#39ff8f' });
+      if (sleepS !== null && sleepS >= 65 && (hrvS === null || hrvS >= 65)) {
+        _recs.push({ icon: '🏆', text: 'All metrics green — consider a PR attempt today', color: '#ffb800' });
+      } else {
+        _recs.push({ icon: '💪', text: 'Push to working weights — all systems go', color: '#39ff8f' });
+      }
+    } else if (score >= 40) {
+      _recs.push({ icon: '⚖️', text: 'Train at 70-80% intensity today', color: '#ffb800' });
+      _recs.push({ icon: '🧠', text: 'Focus on technique — skip max efforts', color: '#ffb800' });
+    } else {
+      _recs.push({ icon: '🛌', text: 'Rest day or active recovery recommended', color: '#ff6b6b' });
+      _recs.push({ icon: '🚶', text: 'Light walk or mobility work only', color: '#ff6b6b' });
+    }
+  }
+  if (sleepS !== null && sleepS < 50) _warns.push('😴  Poor sleep detected — recovery is impaired. Aim for 8h tonight.');
+  if (hrvS !== null && hrvS < 45)     _warns.push('💓  Low HRV — reduce session volume by ~20%, skip high intensity.');
+  if (rhrS !== null && rhrS < 55)     _warns.push('❤️  Elevated resting HR — possible overtraining or illness. Monitor closely.');
+  if (energy !== null && energy <= 2) _warns.push('⚡  Very low energy — consider a deload or skip today\'s session.');
+
+  var _recsHtml = '';
+  if (_recs.length > 0 || _warns.length > 0) {
+    _recsHtml =
+      '<div class="rd-section">' +
+        '<div class="rd-section-title">🎯 TODAY\'S PLAN</div>' +
+        '<div class="rd-rec-list">' +
+          _recs.map(function(r) {
+            return '<div class="rd-rec-row" style="--rec-c:' + r.color + '">' +
+              '<span class="rd-rec-icon">' + r.icon + '</span>' +
+              '<span class="rd-rec-text">' + r.text + '</span></div>';
+          }).join('') +
+          (_warns.length > 0
+            ? '<div class="rd-warn-divider"></div>' +
+              _warns.map(function(w) { return '<div class="rd-warn-row">' + w + '</div>'; }).join('')
+            : '') +
+        '</div>' +
+      '</div>';
+  }
+
   el.innerHTML =
     '<div class="rd-wrap">' +
       '<div class="rd-hero">' +
@@ -4407,6 +4450,7 @@ function renderReadinessPanel() {
         '<div class="rd-section-title">📊 SCORE BREAKDOWN</div>' +
         '<div class="rd-breakdown">' + bRows + '</div>' +
       '</div>' +
+      _recsHtml +
     '</div>';
 
   requestAnimationFrame(function() {

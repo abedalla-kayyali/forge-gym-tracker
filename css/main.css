@@ -23149,6 +23149,13 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .rd-chip-warn{background:rgba(255,184,0,.08);color:#ffb800;border-color:rgba(255,184,0,.3);}
 .rd-msg{font-size:11px;color:var(--text2);line-height:1.4;}
 .rd-energy-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;}
+/* Readiness action recommendations */
+.rd-rec-list{display:flex;flex-direction:column;gap:7px;}
+.rd-rec-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);border:1px solid var(--rec-c,rgba(255,255,255,.1));border-left:3px solid var(--rec-c,rgba(255,255,255,.25));border-radius:10px;padding:9px 12px;transition:border-color .2s;}
+.rd-rec-icon{font-size:17px;flex-shrink:0;line-height:1;}
+.rd-rec-text{font-size:12px;color:var(--text1);line-height:1.4;font-weight:500;}
+.rd-warn-divider{height:1px;background:rgba(255,255,255,.07);margin:5px 0;}
+.rd-warn-row{font-size:11px;color:var(--text2);line-height:1.55;padding:2px 0;}
 
 /* ── Mesocycle / Training Phase Tracker (v187) ────────────────────────────── */
 .meso-wrap{display:flex;flex-direction:column;gap:10px;}
