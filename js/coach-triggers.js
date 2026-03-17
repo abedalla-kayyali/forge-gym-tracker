@@ -296,8 +296,6 @@
 
   // ── Trigger: session debrief card (fires after workout save) ─────────────
   async function generateSessionDebrief(summary) {
-    const dateKey = new Date().toDateString();
-
     // Auth: get live session token
     const session = await window._sb?.auth?.getSession?.();
     const token = session?.data?.session?.access_token;
@@ -307,10 +305,8 @@
     const todayStr = new Date().toDateString();
     const lsKey = 'forge_debrief_date';
     if (localStorage.getItem(lsKey) === todayStr) return;
-    const cdKey = 'session_debrief_' + dateKey;
+    const cdKey = 'session_debrief_' + todayStr;
     if (_onCooldown(cdKey)) return;
-    _setCooldown(cdKey);
-    localStorage.setItem(lsKey, todayStr);
 
     const musclesStr = (summary?.muscles || []).join(', ') || 'unknown muscles';
     const setsStr = summary?.totalSets ?? '?';
@@ -373,6 +369,8 @@
         })
       });
       if (!resp.ok) { card.remove(); return; }
+      _setCooldown(cdKey);
+      localStorage.setItem(lsKey, todayStr);
 
       // Stream tokens into card (exact pattern from _fireCoachMessage)
       const reader = resp.body?.getReader();
