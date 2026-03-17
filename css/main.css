@@ -22839,3 +22839,39 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .fer-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);}
 .fer-sub{font-size:12px;color:var(--text2);margin-top:2px;}
 
+/* ═══════════════════════════════════════════════════════════════
+   CALORIE SURPLUS / DEFICIT TRACKER  (Pillar 4.1 · v175)
+═══════════════════════════════════════════════════════════════ */
+.cal-balance-card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;margin:0 12px 14px;padding:16px;}
+.cal-balance-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-balance-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);}
+.cal-balance-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:20px;font-weight:700;}
+.cal-balance-badge.cal-bal-green{background:rgba(57,255,143,.15);color:var(--accent);border:1px solid rgba(57,255,143,.3);}
+.cal-balance-badge.cal-bal-yellow{background:rgba(255,184,0,.12);color:#ffb800;border:1px solid rgba(255,184,0,.25);}
+.cal-balance-badge.cal-bal-red{background:rgba(255,80,80,.12);color:#ff5050;border:1px solid rgba(255,80,80,.22);}
+.cal-balance-main{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;}
+.cal-balance-number{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:700;line-height:1;letter-spacing:-1px;}
+.cal-balance-number.cal-bal-green{color:var(--accent);}
+.cal-balance-number.cal-bal-yellow{color:#ffb800;}
+.cal-balance-number.cal-bal-red{color:#ff5050;}
+.cal-balance-number.cal-bal-na{color:var(--text3);}
+.cal-bal-unit{font-size:16px;font-weight:400;letter-spacing:0;}
+.cal-balance-sub{font-size:11px;color:var(--text3);}
+.cal-balance-avg{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:10px;margin-bottom:14px;}
+.cal-bal-avg-label{font-size:11px;color:var(--text2);}
+.cal-bal-avg-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;}
+.cal-bal-avg-val.cal-bal-green{color:var(--accent);}
+.cal-bal-avg-val.cal-bal-yellow{color:#ffb800;}
+.cal-bal-avg-val.cal-bal-red{color:#ff5050;}
+.cal-spark-wrap{display:flex;gap:3px;align-items:flex-end;height:52px;margin-bottom:10px;}
+.cal-spark-day{display:flex;flex-direction:column;align-items:center;flex:1;gap:3px;height:100%;}
+.cal-spark-bar-wrap{flex:1;display:flex;align-items:flex-end;width:100%;}
+.cal-spark-bar{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:height .4s ease;opacity:.6;}
+.cal-spark-today .cal-spark-bar{opacity:1;}
+.cal-spark-bar.cal-bal-green{background:var(--accent);}
+.cal-spark-bar.cal-bal-yellow{background:#ffb800;}
+.cal-spark-bar.cal-bal-red{background:#ff5050;}
+.cal-spark-empty{flex:1;}
+.cal-spark-label{font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);text-transform:uppercase;}
+.cal-balance-zone{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.5px;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;}
+

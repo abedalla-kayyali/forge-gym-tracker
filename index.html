@@ -7501,11 +7501,70 @@ function renderCoachNutrition() {
       </div>
     </div>`;
 
+  // ── Calorie Surplus/Deficit Tracker (Pillar 4.1) ─────────────────────────
+  const _cnDaysAgo = (n) => {
+    const d = new Date(); d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
+  const calBalanceDays = [];
+  for (let i = 6; i >= 0; i--) {
+    const dk = _cnDaysAgo(i);
+    const dayMeals = Array.isArray(mealsLog?.[dk]) ? mealsLog[dk] : [];
+    const logged = dayMeals.reduce((s, m) => s + (parseFloat(m.kcal) || 0), 0);
+    calBalanceDays.push({ date: dk, logged, balance: dayMeals.length ? Math.round(logged - tdee) : null });
+  }
+  const todayCalBalance = calBalanceDays[6].balance;
+  const validCBDays = calBalanceDays.filter(d => d.balance !== null);
+  const avg7dBalance = validCBDays.length ? Math.round(validCBDays.reduce((s, d) => s + d.balance, 0) / validCBDays.length) : null;
+  const _calInZone = (b) => {
+    if (b === null) return null;
+    if (goal === 'fat_loss') return b >= -700 && b <= -200;
+    if (goal === 'muscle' || goal === 'strength') return b >= 100 && b <= 450;
+    return Math.abs(b) <= 150;
+  };
+  const _calZoneCls = (b) => {
+    if (b === null) return 'cal-bal-na';
+    if (_calInZone(b)) return 'cal-bal-green';
+    if (goal === 'fat_loss') return (b > -200 ? 'cal-bal-red' : 'cal-bal-yellow');
+    if (goal === 'muscle' || goal === 'strength') return (b < 50 ? 'cal-bal-yellow' : 'cal-bal-red');
+    return Math.abs(b) <= 300 ? 'cal-bal-yellow' : 'cal-bal-red';
+  };
+  const _calTargetZone = goal === 'fat_loss'
+    ? tx('Target: 250–600 kcal deficit', 'الهدف: عجز 250–600 سعرة')
+    : (goal === 'muscle' || goal === 'strength')
+    ? tx('Target: 150–400 kcal surplus', 'الهدف: فائض 150–400 سعرة')
+    : tx('Target: ±150 kcal (maintenance)', 'الهدف: ±150 سعرة صيانة');
+  const _maxAbsCB = Math.max(400, ...validCBDays.map(d => Math.abs(d.balance)));
+  const _sparkBars = calBalanceDays.map((d, i) => {
+    const dayLabel = new Date(d.date + 'T12:00:00').toLocaleDateString(_cnAr ? 'ar' : 'en', { weekday: 'narrow' });
+    if (d.balance === null) return `<div class="cal-spark-day"><div class="cal-spark-bar-wrap"><div class="cal-spark-empty"></div></div><span class="cal-spark-label">${dayLabel}</span></div>`;
+    const pct = Math.max(6, Math.min(100, Math.round((Math.abs(d.balance) / _maxAbsCB) * 100)));
+    return `<div class="cal-spark-day${i === 6 ? ' cal-spark-today' : ''}"><div class="cal-spark-bar-wrap"><div class="cal-spark-bar ${_calZoneCls(d.balance)}" style="height:${pct}%;"></div></div><span class="cal-spark-label">${dayLabel}</span></div>`;
+  }).join('');
+  const calBalanceHtml = `
+    <div class="cal-balance-card">
+      <div class="cal-balance-head">
+        <span class="cal-balance-title">${tx('Energy Balance', 'ميزان الطاقة')}</span>
+        ${todayCalBalance !== null ? `<span class="cal-balance-badge ${_calZoneCls(todayCalBalance)}">${_calInZone(todayCalBalance) ? tx('ON TARGET','في الهدف') : todayCalBalance > 0 ? tx('SURPLUS','فائض') : tx('DEFICIT','عجز')}</span>` : ''}
+      </div>
+      <div class="cal-balance-main">
+        ${todayCalBalance !== null
+          ? `<span class="cal-balance-number ${_calZoneCls(todayCalBalance)}">${todayCalBalance > 0 ? '+' : ''}${todayCalBalance}<span class="cal-bal-unit"> kcal</span></span>
+             <span class="cal-balance-sub">${tx('vs TDEE','مقابل الاحتياج')} ${tdee} kcal · ${tx('target','الهدف')} ${targetCal} kcal</span>`
+          : `<span class="cal-balance-number cal-bal-na">—</span>
+             <span class="cal-balance-sub">${tx('Log meals to see today\'s energy balance','سجّل وجباتك لرؤية ميزان الطاقة اليومي')}</span>`}
+      </div>
+      ${avg7dBalance !== null ? `<div class="cal-balance-avg"><span class="cal-bal-avg-label">${tx('7-day avg','متوسط 7 أيام')}</span><span class="cal-bal-avg-val ${_calZoneCls(avg7dBalance)}">${avg7dBalance > 0 ? '+' : ''}${avg7dBalance} kcal/day</span></div>` : ''}
+      <div class="cal-spark-wrap">${_sparkBars}</div>
+      <div class="cal-balance-zone">${_calTargetZone}</div>
+    </div>`;
+
   el.innerHTML = `
     <div style="padding:12px 16px 4px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.2px;color:var(--text2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <span>${tx('Nutrition Control Center','مركز التحكم الغذائي')}</span>
       <span style="color:var(--accent);">${tx('Live','مباشر')}</span>
     </div>
+    ${calBalanceHtml}
     ${nutritionInsightsHtml}
     ${macroQuestHtml}
     <div class="nutri-custom-box">

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v174';
-window.FORGE_BUILD   = '2026-03-17 (feat: momentum bar color classes, OPT-5 first-entry reward badges for InBody + Measurements)';
+window.FORGE_VERSION = 'v175';
+window.FORGE_BUILD   = '2026-03-17 (feat: Calorie Surplus/Deficit Tracker with 7-day sparkline — Pillar 4.1)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
