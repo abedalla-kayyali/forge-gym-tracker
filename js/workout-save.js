@@ -166,6 +166,11 @@ function _saveWeightedWorkout() {
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
       if (typeof burstPR === 'function') burstPR(btn);
+      if (typeof showPRCelebration === 'function') {
+        const topW = Math.max(0, ...sets.filter(s => s.type !== 'warmup').map(s => +s.weight || 0));
+        const u = sets[0]?.unit || (typeof settings !== 'undefined' ? settings.defaultUnit : 'kg') || 'kg';
+        showPRCelebration(name, topW, u);
+      }
       // JIT: first PR hit
       if (typeof showJit === 'function') {
         setTimeout(() => showJit('pr-first', document.getElementById('save-btn'), _ws('🏆 First PR! Visit the Stats tab to see your full PR history.', '🏆 أول رقم قياسي! افتح تبويب الإحصائيات لرؤية سجل أرقامك.')), 1200);

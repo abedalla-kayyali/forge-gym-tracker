@@ -9292,6 +9292,24 @@ function showJit(id, targetEl, text) {
   tip.addEventListener('click', dismiss);
 }
 
+function showPRCelebration(exerciseName, topWeight, unit) {
+  const overlay = document.getElementById('pr-celebrate-overlay');
+  if (!overlay) return;
+  document.getElementById('prc-exercise-name').textContent = exerciseName || 'Exercise';
+  document.getElementById('prc-detail').textContent = topWeight
+    ? `New top weight: ${topWeight}${unit || 'kg'}`
+    : 'New personal record!';
+  overlay.style.display = 'flex';
+  // Wire close button (safe: textContent not innerHTML)
+  const closeBtn = document.getElementById('prc-close-btn');
+  if (closeBtn && !closeBtn.dataset.wired) {
+    closeBtn.dataset.wired = '1';
+    closeBtn.addEventListener('click', () => { overlay.style.display = 'none'; });
+  }
+  // Auto-close after 4 seconds
+  setTimeout(() => { if (overlay.style.display !== 'none') overlay.style.display = 'none'; }, 4000);
+}
+
 // ???????????????????????????????????????????
 //  INIT
 // ???????????????????????????????????????????
@@ -9780,6 +9798,17 @@ if (document.readyState === 'loading') {
 
 <!-- SESSION START CEREMONY -->
 <div id="session-start-overlay" onclick="_skipSessionCeremony()"><div id="session-countdown-num">3</div></div>
+
+<!-- PR CELEBRATION OVERLAY -->
+<div id="pr-celebrate-overlay" class="pr-celebrate-overlay" style="display:none;">
+  <div class="prc-inner">
+    <div class="prc-trophy">🏆</div>
+    <div class="prc-title">PERSONAL RECORD</div>
+    <div class="prc-exercise" id="prc-exercise-name"></div>
+    <div class="prc-detail" id="prc-detail"></div>
+    <button class="prc-close" id="prc-close-btn">Let's go! 💪</button>
+  </div>
+</div>
 
 <!-- WORKOUT END SUMMARY OVERLAY -->
 <div id="wend-overlay" class="wend-overlay" style="display:none;" onclick="if(event.target===this)closeSessionSummary()">
