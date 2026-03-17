@@ -10108,6 +10108,26 @@ if (document.readyState === 'loading') {
   </div>
 </div>
 
+<!-- Progress Proof Card Modal -->
+<div id="progress-proof-overlay" class="wend-overlay" style="display:none;"
+     onclick="if(event.target===this)closeProgressProofModal()">
+  <div class="wend-card">
+    <div class="wend-handle"></div>
+    <div class="wend-header">
+      <div class="wend-title">PROGRESS PROOF</div>
+      <div class="wend-sub">Your progress, share-ready</div>
+    </div>
+    <div class="wend-share-preview-wrap">
+      <canvas id="progress-proof-preview" width="1080" height="1350"></canvas>
+    </div>
+    <div class="wend-footer">
+      <button class="btn-wend-share" onclick="window.shareProgressProofCard && window.shareProgressProofCard()">SHARE</button>
+      <button class="btn-wend-download" onclick="window.downloadProgressProofCard && window.downloadProgressProofCard()">DOWNLOAD</button>
+      <button class="btn-wend-close" onclick="closeProgressProofModal()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
 <!-- Muscle Detail Modal -->
 <div id="muscle-detail-modal" role="dialog" aria-modal="true">
   <div class="mdc-overlay" onclick="_closeMuscleDetail()"></div>

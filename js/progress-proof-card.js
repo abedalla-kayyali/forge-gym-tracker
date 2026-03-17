@@ -243,6 +243,62 @@
     return canvas;
   }
 
+  // ── modal / share / download ─────────────────────────────────────────────
+
+  function openProgressProofModal() {
+    const overlay = document.getElementById('progress-proof-overlay');
+    if (!overlay) return;
+    overlay.style.display = 'block';
+    document.body.classList.add('scroll-locked');
+    const preview = document.getElementById('progress-proof-preview');
+    if (!preview) return;
+    document.fonts.ready.then(async () => {
+      const source = await _drawProgressProofCard();
+      if (!source) return;
+      preview.width  = source.width;
+      preview.height = source.height;
+      const ctx = preview.getContext('2d');
+      if (ctx) ctx.drawImage(source, 0, 0);
+    });
+  }
+
+  function closeProgressProofModal() {
+    const overlay = document.getElementById('progress-proof-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.classList.remove('scroll-locked');
+  }
+
+  async function shareProgressProofCard() {
+    const canvas = await (async () => {
+      const preview = document.getElementById('progress-proof-preview');
+      if (preview && preview.width > 0 && preview.height > 0) return preview;
+      return await _drawProgressProofCard();
+    })();
+    if (!canvas) return;
+    const blob = typeof _canvasToBlob === 'function' ? await _canvasToBlob(canvas) : await new Promise(r => canvas.toBlob(r, 'image/png'));
+    if (!blob) return;
+    const filename = 'forge-progress-' + new Date().toISOString().slice(0, 10) + '.png';
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ title: 'FORGE Progress', text: 'My progress. Built with FORGE.', files: [file] });
+        return;
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    if (typeof _downloadBlob === 'function') _downloadBlob(blob, filename);
+    if (typeof showToast === 'function') showToast('Progress image downloaded', 'var(--accent)');
+  }
+
+  async function downloadProgressProofCard() {
+    const canvas = await _drawProgressProofCard();
+    if (!canvas) return;
+    const blob = typeof _canvasToBlob === 'function' ? await _canvasToBlob(canvas) : await new Promise(r => canvas.toBlob(r, 'image/png'));
+    if (!blob) return;
+    const filename = 'forge-progress-' + new Date().toISOString().slice(0, 10) + '.png';
+    if (typeof _downloadBlob === 'function') _downloadBlob(blob, filename);
+    if (typeof showToast === 'function') showToast('Progress image saved', 'var(--accent)');
+  }
+
   // ── exports ──────────────────────────────────────────────────────────────
   window._pcGetWindow       = _getWindow;
   window._pcGetWeightDelta  = _getWeightDelta;
@@ -251,5 +307,10 @@
   window._pcGetSessionCount = _getSessionCount;
   window._pcGetGoal         = _getGoal;
   window._pcDrawCard        = _drawProgressProofCard;
+
+  window.openProgressProofModal    = openProgressProofModal;
+  window.closeProgressProofModal   = closeProgressProofModal;
+  window.shareProgressProofCard    = shareProgressProofCard;
+  window.downloadProgressProofCard = downloadProgressProofCard;
 
 }());
