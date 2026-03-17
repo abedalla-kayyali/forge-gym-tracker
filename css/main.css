@@ -23322,3 +23322,23 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .msc-btn-apply { background: #f59e0b; color: white; font-weight: 600; }
 .msc-btn-ask { background: var(--accent); color: white; }
 .msc-btn-dismiss { background: var(--bg3); color: var(--text2); }
+
+/* Ghost delta live display */
+.ghost-delta {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  margin-top: 2px;
+  min-height: 14px;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+.gd-ghost { color: var(--text3); }
+.gd-up    { color: #22c55e; font-weight: 600; }
+.gd-down  { color: #ef4444; }
+.gd-equal { color: var(--text3); }
+.ghost-beaten {
+  background: #22c55e !important;
+  color: white !important;
+  transform: scale(1.1);
+  transition: transform 0.2s, background 0.2s;
+}

@@ -1,6 +1,63 @@
 // Ghost data stored per exercise name while user is on that exercise
 let _ghostSets = [];  // array of {reps, weight, unit}
 
+// Delta display — shows +/- against ghost value in real time
+function _formatDelta(current, ghost, unit) {
+  const c = parseFloat(current);
+  const g = parseFloat(ghost);
+  if (!Number.isFinite(c) || !Number.isFinite(g)) return '';
+  const diff = +(c - g).toFixed(2);
+  if (diff === 0) return `<span class="gd-equal">= ${g}${unit || ''}</span>`;
+  const sign = diff > 0 ? '+' : '';
+  const cls = diff > 0 ? 'gd-up' : 'gd-down';
+  return `<span class="${cls}">${sign}${diff}${unit || ''}</span>`;
+}
+
+function _updateRowDelta(row, idx) {
+  const ghost = _ghostSets[idx];
+  if (!ghost) return;
+  const weightEl = row.querySelector('.set-weight');
+  const repsEl   = row.querySelector('.set-reps');
+  let deltaEl    = row.querySelector('.ghost-delta');
+
+  if (!deltaEl) {
+    deltaEl = document.createElement('div');
+    deltaEl.className = 'ghost-delta';
+    row.appendChild(deltaEl);
+  }
+
+  const unit = row.querySelector('.set-unit-toggle')?.dataset?.unit || 'kg';
+  const wDelta = _formatDelta(weightEl?.value, ghost.weight, unit);
+  const rDelta = _formatDelta(repsEl?.value, ghost.reps, '');
+
+  if (!weightEl?.value && !repsEl?.value) {
+    deltaEl.innerHTML = `<span class="gd-ghost">Ghost: ${ghost.weight}${unit} × ${ghost.reps}</span>`;
+  } else {
+    deltaEl.innerHTML = [wDelta, rDelta].filter(Boolean).join(' ');
+  }
+}
+
+function _checkAndCelebrateBeat(row, idx) {
+  const ghost = _ghostSets[idx];
+  if (!ghost) return;
+  const weightEl = row.querySelector('.set-weight');
+  const repsEl   = row.querySelector('.set-reps');
+  const wVal = parseFloat(weightEl?.value);
+  const rVal = parseFloat(repsEl?.value);
+  const gW   = parseFloat(ghost.weight);
+  const gR   = parseFloat(ghost.reps);
+  const beatWeight = Number.isFinite(wVal) && Number.isFinite(gW) && wVal > gW;
+  const beatReps   = Number.isFinite(rVal) && Number.isFinite(gR) && rVal > gR && wVal >= gW;
+
+  if (beatWeight || beatReps) {
+    const numBadge = row.querySelector('.set-num');
+    if (numBadge && !numBadge.classList.contains('ghost-beaten')) {
+      numBadge.classList.add('ghost-beaten');
+      if (typeof hapTap === 'function') hapTap();
+    }
+  }
+}
+
 function _loadGhostSets(exerciseName) {
   if (!exerciseName) { _ghostSets = []; return; }
   const prev = [...workouts].reverse().find(w => w.exercise.toLowerCase() === exerciseName.toLowerCase());
@@ -43,6 +100,19 @@ function _applyGhostToRow(row, idx) {
     weightEl.classList.add('ghost-placeholder');
     weightEl.addEventListener('focus', function () { this.classList.remove('ghost-placeholder'); }, { once: true });
   }
+
+  // Initial delta display
+  _updateRowDelta(row, idx);
+
+  // Live update on input
+  const _wEl = row.querySelector('.set-weight');
+  const _rEl = row.querySelector('.set-reps');
+  [_rEl, _wEl].forEach(inp => {
+    if (inp) inp.addEventListener('input', () => {
+      _updateRowDelta(row, idx);
+      _checkAndCelebrateBeat(row, idx);
+    });
+  });
 }
 
 function loadLastSessionSets(exerciseName) {
@@ -71,6 +141,13 @@ function loadLastSessionSets(exerciseName) {
     // Remove ghost style on focus
     row.querySelectorAll('.ghost-placeholder').forEach(inp => {
       inp.addEventListener('focus', function () { this.classList.remove('ghost-placeholder'); }, { once: true });
+    });
+    _updateRowDelta(row, idx);
+    row.querySelectorAll('input.set-weight, input.set-reps').forEach(inp => {
+      inp.addEventListener('input', () => {
+        _updateRowDelta(row, idx);
+        _checkAndCelebrateBeat(row, idx);
+      });
     });
   });
   // Show ghost badge above the sets
