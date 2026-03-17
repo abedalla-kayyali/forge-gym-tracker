@@ -24,6 +24,7 @@
       .sort((a, b) => a.date.localeCompare(b.date));
     if (bw.length < 2) return null;
     const delta = Number(bw[bw.length - 1].weight) - Number(bw[0].weight);
+    if (Math.abs(delta) < 0.05) return null;
     const unit = bw[0].unit || 'kg';
     return { delta: Math.round(delta * 10) / 10, unit, current: Number(bw[bw.length - 1].weight) };
   }
