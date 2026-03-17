@@ -244,26 +244,84 @@
     return { total: items.length, indexed };
   }
 
-  // ─── Auto-ingest: called after save() for the latest workout ─────────────
+  // ─── Auto-ingest: called after save() — picks up latest of ALL data types ──
 
   window._ragAutoIngest = async function () {
     if (!window._sb || !window.FORGE_CONFIG?.SUPABASE_URL) return;
     const authHeader = await getAuthHeader();
     if (!authHeader) return;
     try {
-      // Only ingest the most recent workout/bw workout (just added)
+      const items = [];
+
+      // Latest weighted workout
       const workouts = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
-      const latest = Array.isArray(workouts) ? workouts[workouts.length - 1] : null;
-      if (!latest?.id) return;
-      const item = {
-        id: `workout_${latest.id}`,
+      const latestW = Array.isArray(workouts) ? workouts[workouts.length - 1] : null;
+      if (latestW?.id) items.push({
+        id: `workout_${latestW.id}`,
         type: 'workout',
-        date: latest.date ? latest.date.slice(0, 10) : '',
-        content: workoutToDoc(latest),
-        metadata: { muscle: latest.muscle || '', exercise: latest.exercise || '',
-                    is_pr: String(!!latest.isPR), volume: latest.totalVolume || 0 },
-      };
-      await ingestBatch([item], authHeader);
+        date: latestW.date ? latestW.date.slice(0, 10) : '',
+        content: workoutToDoc(latestW),
+        metadata: { muscle: latestW.muscle || '', exercise: latestW.exercise || '',
+                    is_pr: String(!!latestW.isPR), volume: latestW.totalVolume || 0 },
+      });
+
+      // Latest bodyweight entry
+      const bw = JSON.parse(localStorage.getItem('forge_bodyweight') || '[]');
+      const latestBW = Array.isArray(bw) ? bw[bw.length - 1] : null;
+      if (latestBW?.date) items.push({
+        id: `bw_${latestBW.date.slice(0,10).replace(/-/g,'')}`,
+        type: 'bodyweight',
+        date: latestBW.date.slice(0, 10),
+        content: bodyweightToDoc(latestBW),
+        metadata: { weight: latestBW.weight || 0, body_fat: latestBW.bodyFat || 0 },
+      });
+
+      // Latest cardio entry
+      const cardio = JSON.parse(localStorage.getItem('forge_cardio') || '[]');
+      const latestC = Array.isArray(cardio) ? cardio[cardio.length - 1] : null;
+      if (latestC) {
+        const dateKey = latestC.date ? latestC.date.slice(0, 10) : 'unknown';
+        items.push({
+          id: `cardio_${dateKey.replace(/-/g,'')}_last`,
+          type: 'cardio',
+          date: dateKey,
+          content: cardioToDoc(latestC),
+          metadata: { activity: latestC.type || '', duration: latestC.duration || 0 },
+        });
+      }
+
+      // Latest meals for today
+      const meals = JSON.parse(localStorage.getItem('forge_meals') || '{}');
+      const today = new Date().toISOString().slice(0, 10);
+      const todayMeals = Array.isArray(meals[today]) ? meals[today] : [];
+      todayMeals.forEach((meal, i) => {
+        if (!meal) return;
+        items.push({
+          id: `meal_${today.replace(/-/g,'')}_${i}`,
+          type: 'meal',
+          date: today,
+          content: mealToDoc(meal, today),
+          metadata: { meal_name: meal.name || '', kcal: meal.kcal || 0, protein: meal.p || meal.protein || 0 },
+        });
+      });
+
+      // Latest bw workout
+      const bwwk = JSON.parse(localStorage.getItem('forge_bw_workouts') || '[]');
+      const latestBWW = Array.isArray(bwwk) ? bwwk[bwwk.length - 1] : null;
+      if (latestBWW) {
+        const dateKey = latestBWW.date ? latestBWW.date.slice(0, 10) : 'unknown';
+        items.push({
+          id: `bwwk_${dateKey.replace(/-/g,'')}_last`,
+          type: 'bw_workout',
+          date: dateKey,
+          content: bwWorkoutToDoc(latestBWW),
+          metadata: { exercise: latestBWW.exercise || '', muscle: latestBWW.muscle || '' },
+        });
+      }
+
+      if (items.length === 0) return;
+      await ingestBatch(items, authHeader);
+      console.debug('[FORGE RAG] auto-ingested', items.length, 'items');
     } catch (e) {
       console.debug('[FORGE RAG] auto-ingest skipped:', e.message);
     }
@@ -293,7 +351,7 @@
         <div id="rag-results" class="rag-results"></div>
         <div class="rag-footer">
           <button id="rag-index-btn" class="rag-btn-secondary">Index my data</button>
-          <span id="rag-index-status" class="rag-index-status"></span>
+          <span id="rag-index-status" class="rag-index-status" id="rag-last-indexed"></span>
         </div>
       </div>
     `;
@@ -353,6 +411,7 @@
       .rag-btn-secondary:active { border-color:var(--accent); color:var(--accent); }
       .rag-btn-secondary:disabled { opacity:.4; cursor:not-allowed; }
       .rag-index-status { font-size:.75rem; color:var(--text2); flex:1; }
+      .rag-btn-stale { border-color:var(--accent) !important; color:var(--accent) !important; }
       .rag-answer {
         background:var(--panel); border:1px solid var(--accent);
         border-radius:12px; padding:14px 16px;
@@ -382,10 +441,28 @@
     });
   }
 
+  function updateIndexStatus() {
+    const ts = localStorage.getItem(INGEST_KEY);
+    const btn = document.getElementById('rag-index-btn');
+    const status = document.getElementById('rag-index-status');
+    if (!status || !btn) return;
+    if (!ts) {
+      status.textContent = 'Not indexed yet';
+      btn.classList.add('rag-btn-stale');
+      return;
+    }
+    const days = Math.floor((Date.now() - Number(ts)) / 86400000);
+    if (days === 0) status.textContent = 'Indexed today';
+    else if (days === 1) status.textContent = 'Indexed yesterday';
+    else status.textContent = `Indexed ${days} days ago`;
+    btn.classList.toggle('rag-btn-stale', days >= 7);
+  }
+
   function openModal() {
     const modal = document.getElementById('rag-modal');
     if (modal) {
       modal.classList.add('open');
+      updateIndexStatus();
       setTimeout(() => document.getElementById('rag-input')?.focus(), 300);
     }
   }
@@ -462,11 +539,12 @@
     const status = document.getElementById('rag-index-status');
     btn.disabled = true;
     try {
-      const { total, indexed } = await runFullIngest((done, total) => {
-        if (status) status.textContent = `Indexing... ${done}/${total}`;
+      const { total, indexed } = await runFullIngest((done, tot) => {
+        if (status) status.textContent = `Indexing... ${done}/${tot}`;
       });
-      if (status) status.textContent = `Indexed ${total} entries.`;
-      setTimeout(() => { if (status) status.textContent = ''; }, 4000);
+      if (status) status.textContent = `Done — ${total} entries indexed.`;
+      updateIndexStatus();
+      setTimeout(() => updateIndexStatus(), 3000);
     } catch (e) {
       if (status) status.textContent = 'Error: ' + (e.message || 'failed');
     } finally {
