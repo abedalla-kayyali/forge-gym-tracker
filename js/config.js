@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v181';
-window.FORGE_BUILD   = '2026-03-17 (feat: Weekly Review Card in Overview tab — leading KPI hit rates, win/fix, weight projection)';
+window.FORGE_VERSION = 'v182';
+window.FORGE_BUILD   = '2026-03-17 (feat: Adaptive TDEE Refinement in Nutrition tab — 28-day data-driven TDEE estimate + apply button)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

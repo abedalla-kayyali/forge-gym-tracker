@@ -22971,3 +22971,30 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .wrc-proj-detail{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px;}
 .wrc-proj-done .wrc-proj-text strong{color:var(--accent);}
 .wrc-proj-flat .wrc-proj-text{color:var(--text2);}
+
+/* ── Adaptive TDEE Refinement (v182) ──────────────────────────────────────── */
+.atdee-wrap{display:flex;flex-direction:column;gap:10px;}
+.atdee-headline{display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;}
+.atdee-headline-label{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.atdee-headline-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);}
+.atdee-weight-ctx{font-size:12px;color:var(--text2);padding:4px 2px;}
+.atdee-weight-ctx strong{color:var(--text);}
+.atdee-no-bw{color:var(--text3);font-size:11px;font-style:italic;}
+.atdee-compare{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+.atdee-compare-row{display:flex;justify-content:space-between;align-items:center;}
+.atdee-compare-label{font-size:12px;color:var(--text2);}
+.atdee-compare-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+.atdee-compare-val.atdee-accent{color:var(--accent);}
+.atdee-diff-row{font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:6px;line-height:1.4;}
+.atdee-diff-row strong{color:var(--text2);}
+.atdee-diff-large strong{color:#ff9f2a;}
+.atdee-confidence{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);padding:4px 2px;}
+.atdee-confidence strong{color:var(--text2);}
+.atdee-high strong{color:var(--accent);}.atdee-mod strong{color:#ff9f2a;}.atdee-low strong{color:#ff5050;}
+.atdee-apply-btn{width:100%;padding:10px;background:rgba(57,255,20,.1);border:1px solid rgba(57,255,20,.3);border-radius:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:background .2s;}
+.atdee-apply-btn:hover{background:rgba(57,255,20,.18);}
+.atdee-insufficient{display:flex;flex-direction:column;gap:8px;padding:4px 2px;}
+.atdee-progress-wrap{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.atdee-progress-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .5s;}
+.atdee-progress-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);}
+.atdee-note{font-size:12px;color:var(--text2);line-height:1.5;}

@@ -692,6 +692,7 @@ function switchDashTab(name, btn) {
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
   if (name === 'nutrition' && typeof renderWeeklyNutritionReport === 'function') renderWeeklyNutritionReport();
+  if (name === 'nutrition' && typeof renderAdaptiveTDEE === 'function') renderAdaptiveTDEE();
   if (name === 'progress' && typeof window.FORGE_OVERLOAD !== 'undefined') window.FORGE_OVERLOAD.renderOverloadScoreCard('overload-score-card');
   if (name === 'progress' && typeof renderVolumeLandmarks === 'function') renderVolumeLandmarks();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
@@ -3701,4 +3702,190 @@ function renderWeeklyReviewCard() {
     </div>` : `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No data yet</div><div class="empty-sub">Log meals and workouts to see your weekly review.</div></div>`;
 }
 window.renderWeeklyReviewCard = renderWeeklyReviewCard;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADAPTIVE TDEE REFINEMENT  (data-driven TDEE estimate · P1 · v182)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderAdaptiveTDEE() {
+  const el = document.getElementById('adaptive-tdee-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _lsSave(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
+  }
+  const _meals = (typeof mealsLog    !== 'undefined' ? mealsLog    : null) || _lsGet('forge_meals',      {});
+  const _bw    = (typeof bodyWeight  !== 'undefined' ? bodyWeight  : null) || _lsGet('forge_bodyweight', []);
+  const _up    = (typeof userProfile !== 'undefined' ? userProfile : null) || _lsGet('forge_profile',    {});
+  const _sets  = (typeof settings    !== 'undefined' ? settings    : null) || _lsGet('forge_settings',   {});
+
+  function _dateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function _daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d; }
+
+  // ── Formula TDEE ───────────────────────────────────────────────────────────
+  function _formulaTDEE() {
+    const p  = _up;
+    const wt = parseFloat(p.weight || 75);
+    const ht = parseFloat(p.height || 175);
+    const ag = parseFloat(p.age    || 25);
+    const sx = (p.sex || 'male') === 'female';
+    const bmr = sx ? (10*wt + 6.25*ht - 5*ag - 161) : (10*wt + 6.25*ht - 5*ag + 5);
+    const afMap = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725, very_active:1.9 };
+    const af = afMap[p.activity || _sets.activityLevel] || 1.55;
+    return Math.round(bmr * af);
+  }
+
+  const formulaTDEE = _formulaTDEE();
+
+  // ── Collect 28-day meal data ───────────────────────────────────────────────
+  const WINDOW = 28;
+  let totalKcal = 0, loggedDays = 0;
+  for (let i = 0; i < WINDOW; i++) {
+    const dk       = _dateKey(_daysAgo(i));
+    const dayMeals = Array.isArray(_meals?.[dk]) ? _meals[dk] : [];
+    if (dayMeals.length) {
+      totalKcal += dayMeals.reduce((s, m) => s + (parseFloat(m.kcal) || 0), 0);
+      loggedDays++;
+    }
+  }
+
+  // Need at least 14 logged days for a useful estimate
+  const MIN_DAYS = 14;
+  if (loggedDays < MIN_DAYS) {
+    const badge = document.getElementById('adaptive-tdee-badge');
+    if (badge) badge.textContent = `${loggedDays}/28 DAYS`;
+    el.innerHTML = `
+      <div class="atdee-insufficient">
+        <div class="atdee-progress-wrap">
+          <div class="atdee-progress-bar" style="width:${Math.round(loggedDays/WINDOW*100)}%"></div>
+        </div>
+        <div class="atdee-progress-label">${loggedDays} / ${WINDOW} days logged</div>
+        <div class="atdee-note">Log at least ${MIN_DAYS} days of meals to unlock your data-driven TDEE estimate.</div>
+      </div>`;
+    return;
+  }
+
+  const avgDailyKcal = Math.round(totalKcal / loggedDays);
+
+  // ── 28-day weight change ───────────────────────────────────────────────────
+  const cutoff28 = _dateKey(_daysAgo(WINDOW));
+  const today    = _dateKey(new Date());
+  const wEntries = [...(_bw || [])]
+    .filter(e => (e.date || e.d || '') >= cutoff28 && (e.date || e.d || '') <= today)
+    .sort((a, b) => (a.date || a.d || '') < (b.date || b.d || '') ? -1 : 1);
+
+  let estimatedTDEE = null;
+  let weightDelta   = null;
+  let weightUnit    = _up.weightUnit || _sets.weightUnit || 'kg';
+  let wSpanDays     = 0;
+
+  if (wEntries.length >= 2) {
+    const wFirst  = parseFloat(wEntries[0].weight || wEntries[0].w || 0);
+    const wLast   = parseFloat(wEntries[wEntries.length - 1].weight || wEntries[wEntries.length - 1].w || 0);
+    wSpanDays     = Math.max(1, wEntries.length - 1);
+    const changePerDay = (wLast - wFirst) / wSpanDays;  // kg/day (or lbs/day)
+
+    // Convert to kcal/day impact (7700 kcal ≈ 1 kg; 3500 kcal ≈ 1 lb)
+    const kcalPerUnit = (weightUnit === 'lbs') ? 3500 : 7700;
+    const kcalPerDay  = changePerDay * kcalPerUnit;
+
+    estimatedTDEE = Math.round(avgDailyKcal - kcalPerDay);
+    weightDelta   = Math.round((wLast - wFirst) * 10) / 10;
+  }
+
+  // ── Accuracy indicator ─────────────────────────────────────────────────────
+  const confidence = loggedDays >= 21 ? 'High' : loggedDays >= 14 ? 'Moderate' : 'Low';
+  const confClass  = loggedDays >= 21 ? 'atdee-high' : loggedDays >= 14 ? 'atdee-mod' : 'atdee-low';
+
+  // ── Delta vs formula ───────────────────────────────────────────────────────
+  let deltaHtml = '';
+  let applyBtnHtml = '';
+  if (estimatedTDEE !== null) {
+    const diff = estimatedTDEE - formulaTDEE;
+    const sign = diff > 0 ? '+' : '';
+    const diffClass = Math.abs(diff) > 200 ? 'atdee-diff-large' : Math.abs(diff) > 100 ? 'atdee-diff-mid' : 'atdee-diff-small';
+    deltaHtml = `
+      <div class="atdee-compare">
+        <div class="atdee-compare-row">
+          <span class="atdee-compare-label">Data-driven estimate</span>
+          <span class="atdee-compare-val atdee-accent">${estimatedTDEE} kcal</span>
+        </div>
+        <div class="atdee-compare-row">
+          <span class="atdee-compare-label">Formula (Mifflin-St Jeor)</span>
+          <span class="atdee-compare-val">${formulaTDEE} kcal</span>
+        </div>
+        <div class="atdee-diff-row ${diffClass}">
+          Difference: <strong>${sign}${diff} kcal/day</strong>
+          ${Math.abs(diff) > 100 ? ' — your metabolism differs from the formula' : ' — formula is accurate for you'}
+        </div>
+      </div>`;
+
+    // Only offer update button if difference is meaningful (>100 kcal)
+    if (Math.abs(diff) > 100) {
+      const goalType   = _up.goal || _sets.goal || 'muscle';
+      const calAdj     = { fat_loss: -400, muscle: +200, recomp: 0, maintenance: 0 };
+      const newTarget  = estimatedTDEE + (calAdj[goalType] || 0);
+      applyBtnHtml = `
+        <button class="atdee-apply-btn" onclick="window._applyAdaptiveTDEE(${estimatedTDEE}, ${newTarget})">
+          Apply: set calorie target to ${newTarget} kcal
+        </button>`;
+    }
+  }
+
+  // ── Weight context ─────────────────────────────────────────────────────────
+  let weightHtml = '';
+  if (wEntries.length >= 2 && weightDelta !== null) {
+    const sign = weightDelta > 0 ? '+' : '';
+    weightHtml = `<div class="atdee-weight-ctx">Weight change over ${wSpanDays} days: <strong>${sign}${weightDelta} ${weightUnit}</strong></div>`;
+  } else {
+    weightHtml = `<div class="atdee-weight-ctx atdee-no-bw">Add body weight logs to improve the estimate accuracy.</div>`;
+  }
+
+  const badge = document.getElementById('adaptive-tdee-badge');
+  if (badge) badge.textContent = `${loggedDays} DAYS`;
+
+  el.innerHTML = `
+    <div class="atdee-wrap">
+      <div class="atdee-headline">
+        <span class="atdee-headline-label">Avg daily intake (${loggedDays} logged days)</span>
+        <span class="atdee-headline-val">${avgDailyKcal} kcal</span>
+      </div>
+      ${weightHtml}
+      ${deltaHtml}
+      <div class="atdee-confidence ${confClass}">Confidence: <strong>${confidence}</strong> · ${loggedDays}/${WINDOW} days logged</div>
+      ${applyBtnHtml}
+    </div>`;
+}
+
+// Apply adaptive TDEE — updates customNutritionTargets with new calorie target
+window._applyAdaptiveTDEE = function(estimatedTDEE, newKcalTarget) {
+  const _up = (typeof userProfile !== 'undefined' ? userProfile : null);
+  if (!_up) { if (typeof showToast === 'function') showToast('Profile not loaded', 'error'); return; }
+
+  const existing = _up.customNutritionTargets || {};
+  const protTarget = Math.round(parseFloat(_up.weight || 75) * 1.8);
+  _up.customNutritionTargets = {
+    ...existing,
+    enabled: true,
+    kcal: newKcalTarget,
+    p: existing.p > 0 ? existing.p : protTarget,
+    c: existing.c || 0,
+    f: existing.f || 0,
+    updatedAt: Date.now(),
+    tdeeEstimate: estimatedTDEE,
+  };
+  // Persist via saveProfile if available, else localStorage
+  if (typeof saveProfile === 'function') {
+    try { saveProfile(); } catch (_e) {}
+  }
+  try { localStorage.setItem('forge_profile', JSON.stringify(_up)); } catch (_e) {}
+  if (typeof showToast === 'function') showToast(`Calorie target updated to ${newKcalTarget} kcal`, 'success');
+  renderAdaptiveTDEE();
+};
+window.renderAdaptiveTDEE = renderAdaptiveTDEE;
+
 
