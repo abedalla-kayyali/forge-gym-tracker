@@ -699,6 +699,7 @@ function switchDashTab(name, btn) {
   if (name === 'progress' && typeof renderVolumeLandmarks === 'function') renderVolumeLandmarks();
   if (name === 'progress' && typeof renderMesocyclePanel === 'function') renderMesocyclePanel();
   if (name === 'progress' && typeof renderSplitPlanner === 'function') renderSplitPlanner();
+  if (name === 'progress' && typeof renderMonthlyReport === 'function') renderMonthlyReport();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
     _renderProgressReadinessHub();
@@ -4454,13 +4455,34 @@ function renderSplitPlanner() {
     alertHtml = `<div class="sp-alert sp-alert-miss">You haven't logged a <strong>${planned.label}</strong> session yet today.</div>`;
   }
 
-  // ── Week adherence score ──────────────────────────────────────────────────
+  // ── Week adherence score (only counts planned workout days, not rest days) ──
   const pastDays = DAYS.slice(0, todayDowIdx + 1);
-  const pastStatuses = pastDays.map((d, i) => _adherence(d, i));
-  const hitCount = pastStatuses.filter(s => s === 'ok').length;
-  const adherencePct = pastDays.length > 0 ? Math.round(hitCount / pastDays.length * 100) : 0;
+  const pastStatuses = pastDays.map((d, i) => ({ dow: d, status: _adherence(d, i) }));
+  // Only count past days that were planned as a workout (non-rest)
+  const plannedPastWorkout = pastStatuses.filter(({ dow }) => split[dow] && split[dow] !== 'rest');
+  const hitWorkoutDays     = plannedPastWorkout.filter(({ status }) => status === 'ok').length;
+  const hasAnyPlan = DAYS.some(d => split[d] && split[d] !== 'rest');
+  const adherencePct = plannedPastWorkout.length > 0
+    ? Math.round(hitWorkoutDays / plannedPastWorkout.length * 100)
+    : null;
 
-  // ── Render day cells ───────────────────────────────────────────────────────
+  // ── Plan summary strip (shown above the grid) ─────────────────────────────
+  const planPills = DAYS.map(dow => {
+    const slotKey  = split[dow] || 'rest';
+    const slot     = SLOTS[slotKey] || SLOTS.rest;
+    const isActive = slotKey !== 'rest';
+    return `<div class="sp-plan-pill${isActive ? ' sp-plan-active' : ''}" style="${isActive ? `--pill-color:${slot.color}` : ''}">
+      <span class="sp-plan-day">${DAY_LABELS[dow]}</span>
+      <span class="sp-plan-type">${isActive ? slot.label : 'Rest'}</span>
+    </div>`;
+  }).join('');
+  const planStripHtml = `
+    <div class="sp-plan-strip">
+      <div class="sp-plan-strip-label">${hasAnyPlan ? 'YOUR PLAN — tap any day to change' : 'NO PLAN SET — tap any day to assign a workout type'}</div>
+      <div class="sp-plan-pills">${planPills}</div>
+    </div>`;
+
+  // ── Render day cards ───────────────────────────────────────────────────────
   const dayCells = DAYS.map((dow, idx) => {
     const slotKey  = split[dow] || 'rest';
     const slot     = SLOTS[slotKey] || SLOTS.rest;
@@ -4478,10 +4500,11 @@ function renderSplitPlanner() {
   }).join('');
 
   const badge = document.getElementById('split-planner-badge');
-  if (badge) badge.textContent = `${adherencePct}% ADHERENCE`;
+  if (badge) badge.textContent = adherencePct != null ? `${adherencePct}% ADHERENCE` : 'SET YOUR PLAN';
 
   el.innerHTML = `
     <div class="sp-wrap">
+      ${planStripHtml}
       <div class="sp-grid">${dayCells}</div>
       ${alertHtml}
       <div class="sp-legend">
@@ -4507,4 +4530,265 @@ window._splitCycle = function(dow) {
   renderSplitPlanner();
 };
 window.renderSplitPlanner = renderSplitPlanner;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MONTHLY PROGRESS REPORT  (Pillar 6.3 · P2 · v190)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMonthlyReport() {
+  const el = document.getElementById('monthly-report-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+
+  const now      = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const cutoff   = new Date(now.getTime() - 30 * 86400000);
+  const cutoffStr= cutoff.toISOString().slice(0, 10);
+  const monthLabel = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  // ── Load data ───────────────────────────────────────────────────────────
+  const _wk  = (typeof workouts    !== 'undefined' ? workouts    : null) || _lsGet('forge_workouts',   []);
+  const _ml  = (typeof mealsLog    !== 'undefined' ? mealsLog    : null) || _lsGet('forge_meals',      {});
+  const _bw  = (typeof bodyWeight  !== 'undefined' ? bodyWeight  : null) || _lsGet('forge_bodyweight', []);
+  const _up  = (typeof userProfile !== 'undefined' ? userProfile : null) || _lsGet('forge_profile',    {});
+  const _dnn = _lsGet('forge_dnn', {});
+  const _ib  = (typeof window._inbodyGetTests === 'function') ? window._inbodyGetTests() : _lsGet('forge_inbody_tests', []);
+  const _ms  = (typeof window._measGetEntries === 'function') ? window._measGetEntries() : _lsGet('forge_measurements', []);
+
+  // ── Body weight ─────────────────────────────────────────────────────────
+  const bwPeriod = [..._bw].filter(e => e.date >= cutoffStr).sort((a,b) => a.date.localeCompare(b.date));
+  const bwStart  = bwPeriod.length ? bwPeriod[0].w : null;
+  const bwEnd    = bwPeriod.length ? bwPeriod[bwPeriod.length - 1].w : null;
+  const bwChange = (bwStart != null && bwEnd != null) ? +(bwEnd - bwStart).toFixed(1) : null;
+
+  // ── InBody: BF% + SMM ───────────────────────────────────────────────────
+  const ibSorted = [..._ib].sort((a,b) => a.date.localeCompare(b.date));
+  const ibBefore = ibSorted.filter(t => t.date < cutoffStr);
+  const ibPeriod = ibSorted.filter(t => t.date >= cutoffStr);
+  const ibPre    = ibBefore[ibBefore.length - 1] || ibPeriod[0];
+  const ibPost   = ibPeriod[ibPeriod.length - 1];
+  const bfChange  = (ibPre?.bf  != null && ibPost?.bf  != null) ? +(ibPost.bf  - ibPre.bf).toFixed(1)  : null;
+  const smmChange = (ibPre?.smm != null && ibPost?.smm != null) ? +(ibPost.smm - ibPre.smm).toFixed(1) : null;
+
+  // ── Body measurements: find best positive improvement ───────────────────
+  const msSorted = [..._ms].sort((a,b) => a.date.localeCompare(b.date));
+  const msBefore = msSorted.filter(e => e.date < cutoffStr);
+  const msPeriod = msSorted.filter(e => e.date >= cutoffStr);
+  let bestMeas = null;
+  const MEAS_REDUCE = ['waist', 'hips'];
+  const MEAS_KEYS   = ['waist','hips','chest','shoulders','leftArm','rightArm','leftThigh','rightThigh','calves','neck'];
+  const MEAS_LABELS = { waist:'Waist', hips:'Hips', chest:'Chest', shoulders:'Shoulders', leftArm:'L.Arm', rightArm:'R.Arm', leftThigh:'L.Thigh', rightThigh:'R.Thigh', calves:'Calves', neck:'Neck' };
+  if (msPeriod.length) {
+    const pre  = msBefore.length ? msBefore[msBefore.length - 1] : msPeriod[0];
+    const post = msPeriod[msPeriod.length - 1];
+    for (const k of MEAS_KEYS) {
+      const v0 = parseFloat(pre[k]), v1 = parseFloat(post[k]);
+      if (!v0 || !v1 || isNaN(v0) || isNaN(v1)) continue;
+      const diff = +(v1 - v0).toFixed(1);
+      const improved = MEAS_REDUCE.includes(k) ? diff < 0 : diff > 0;
+      if (improved && (!bestMeas || Math.abs(diff) > Math.abs(bestMeas.change))) {
+        bestMeas = { label: MEAS_LABELS[k], change: diff };
+      }
+    }
+  }
+
+  // ── Training ────────────────────────────────────────────────────────────
+  const wkPeriod     = _wk.filter(w => w.date >= cutoffStr && w.date <= todayStr);
+  const trainingDays = [...new Set(wkPeriod.map(w => w.date))].length;
+  const _split       = _lsGet('forge_split', {});
+  const activeSplitDays = ['mon','tue','wed','thu','fri','sat','sun'].filter(d => _split[d] && _split[d] !== 'rest').length;
+  const expectedDays    = activeSplitDays ? Math.round(activeSplitDays / 7 * 30) : 16;
+  const trainingAdh     = Math.min(100, Math.round(trainingDays / expectedDays * 100));
+  const musclesCovered  = [...new Set(wkPeriod.map(w => w.muscle).filter(Boolean))];
+
+  // ── Strength PRs ────────────────────────────────────────────────────────
+  const exMax = {};
+  _wk.forEach(w => {
+    if (!w.exercise || !Array.isArray(w.sets)) return;
+    const mx = Math.max(...w.sets.map(s => +s.weight || 0));
+    if (mx <= 0) return;
+    if (!exMax[w.exercise]) exMax[w.exercise] = { before: 0, during: 0 };
+    if (w.date >= cutoffStr) exMax[w.exercise].during = Math.max(exMax[w.exercise].during, mx);
+    else                     exMax[w.exercise].before = Math.max(exMax[w.exercise].before, mx);
+  });
+  const newPRs = Object.entries(exMax)
+    .filter(([, d]) => d.during > d.before && d.during > 0)
+    .map(([name, d]) => ({ name, weight: d.during, prev: d.before }))
+    .sort((a,b) => (b.weight - b.prev) - (a.weight - a.prev))
+    .slice(0, 5);
+
+  // ── Nutrition ───────────────────────────────────────────────────────────
+  const mealsFlat = Object.values(_ml).flat().filter(m => {
+    const d = m.ts ? m.ts.slice(0, 10) : (m.date || '');
+    return d >= cutoffStr && d <= todayStr;
+  });
+  const mealsByDay = {};
+  mealsFlat.forEach(m => {
+    const d = m.ts ? m.ts.slice(0, 10) : (m.date || '');
+    if (d) { if (!mealsByDay[d]) mealsByDay[d] = []; mealsByDay[d].push(m); }
+  });
+  const mealDayCount = Object.keys(mealsByDay).length;
+  const proteinGoal  = (_up.customNutritionTargets?.protein) || (_up.nutritionGoals?.protein) || 160;
+  const kcalGoal     = (_up.customNutritionTargets?.calories) || (_up.nutritionGoals?.calories) || 2000;
+  let totalKcal = 0, totalProt = 0, protHitDays = 0, kcalHitDays = 0;
+  Object.values(mealsByDay).forEach(dm => {
+    const dk = dm.reduce((s,m) => s + (parseFloat(m.kcal) || 0), 0);
+    const dp = dm.reduce((s,m) => s + (parseFloat(m.protein || m.p) || 0), 0);
+    totalKcal += dk; totalProt += dp;
+    if (dp >= proteinGoal * 0.9)                          protHitDays++;
+    if (dk >= kcalGoal * 0.85 && dk <= kcalGoal * 1.15)  kcalHitDays++;
+  });
+  const avgKcal    = mealDayCount ? Math.round(totalKcal / mealDayCount) : 0;
+  const avgProt    = mealDayCount ? Math.round(totalProt / mealDayCount) : 0;
+  const protHitPct = mealDayCount ? Math.round(protHitDays / mealDayCount * 100) : 0;
+  const kcalHitPct = mealDayCount ? Math.round(kcalHitDays / mealDayCount * 100) : 0;
+
+  // ── DNN habit score ─────────────────────────────────────────────────────
+  const dnnEntries  = Object.entries(_dnn).filter(([k]) => !k.startsWith('_') && k >= cutoffStr);
+  const perfectDays = dnnEntries.filter(([, v]) => v && v.perfectDay).length;
+  const habitPct    = dnnEntries.length ? Math.round(perfectDays / dnnEntries.length * 100) : null;
+  const streak      = _dnn._streak || 0;
+
+  // ── Display helpers ─────────────────────────────────────────────────────
+  function _cls(val, lowerBetter) {
+    if (val == null) return 'mr-neu';
+    if (lowerBetter) return val < 0 ? 'mr-pos' : val > 0 ? 'mr-neg' : 'mr-neu';
+    return val > 0 ? 'mr-pos' : val < 0 ? 'mr-neg' : 'mr-neu';
+  }
+  function _sign(v) { return v > 0 ? '+' : ''; }
+  function _bar(pct) {
+    const cl = pct >= 75 ? 'mr-fill-green' : pct >= 50 ? 'mr-fill-yellow' : 'mr-fill-red';
+    return `<div class="mr-adh-track"><div class="mr-adh-fill ${cl}" style="width:${pct}%"></div></div>`;
+  }
+
+  // ── Build share text ────────────────────────────────────────────────────
+  const shareLines = [`🏋️ FORGE Monthly Report — ${monthLabel}`];
+  if (bwChange != null)   shareLines.push(`⚖️  Weight: ${bwEnd}kg (${_sign(bwChange)}${bwChange}kg)`);
+  if (bfChange != null)   shareLines.push(`📊 Body Fat: ${_sign(bfChange)}${bfChange}%`);
+  shareLines.push(`💪 ${newPRs.length} new PR${newPRs.length !== 1 ? 's' : ''} this month`);
+  shareLines.push(`📅 Training: ${trainingDays} days (${trainingAdh}% adherence)`);
+  if (mealDayCount)       shareLines.push(`🥩 Protein hit: ${protHitPct}% of days | avg ${avgProt}g/day`);
+  if (habitPct != null)   shareLines.push(`🔥 Habit score: ${habitPct}% perfect days`);
+  shareLines.push(`\n💚 Tracked with FORGE`);
+  window._mrLastShareText = shareLines.join('\n');
+
+  // ── Body comp section ───────────────────────────────────────────────────
+  const bwStat = bwChange != null
+    ? `<div class="mr-stat"><div class="mr-stat-label">WEIGHT</div><div class="mr-stat-val ${_cls(bwChange,false)}">${_sign(bwChange)}${bwChange} kg</div><div class="mr-stat-sub">${bwStart} → ${bwEnd}</div></div>`
+    : `<div class="mr-stat"><div class="mr-stat-label">WEIGHT</div><div class="mr-stat-val mr-neu">—</div><div class="mr-stat-sub">No logs</div></div>`;
+
+  const bfStat = bfChange != null
+    ? `<div class="mr-stat"><div class="mr-stat-label">BODY FAT</div><div class="mr-stat-val ${_cls(bfChange,true)}">${_sign(bfChange)}${bfChange}%</div><div class="mr-stat-sub">${ibPre.bf}→${ibPost.bf}%</div></div>`
+    : `<div class="mr-stat"><div class="mr-stat-label">BODY FAT</div><div class="mr-stat-val mr-neu">—</div><div class="mr-stat-sub">No InBody</div></div>`;
+
+  const measStat = bestMeas
+    ? `<div class="mr-stat"><div class="mr-stat-label">BEST MEAS</div><div class="mr-stat-val mr-pos">${bestMeas.label}</div><div class="mr-stat-sub">${_sign(bestMeas.change)}${bestMeas.change} cm</div></div>`
+    : `<div class="mr-stat"><div class="mr-stat-label">BEST MEAS</div><div class="mr-stat-val mr-neu">—</div><div class="mr-stat-sub">No data</div></div>`;
+
+  const smmNote = smmChange != null
+    ? `<div class="mr-smm-note">Skeletal Muscle Mass: ${_sign(smmChange)}${smmChange} kg</div>` : '';
+
+  // ── PRs section ─────────────────────────────────────────────────────────
+  const prRows = newPRs.length
+    ? newPRs.map(pr => `<div class="mr-pr-row"><span class="mr-pr-name">${pr.name}</span><span class="mr-pr-weight">${pr.weight} kg</span><span class="mr-pr-prev">${pr.prev ? `was ${pr.prev}kg` : 'first PR'}</span></div>`).join('')
+    : `<div class="mr-no-data">No new PRs this period — keep pushing!</div>`;
+
+  // ── Training section ────────────────────────────────────────────────────
+  const muscleNote = musclesCovered.length
+    ? `<div class="mr-adh-sub">Muscles: ${musclesCovered.slice(0,6).join(', ')}${musclesCovered.length > 6 ? ` +${musclesCovered.length-6}` : ''}</div>`
+    : '';
+
+  // ── Nutrition section ───────────────────────────────────────────────────
+  const nutSection = mealDayCount === 0
+    ? `<div class="mr-no-data">No meals logged this period</div>`
+    : `<div class="mr-adh-row">
+        <div class="mr-adh-item">
+          <div class="mr-adh-label-row"><span>Protein Goal Hit</span><span>${protHitPct}%</span></div>
+          ${_bar(protHitPct)}
+          <div class="mr-adh-sub">avg ${avgProt}g/day · target ${proteinGoal}g</div>
+        </div>
+        <div class="mr-adh-item">
+          <div class="mr-adh-label-row"><span>Calorie Target Hit</span><span>${kcalHitPct}%</span></div>
+          ${_bar(kcalHitPct)}
+          <div class="mr-adh-sub">avg ${avgKcal} kcal/day · target ${kcalGoal}</div>
+        </div>
+      </div>`;
+
+  // ── Habit section ───────────────────────────────────────────────────────
+  const habitSection = habitPct == null
+    ? `<div class="mr-no-data">No habit data logged</div>`
+    : `<div class="mr-adh-row">
+        <div class="mr-adh-item">
+          <div class="mr-adh-label-row"><span>Perfect Days</span><span>${habitPct}%</span></div>
+          ${_bar(habitPct)}
+          <div class="mr-adh-sub">${perfectDays} perfect days · ${streak > 0 ? `🔥 ${streak}-day streak` : 'no active streak'}</div>
+        </div>
+      </div>`;
+
+  el.innerHTML = `
+    <div class="mr-wrap">
+      <div class="mr-header">
+        <div class="mr-header-row">
+          <span class="mr-title">📋 Monthly Report</span>
+          <span class="mr-period-badge">LAST 30 DAYS</span>
+        </div>
+        <div class="mr-month">${monthLabel}</div>
+      </div>
+
+      <div class="mr-section">
+        <div class="mr-section-title">🏆 Body Composition</div>
+        <div class="mr-stats-row">${bwStat}${bfStat}${measStat}</div>
+        ${smmNote}
+      </div>
+
+      <div class="mr-section">
+        <div class="mr-section-title">💪 Strength Milestones</div>
+        <div class="mr-pr-count">${newPRs.length} new PR${newPRs.length !== 1 ? 's' : ''} this month</div>
+        <div class="mr-pr-list">${prRows}</div>
+      </div>
+
+      <div class="mr-section">
+        <div class="mr-section-title">📅 Training Adherence</div>
+        <div class="mr-adh-row">
+          <div class="mr-adh-item">
+            <div class="mr-adh-label-row"><span>Training Days</span><span>${trainingAdh}%</span></div>
+            ${_bar(trainingAdh)}
+            <div class="mr-adh-sub">${trainingDays} of ~${expectedDays} expected days · ${wkPeriod.length} sessions</div>
+          </div>
+          ${muscleNote}
+        </div>
+      </div>
+
+      <div class="mr-section">
+        <div class="mr-section-title">🥩 Nutrition</div>
+        ${nutSection}
+      </div>
+
+      <div class="mr-section">
+        <div class="mr-section-title">🔥 Daily Habits</div>
+        ${habitSection}
+      </div>
+
+      <div class="mr-actions">
+        <button class="mr-btn mr-btn-share" onclick="window._mrShare()">📤 Share</button>
+        <button class="mr-btn mr-btn-print" onclick="window._mrPrint()">🖨️ Print / PDF</button>
+      </div>
+    </div>`;
+}
+
+window._mrShare = function() {
+  const text = window._mrLastShareText || 'FORGE Monthly Report';
+  if (navigator.share) {
+    navigator.share({ title: 'FORGE Monthly Report', text }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+      .then(() => { if (typeof showToast === 'function') showToast('Report copied to clipboard!', 'success'); })
+      .catch(() => { if (typeof showToast === 'function') showToast('Copy failed — try manually', 'warn'); });
+  }
+};
+
+window._mrPrint = function() { window.print(); };
+window.renderMonthlyReport = renderMonthlyReport;
 

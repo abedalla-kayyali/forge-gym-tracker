@@ -1,6 +1,6 @@
 // FORGE Gym Tracker - Service Worker
 // Bump version to force cache refresh after updates
-const CACHE_NAME = 'forge-v189';
+const CACHE_NAME = 'forge-v190';
 
 const CORE_ASSETS = [
   './index.html',

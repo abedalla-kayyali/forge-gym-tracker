@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v189';
-window.FORGE_BUILD   = '2026-03-17 (fix: Training Phase reset+reselect crash — null.durationWeeks TypeError after ↺ press)';
+window.FORGE_VERSION = 'v190';
+window.FORGE_BUILD   = '2026-03-17 (feat: Monthly Progress Report + Split Planner plan strip + adherence fix)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
