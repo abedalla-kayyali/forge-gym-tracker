@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v206';
-window.FORGE_BUILD   = '2026-03-17 (fix: Ask FORGE full answers + FAB bottom-right dumbbell icon)';
+window.FORGE_VERSION = 'v207';
+window.FORGE_BUILD   = '2026-03-17 (feat: readiness sleep h+min dual inputs, RIR-aware overload, plateau buttons, DNN duel)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

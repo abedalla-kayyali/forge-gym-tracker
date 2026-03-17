@@ -4227,6 +4227,10 @@ function renderReadinessPanel() {
   var totalSleep = todayRdy.totalSleep != null ? parseFloat(todayRdy.totalSleep) : null;
   var deepSleep  = todayRdy.deepSleep  != null ? parseFloat(todayRdy.deepSleep)  : null;
   var remSleep   = todayRdy.remSleep   != null ? parseFloat(todayRdy.remSleep)   : null;
+
+  // Decompose fractional hours → h + min for display
+  function _hmH(v) { return v != null ? Math.floor(v) : ''; }
+  function _hmM(v) { return v != null ? Math.round((v - Math.floor(v)) * 60) : ''; }
   var hrv        = todayRdy.hrv        != null ? parseFloat(todayRdy.hrv)        : null;
   var rhr        = todayRdy.rhr        != null ? parseFloat(todayRdy.rhr)        : null;
   var energy     = todayRdy.energy     != null ? parseInt(todayRdy.energy, 10)   : null;
@@ -4318,21 +4322,49 @@ function renderReadinessPanel() {
       '<div class="rd-section">' +
         '<div class="rd-section-title">💤 SLEEP LAST NIGHT</div>' +
         '<div class="rd-input-grid">' +
-          '<div class="rd-input-box"><span class="rd-input-label">TOTAL</span><div class="rd-input-row">' +
-            '<input class="rd-input-field" type="number" min="0" max="14" step="0.25" placeholder="—"' +
-            ' value="' + (totalSleep != null ? totalSleep : '') + '"' +
-            ' oninput="window._rdSave(\'totalSleep\',this.value)">' +
-            '<span class="rd-input-unit">h</span></div></div>' +
-          '<div class="rd-input-box"><span class="rd-input-label">DEEP</span><div class="rd-input-row">' +
-            '<input class="rd-input-field" type="number" min="0" max="6" step="0.25" placeholder="—"' +
-            ' value="' + (deepSleep != null ? deepSleep : '') + '"' +
-            ' oninput="window._rdSave(\'deepSleep\',this.value)">' +
-            '<span class="rd-input-unit">h</span></div></div>' +
-          '<div class="rd-input-box"><span class="rd-input-label">REM</span><div class="rd-input-row">' +
-            '<input class="rd-input-field" type="number" min="0" max="6" step="0.25" placeholder="—"' +
-            ' value="' + (remSleep != null ? remSleep : '') + '"' +
-            ' oninput="window._rdSave(\'remSleep\',this.value)">' +
-            '<span class="rd-input-unit">h</span></div></div>' +
+
+          // TOTAL sleep — h + min
+          '<div class="rd-input-box"><span class="rd-input-label">TOTAL</span>' +
+            '<div class="rd-input-hm-row">' +
+              '<input class="rd-input-field rd-input-hm" id="rd-ts-h" type="number" min="0" max="14" step="1" placeholder="0"' +
+              ' value="' + _hmH(totalSleep) + '"' +
+              ' oninput="window._rdSaveHM(\'totalSleep\',this.value,document.getElementById(\'rd-ts-m\').value)">' +
+              '<span class="rd-input-unit">h</span>' +
+              '<input class="rd-input-field rd-input-hm" id="rd-ts-m" type="number" min="0" max="59" step="1" placeholder="0"' +
+              ' value="' + _hmM(totalSleep) + '"' +
+              ' oninput="window._rdSaveHM(\'totalSleep\',document.getElementById(\'rd-ts-h\').value,this.value)">' +
+              '<span class="rd-input-unit">min</span>' +
+            '</div>' +
+          '</div>' +
+
+          // DEEP sleep — h + min
+          '<div class="rd-input-box"><span class="rd-input-label">DEEP</span>' +
+            '<div class="rd-input-hm-row">' +
+              '<input class="rd-input-field rd-input-hm" id="rd-ds-h" type="number" min="0" max="6" step="1" placeholder="0"' +
+              ' value="' + _hmH(deepSleep) + '"' +
+              ' oninput="window._rdSaveHM(\'deepSleep\',this.value,document.getElementById(\'rd-ds-m\').value)">' +
+              '<span class="rd-input-unit">h</span>' +
+              '<input class="rd-input-field rd-input-hm" id="rd-ds-m" type="number" min="0" max="59" step="1" placeholder="0"' +
+              ' value="' + _hmM(deepSleep) + '"' +
+              ' oninput="window._rdSaveHM(\'deepSleep\',document.getElementById(\'rd-ds-h\').value,this.value)">' +
+              '<span class="rd-input-unit">min</span>' +
+            '</div>' +
+          '</div>' +
+
+          // REM sleep — h + min
+          '<div class="rd-input-box"><span class="rd-input-label">REM</span>' +
+            '<div class="rd-input-hm-row">' +
+              '<input class="rd-input-field rd-input-hm" id="rd-rs-h" type="number" min="0" max="6" step="1" placeholder="0"' +
+              ' value="' + _hmH(remSleep) + '"' +
+              ' oninput="window._rdSaveHM(\'remSleep\',this.value,document.getElementById(\'rd-rs-m\').value)">' +
+              '<span class="rd-input-unit">h</span>' +
+              '<input class="rd-input-field rd-input-hm" id="rd-rs-m" type="number" min="0" max="59" step="1" placeholder="0"' +
+              ' value="' + _hmM(remSleep) + '"' +
+              ' oninput="window._rdSaveHM(\'remSleep\',document.getElementById(\'rd-rs-h\').value,this.value)">' +
+              '<span class="rd-input-unit">min</span>' +
+            '</div>' +
+          '</div>' +
+
         '</div>' +
         '<div class="rd-sub-bar-row">' +
           '<span class="rd-sub-bar-lbl">Sleep score</span>' +
@@ -4406,6 +4438,13 @@ window._rdSave = function(field, rawValue) {
 
   _lsSave('forge_readiness', _ready);
   renderReadinessPanel();
+};
+
+window._rdSaveHM = function(field, hVal, mVal) {
+  var h = parseFloat(hVal) || 0;
+  var m = parseFloat(mVal) || 0;
+  var total = h + (m / 60);
+  window._rdSave(field, total > 0 ? total : '');
 };
 
 window._setReadinessEnergy = function(level) { window._rdSave('energy', level); };
