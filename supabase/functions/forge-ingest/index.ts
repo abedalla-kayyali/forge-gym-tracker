@@ -27,7 +27,8 @@ serve(async (req) => {
     { global: { headers: { Authorization: authHeader } } }
   );
 
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return new Response('Unauthorized', { status: 401 });
 
   let items: Array<{ id: string; type: string; date: string; content: string; metadata: Record<string, unknown> }>;
