@@ -77,11 +77,11 @@
       lines.push(`Day ${i + 1}: ${day.muscles.join(', ')}`);
     });
     lines.push('');
-    lines.push('Return ONLY a JSON code block. No explanation. Format:');
+    lines.push('Return ONLY a JSON code block. Use EXACTLY this schema — no extra fields (no notes, no rest_seconds, no muscle_group):');
     lines.push('```json');
-    lines.push('{"name":"Program name (max 5 words)","days":[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Incline DB Press","sets":3,"reps":"10-12"}]}]}');
+    lines.push('{"name":"Push Pull Legs","days":[{"label":"Push Day","muscles":["chest","triceps"],"exercises":[{"name":"Bench Press","sets":4,"reps":"8-10"},{"name":"Overhead Press","sets":3,"reps":"8-12"},{"name":"Tricep Dips","sets":3,"reps":"10-12"}]},{"label":"Pull Day","muscles":["back","biceps"],"exercises":[{"name":"Pull-Up","sets":4,"reps":"6-10"},{"name":"Barbell Row","sets":3,"reps":"8-10"},{"name":"Bicep Curl","sets":3,"reps":"10-12"}]}]}');
     lines.push('```');
-    lines.push('Provide 4-6 exercises per day. Prioritize lagging muscles. Use exercises the user has logged before where appropriate.');
+    lines.push('Rules: top-level keys are ONLY "name" and "days". Each day has ONLY "label", "muscles", "exercises". Each exercise has ONLY "name", "sets", "reps". 4-6 exercises per day.');
     if (refinementNote && refinementNote.trim()) {
       lines.push(`User refinement note: ${refinementNote.trim()}`);
     }
@@ -109,8 +109,8 @@
           query: prompt,
           type_filter: null,
           coach_mode: true,
-          coach_system: 'You are a personal training program generator. Return only valid JSON. Complete the JSON object already started.',
-          max_tokens: 1500,
+          coach_system: 'Complete the JSON training program. Schema: {"name":"...","days":[{"label":"...","muscles":[...],"exercises":[{"name":"...","sets":N,"reps":"..."}]}]}. NO extra fields.',
+          max_tokens: 2000,
           prefill: _PROGRAM_PREFILL
         })
       });
@@ -148,7 +148,9 @@
     if (!jsonStr) return null;
     for (let pass = 0; pass < 2; pass++) {
       try {
-        const r = JSON.parse(jsonStr);
+        let r = JSON.parse(jsonStr);
+        // Unwrap LLM-added "program" wrapper if present
+        if (r.program && typeof r.program.name === 'string' && Array.isArray(r.program.days)) r = r.program;
         if (typeof r.name !== 'string') return null;
         if (!Array.isArray(r.days) || r.days.length !== expectedDays) return null;
         for (const d of r.days) {
