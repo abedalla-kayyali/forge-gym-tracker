@@ -176,10 +176,26 @@
       streakHtml = `<span class="ol-streak-badge">🔥 ${ctx.overloadStreak} session streak</span>`;
     }
 
-    // Plateau warning
+    // Plateau warning with actionable suggestions
     let plateauHtml = '';
     if (ctx.plateauLength >= 3) {
-      plateauHtml = `<div class="ol-plateau-warn">⚠️ Plateau detected — ${ctx.plateauLength} sessions without progress. Try adding weight or reps.</div>`;
+      const _unit = (last.sets?.[0]?.unit) || _cfg.defaultUnit || 'kg';
+      const _topW  = ctx.lastTopWeight || 0;
+      const _deload = _unit === 'lbs'
+        ? Math.round(_topW * 0.9 / 2.5) * 2.5
+        : Math.round(_topW * 0.9 * 2) / 2;
+      const _suggestions = [
+        `Deload to <strong>${_deload}${_unit}</strong> (−10%) for 1 week`,
+        'Switch rep range (e.g. 3×8 → 4×6 or 3×12)',
+        'Swap to a variation exercise for 3–4 weeks'
+      ];
+      plateauHtml = `
+        <div class="ol-plateau-warn">
+          <div class="ol-plateau-title">⚠️ Plateau — ${ctx.plateauLength} sessions without progress</div>
+          <ul class="ol-plateau-tips">
+            ${_suggestions.map(s => `<li>${s}</li>`).join('')}
+          </ul>
+        </div>`;
     }
 
     // Target for next session

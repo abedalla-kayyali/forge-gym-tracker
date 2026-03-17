@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v176';
-window.FORGE_BUILD   = '2026-03-17 (feat: Weekly Nutrition Report — 7-day heat calendar + week-over-week comparison)';
+window.FORGE_VERSION = 'v177';
+window.FORGE_BUILD   = '2026-03-17 (feat: Plateau Detection + Alerts — toast on save, deload suggestion, rep-range + variation tips)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

@@ -177,6 +177,23 @@ function _saveWeightedWorkout() {
       if (typeof sndSave === 'function') sndSave();
       if (typeof burstSave === 'function') burstSave();
     }
+    // Plateau detection toast (fires 1.5s after save so it doesn't clash with workout-logged toast)
+    if (typeof window.FORGE_OVERLOAD !== 'undefined' && typeof window.FORGE_OVERLOAD.getPlateauLength === 'function') {
+      const _plateauLen = window.FORGE_OVERLOAD.getPlateauLength(name);
+      if (_plateauLen >= 3) {
+        const _topWt = Math.max(0, ...sets.filter(s => s.type !== 'warmup').map(s => +s.weight || 0));
+        const _unit  = sets[0]?.unit || (typeof settings !== 'undefined' ? settings.defaultUnit : 'kg') || 'kg';
+        const _deload = _unit === 'lbs' ? Math.round(_topWt * 0.9 / 2.5) * 2.5 : Math.round(_topWt * 0.9 * 2) / 2;
+        setTimeout(() => {
+          if (typeof showToast === 'function') {
+            showToast(_ws(
+              `⚠️ Plateau — ${_plateauLen} sessions flat. Try: deload to ${_deload}${_unit}, switch rep range, or swap exercise.`,
+              `⚠️ ثبات — ${_plateauLen} جلسات بدون تقدم. جرّب: تخفيض إلى ${_deload}${_unit}، تغيير نطاق التكرارات، أو تبديل التمرين.`
+            ), 'warning');
+          }
+        }, 1500);
+      }
+    }
     // A2: Auto-rest trigger
     if (settings.autoRest && !_hdrRestRunning) {
       hdrSetRest(_hdrRestTarget || 90);
