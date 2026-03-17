@@ -21,9 +21,9 @@ function _getMrvConfig() {
 }
 
 function _getWeeklyVolume(muscle) {
-  const cutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+  const cutoffMs = Date.now() - 7 * 86400000;
   const ws = (typeof workouts !== 'undefined' ? workouts : [])
-    .filter(w => w.muscle?.toLowerCase() === muscle?.toLowerCase() && w.date >= cutoff);
+    .filter(w => w.muscle?.toLowerCase() === muscle?.toLowerCase() && new Date(w.date).getTime() >= cutoffMs);
   // Count working sets (not warmup)
   return ws.reduce((sum, w) => sum + (w.sets?.filter(s => s.type !== 'warmup').length || 0), 0);
 }
@@ -39,6 +39,7 @@ function toggleRecoveryHeatmap() {
     btn.classList.add('active');
     legend.classList.add('show');
     renderRecoveryHeatmap();
+    clearInterval(_recoveryInterval);
     _recoveryInterval = setInterval(renderRecoveryHeatmap, 60000);
   } else {
     btn.classList.remove('active');
@@ -69,13 +70,16 @@ function renderRecoveryHeatmap() {
     if (rd.score && rd.score < 50) readinessMult = 1.2;
   } catch {}
 
-  // Find last workout per muscle
+  // Single pass: build lastWorked + weeklyVolume maps together
   const lastWorked = {};
+  const weeklyVolume = {};
+  const cutoffMs = now - 7 * 86400000;
   (typeof workouts !== 'undefined' ? workouts : []).forEach(w => {
     const ms = new Date(w.date).getTime();
     const key = (w.muscle || '').toLowerCase();
-    if (!lastWorked[key] || ms > lastWorked[key].ms) {
-      lastWorked[key] = { ms, date: w.date };
+    if (!lastWorked[key] || ms > lastWorked[key]) lastWorked[key] = ms;
+    if (ms >= cutoffMs) {
+      weeklyVolume[key] = (weeklyVolume[key] || 0) + (w.sets?.filter(s => s.type !== 'warmup').length || 0);
     }
   });
 
@@ -84,10 +88,10 @@ function renderRecoveryHeatmap() {
     z.classList.remove('recovery-fresh', 'recovery-mid', 'recovery-almost', 'recovery-good', 'zone-selected');
     if (!lastWorked[muscle]) return;
 
-    const hoursAgo = (now - lastWorked[muscle].ms) / 3600000;
+    const hoursAgo = (now - lastWorked[muscle]) / 3600000;
     const window_ = (RECOVERY_WINDOW[muscle] || 48) * readinessMult;
     const mrv = mrvConfig[muscle] || DEFAULT_MRV[muscle] || 20;
-    const weeklyVol = _getWeeklyVolume(muscle);
+    const weeklyVol = weeklyVolume[muscle] || 0;
     const overreached = weeklyVol >= mrv;
 
     if (overreached || hoursAgo < window_ * 0.33) {
