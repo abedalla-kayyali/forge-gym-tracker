@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v222';
-window.FORGE_BUILD   = '2026-03-17 (feat: coach real AI — insights plateau hints, session debrief, coach bar streams Claude)';
+window.FORGE_VERSION = 'v223';
+window.FORGE_BUILD   = '2026-03-17 (feat: v223 — DNN steps uses custom goal, coach context expanded, ask-answer markdown render + FX)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

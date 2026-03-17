@@ -234,6 +234,47 @@
     } catch {}
 
     try {
+      // Today's nutrition (actual intake today)
+      const meals = JSON.parse(localStorage.getItem('forge_meals') || '{}');
+      const todayKey = new Date().toISOString().slice(0,10);
+      const todayMeals = meals[todayKey];
+      if (Array.isArray(todayMeals) && todayMeals.length) {
+        let kcal = 0, protein = 0;
+        todayMeals.forEach(m => { kcal += +(m.kcal || m.calories || 0); protein += +(m.p || m.protein || 0); });
+        lines.push(`Today's nutrition: ${Math.round(kcal)} kcal, ${Math.round(protein)}g protein`);
+      }
+    } catch {}
+
+    try {
+      // Daily readiness score
+      const todayKey = new Date().toISOString().slice(0,10);
+      const rdy = JSON.parse(localStorage.getItem('forge_readiness') || '{}');
+      const rdyToday = rdy[todayKey];
+      if (rdyToday) {
+        const parts = [];
+        if (rdyToday.score != null) parts.push(`readiness score: ${rdyToday.score}/100`);
+        if (rdyToday.totalSleep != null) parts.push(`sleep: ${rdyToday.totalSleep}h`);
+        if (rdyToday.hrv != null) parts.push(`HRV: ${rdyToday.hrv}ms`);
+        if (rdyToday.rhr != null) parts.push(`resting HR: ${rdyToday.rhr}bpm`);
+        if (parts.length) lines.push(`Today's readiness: ${parts.join(', ')}`);
+      }
+    } catch {}
+
+    try {
+      // Body weight trend (last 4 entries)
+      const bw = JSON.parse(localStorage.getItem('forge_bodyweight') || '[]');
+      if (Array.isArray(bw) && bw.length >= 2) {
+        const recent = bw.slice(-4);
+        const first = recent[0].weight, last = recent[recent.length-1].weight;
+        if (first && last) {
+          const diff = +(last - first).toFixed(1);
+          const trend = diff > 0.3 ? `gaining (${diff > 0 ? '+' : ''}${diff}kg)` : diff < -0.3 ? `losing (${diff}kg)` : 'stable';
+          lines.push(`Weight trend (last ${recent.length} logs): ${trend}, current ${last}${bw[bw.length-1].unit||'kg'}`);
+        }
+      }
+    } catch {}
+
+    try {
       // Today's planned training from weekly split + muscle recovery
       const split = JSON.parse(localStorage.getItem('forge_split') || '{}');
       const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];

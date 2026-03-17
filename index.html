@@ -5428,7 +5428,7 @@ async function _askCoach(idx) {
         query: q,
         user_context: ctx,
         coach_mode: true,
-        coach_system: 'You are FORGE coach. Answer the athlete\'s question directly in 1-2 sentences. Reference their actual training data.',
+        coach_system: 'You are FORGE coach. Answer the athlete\'s question directly in 1-2 sentences. Reference their actual training data. Plain text only, no markdown.',
         max_tokens: 150
       })
     });
@@ -5437,7 +5437,7 @@ async function _askCoach(idx) {
     bubble.innerHTML = '';
     const reader = resp.body.getReader();
     const dec = new TextDecoder();
-    let buf = '', text = '';
+    let buf = '', text = '', firstToken = true;
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -5449,11 +5449,26 @@ async function _askCoach(idx) {
         if (raw === '[DONE]') break;
         try {
           const d = JSON.parse(raw);
-          if (d?.token) { text += d.token; bubble.textContent = text; }
+          if (d?.token) {
+            if (firstToken) {
+              firstToken = false;
+              if (typeof sndTap === 'function') sndTap();
+            }
+            text += d.token;
+            bubble.textContent = text;
+          }
         } catch (_) {}
       }
     }
-    if (!text.trim()) _fallback();
+    if (!text.trim()) { _fallback(); return; }
+    // Post-stream: render any residual markdown as HTML
+    const safe = text
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/\n/g,'<br>');
+    bubble.innerHTML = safe;
+    if (typeof addRipple === 'function') addRipple(bubble, null);
   } catch (_e) { _fallback(); }
 }
 
