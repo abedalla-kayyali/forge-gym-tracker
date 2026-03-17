@@ -6634,7 +6634,8 @@ function renderCoachPlan() {
     </div>`;
 
   if (_cplanView === 'programs') {
-    el.innerHTML = subToggle + _renderCoachProgramsHTML(_cpAr);
+    el.innerHTML = subToggle + '<div id="programs-panel-body" style="padding:0 4px;"></div>';
+    if (typeof renderProgramPanel === 'function') renderProgramPanel();
     return;
   }
 
