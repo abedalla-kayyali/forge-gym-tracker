@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v178';
-window.FORGE_BUILD   = '2026-03-17 (fix: overload-engine load order before workout-save, toast type warn not warning)';
+window.FORGE_VERSION = 'v179';
+window.FORGE_BUILD   = '2026-03-17 (feat: Progressive Overload Score panel in Progress tab — 28-day per-muscle POS)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

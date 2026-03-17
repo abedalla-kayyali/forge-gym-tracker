@@ -691,6 +691,7 @@ function switchDashTab(name, btn) {
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
   if (name === 'nutrition' && typeof renderWeeklyNutritionReport === 'function') renderWeeklyNutritionReport();
+  if (name === 'progress' && typeof window.FORGE_OVERLOAD !== 'undefined') window.FORGE_OVERLOAD.renderOverloadScoreCard('overload-score-card');
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
     _renderProgressReadinessHub();
