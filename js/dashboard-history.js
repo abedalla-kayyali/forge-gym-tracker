@@ -3955,7 +3955,7 @@ function renderDailyNonNegotiables() {
   const proteinHit = protTarget > 0 && todayProt >= protTarget * 0.9;
 
   const sessionDone = Array.isArray(_wrk) && _wrk.some(w => w.date === todayKey);
-  const _rdyToday   = (() => { try { return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[todayKey] || {}; } catch { return {}; } })();
+  const _rdyToday   = _lsGet('forge_readiness', {})[todayKey] || {};
   const sleepHours  = parseFloat(_rdyToday.totalSleep) || 0;
   const sleepDone   = sleepHours >= 7;
   const stepsDone   = !!todayDNN.steps;
@@ -4057,7 +4057,7 @@ function renderDailyNonNegotiables() {
       <div class="dnn-grid">${pillsHtml}</div>
       ${shieldRow}
       ${shieldOfferHtml}
-      ${!habits[3].done || !habits[4].done ? `<div class="dnn-tap-hint">Tap 😴 / 👟 to mark when done</div>` : ''}
+      ${!habits[4].done ? `<div class="dnn-tap-hint">Tap 👟 to mark steps when done</div>` : ''}
       <button class="dnn-challenge-btn" onclick="typeof FORGE_DUELS !== 'undefined' ? FORGE_DUELS.open() : (typeof showToast === 'function' && showToast('Connect with friends first in the Social tab', 'info'))">🏆 Challenge a Friend on Habits</button>
     </div>`;
 }
