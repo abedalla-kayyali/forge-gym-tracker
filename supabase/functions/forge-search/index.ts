@@ -26,7 +26,8 @@ serve(async (req) => {
     { global: { headers: { Authorization: authHeader } } }
   );
 
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  const token = authHeader.replace('Bearer ', '');
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
   if (authErr || !user) return new Response('Unauthorized', { status: 401 });
 
   let query: string;
@@ -43,7 +44,7 @@ serve(async (req) => {
   }
 
   if (!query || query.length < 2) {
-    return new Response(JSON.stringify({ results: [] }), {
+    return new Response(JSON.stringify({ answer: '', results: [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
@@ -63,7 +64,7 @@ serve(async (req) => {
     });
   }
 
-  // Call match function
+  // Vector similarity search
   const { data, error } = await supabase.rpc('match_forge_embeddings', {
     query_embedding: queryEmbedding,
     match_user_id: user.id,
@@ -79,7 +80,55 @@ serve(async (req) => {
     });
   }
 
-  return new Response(JSON.stringify({ results: data ?? [] }), {
+  const results = data ?? [];
+
+  // No results — return early without calling Claude
+  if (results.length === 0) {
+    return new Response(JSON.stringify({ answer: "I couldn't find any relevant data for that. Try indexing your data first.", results }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Build context from top results
+  const context = results
+    .map((r: { type: string; content: string }, i: number) => `[${i + 1}] (${r.type}) ${r.content}`)
+    .join('\n');
+
+  // Call Claude for a natural language answer
+  let answer = '';
+  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (anthropicKey) {
+    try {
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 300,
+          system: `You are FORGE, a personal gym assistant. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and other numbers when relevant. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
+          messages: [{
+            role: 'user',
+            content: `My question: ${query}\n\nRelevant entries from my training log:\n${context}`,
+          }],
+        }),
+      });
+
+      if (claudeRes.ok) {
+        const claudeData = await claudeRes.json();
+        answer = claudeData.content?.[0]?.text ?? '';
+      } else {
+        console.warn('[forge-search] Claude API error', claudeRes.status);
+      }
+    } catch (e) {
+      console.warn('[forge-search] Claude call failed', e);
+    }
+  }
+
+  return new Response(JSON.stringify({ answer, results }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 });

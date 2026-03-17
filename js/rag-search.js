@@ -353,6 +353,12 @@
       .rag-btn-secondary:active { border-color:var(--accent); color:var(--accent); }
       .rag-btn-secondary:disabled { opacity:.4; cursor:not-allowed; }
       .rag-index-status { font-size:.75rem; color:var(--text2); flex:1; }
+      .rag-answer {
+        background:var(--panel); border:1px solid var(--accent);
+        border-radius:12px; padding:14px 16px;
+        font-size:.88rem; color:var(--text); line-height:1.6;
+        white-space:pre-wrap;
+      }
       #rag-fab {
         position:fixed; right:16px; bottom:calc(74px + env(safe-area-inset-bottom,0px));
         width:46px; height:46px; border-radius:50%;
@@ -395,6 +401,15 @@
     el.style.display = msg ? 'block' : 'none';
   }
 
+  function renderAnswer(answer) {
+    const container = document.getElementById('rag-results');
+    if (!container || !answer) return;
+    const el = document.createElement('div');
+    el.className = 'rag-answer';
+    el.textContent = answer;
+    container.appendChild(el);
+  }
+
   function renderResults(results) {
     const container = document.getElementById('rag-results');
     if (!container) return;
@@ -427,12 +442,13 @@
     const query = input?.value?.trim();
     if (!query) return;
     btn.disabled = true;
-    showStatus('Searching...');
+    showStatus('Thinking...');
     document.getElementById('rag-results').innerHTML = '';
     try {
-      const { results, error } = await searchQuery(query, null);
+      const { answer, results, error } = await searchQuery(query, null);
       if (error) throw new Error(error);
       showStatus('');
+      renderAnswer(answer);
       renderResults(results);
     } catch (e) {
       showStatus('Search failed: ' + (e.message || 'unknown error'));
