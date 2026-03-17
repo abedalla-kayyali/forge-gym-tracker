@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v231';
-window.FORGE_BUILD   = '2026-03-18 (feat: v231 — Weekly Review Card in Progress tab)';
+window.FORGE_VERSION = 'v232';
+window.FORGE_BUILD   = '2026-03-18 (feat: v232 — AI Program Generator with custom split builder)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
