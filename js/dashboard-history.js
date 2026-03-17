@@ -4085,120 +4085,313 @@ window._dnnUseShield = function() {
 window.renderDailyNonNegotiables = renderDailyNonNegotiables;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DAILY READINESS SCORE  (OPT-3 · manual energy check-in · v193)
-// Score = Sleep 35% + Energy 45% + Recovery 20%
-// Storage: forge_readiness { "YYYY-MM-DD": { energy: 1-5, score: 0-100 } }
+// DAILY READINESS SCORE  (OPT-3 · Oura/WHOOP-inspired · v194)
+// Score = Sleep 40% + HRV 25% + RHR 15% + Energy 15% + Recovery 5%
+// Missing components → weight redistributed among present ones
+// Storage: forge_readiness { "YYYY-MM-DD": { energy, totalSleep, deepSleep, remSleep, hrv, rhr } }
 // ─────────────────────────────────────────────────────────────────────────────
+
+function _rdSleepScore(totalH, deepH, remH) {
+  if (totalH == null) return null;
+  var totalS;
+  if      (totalH < 4)  totalS = 10;
+  else if (totalH < 5)  totalS = 30;
+  else if (totalH < 6)  totalS = 55;
+  else if (totalH < 7)  totalS = 75;
+  else if (totalH < 8)  totalS = 92;
+  else if (totalH <= 9) totalS = 100;
+  else                  totalS = 88;
+
+  var deepS = null, remS = null;
+  if (deepH != null) {
+    if      (deepH < 0.5) deepS = 20;
+    else if (deepH < 1)   deepS = 55;
+    else if (deepH < 1.5) deepS = 80;
+    else if (deepH < 2.5) deepS = 100;
+    else                  deepS = 90;
+  }
+  if (remH != null) {
+    if      (remH < 0.5) remS = 20;
+    else if (remH < 1)   remS = 50;
+    else if (remH < 1.5) remS = 75;
+    else if (remH < 2.5) remS = 100;
+    else                 remS = 90;
+  }
+
+  var haDeep = deepS != null, haRem = remS != null;
+  if (!haDeep && !haRem) return totalS;
+  var wt = 50, wd = haDeep ? 25 : 0, wr = haRem ? 25 : 0;
+  if (!haDeep) wt += 25;
+  if (!haRem)  wt += 25;
+  var tot = wt + wd + wr;
+  return Math.round((totalS * wt + (haDeep ? deepS * wd : 0) + (haRem ? remS * wr : 0)) / tot);
+}
+
+function _rdHrvScore(hrv) {
+  if (hrv == null) return null;
+  if (hrv >= 100) return 100;
+  if (hrv >= 80)  return 92;
+  if (hrv >= 60)  return 80;
+  if (hrv >= 40)  return 65;
+  if (hrv >= 25)  return 45;
+  return 25;
+}
+
+function _rdRhrScore(rhr) {
+  if (rhr == null) return null;
+  if (rhr < 45) return 100;
+  if (rhr < 50) return 93;
+  if (rhr < 55) return 84;
+  if (rhr < 60) return 74;
+  if (rhr < 65) return 62;
+  if (rhr < 70) return 50;
+  if (rhr < 75) return 38;
+  if (rhr < 80) return 27;
+  return 15;
+}
+
+function _rdEnergyScore(e) {
+  var map = { 1: 15, 2: 38, 3: 62, 4: 82, 5: 100 };
+  return (e && map[e] != null) ? map[e] : null;
+}
+
+function _rdRecoveryScore(workouts, todayKey) {
+  if (!Array.isArray(workouts) || !workouts.length) return 100;
+  var sorted = workouts.map(function(w) { return w.date || ''; }).filter(Boolean).sort().reverse();
+  var last = sorted[0];
+  if (!last) return 100;
+  if (last === todayKey) return 50;
+  var diff = Math.round((new Date(todayKey) - new Date(last)) / 86400000);
+  return diff <= 1 ? 75 : 100;
+}
+
+function _rdComputeScore(sleepS, hrvS, rhrS, energyS, recovS) {
+  var components = [
+    { s: sleepS,  w: 40 },
+    { s: hrvS,    w: 25 },
+    { s: rhrS,    w: 15 },
+    { s: energyS, w: 15 },
+    { s: recovS,  w: 5  }
+  ].filter(function(c) { return c.s != null; });
+  if (!components.length) return null;
+  var totalW  = components.reduce(function(a, c) { return a + c.w; }, 0);
+  var weighted = components.reduce(function(a, c) { return a + c.s * c.w; }, 0);
+  return Math.round(weighted / totalW);
+}
+
+function _rdColor(score) {
+  if (score == null) return 'rgba(255,255,255,.15)';
+  if (score >= 70) return '#39ff8f';
+  if (score >= 40) return '#ffb800';
+  return '#ff6b6b';
+}
+
+function _rdBar(score, color) {
+  return '<div class="rd-sub-bar"><div class="rd-sub-bar-fill" style="width:' + (score || 0) + '%;background:' + color + ';"></div></div>';
+}
+
 function renderReadinessPanel() {
-  const el = document.getElementById('readiness-body');
+  var el = document.getElementById('readiness-body');
   if (!el) return;
 
   function _lsGet(key, fb) {
-    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+    try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
   }
 
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  var today    = new Date();
+  var todayKey = today.getFullYear() + '-' +
+                 String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                 String(today.getDate()).padStart(2, '0');
 
-  const _dnn      = _lsGet('forge_dnn', {});
-  const _ready    = _lsGet('forge_readiness', {});
-  const _wrk      = _lsGet('forge_workouts', []);
-  const todayDNN  = _dnn[todayKey] || {};
-  const todayRdy  = _ready[todayKey] || {};
+  var _ready   = _lsGet('forge_readiness', {});
+  var _wrk     = _lsGet('forge_workouts', []);
+  var todayRdy = _ready[todayKey] || {};
 
-  // ── Inputs ─────────────────────────────────────────────────────────────────
-  const sleepDone = !!todayDNN.sleep;
-  const energy    = todayRdy.energy || 0;  // 0 = not yet entered
+  var totalSleep = todayRdy.totalSleep != null ? parseFloat(todayRdy.totalSleep) : null;
+  var deepSleep  = todayRdy.deepSleep  != null ? parseFloat(todayRdy.deepSleep)  : null;
+  var remSleep   = todayRdy.remSleep   != null ? parseFloat(todayRdy.remSleep)   : null;
+  var hrv        = todayRdy.hrv        != null ? parseFloat(todayRdy.hrv)        : null;
+  var rhr        = todayRdy.rhr        != null ? parseFloat(todayRdy.rhr)        : null;
+  var energy     = todayRdy.energy     != null ? parseInt(todayRdy.energy, 10)   : null;
 
-  // ── Recovery factor: days since last workout ──────────────────────────────
-  let recoveryPts = 20;  // default: well-rested
-  if (Array.isArray(_wrk) && _wrk.length) {
-    const sortedWrk = _wrk.map(w => w.date || '').filter(Boolean).sort().reverse();
-    const lastWrkDate = sortedWrk[0];
-    if (lastWrkDate === todayKey) {
-      recoveryPts = 10;   // trained today — moderate recovery
-    } else {
-      const diff = Math.round((new Date(todayKey) - new Date(lastWrkDate)) / 86400000);
-      recoveryPts = diff <= 1 ? 16 : 20;
-    }
-  }
+  var sleepS  = _rdSleepScore(totalSleep, deepSleep, remSleep);
+  var hrvS    = _rdHrvScore(hrv);
+  var rhrS    = _rdRhrScore(rhr);
+  var energyS = _rdEnergyScore(energy);
+  var recovS  = _rdRecoveryScore(_wrk, todayKey);
+  var score   = _rdComputeScore(sleepS, hrvS, rhrS, energyS, recovS);
 
-  // ── Sleep score ────────────────────────────────────────────────────────────
-  const sleepPts = sleepDone ? 35 : 0;
-
-  // ── Energy score ──────────────────────────────────────────────────────────
-  const energyPts = energy > 0 ? Math.round(((energy - 1) / 4) * 45) : 0;
-
-  // ── Total score (only meaningful when energy has been entered) ─────────────
-  const hasData   = energy > 0;
-  const score     = hasData ? (sleepPts + energyPts + recoveryPts) : null;
-
-  // ── Badge + message ───────────────────────────────────────────────────────
-  let scoreCls = 'rd-score-none', scoreLabel = '—', scoreMsg = 'Tap an energy level below to get your readiness score.';
+  var scoreLabel  = 'NO DATA';
+  var scoreMsg    = 'Enter at least one metric below to compute your readiness score.';
+  var accentColor = 'rgba(255,255,255,.15)';
   if (score !== null) {
+    accentColor = _rdColor(score);
     if (score >= 70) {
-      scoreCls = 'rd-score-high'; scoreLabel = 'HIGH';
-      scoreMsg = 'You\'re energized and recovered. Push hard today! 💪';
+      scoreLabel = 'HIGH READINESS';
+      scoreMsg   = 'Push hard today — all systems green. 💪';
     } else if (score >= 40) {
-      scoreCls = 'rd-score-med'; scoreLabel = 'MODERATE';
-      scoreMsg = 'Decent readiness. Train smart — listen to your body.';
+      scoreLabel = 'MODERATE';
+      scoreMsg   = 'Train smart and listen to your body today.';
     } else {
-      scoreCls = 'rd-score-low'; scoreLabel = 'LOW';
-      scoreMsg = 'Low readiness today. Consider a lighter session or extra rest.';
+      scoreLabel = 'LOW READINESS';
+      scoreMsg   = 'Consider a lighter session or extra recovery today.';
     }
   }
 
-  const badge = document.getElementById('readiness-badge');
-  if (badge) badge.textContent = score !== null ? `${score} ${scoreLabel}` : 'CHECK IN';
+  var badge = document.getElementById('readiness-badge');
+  if (badge) {
+    badge.textContent = score !== null ? (score + ' ' + (score >= 70 ? 'HIGH' : score >= 40 ? 'MOD' : 'LOW')) : 'CHECK IN';
+    badge.style.color = accentColor;
+  }
 
-  // ── Energy tap buttons ────────────────────────────────────────────────────
-  const energyEmojis = ['😴','😐','🙂','😄','🚀'];
-  const energyLabels = ['Drained','Tired','OK','Good','Fired up'];
-  const energyBtns   = energyEmojis.map((emoji, i) => {
-    const lvl   = i + 1;
-    const isOn  = energy === lvl;
-    return `<button class="rd-energy-btn${isOn ? ' rd-energy-active' : ''}" onclick="window._setReadinessEnergy(${lvl})" title="${energyLabels[i]}">
-      <span class="rd-energy-emoji">${emoji}</span>
-      <span class="rd-energy-lbl">${energyLabels[i]}</span>
-    </button>`;
+  var CIRC    = 226.2;
+  var ringFill = score !== null ? (CIRC * score / 100) : 0;
+  var ringDash = ringFill + ' ' + CIRC;
+  var scoreTxt = score !== null ? score : '—';
+
+  var emojis = ['😴','😐','🙂','😄','🚀'];
+  var eLbls  = ['Drained','Tired','OK','Good','Fired up'];
+  var eBtns  = emojis.map(function(em, i) {
+    var lvl = i + 1;
+    var on  = energy === lvl;
+    return '<button class="rd-energy-btn' + (on ? ' rd-energy-active' : '') + '"' +
+      ' onclick="window._rdSave(\'energy\',' + lvl + ')" title="' + eLbls[i] + '">' +
+      '<span class="rd-energy-emoji">' + em + '</span>' +
+      '<span class="rd-energy-lbl">' + eLbls[i] + '</span></button>';
   }).join('');
 
-  // ── Context chips ─────────────────────────────────────────────────────────
-  const sleepChip = `<span class="rd-chip ${sleepDone ? 'rd-chip-ok' : 'rd-chip-miss'}">😴 Sleep ${sleepDone ? '✓' : '—'}</span>`;
-  const recLabel  = recoveryPts === 10 ? 'Trained today' : recoveryPts === 16 ? 'Trained yesterday' : 'Well rested';
-  const recCls    = recoveryPts >= 16 ? 'rd-chip-ok' : 'rd-chip-warn';
-  const recChip   = `<span class="rd-chip ${recCls}">🔄 ${recLabel}</span>`;
+  function brow(icon, lbl, s, w) {
+    var c = _rdColor(s);
+    return '<div class="rd-breakdown-row">' +
+      '<span class="rd-bd-icon">' + icon + '</span>' +
+      '<span class="rd-bd-label">' + lbl + '</span>' +
+      _rdBar(s, c) +
+      '<span class="rd-bd-val" style="color:' + c + '">' + (s != null ? s : '—') + '</span>' +
+      '<span class="rd-bd-wt">(' + w + '%)</span></div>';
+  }
 
-  el.innerHTML = `
-    <div class="rd-wrap">
-      <div class="rd-score-row">
-        <div class="rd-score-circle ${scoreCls}">${score !== null ? score : '?'}</div>
-        <div class="rd-score-right">
-          <div class="rd-chips">${sleepChip}${recChip}</div>
-          <div class="rd-msg">${scoreMsg}</div>
-        </div>
-      </div>
-      <div class="rd-energy-label">How do you feel today?</div>
-      <div class="rd-energy-row">${energyBtns}</div>
-    </div>`;
+  var bRows = brow('💤','Sleep', sleepS, 40) + brow('💓','HRV', hrvS, 25) +
+              brow('❤️','RHR',   rhrS,   15) + brow('⚡','Energy', energyS, 15) +
+              brow('🔄','Recov.', recovS, 5);
+
+  var barGrad = score !== null
+    ? 'linear-gradient(90deg,#ff6b6b 0%,#ffb800 45%,' + accentColor + ' 100%)'
+    : 'rgba(255,255,255,.06)';
+
+  el.innerHTML =
+    '<div class="rd-wrap">' +
+      '<div class="rd-hero">' +
+        '<div class="rd-ring-wrap">' +
+          '<svg width="80" height="80" viewBox="0 0 80 80" class="rd-ring-svg">' +
+            '<circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>' +
+            '<circle class="rd-ring-arc" cx="40" cy="40" r="36" fill="none"' +
+            ' stroke="' + accentColor + '" stroke-width="6"' +
+            ' stroke-dasharray="' + ringDash + '"' +
+            ' stroke-linecap="round" transform="rotate(-90 40 40)"/>' +
+          '</svg>' +
+          '<div class="rd-ring-inner"><span class="rd-ring-score" style="color:' + accentColor + '">' + scoreTxt + '</span></div>' +
+        '</div>' +
+        '<div class="rd-hero-text">' +
+          '<div class="rd-ring-label" style="color:' + accentColor + '">' + scoreLabel + '</div>' +
+          '<div class="rd-ring-msg">' + scoreMsg + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rd-hero-bar" style="background:' + barGrad + ';opacity:' + (score !== null ? '1' : '.3') + ';"></div>' +
+
+      '<div class="rd-section">' +
+        '<div class="rd-section-title">💤 SLEEP LAST NIGHT</div>' +
+        '<div class="rd-input-grid">' +
+          '<div class="rd-input-box"><span class="rd-input-label">TOTAL</span><div class="rd-input-row">' +
+            '<input class="rd-input-field" type="number" min="0" max="14" step="0.25" placeholder="—"' +
+            ' value="' + (totalSleep != null ? totalSleep : '') + '"' +
+            ' oninput="window._rdSave(\'totalSleep\',this.value)">' +
+            '<span class="rd-input-unit">h</span></div></div>' +
+          '<div class="rd-input-box"><span class="rd-input-label">DEEP</span><div class="rd-input-row">' +
+            '<input class="rd-input-field" type="number" min="0" max="6" step="0.25" placeholder="—"' +
+            ' value="' + (deepSleep != null ? deepSleep : '') + '"' +
+            ' oninput="window._rdSave(\'deepSleep\',this.value)">' +
+            '<span class="rd-input-unit">h</span></div></div>' +
+          '<div class="rd-input-box"><span class="rd-input-label">REM</span><div class="rd-input-row">' +
+            '<input class="rd-input-field" type="number" min="0" max="6" step="0.25" placeholder="—"' +
+            ' value="' + (remSleep != null ? remSleep : '') + '"' +
+            ' oninput="window._rdSave(\'remSleep\',this.value)">' +
+            '<span class="rd-input-unit">h</span></div></div>' +
+        '</div>' +
+        '<div class="rd-sub-bar-row">' +
+          '<span class="rd-sub-bar-lbl">Sleep score</span>' +
+          _rdBar(sleepS, _rdColor(sleepS)) +
+          '<span class="rd-sub-bar-val" style="color:' + _rdColor(sleepS) + '">' + (sleepS != null ? sleepS : '—') + '</span>' +
+        '</div>' +
+      '</div>' +
+
+      '<div class="rd-section">' +
+        '<div class="rd-section-title">💓 RECOVERY METRICS</div>' +
+        '<div class="rd-input-grid rd-input-grid-2">' +
+          '<div class="rd-input-box"><span class="rd-input-label">HRV TODAY</span><div class="rd-input-row">' +
+            '<input class="rd-input-field" type="number" min="1" max="250" step="1" placeholder="—"' +
+            ' value="' + (hrv != null ? hrv : '') + '"' +
+            ' oninput="window._rdSave(\'hrv\',this.value)">' +
+            '<span class="rd-input-unit">ms</span></div></div>' +
+          '<div class="rd-input-box"><span class="rd-input-label">RESTING HR</span><div class="rd-input-row">' +
+            '<input class="rd-input-field" type="number" min="30" max="120" step="1" placeholder="—"' +
+            ' value="' + (rhr != null ? rhr : '') + '"' +
+            ' oninput="window._rdSave(\'rhr\',this.value)">' +
+            '<span class="rd-input-unit">bpm</span></div></div>' +
+        '</div>' +
+        '<div class="rd-tip">Check HRV and RHR in Apple Health, Garmin Connect, Huawei Health, or Samsung Health each morning.</div>' +
+      '</div>' +
+
+      '<div class="rd-section">' +
+        '<div class="rd-section-title">⚡ HOW DO YOU FEEL?</div>' +
+        '<div class="rd-energy-row">' + eBtns + '</div>' +
+      '</div>' +
+
+      '<div class="rd-section">' +
+        '<div class="rd-section-title">📊 SCORE BREAKDOWN</div>' +
+        '<div class="rd-breakdown">' + bRows + '</div>' +
+      '</div>' +
+    '</div>';
+
+  requestAnimationFrame(function() {
+    var arc = el.querySelector('.rd-ring-arc');
+    if (arc) arc.style.transition = 'stroke-dasharray .7s cubic-bezier(.4,0,.2,1)';
+  });
 }
 
-window._setReadinessEnergy = function(level) {
+window._rdSave = function(field, rawValue) {
   function _lsGet(key, fb) {
-    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+    try { var r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
   }
   function _lsSave(key, val) {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
   }
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-  const _ready = _lsGet('forge_readiness', {});
+  var today    = new Date();
+  var todayKey = today.getFullYear() + '-' +
+                 String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                 String(today.getDate()).padStart(2, '0');
+  var _ready   = _lsGet('forge_readiness', {});
   _ready[todayKey] = _ready[todayKey] || {};
-  _ready[todayKey].energy = level;
+
+  var intFields = ['energy', 'hrv', 'rhr'];
+  var parsed;
+  if (rawValue === '' || rawValue == null) {
+    parsed = null;
+  } else if (intFields.indexOf(field) !== -1) {
+    parsed = parseInt(rawValue, 10);
+    if (isNaN(parsed)) parsed = null;
+  } else {
+    parsed = parseFloat(rawValue);
+    if (isNaN(parsed)) parsed = null;
+  }
+
+  if (parsed === null) { delete _ready[todayKey][field]; }
+  else { _ready[todayKey][field] = parsed; }
+
   _lsSave('forge_readiness', _ready);
   renderReadinessPanel();
 };
 
+window._setReadinessEnergy = function(level) { window._rdSave('energy', level); };
 window.renderReadinessPanel = renderReadinessPanel;
 
 // ─────────────────────────────────────────────────────────────────────────────
