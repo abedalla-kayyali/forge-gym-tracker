@@ -2789,6 +2789,33 @@ function _hdrRestRender() {
   _restFabUpdate();
 }
 
+// ── Adaptive Rest Timer ────────────────────────────────────────────────────
+// Returns suggested rest duration (seconds) based on exercise type + last RPE
+function computeAdaptiveRest(exerciseName, lastRpe) {
+  const COMPOUND_KEYWORDS = ['squat','deadlift','bench press','overhead press','ohp','row','pull-up','pullup','chin','dip','hip thrust','rdl','romanian'];
+  const name = (exerciseName || '').toLowerCase();
+  const isCompound = COMPOUND_KEYWORDS.some(k => name.includes(k));
+
+  let isCompoundDB = false;
+  if (typeof EXERCISE_DB !== 'undefined') {
+    const ex = EXERCISE_DB.find(e => e.n?.toLowerCase() === name);
+    if (ex) isCompoundDB = ex.e === 'barbell' || ex.e === 'bodyweight';
+  }
+  const compound = isCompound || isCompoundDB;
+
+  const rpe = parseFloat(lastRpe) || 7;
+  const rir = Math.max(0, 10 - rpe);
+
+  if (compound) {
+    if (rir <= 1) return 180;
+    if (rir <= 3) return 150;
+    return 120;
+  } else {
+    if (rir <= 1) return 90;
+    return 60;
+  }
+}
+
 function hdrSetRest(s) {
   _hdrRestTarget = s; _hdrRestSecs = s; _hdrRestRunning = false;
   clearInterval(_hdrRestInterval);

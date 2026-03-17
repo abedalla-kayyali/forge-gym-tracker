@@ -199,10 +199,18 @@ function _saveWeightedWorkout() {
         }, 1500);
       }
     }
-    // A2: Auto-rest trigger
+    // A2: Adaptive auto-rest trigger
     if (settings.autoRest && !_hdrRestRunning) {
-      hdrSetRest(_hdrRestTarget || 90);
+      const _setRows = document.querySelectorAll('#sets-container .set-row');
+      const _lastRow = _setRows.length ? _setRows[_setRows.length - 1] : null;
+      const _lastRpe = _lastRow?.querySelector('.set-rpe-btn')?.dataset?.rpe || '';
+      const _suggestedSecs = (typeof computeAdaptiveRest === 'function')
+        ? computeAdaptiveRest(name, _lastRpe)
+        : (_hdrRestTarget || 90);
+      hdrSetRest(_suggestedSecs);
       hdrRestToggle();
+      const _subEl = document.getElementById('rest-toast-sub');
+      if (_subEl) _subEl.textContent = `Coach: ${_suggestedSecs}s rest`;
     }
     startTimer();
   }, 80);
