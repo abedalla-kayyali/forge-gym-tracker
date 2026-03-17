@@ -1,6 +1,33 @@
 // FORGE Gym Tracker - recovery heatmap + plate calculator
 // Extracted from index.html as part of modularization.
 
+// MRV defaults (sets/week) — user can override via forge_mrv_config in localStorage
+const DEFAULT_MRV = {
+  chest: 20, back: 22, legs: 24, shoulders: 16,
+  biceps: 14, triceps: 14, core: 20, glutes: 20,
+  calves: 20, hamstrings: 18, quads: 20, traps: 14
+};
+
+// Recovery window (hours) based on muscle type
+const RECOVERY_WINDOW = {
+  // Compound-dominant muscles get 72h
+  chest: 72, back: 72, legs: 72, glutes: 72, hamstrings: 72, quads: 72,
+  // Isolation-dominant get 48h
+  shoulders: 48, biceps: 48, triceps: 48, core: 48, calves: 48, traps: 48
+};
+
+function _getMrvConfig() {
+  try { return JSON.parse(localStorage.getItem('forge_mrv_config') || '{}'); } catch { return {}; }
+}
+
+function _getWeeklyVolume(muscle) {
+  const cutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+  const ws = (typeof workouts !== 'undefined' ? workouts : [])
+    .filter(w => w.muscle?.toLowerCase() === muscle?.toLowerCase() && w.date >= cutoff);
+  // Count working sets (not warmup)
+  return ws.reduce((sum, w) => sum + (w.sets?.filter(s => s.type !== 'warmup').length || 0), 0);
+}
+
 let _recoveryMode = false;
 let _recoveryInterval = null;
 
@@ -32,23 +59,46 @@ function toggleRecoveryHeatmap() {
 
 function renderRecoveryHeatmap() {
   if (!_recoveryMode) return;
-  const RECOVERY_HOURS = 48; // full recovery window
   const now = Date.now();
-  // Find last workout date per muscle
+  const mrvConfig = _getMrvConfig();
+
+  // Readiness multiplier: if readiness < 50%, extend recovery times by 20%
+  let readinessMult = 1.0;
+  try {
+    const rd = JSON.parse(localStorage.getItem('forge_readiness_today') || '{}');
+    if (rd.score && rd.score < 50) readinessMult = 1.2;
+  } catch {}
+
+  // Find last workout per muscle
   const lastWorked = {};
-  workouts.forEach(w => {
+  (typeof workouts !== 'undefined' ? workouts : []).forEach(w => {
     const ms = new Date(w.date).getTime();
-    if (!lastWorked[w.muscle] || ms > lastWorked[w.muscle]) lastWorked[w.muscle] = ms;
+    const key = (w.muscle || '').toLowerCase();
+    if (!lastWorked[key] || ms > lastWorked[key].ms) {
+      lastWorked[key] = { ms, date: w.date };
+    }
   });
+
   document.querySelectorAll('.body-zone').forEach(z => {
-    const muscle = z.dataset.muscle;
+    const muscle = (z.dataset.muscle || '').toLowerCase();
     z.classList.remove('recovery-fresh', 'recovery-mid', 'recovery-almost', 'recovery-good', 'zone-selected');
-    if (!lastWorked[muscle]) return; // never trained — no color
-    const hoursAgo = (now - lastWorked[muscle]) / 3600000;
-    if (hoursAgo < 24) z.classList.add('recovery-fresh');
-    else if (hoursAgo < 36) z.classList.add('recovery-mid');
-    else if (hoursAgo < RECOVERY_HOURS) z.classList.add('recovery-almost');
-    else z.classList.add('recovery-good');
+    if (!lastWorked[muscle]) return;
+
+    const hoursAgo = (now - lastWorked[muscle].ms) / 3600000;
+    const window_ = (RECOVERY_WINDOW[muscle] || 48) * readinessMult;
+    const mrv = mrvConfig[muscle] || DEFAULT_MRV[muscle] || 20;
+    const weeklyVol = _getWeeklyVolume(muscle);
+    const overreached = weeklyVol >= mrv;
+
+    if (overreached || hoursAgo < window_ * 0.33) {
+      z.classList.add('recovery-fresh');       // red — still recovering / overreached
+    } else if (hoursAgo < window_ * 0.66) {
+      z.classList.add('recovery-mid');         // orange
+    } else if (hoursAgo < window_) {
+      z.classList.add('recovery-almost');      // yellow
+    } else {
+      z.classList.add('recovery-good');        // green — fully recovered
+    }
   });
 }
 
