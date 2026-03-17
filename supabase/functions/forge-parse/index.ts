@@ -42,7 +42,7 @@ Output format: {"exercise":"string","weight":number,"unit":"kg"|"lbs","reps":num
     // Validate it's JSON
     let parsed: unknown;
     try { parsed = JSON.parse(raw); }
-    catch { return new Response(JSON.stringify({ error: "parse failed", raw }), {
+    catch { return new Response(JSON.stringify({ error: "parse failed" }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" }
     }); }
 
