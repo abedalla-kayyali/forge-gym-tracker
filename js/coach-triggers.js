@@ -294,5 +294,106 @@
 
   window.FORGE_COACH.checkDailyReadiness = _checkDailyReadiness;
 
+  // ── Trigger: session debrief card (fires after workout save) ─────────────
+  async function generateSessionDebrief(summary) {
+    const dateKey = new Date().toDateString();
+    const cdKey = 'session_debrief_' + dateKey;
+    if (_onCooldown(cdKey)) return;
+    _setCooldown(cdKey);
+
+    // Auth: get live session token
+    const session = await window._sb?.auth?.getSession?.();
+    const token = session?.data?.session?.access_token;
+    if (!token) return; // guests skip debrief
+
+    const musclesStr = (summary?.muscles || []).join(', ') || 'unknown muscles';
+    const setsStr = summary?.totalSets ?? '?';
+    const volPart = summary?.volumeDelta != null
+      ? `, ${summary.volumeDelta >= 0 ? '+' : ''}${summary.volumeDelta}% volume vs last session`
+      : '';
+    const goal = (typeof userProfile !== 'undefined' ? userProfile : window.userProfile)?.goal || 'muscle';
+
+    const query = `Workout complete: ${setsStr} sets on ${musclesStr}${volPart}. Goal: ${goal}. Give a 3-line debrief: (1) what was accomplished, (2) overload verdict, (3) recovery recommendation. Max 120 words.`;
+
+    if (!window.FORGE_CONFIG?.SUPABASE_URL) return;
+
+    // Build debrief card using DOM methods (same style as fetchFormCue)
+    const existing = document.getElementById('coach-debrief-card');
+    if (existing) existing.remove();
+
+    const card = document.createElement('div');
+    card.id = 'coach-debrief-card';
+    card.className = 'coach-intercept-card';
+
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'cic-icon';
+    iconDiv.textContent = '💬';
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'cic-message';
+    msgDiv.style.opacity = '0.5';
+    msgDiv.textContent = 'Generating session debrief…';
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'cic-actions';
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'cic-btn cic-btn-dismiss';
+    dismissBtn.textContent = 'Dismiss';
+    dismissBtn.addEventListener('click', () => card.remove());
+    actionsDiv.appendChild(dismissBtn);
+
+    card.append(iconDiv, msgDiv, actionsDiv);
+    card.addEventListener('click', () => card.remove());
+
+    const anchor = document.getElementById('last-session-hint') || document.getElementById('sets-container') || document.getElementById('muscle-btn-grid');
+    if (anchor) anchor.parentNode.insertBefore(card, anchor.nextSibling);
+    else document.body.appendChild(card);
+
+    try {
+      const resp = await fetch(`${window.FORGE_CONFIG.SUPABASE_URL}/functions/v1/forge-search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          query,
+          coach_mode: true,
+          coach_system: 'You are FORGE. Give a 3-line post-workout debrief. Line 1: accomplished. Line 2: overload verdict. Line 3: recovery. Max 120 words.',
+          max_tokens: 150
+        })
+      });
+      if (!resp.ok) { card.remove(); return; }
+
+      // Stream tokens into card (exact pattern from _fireCoachMessage)
+      const reader = resp.body?.getReader();
+      if (!reader) { card.remove(); return; }
+      const decoder = new TextDecoder();
+      let text = '';
+      msgDiv.style.opacity = '';
+      msgDiv.textContent = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        chunk.split('\n').forEach(line => {
+          if (line.startsWith('data: ')) {
+            const d = line.slice(6).trim();
+            if (d && d !== '[DONE]') {
+              try { text += JSON.parse(d)?.token || ''; } catch {}
+            }
+          }
+        });
+        msgDiv.textContent = text;
+      }
+      if (!text.trim()) card.remove();
+      else setTimeout(() => card?.remove(), 30000); // auto-dismiss after 30s
+    } catch (e) {
+      card.remove();
+    }
+  }
+
+  window.FORGE_COACH.generateSessionDebrief = generateSessionDebrief;
+
   console.log('[FORGE] Coach triggers loaded');
 })();

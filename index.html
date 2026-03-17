@@ -8513,6 +8513,40 @@ function _runPostSaveAsyncHooks() {
   if (typeof window._ragAutoIngest === 'function') {
     setTimeout(window._ragAutoIngest, 2500);
   }
+  // Session debrief (5A) — fires 2s after save
+  setTimeout(() => {
+    if (typeof FORGE_COACH?.generateSessionDebrief === 'function') {
+      // workouts schema: flat array of { exercise, muscle, date, sets, totalVolume }
+      // Get all entries from today's date to build the debrief summary
+      const _todayStr = new Date().toDateString();
+      const _allW = (typeof workouts !== 'undefined' ? workouts : []);
+      const _todayW = _allW.filter(w => w.date && new Date(w.date).toDateString() === _todayStr);
+      const _debriefMuscles = Array.from(new Set(_todayW.map(e => e.muscle).filter(Boolean)));
+      const _totalSets = _todayW.reduce((n, e) => n + (e.sets?.length || 0), 0);
+      // Compute volumeDelta vs previous session(s) on same muscles
+      let _volDelta = null;
+      if (_debriefMuscles.length > 0) {
+        const _curVol = _todayW.reduce((n, e) => n + (e.totalVolume || 0), 0);
+        const _prevW = _allW.filter(w =>
+          w.date && new Date(w.date).toDateString() !== _todayStr &&
+          _debriefMuscles.includes(w.muscle)
+        );
+        // Group prev entries by date, find most recent date
+        const _prevDates = Array.from(new Set(_prevW.map(w => new Date(w.date).toDateString())));
+        if (_prevDates.length > 0) {
+          const _lastDate = _prevDates.sort((a, b) => new Date(b) - new Date(a))[0];
+          const _lastW = _prevW.filter(w => new Date(w.date).toDateString() === _lastDate);
+          const _prevVol = _lastW.reduce((n, e) => n + (e.totalVolume || 0), 0);
+          if (_prevVol > 0) _volDelta = Math.round(((_curVol - _prevVol) / _prevVol) * 100);
+        }
+      }
+      FORGE_COACH.generateSessionDebrief({
+        muscles: _debriefMuscles,
+        totalSets: _totalSets,
+        volumeDelta: _volDelta
+      });
+    }
+  }, 2000);
 }
 
 // ???????????????????????????????????????????
