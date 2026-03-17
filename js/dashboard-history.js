@@ -686,6 +686,7 @@ function switchDashTab(name, btn) {
   if (name === 'body' && typeof renderMeasurementsPanel === 'function') renderMeasurementsPanel();
   if (name === 'overview' && typeof renderGoalDashboard === 'function') renderGoalDashboard();
   if (name === 'overview' && typeof renderWeeklyReviewCard === 'function') renderWeeklyReviewCard();
+  if (name === 'overview' && typeof renderDailyNonNegotiables === 'function') renderDailyNonNegotiables();
   // Render Calisthenics Journey when progress tab opens
   if (name === 'progress' && typeof renderCaliJourney === 'function') renderCaliJourney();
   // Render Calisthenics Dashboard when cali tab opens
@@ -3887,5 +3888,132 @@ window._applyAdaptiveTDEE = function(estimatedTDEE, newKcalTarget) {
   renderAdaptiveTDEE();
 };
 window.renderAdaptiveTDEE = renderAdaptiveTDEE;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DAILY NON-NEGOTIABLES  (5-habit checklist · P2 · v183)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderDailyNonNegotiables() {
+  const el = document.getElementById('dnn-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _lsSave(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
+  }
+
+  const _meals  = (typeof mealsLog    !== 'undefined' ? mealsLog    : null) || _lsGet('forge_meals',      {});
+  const _bw     = (typeof bodyWeight  !== 'undefined' ? bodyWeight  : null) || _lsGet('forge_bodyweight', []);
+  const _wrk    = (typeof workouts    !== 'undefined' ? workouts    : null) || _lsGet('forge_workouts',   []);
+  const _up     = (typeof userProfile !== 'undefined' ? userProfile : null) || _lsGet('forge_profile',    {});
+  const _sets   = (typeof settings    !== 'undefined' ? settings    : null) || _lsGet('forge_settings',   {});
+  const _dnn    = _lsGet('forge_dnn', {});
+
+  const today  = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const todayDNN = _dnn[todayKey] || {};
+
+  // ── Auto-detect habits ────────────────────────────────────────────────────
+  // 1. Weight logged today
+  const weightLogged = Array.isArray(_bw) && _bw.some(e => (e.date || e.d || '') === todayKey);
+
+  // 2. Protein hit today
+  const protTarget = Math.round(parseFloat(_up.weight || 75) * 1.8);
+  const todayMeals = Array.isArray(_meals?.[todayKey]) ? _meals[todayKey] : [];
+  const todayProt  = todayMeals.reduce((s, m) => s + (parseFloat(m.protein) || 0), 0);
+  const proteinHit = protTarget > 0 && todayProt >= protTarget * 0.9;
+
+  // 3. Session completed today
+  const sessionDone = Array.isArray(_wrk) && _wrk.some(w => w.date === todayKey);
+
+  // 4. Sleep 7h+ (manual tap)
+  const sleepDone  = !!todayDNN.sleep;
+
+  // 5. Steps 8k+ (manual tap)
+  const stepsDone  = !!todayDNN.steps;
+
+  const habits = [
+    { id: 'weight', icon: '⚖️', label: 'Log weight',      done: weightLogged, auto: true  },
+    { id: 'protein',icon: '🥩', label: 'Hit protein',     done: proteinHit,   auto: true  },
+    { id: 'session',icon: '💪', label: 'Train today',     done: sessionDone,  auto: true  },
+    { id: 'sleep',  icon: '😴', label: '7h+ sleep',       done: sleepDone,    auto: false },
+    { id: 'steps',  icon: '👟', label: '8k+ steps',       done: stepsDone,    auto: false },
+  ];
+
+  const doneCount = habits.filter(h => h.done).length;
+  const isPerfect = doneCount === 5;
+
+  // ── Perfect day: persist and toast ────────────────────────────────────────
+  if (isPerfect && !todayDNN.perfectDay) {
+    todayDNN.perfectDay = true;
+    _dnn[todayKey] = todayDNN;
+    _lsSave('forge_dnn', _dnn);
+    if (typeof showToast === 'function') {
+      setTimeout(() => showToast('🔥 Perfect day! All 5 Non-Negotiables hit!', 'success'), 300);
+    }
+  }
+
+  // ── Streak: consecutive perfect days before today ─────────────────────────
+  let streak = 0;
+  for (let i = 1; i <= 365; i++) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const dk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (_dnn[dk]?.perfectDay) { streak++; } else { break; }
+  }
+  if (isPerfect) streak++; // count today if perfect
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  const pillsHtml = habits.map(h => `
+    <div class="dnn-pill ${h.done ? 'dnn-done' : 'dnn-open'}${h.auto ? ' dnn-auto' : ''}"
+         ${!h.auto ? `onclick="window._dnnToggle('${h.id}')"` : ''}
+         title="${h.auto ? 'Auto-tracked' : 'Tap to mark complete'}">
+      <span class="dnn-pill-icon">${h.icon}</span>
+      <span class="dnn-pill-label">${h.label}</span>
+      <span class="dnn-pill-check">${h.done ? '✓' : ''}</span>
+    </div>`).join('');
+
+  const streakHtml = streak > 0
+    ? `<div class="dnn-streak"><span class="dnn-streak-fire">🔥</span><span class="dnn-streak-val">${streak}</span><span class="dnn-streak-label">day streak</span></div>`
+    : '';
+
+  const progressPct = Math.round(doneCount / 5 * 100);
+  const progressClass = isPerfect ? 'dnn-prog-perfect' : doneCount >= 3 ? 'dnn-prog-good' : 'dnn-prog-low';
+
+  const badge = document.getElementById('dnn-badge');
+  if (badge) badge.textContent = `${doneCount}/5 TODAY`;
+
+  el.innerHTML = `
+    <div class="dnn-wrap">
+      <div class="dnn-progress-row">
+        <div class="dnn-progress-track">
+          <div class="dnn-progress-fill ${progressClass}" style="width:${progressPct}%"></div>
+        </div>
+        <span class="dnn-progress-label">${doneCount}/5 ${isPerfect ? '🔥' : ''}</span>
+        ${streakHtml}
+      </div>
+      <div class="dnn-grid">${pillsHtml}</div>
+      ${!habits[3].done || !habits[4].done ? `<div class="dnn-tap-hint">Tap 😴 / 👟 to mark when done</div>` : ''}
+    </div>`;
+}
+
+// Toggle a manual DNN habit (sleep / steps)
+window._dnnToggle = function(habitId) {
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _lsSave(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
+  }
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const _dnn = _lsGet('forge_dnn', {});
+  const todayDNN = _dnn[todayKey] || {};
+  todayDNN[habitId] = !todayDNN[habitId];
+  _dnn[todayKey] = todayDNN;
+  _lsSave('forge_dnn', _dnn);
+  renderDailyNonNegotiables();
+};
+window.renderDailyNonNegotiables = renderDailyNonNegotiables;
 
 
