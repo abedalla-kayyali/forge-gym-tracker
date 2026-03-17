@@ -341,6 +341,11 @@
         const savedGoal = parseInt(localStorage.getItem('forge_step_goal') || '0') || 10000;
         stepsRes.data.forEach(r => { obj[r.date] = { steps: r.steps, goal: savedGoal }; });
         _lsSet('forge_steps', obj);
+        // Sync in-memory stepsData so renderStepsPanel reads fresh values without reload
+        if (typeof stepsData !== 'undefined') {
+          Object.keys(stepsData).forEach(k => delete stepsData[k]);
+          Object.assign(stepsData, obj);
+        }
       }
 
       console.log('[FORGE sync] pull complete — workouts:', workoutsRes.data?.length ?? 0,
