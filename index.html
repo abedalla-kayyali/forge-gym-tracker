@@ -2960,6 +2960,30 @@ function _updateHdrStreak() {
   if (lbl) lbl.textContent = (typeof currentLang !== 'undefined' && currentLang === 'ar') ? 'السلسلة' : 'STREAK';
 }
 
+// Recovery status helpers — used by coach-triggers.js
+// Recovery window per muscle (mirrors recovery-plate.js RECOVERY_WINDOW)
+const _COACH_RECOVERY_WINDOW = {
+  chest:72, back:72, legs:72, glutes:72, hamstrings:72, quads:72,
+  shoulders:48, biceps:48, triceps:48, core:48, calves:48, traps:48
+};
+window._getMuscleRecoveryStatus = function(muscleName) {
+  const key = (muscleName || '').toLowerCase();
+  const ws = (typeof workouts !== 'undefined' ? workouts : [])
+    .filter(w => w.muscle?.toLowerCase() === key)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  if (!ws.length) return null;
+  const hoursAgo = (Date.now() - new Date(ws[0].date).getTime()) / 3600000;
+  return { hoursAgo, lastDate: ws[0].date };
+};
+window._getRecoveredMuscles = function() {
+  const muscles = ['Chest','Back','Shoulders','Biceps','Triceps','Legs','Core','Glutes'];
+  return muscles.filter(m => {
+    const s = window._getMuscleRecoveryStatus(m);
+    const w = _COACH_RECOVERY_WINDOW[m.toLowerCase()] || 48;
+    return !s || s.hoursAgo >= w;
+  });
+};
+
 // ?? Header Water Tracker ??
 function _updateHdrWater() {
   const val  = document.getElementById('hdr-water-val');
@@ -3369,6 +3393,10 @@ function _toggleBodyMap(btn) {
 }
 
 function selectMuscle(muscleOrBtn, fromOverlay) {
+  // Coach recovery intercept — must be FIRST, before any early returns
+  if (typeof window.FORGE_COACH?.checkMuscleRecovery === 'function') {
+    window.FORGE_COACH.checkMuscleRecovery(typeof muscleOrBtn === 'string' ? muscleOrBtn : muscleOrBtn?.dataset?.muscle);
+  }
   const muscle = typeof muscleOrBtn === 'string' ? muscleOrBtn : muscleOrBtn.dataset.muscle;
   selectedMuscle = muscle;
   document.getElementById('selected-muscle-badge').textContent = (typeof t === 'function') ? t('muscle.' + muscle) : muscle.toUpperCase();
@@ -9426,6 +9454,7 @@ if (document.readyState === 'loading') {
 <script src="js/cardio-log.js"></script>
 <script src="js/cardio-stats.js"></script>
 <script src="js/coach-state.js"></script>
+<script src="js/coach-triggers.js"></script>
 <script src="js/duels.js"></script>
 <script src="js/social-ui.js"></script>
 <script src="js/steps-health.js"></script>

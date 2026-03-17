@@ -23283,3 +23283,23 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .cplan-setup-val.cplan-setup-warn{color:var(--warn);}
 .cplan-setup-btn{padding:4px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;flex-shrink:0;}
 .cplan-setup-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Coach intercept card */
+.coach-intercept-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg2));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  animation: slideDown 0.2s ease;
+}
+.cic-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.cic-message { font-size: 13px; line-height: 1.4; color: var(--text1); flex: 1; }
+.cic-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.cic-btn { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: none; cursor: pointer; }
+.cic-btn-primary { background: var(--accent); color: white; }
+.cic-btn-dismiss { background: var(--bg3); color: var(--text2); }
+@keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }

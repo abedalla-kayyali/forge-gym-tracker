@@ -38,6 +38,10 @@ serve(async (req) => {
   let clientTz = 'UTC';
   let userContext = '';
 
+  let coach_mode = false;
+  let coach_system = '';
+  let max_tokens = 900;
+
   try {
     const body = await req.json();
     query = body.query?.trim();
@@ -47,6 +51,9 @@ serve(async (req) => {
     if (body.client_date) clientDate = String(body.client_date);
     if (body.client_tz) clientTz = String(body.client_tz);
     if (body.user_context) userContext = String(body.user_context).slice(0, 2000);
+    if (body.coach_mode) coach_mode = Boolean(body.coach_mode);
+    if (body.coach_system) coach_system = String(body.coach_system).slice(0, 500);
+    if (body.max_tokens) max_tokens = Math.min(500, Math.max(10, Number(body.max_tokens)));
   } catch {
     return new Response('Bad request', { status: 400 });
   }
@@ -110,12 +117,17 @@ serve(async (req) => {
         `event: meta\ndata: ${JSON.stringify({ results })}\n\n`
       ));
 
-      if (!anthropicKey || results.length === 0) {
+      if (!coach_mode && (!results || results.length === 0)) {
         if (results.length === 0) {
           controller.enqueue(encoder.encode(
             `event: token\ndata: ${JSON.stringify({ token: "I couldn't find any relevant data. Try indexing your data first." })}\n\n`
           ));
         }
+        controller.enqueue(encoder.encode(`event: done\ndata: {}\n\n`));
+        controller.close();
+        return;
+      }
+      if (!anthropicKey) {
         controller.enqueue(encoder.encode(`event: done\ndata: {}\n\n`));
         controller.close();
         return;
@@ -136,9 +148,11 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             model: 'claude-haiku-4-5-20251001',
-            max_tokens: 900,
+            max_tokens: coach_mode ? (max_tokens || 80) : 900,
             stream: true,
-            system: `You are FORGE, a personal gym AI coach. Today is ${dateStr}, current time is ${timeStr}.
+            system: coach_mode
+              ? (coach_system || 'You are FORGE Coach. Be brief and direct.')
+              : `You are FORGE, a personal gym AI coach. Today is ${dateStr}, current time is ${timeStr}.
 
 ${userContext ? `## USER PROFILE & CURRENT STATS\n${userContext}\n` : ''}
 ## YOUR ROLE
