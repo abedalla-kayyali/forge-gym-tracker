@@ -5674,86 +5674,41 @@ function renderCoachToday() {
   const userName = userProfile?.name || userProfile?.firstName || '';
   const greetLine = userName ? `${greeting}, ${userName}!` : `${greeting}!`;
 
-  // Check-in card
-  let checkinCard = '';
-  if (ciDone) {
-    const starLine = (val, max=5) => '<span class="ctoday-star active"></span>'.repeat(val||0) + '<span class="ctoday-star"></span>'.repeat(max-(val||0));
-    checkinCard = `
-      <div class="ctoday-card ctoday-checkin-done">
-        <div class="ctoday-card-title">${_ctAr ? 'حالة اليوم' : "Today's Wellness"}</div>
-        <div class="ctoday-ci-row"><span>${_ctAr ? 'الطاقة' : 'Energy'}</span><span>${starLine(ci.energy)}</span></div>
-        <div class="ctoday-ci-row"><span>${_ctAr ? 'النوم' : 'Sleep'}</span><span>${starLine(ci.sleep)}</span></div>
-        <div class="ctoday-ci-row"><span>${_ctAr ? 'المزاج' : 'Mood'}</span><span>${starLine(ci.mood)}</span></div>
-        <div class="ctoday-ci-tip">${_ctAr ? 'تم تسجيل التقييم اليوم' : 'Check-in logged for today'}</div>
-      </div>`;
-  } else if (ci && ci.skipped) {
-    checkinCard = `
-      <div class="ctoday-card ctoday-checkin-done" style="opacity:.7;">
-        <div class="ctoday-card-title">${_ctAr ? 'تقييم يومي' : 'Daily Check-In'}</div>
-        <div class="ctoday-ci-tip">${_ctAr ? 'تم التخطي اليوم.' : 'Skipped for today.'} <button class="ctoday-ci-redo" onclick="localStorage.removeItem('forge_checkin_'+new Date().toDateString());renderCoachToday()">${_ctAr ? 'سجل الآن' : 'Log now'}</button></div>
-      </div>`;
-  } else {
-    checkinCard = `
-      <div class="ctoday-card" id="ctoday-checkin-card">
-        <div class="ctoday-card-title">${_ctAr ? 'كيف تشعر اليوم؟' : 'How are you feeling today?'}</div>
-        <div class="ctoday-ci-row"><span>${_ctAr ? 'الطاقة' : 'Energy'}</span><div class="ctoday-stars" id="ctoday-energy"></div></div>
-        <div class="ctoday-ci-row"><span>${_ctAr ? 'النوم' : 'Sleep'}</span><div class="ctoday-stars" id="ctoday-sleep"></div></div>
-        <div class="ctoday-ci-row"><span>${_ctAr ? 'المزاج' : 'Mood'}</span><div class="ctoday-stars" id="ctoday-mood"></div></div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="ctoday-ci-submit" onclick="_ctodaySubmitCheckin()">${_ctAr ? 'تسجيل' : "Log Today"}</button>
-          <button class="ctoday-ci-skip" onclick="_ctodaySkipCheckin()">${_ctAr ? 'تخطي' : 'Skip'}</button>
-        </div>
-      </div>`;
-  }
+  // ── Wellness card: pulls from forge_readiness (replaces old star check-in) ─
+  const _rdWell = (() => { try { return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[new Date().toISOString().slice(0,10)] || {}; } catch { return {}; } })();
+  const _rdWellHas = !!((_rdWell.totalSleep) || (_rdWell.hrv) || (_rdWell.rhr) || (_rdWell.energy));
+  const _rdWellScore = (() => {
+    if (!_rdWellHas) return null;
+    try {
+      const sl = (typeof _rdSleepScore === 'function') ? _rdSleepScore(_rdWell.totalSleep ?? null, _rdWell.deepSleep ?? null, _rdWell.remSleep ?? null) : null;
+      const hv = (typeof _rdHrvScore === 'function') ? _rdHrvScore(_rdWell.hrv ?? null) : null;
+      const rh = (typeof _rdRhrScore === 'function') ? _rdRhrScore(_rdWell.rhr ?? null) : null;
+      const en = (typeof _rdEnergyScore === 'function') ? _rdEnergyScore(_rdWell.energy ?? null) : null;
+      return (typeof _rdComputeScore === 'function') ? _rdComputeScore(sl, hv, rh, en, 100) : null;
+    } catch { return null; }
+  })();
+  const _rdWellColor = _rdWellScore === null ? 'rgba(255,255,255,.3)' : (_rdWellScore >= 70 ? '#39ff8f' : (_rdWellScore >= 40 ? '#ffb800' : '#ff6b6b'));
+  const _rdWellLabel = _rdWellScore === null ? (_ctAr ? 'لم يُسجَّل' : 'Not logged') : (_rdWellScore >= 70 ? (_ctAr ? 'جاهزية عالية' : 'HIGH') : (_rdWellScore >= 40 ? (_ctAr ? 'معتدل' : 'MODERATE') : (_ctAr ? 'منخفض' : 'LOW')));
 
-  // ── Readiness Check-In shortcut card ──────────────────────────────────────
-  const _rdToday = (() => {
-    try {
-      const _tk = new Date().toISOString().slice(0,10);
-      return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[_tk] || {};
-    } catch(_e) { return {}; }
-  })();
-  const _rdHasData = !!((_rdToday.energy) || (_rdToday.totalSleep) || (_rdToday.hrv) || (_rdToday.rhr));
-  const _rdScore = (() => {
-    if (!_rdHasData) return null;
-    try {
-      const _sl = (typeof _rdSleepScore === 'function') ? _rdSleepScore(_rdToday.totalSleep ?? null, _rdToday.deepSleep ?? null, _rdToday.remSleep ?? null) : null;
-      const _hv = (typeof _rdHrvScore === 'function') ? _rdHrvScore(_rdToday.hrv ?? null) : null;
-      const _rh = (typeof _rdRhrScore === 'function') ? _rdRhrScore(_rdToday.rhr ?? null) : null;
-      const _en = (typeof _rdEnergyScore === 'function') ? _rdEnergyScore(_rdToday.energy ?? null) : null;
-      const _rc = 100;
-      return (typeof _rdComputeScore === 'function') ? _rdComputeScore(_sl, _hv, _rh, _en, _rc) : null;
-    } catch(_e) { return null; }
-  })();
-  const _rdColor2 = _rdScore === null ? 'rgba(255,255,255,.3)' : (_rdScore >= 70 ? '#39ff8f' : (_rdScore >= 40 ? '#ffb800' : '#ff6b6b'));
-  const _rdLabel2 = _rdScore === null ? (_ctAr ? 'لم يُسجَّل بعد' : 'Not logged yet') : (_rdScore >= 70 ? (_ctAr ? 'جاهزية عالية' : 'HIGH READINESS') : (_rdScore >= 40 ? (_ctAr ? 'معتدل' : 'MODERATE') : (_ctAr ? 'جاهزية منخفضة' : 'LOW READINESS')));
-  const _rdNavFn = `(function(){
-    const ob=document.querySelector('.dash-tab[data-tab="overview"]');
-    if(typeof switchDashTab==='function') switchDashTab('overview',ob||null);
-    const ps=Array.from(document.querySelectorAll('#view-dashboard .panel[data-dash-tab="overview"]'));
-    const ri=ps.findIndex(p=>p.id==='readiness-panel');
-    if(ri>=0){_overviewAccordionOpenIndex=ri;if(typeof _applyOverviewAccordion==='function')_applyOverviewAccordion();}
-    const rp=document.getElementById('readiness-panel');
-    if(rp) setTimeout(()=>{try{rp.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}},80);
-    if(typeof renderReadinessPanel==='function') renderReadinessPanel();
-  })()`;
-  const readinessShortcutCard = `
-    <div class="ctoday-card ctoday-readiness-card" onclick="${_rdNavFn.replace(/"/g,"'")}" style="cursor:pointer;">
-      <div class="ctoday-readiness-row">
-        <div class="ctoday-readiness-ring" style="--rd-color:${_rdColor2};">
-          <span class="ctoday-readiness-val" style="color:${_rdColor2};">${_rdScore !== null ? _rdScore : '—'}</span>
-        </div>
-        <div class="ctoday-readiness-info">
-          <div class="ctoday-card-title" style="margin-bottom:2px;">⚡ ${_ctAr ? 'الجاهزية اليومية' : 'Daily Readiness'}</div>
-          <div class="ctoday-readiness-label" style="color:${_rdColor2};">${_rdLabel2}</div>
-          <div class="ctoday-readiness-hint">${_rdHasData
-            ? (_rdToday.totalSleep ? `💤 ${_rdToday.totalSleep}h` : '') + (_rdToday.hrv ? `  💓 HRV ${_rdToday.hrv}` : '') + (_rdToday.rhr ? `  ❤️ ${_rdToday.rhr}bpm` : '')
-            : (_ctAr ? 'اضغط لإدخال النوم، معدل ضربات القلب، وHRV' : 'Tap to enter Sleep, HRV & Resting HR')
-          }</div>
-        </div>
-        <span class="ctoday-readiness-arrow">›</span>
+  const _rdNavFnWell = `(function(){const ob=document.querySelector('.dash-tab[data-tab="overview"]');if(typeof switchDashTab==='function')switchDashTab('overview',ob||null);const ps=Array.from(document.querySelectorAll('#view-dashboard .panel[data-dash-tab="overview"]'));const ri=ps.findIndex(p=>p.id==='readiness-panel');if(ri>=0){_overviewAccordionOpenIndex=ri;if(typeof _applyOverviewAccordion==='function')_applyOverviewAccordion();}const rp=document.getElementById('readiness-panel');if(rp)setTimeout(()=>{try{rp.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}},80);if(typeof renderReadinessPanel==='function')renderReadinessPanel();})()`;
+
+  const checkinCard = `
+  <div class="ctoday-card ctoday-readiness-card" onclick="${_rdNavFnWell.replace(/"/g,"'")}" style="cursor:pointer;">
+    <div class="ctoday-readiness-row">
+      <div class="ctoday-readiness-ring" style="--rd-color:${_rdWellColor};">
+        <span class="ctoday-readiness-val" style="color:${_rdWellColor};">${_rdWellScore !== null ? _rdWellScore : '—'}</span>
       </div>
-    </div>`;
+      <div class="ctoday-readiness-info">
+        <div class="ctoday-card-title" style="margin-bottom:2px;">⚡ ${_ctAr ? 'الجاهزية اليومية' : 'Daily Readiness'}</div>
+        <div class="ctoday-readiness-label" style="color:${_rdWellColor};">${_rdWellLabel}</div>
+        <div class="ctoday-readiness-hint">${_rdWellHas
+          ? [_rdWell.totalSleep ? `💤 ${_rdWell.totalSleep}h` : '', _rdWell.hrv ? `💓 HRV ${_rdWell.hrv}` : '', _rdWell.rhr ? `❤️ ${_rdWell.rhr}bpm` : ''].filter(Boolean).join('  ')
+          : (_ctAr ? 'اضغط لإدخال النوم، معدل ضربات القلب، وHRV' : 'Tap to log Sleep, HRV & Resting HR')
+        }</div>
+      </div>
+      <span class="ctoday-readiness-arrow">›</span>
+    </div>
+  </div>`;
 
   // Game Plan
   const allMuscles = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Glutes','Calves','Forearms'];
@@ -5841,7 +5796,8 @@ function renderCoachToday() {
       <div style="margin-top:10px;"><button class="ctoday-ci-submit" onclick="_ctodayStartMinimumSession()">${_tx('Start Minimum Session','ابدأ جلسة الحد الأدنى')}</button></div>
     </div>` : '';
 
-  const lowSleep = !!(ciDone && (ci.sleep || 0) <= 2);
+  const sleepHours = (() => { try { return parseFloat(JSON.parse(localStorage.getItem('forge_readiness') || '{}')[new Date().toISOString().slice(0,10)]?.totalSleep) || 0; } catch { return 0; } })();
+  const lowSleep  = sleepHours > 0 && sleepHours < 6;
   const lowEnergy = !!(ciDone && (ci.energy || 0) <= 2);
   const recoveryCard = (lowSleep || lowEnergy || consistencyState.momentum_state === 'recovery') ? `
     <div class="ctoday-card" style="border-color:#60a5fa55;">
@@ -6012,7 +5968,6 @@ function renderCoachToday() {
   el.innerHTML = `
     <div class="ctoday-wrap">
       <div class="ctoday-greeting">${greetLine}</div>
-      ${readinessShortcutCard}
       ${checkinCard}
       ${gamePlanCard}
       ${adaptCard}
@@ -6024,7 +5979,6 @@ function renderCoachToday() {
       ${quickBWCard}
     </div>`;
 
-  if (!ciDone && !(ci && ci.skipped)) _ctodayInitStars();
 }
 
 // Init interactive stars for Today tab
