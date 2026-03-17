@@ -1795,7 +1795,6 @@
     init();
   }
 
+  // Expose user context builder for inline coach calls
+  window._forgeUserContext = buildUserContext;
 })();
-
-// Expose user context builder for inline coach calls
-window._forgeUserContext = buildUserContext;

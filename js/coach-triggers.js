@@ -77,8 +77,8 @@
     card.id = 'coach-intercept-card';
     card.className = 'coach-intercept-card';
     card.innerHTML = `
-      <div class="cic-icon">🤖</div>
-      <div class="cic-message"></div>
+      <div class="cic-top"><span class="cic-icon">🤖</span><span class="cic-label">FORGE COACH</span></div>
+      <div class="cic-body"><div class="cic-message"></div></div>
       <div class="cic-actions">
         ${cta1Label ? `<button class="cic-btn cic-btn-primary" id="cic-cta1">${cta1Label}</button>` : ''}
         <button class="cic-btn cic-btn-dismiss" id="cic-dismiss">Log anyway</button>
@@ -114,7 +114,7 @@
 
     _fireCoachMessage(
       triggerKey,
-      'You are FORGE Coach. Reply in 1 sentence, max 15 words. Be direct, not preachy.',
+      'You are FORGE Coach. Reply in 1 sentence, max 15 words. Be direct, not preachy. Plain text only, no markdown.',
       `User wants to train ${muscleName} but only rested ${Math.round(status.hoursAgo)}h. Suggest ${altStr}.`,
       (msg) => {
         _showInterceptCard(
@@ -137,7 +137,7 @@
     const triggerKey = `plateau_${exerciseName}_${new Date().toDateString()}`;
     _fireCoachMessage(
       triggerKey,
-      'You are FORGE Coach. Reply in 1 sentence, max 20 words. Be actionable.',
+      'You are FORGE Coach. Reply in 1 sentence, max 20 words. Be actionable. Plain text only, no markdown.',
       `User has a ${plateau}-session plateau on ${exerciseName}. Give one concrete tip.`,
       (msg) => {
         if (typeof showToast === 'function') showToast(`🧠 ${msg}`, 'info', 5000);
@@ -261,7 +261,7 @@
 
     await _fireCoachMessage(
       'daily_readiness_' + new Date().toDateString(),
-      `You are FORGE, a concise elite coach. Give a 1-sentence morning brief based on the athlete's readiness data. Be direct and motivating. Max 80 tokens.`,
+      `You are FORGE, a concise elite coach. Give a 1-sentence morning brief based on the athlete's readiness data. Be direct and motivating. Max 80 tokens. Plain text only, no markdown.`,
       `Athlete readiness today: ${metrics}. ${lastStr}. Goal: ${goal}. What's your one-line coaching brief for today?`,
       (text) => {
         const el = document.getElementById('coach-tab-today');
@@ -389,7 +389,7 @@
       if (!reader) { card.remove(); return; }
       const decoder = new TextDecoder();
       let text = '';
-      msgDiv.innerHTML = '';
+      let firstToken = true;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -402,6 +402,7 @@
             }
           }
         });
+        if (firstToken && text.length > 0) { msgDiv.innerHTML = ''; firstToken = false; }
         msgDiv.textContent = text;
       }
       if (text.trim()) {
