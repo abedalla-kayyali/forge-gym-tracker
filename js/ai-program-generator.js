@@ -130,11 +130,15 @@
         return arr;
       } catch {
         if (pass === 0) {
-          // Repair 1: bare exercise name after closing brace
+          // Repair 1: muscles array dropped — "muscles":"exercises" → "muscles":[],"exercises"
+          jsonStr = jsonStr.replace(/"muscles"\s*:\s*"exercises"/g, '"muscles": [], "exercises"');
+          // Repair 2: bare exercise name after closing brace
           jsonStr = jsonStr.replace(/}\s*,\s*\n(\s*)([A-Z][^"{\n,]{1,60})",/g, '},\n$1{"name": "$2",');
-          // Repair 2: reps merged with next exercise name — "reps": "8-BicepCurl"
+          // Repair 3: reps merged with next exercise name — "reps": "8-BicepCurl"
           jsonStr = jsonStr.replace(/"reps":\s*"(\d+)-([A-Z][^"]+)"/g, '"reps": "$1-12"');
-          // Repair 3: missing opening quote on known string fields
+          // Repair 4: unclosed reps string with embedded newline — "reps": "10-15\n
+          jsonStr = jsonStr.replace(/"reps":\s*"([0-9][^"\n]{0,8})\n/g, '"reps": "$1",\n');
+          // Repair 5: missing opening quote on known string fields
           jsonStr = jsonStr.replace(/"(name|reps|label)":\s*([A-Za-z(][^,}\]\n"]*?)"/g, '"$1": "$2"');
         }
       }
