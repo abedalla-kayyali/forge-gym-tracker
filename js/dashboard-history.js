@@ -693,6 +693,7 @@ function switchDashTab(name, btn) {
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
   if (name === 'nutrition' && typeof renderWeeklyNutritionReport === 'function') renderWeeklyNutritionReport();
+  if (name === 'nutrition' && typeof renderMacroTiming === 'function') renderMacroTiming();
   if (name === 'nutrition' && typeof renderAdaptiveTDEE === 'function') renderAdaptiveTDEE();
   if (name === 'progress' && typeof window.FORGE_OVERLOAD !== 'undefined') window.FORGE_OVERLOAD.renderOverloadScoreCard('overload-score-card');
   if (name === 'progress' && typeof renderVolumeLandmarks === 'function') renderVolumeLandmarks();
@@ -4015,5 +4016,137 @@ window._dnnToggle = function(habitId) {
   renderDailyNonNegotiables();
 };
 window.renderDailyNonNegotiables = renderDailyNonNegotiables;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MACRO TIMING INTELLIGENCE  (morning protein · pre-WO carbs · post-WO protein · P2 · v184)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMacroTiming() {
+  const el = document.getElementById('macro-timing-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  const _meals = (typeof mealsLog   !== 'undefined' ? mealsLog   : null) || _lsGet('forge_meals',    {});
+  const _wrk   = (typeof workouts   !== 'undefined' ? workouts   : null) || _lsGet('forge_workouts', []);
+  const _up    = (typeof userProfile!== 'undefined' ? userProfile: null) || _lsGet('forge_profile',  {});
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const todayMeals = (Array.isArray(_meals?.[todayKey]) ? _meals[todayKey] : [])
+    .slice()
+    .sort((a, b) => (a.ts || 0) - (b.ts || 0));  // oldest first
+
+  const sessionToday = Array.isArray(_wrk) && _wrk.some(w => w.date === todayKey);
+
+  // ── 1. Morning protein: 30g+ in first meal ────────────────────────────────
+  let morningProtStatus = 'pending';
+  let morningProtDetail = 'First meal not logged yet';
+  if (todayMeals.length > 0) {
+    const firstMeal = todayMeals[0];
+    const firstProt = parseFloat(firstMeal.protein || firstMeal.p || 0);
+    const firstTime = firstMeal.ts ? new Date(firstMeal.ts) : null;
+    const firstHour = firstTime ? firstTime.getHours() : null;
+    // "Morning" = before noon; after noon it's still first-meal check
+    if (firstProt >= 30) {
+      morningProtStatus = 'hit';
+      morningProtDetail = `${Math.round(firstProt)}g protein in first meal${firstHour !== null ? ` (${String(firstHour).padStart(2,'0')}:${String(firstTime.getMinutes()).padStart(2,'0')})` : ''}`;
+    } else {
+      morningProtStatus = 'miss';
+      morningProtDetail = `First meal: ${Math.round(firstProt)}g protein — aim for 30g+`;
+    }
+  }
+
+  // ── 2. Pre-workout carbs: 30g+ carbs on a training day ────────────────────
+  let preWoStatus = 'na';
+  let preWoDetail = 'No session logged today';
+  if (sessionToday) {
+    const totalCarbs = todayMeals.reduce((s, m) => s + (parseFloat(m.carbs || m.c || 0)), 0);
+    if (todayMeals.length === 0) {
+      preWoStatus = 'pending';
+      preWoDetail = 'Log meals to track pre-session carbs';
+    } else if (totalCarbs >= 30) {
+      preWoStatus = 'hit';
+      preWoDetail = `${Math.round(totalCarbs)}g carbs logged today`;
+    } else {
+      preWoStatus = 'miss';
+      preWoDetail = `Only ${Math.round(totalCarbs)}g carbs — aim for 30g+ before training`;
+    }
+  }
+
+  // ── 3. Post-workout protein: 20g+ protein meal logged on training day ─────
+  let postWoStatus = 'na';
+  let postWoDetail = 'No session logged today';
+  if (sessionToday) {
+    const postMeal = todayMeals.find(m => parseFloat(m.protein || m.p || 0) >= 20);
+    if (todayMeals.length === 0) {
+      postWoStatus = 'pending';
+      postWoDetail = 'Log a protein meal after your session';
+    } else if (postMeal) {
+      const prot = Math.round(parseFloat(postMeal.protein || postMeal.p || 0));
+      postWoStatus = 'hit';
+      postWoDetail = `${prot}g protein meal logged`;
+    } else {
+      const bestProt = Math.max(0, ...todayMeals.map(m => parseFloat(m.protein || m.p || 0)));
+      postWoStatus = 'miss';
+      postWoDetail = `Best meal: ${Math.round(bestProt)}g — aim for 20g+ post-session`;
+    }
+  }
+
+  // ── 4. Calorie front-loading: 60%+ of daily kcal before 6pm ──────────────
+  const hour = today.getHours();
+  let frontloadStatus = 'na';
+  let frontloadDetail = 'Early in the day';
+  if (todayMeals.length > 0) {
+    const totalKcal = todayMeals.reduce((s, m) => s + (parseFloat(m.kcal) || 0), 0);
+    const earlyKcal = todayMeals
+      .filter(m => m.ts && new Date(m.ts).getHours() < 18)
+      .reduce((s, m) => s + (parseFloat(m.kcal) || 0), 0);
+    if (hour >= 18) {
+      const ratio = totalKcal > 0 ? earlyKcal / totalKcal : 0;
+      if (ratio >= 0.6) {
+        frontloadStatus = 'hit';
+        frontloadDetail = `${Math.round(ratio * 100)}% of calories before 6pm`;
+      } else {
+        frontloadStatus = 'miss';
+        frontloadDetail = `Only ${Math.round(ratio * 100)}% before 6pm — aim for 60%+`;
+      }
+    } else {
+      frontloadStatus = 'pending';
+      const pct = totalKcal > 0 ? Math.round(earlyKcal / totalKcal * 100) : 0;
+      frontloadDetail = `${pct}% so far (evaluated after 6pm)`;
+    }
+  }
+
+  // ── Render checks ─────────────────────────────────────────────────────────
+  function _checkRow(icon, label, status, detail) {
+    const cls = { hit: 'mti-hit', miss: 'mti-miss', pending: 'mti-pending', na: 'mti-na' }[status] || 'mti-na';
+    const mark = status === 'hit' ? '✓' : status === 'miss' ? '✗' : status === 'pending' ? '◌' : '—';
+    return `
+      <div class="mti-row ${cls}">
+        <span class="mti-check">${mark}</span>
+        <span class="mti-icon">${icon}</span>
+        <div class="mti-content">
+          <span class="mti-label">${label}</span>
+          <span class="mti-detail">${detail}</span>
+        </div>
+      </div>`;
+  }
+
+  const allHit = [morningProtStatus, preWoStatus, postWoStatus, frontloadStatus]
+    .filter(s => s !== 'na').every(s => s === 'hit');
+
+  el.innerHTML = `
+    <div class="mti-wrap">
+      ${_checkRow('☀️', 'Morning protein (30g+)', morningProtStatus, morningProtDetail)}
+      ${_checkRow('🏋️', 'Pre-session carbs (30g+)', preWoStatus, preWoDetail)}
+      ${_checkRow('🥛', 'Post-session protein (20g+)', postWoStatus, postWoDetail)}
+      ${_checkRow('⏰', 'Front-load calories (60% before 6pm)', frontloadStatus, frontloadDetail)}
+      ${allHit ? '<div class="mti-perfect">⚡ Macro timing optimized today!</div>' : ''}
+      <div class="mti-footnote">Based on today\'s logged meals${sessionToday ? ' · session detected' : ''}</div>
+    </div>`;
+}
+window.renderMacroTiming = renderMacroTiming;
 
 
