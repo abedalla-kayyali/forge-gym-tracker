@@ -498,11 +498,12 @@
 
     // Build plateau hint cards using overload engine
     const _allExercises = [];
-    (window.workouts || (typeof workouts !== 'undefined' ? workouts : []) || []).forEach(w => {
+    _workoutsRef().forEach(w => {
       if (w.exercise && !_allExercises.includes(w.exercise)) _allExercises.push(w.exercise);
     });
 
     const _esc2 = s => window.FORGE_STORAGE?.esc?.(s) || String(s).replace(/[<>"'&]/g, c => ({'<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','&':'&amp;'}[c]));
+    const _jsEsc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
     const _plateauHints = [];
     _allExercises.forEach(exName => {
@@ -517,7 +518,7 @@
           '<div style="font-size:10px;font-weight:700;letter-spacing:.08em;opacity:.5;margin-bottom:6px;">PLATEAU ALERTS</div>' +
           _topPlateaus.map(p =>
             '<div class="coach-bubble warn" style="margin-bottom:6px;cursor:pointer;"' +
-                 ' onclick="window.FORGE_ASK?.openWithQuery(\'I have a plateau on ' + _esc2(p.name).replace(/'/g, '&#39;') + ', ' + p.sessions + ' sessions at same weight. What should I change?\')">' +
+                 ' onclick="window.FORGE_ASK?.openWithQuery(\'I have a plateau on ' + _jsEsc(p.name) + ', ' + p.sessions + ' sessions at same weight. What should I change?\')">' +
               '<span style="font-size:13px;">&#x26A0;&#xFE0F;</span>' +
               '<div>' +
                 '<div style="font-size:12px;font-weight:600;">' + _esc2(p.name) + ' &mdash; ' + p.sessions + ' sessions plateaued</div>' +
