@@ -9,8 +9,10 @@
 
   const INGEST_FN  = window.FORGE_CONFIG?.SUPABASE_URL + '/functions/v1/forge-ingest';
   const SEARCH_FN  = window.FORGE_CONFIG?.SUPABASE_URL + '/functions/v1/forge-search';
-  const INGEST_KEY = 'forge_rag_last_ingest';   // localStorage: last full ingest timestamp
-  const BATCH_SIZE = 5;                         // items per ingest batch (keep small — edge fn AI inference is slow)
+  const INGEST_KEY     = 'forge_rag_last_ingest';   // localStorage: last full ingest timestamp
+  const INGEST_VER_KEY = 'forge_rag_version';       // localStorage: RAG schema version
+  const RAG_VERSION    = '2';                        // bump when ingest schema changes (e.g. form_cues added)
+  const BATCH_SIZE     = 5;                          // items per ingest batch (keep small — edge fn AI inference is slow)
 
   const MUSCLE_LABELS = {
     chest:'Chest', back:'Back', shoulders:'Shoulders', biceps:'Biceps',
@@ -495,6 +497,7 @@
       onProgress && onProgress(Math.min(i + BATCH_SIZE, items.length), items.length);
     }
     localStorage.setItem(INGEST_KEY, Date.now().toString());
+    localStorage.setItem(INGEST_VER_KEY, RAG_VERSION);
     return { total: items.length, indexed };
   }
 
@@ -1755,9 +1758,12 @@
       window.visualViewport.addEventListener('resize', _onKbResize);
       window.visualViewport.addEventListener('scroll', _onKbResize);
     }
-    // Auto re-index if stale (>3 days) or never indexed
+    // Auto re-index if stale (>3 days), never indexed, or RAG schema version changed
     const lastIngest = localStorage.getItem(INGEST_KEY);
-    const daysSince = lastIngest ? (Date.now() - Number(lastIngest)) / 86400000 : Infinity;
+    const storedVer  = localStorage.getItem(INGEST_VER_KEY);
+    if (storedVer !== RAG_VERSION) localStorage.removeItem(INGEST_KEY); // force re-index on schema bump
+    const freshIngest = localStorage.getItem(INGEST_KEY);
+    const daysSince = freshIngest ? (Date.now() - Number(freshIngest)) / 86400000 : Infinity;
     if (daysSince > 3) {
       setTimeout(async () => {
         if (!window._sb || !(await getAuthHeader())) return;
