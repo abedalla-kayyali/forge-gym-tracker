@@ -713,9 +713,8 @@
       }
       @keyframes ragBlink { 50% { opacity:0; } }
       #rag-fab-wrap {
-        position:fixed; right:16px; bottom:calc(74px + env(safe-area-inset-bottom,0px));
+        position:fixed; left:16px; top:calc(16px + env(safe-area-inset-top,0px));
         display:flex; align-items:center; gap:8px; z-index:1000;
-        flex-direction:row-reverse;
       }
       #rag-fab {
         width:46px; height:46px; border-radius:50%;

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v202';
-window.FORGE_BUILD   = '2026-03-17 (feat: page-aware suggestions + date/time context in Ask FORGE)';
+window.FORGE_VERSION = 'v203';
+window.FORGE_BUILD   = '2026-03-17 (fix: move Ask FORGE FAB to upper left corner)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
