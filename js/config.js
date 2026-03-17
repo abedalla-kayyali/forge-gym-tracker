@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v177';
-window.FORGE_BUILD   = '2026-03-17 (feat: Plateau Detection + Alerts — toast on save, deload suggestion, rep-range + variation tips)';
+window.FORGE_VERSION = 'v178';
+window.FORGE_BUILD   = '2026-03-17 (fix: overload-engine load order before workout-save, toast type warn not warning)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

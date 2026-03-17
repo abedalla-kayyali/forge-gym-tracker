@@ -189,7 +189,7 @@ function _saveWeightedWorkout() {
             showToast(_ws(
               `⚠️ Plateau — ${_plateauLen} sessions flat. Try: deload to ${_deload}${_unit}, switch rep range, or swap exercise.`,
               `⚠️ ثبات — ${_plateauLen} جلسات بدون تقدم. جرّب: تخفيض إلى ${_deload}${_unit}، تغيير نطاق التكرارات، أو تبديل التمرين.`
-            ), 'warning');
+            ), 'warn');
           }
         }, 1500);
       }
