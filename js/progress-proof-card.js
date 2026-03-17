@@ -83,12 +83,173 @@
     catch (_) { return 'default'; }
   }
 
-  // ── exports (data layer only for now) ────────────────────────────────────
+  // ── hero stat resolver ───────────────────────────────────────────────────
+
+  function _resolveHeroes(goal, weightD, inBodyD, prGains, windowStart) {
+    const statPool = [];
+    if (weightD)               statPool.push({ label: 'WEIGHT', value: (weightD.delta > 0 ? '+' : '') + weightD.delta + weightD.unit, accent: true });
+    if (inBodyD && inBodyD.bfDelta != null) statPool.push({ label: 'BODY FAT', value: (inBodyD.bfDelta > 0 ? '+' : '') + inBodyD.bfDelta + '%', accent: inBodyD.bfDelta < 0 });
+    if (inBodyD && inBodyD.smmDelta != null) statPool.push({ label: 'MUSCLE', value: (inBodyD.smmDelta > 0 ? '+' : '') + inBodyD.smmDelta + 'kg', accent: inBodyD.smmDelta > 0 });
+    if (prGains.length)        statPool.push({ label: 'TOP PR', value: '+' + prGains[0].gain + 'kg', accent: true });
+
+    const byKey = {};
+    statPool.forEach(s => { byKey[s.label] = s; });
+
+    let heroA, heroB;
+    if (goal === 'fat_loss') {
+      heroA = byKey['WEIGHT'];
+      heroB = byKey['BODY FAT'];
+    } else if (goal === 'muscle_gain') {
+      heroA = byKey['TOP PR'];
+      heroB = byKey['MUSCLE'];
+    } else {
+      heroA = byKey['WEIGHT'];
+      heroB = byKey['TOP PR'];
+    }
+
+    // fallback chain
+    const fallbackOrder = ['WEIGHT', 'BODY FAT', 'MUSCLE', 'TOP PR'];
+    if (!heroA) heroA = fallbackOrder.map(k => byKey[k]).find(Boolean) || null;
+    if (!heroB) heroB = fallbackOrder.filter(k => byKey[k] !== heroA).map(k => byKey[k]).find(Boolean) || null;
+
+    return [
+      heroA || { label: 'SESSIONS', value: String(_getSessionCount(windowStart)), accent: true },
+      heroB || { label: 'STREAK',   value: (typeof calcStreak === 'function' ? calcStreak() : 0) + 'D', accent: false }
+    ];
+  }
+
+  // ── canvas draw function ─────────────────────────────────────────────────
+
+  async function _drawProgressProofCard() {
+    const { windowStart, nWeeks, phaseLabel } = _getWindow();
+    const weightD   = _getWeightDelta(windowStart);
+    const inBodyD   = _getInBodyDelta(windowStart);
+    const prGains   = _getTopPRGains(windowStart);
+    const sessions  = _getSessionCount(windowStart);
+    const streak    = typeof calcStreak === 'function' ? calcStreak() : 0;
+    const goal      = _getGoal();
+    const heroes    = _resolveHeroes(goal, weightD, inBodyD, prGains, windowStart);
+
+    const athleteName = (() => {
+      try { return ((typeof userProfile !== 'undefined' && userProfile && userProfile.name) || '').toUpperCase() || 'FORGE ATHLETE'; }
+      catch (_) { return 'FORGE ATHLETE'; }
+    })();
+
+    const W = 1080, H = 1350;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // background
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#050d08'); bg.addColorStop(0.5, '#0b1a12'); bg.addColorStop(1, '#06110b');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const glowA = ctx.createRadialGradient(170, 170, 20, 170, 170, 420);
+    glowA.addColorStop(0, 'rgba(84,255,171,.18)'); glowA.addColorStop(1, 'rgba(84,255,171,0)');
+    ctx.fillStyle = glowA; ctx.fillRect(0, 0, W, H);
+    const glowB = ctx.createRadialGradient(W - 130, 500, 40, W - 130, 500, 380);
+    glowB.addColorStop(0, 'rgba(78,197,255,.14)'); glowB.addColorStop(1, 'rgba(78,197,255,0)');
+    ctx.fillStyle = glowB; ctx.fillRect(0, 0, W, H);
+
+    // ── ZONE 1: header (y=0–180) ─────────────────────────────────────────────
+    ctx.fillStyle = '#54ffab'; ctx.font = '700 60px "Bebas Neue", sans-serif';
+    ctx.fillText('FORGE PROGRESS PROOF', 70, 96);
+    ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(221,240,227,.92)';
+    ctx.font = '700 24px "Barlow Condensed", sans-serif';
+    ctx.fillText(athleteName, W - 70, 96); ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(179,207,187,.88)'; ctx.font = '500 22px "DM Mono", monospace';
+    ctx.fillText(phaseLabel + ' · ' + nWeeks + ' WEEK' + (nWeeks !== 1 ? 'S' : ''), 70, 144);
+    ctx.strokeStyle = 'rgba(84,255,171,.2)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(70, 166); ctx.lineTo(1010, 166); ctx.stroke();
+
+    // ── ZONE 2: hero stats (y=190–420) ──────────────────────────────────────
+    const heroBoxW = 450, heroBoxH = 210, heroGap = 40;
+    heroes.forEach((hero, i) => {
+      const hx = 70 + i * (heroBoxW + heroGap), hy = 190;
+      ctx.fillStyle = 'rgba(13,24,18,.92)';
+      if (typeof _roundRect === 'function') { _roundRect(ctx, hx, hy, heroBoxW, heroBoxH, 18); ctx.fill(); }
+      ctx.strokeStyle = hero.accent ? 'rgba(57,255,143,.46)' : 'rgba(130,162,137,.24)';
+      ctx.lineWidth = 2;
+      if (typeof _roundRect === 'function') { _roundRect(ctx, hx, hy, heroBoxW, heroBoxH, 18); ctx.stroke(); }
+      ctx.fillStyle = 'rgba(161,192,168,.88)'; ctx.font = '600 18px "DM Mono", monospace';
+      ctx.fillText(hero.label, hx + 24, hy + 38);
+      ctx.fillStyle = hero.accent ? '#54ffab' : '#f0faf2';
+      ctx.font = '700 96px "Barlow Condensed", sans-serif';
+      ctx.fillText(hero.value, hx + 24, hy + 150);
+    });
+
+    // ── ZONE 3: stat pills (y=440–570) ──────────────────────────────────────
+    if (typeof _drawPill === 'function') {
+      const pills = [
+        { label: 'SESSIONS', value: sessions, accent: false },
+        { label: 'STREAK',   value: streak + 'D', accent: false }
+      ];
+      if (prGains.length) pills.push({ label: 'TOP PR', value: '+' + prGains[0].gain + 'kg', accent: true });
+      if (weightD)        pills.push({ label: 'WEIGHT', value: (weightD.delta > 0 ? '+' : '') + weightD.delta + weightD.unit, accent: weightD.delta < 0 });
+      const pillH = 120, gap = 16;
+      const pillW = Math.floor((940 - gap * (pills.length - 1)) / pills.length);
+      pills.forEach((p, i) => _drawPill(ctx, 70 + i * (pillW + gap), 440, pillW, pillH, p.label, p.value, p.accent));
+    }
+
+    // ── ZONE 4: body comp bars (y=590–740) ───────────────────────────────────
+    if (inBodyD && (inBodyD.bfDelta != null || inBodyD.smmDelta != null)) {
+      ctx.fillStyle = '#54ffab'; ctx.font = '600 18px "DM Mono", monospace';
+      ctx.fillText('BODY COMPOSITION', 70, 618);
+      const barRows = [];
+      if (inBodyD.bfDelta != null) barRows.push({ label: 'BF%', delta: inBodyD.bfDelta, max: 5, goodIfNeg: true });
+      if (inBodyD.smmDelta != null) barRows.push({ label: 'SMM', delta: inBodyD.smmDelta, max: 3, goodIfNeg: false, unit: 'kg' });
+      barRows.forEach((row, i) => {
+        const by = 640 + i * 60;
+        ctx.fillStyle = 'rgba(161,192,168,.88)'; ctx.font = '600 17px "DM Mono", monospace';
+        ctx.fillText(row.label, 70, by + 18);
+        const trackX = 220, trackY = by, trackW = 600, trackH = 24;
+        ctx.fillStyle = 'rgba(30,48,36,.9)';
+        if (typeof _roundRect === 'function') { _roundRect(ctx, trackX, trackY, trackW, trackH, 12); ctx.fill(); }
+        const fillW = Math.min(Math.abs(row.delta) / row.max, 1) * trackW;
+        const isGood = row.goodIfNeg ? row.delta < 0 : row.delta > 0;
+        ctx.fillStyle = isGood ? '#54ffab' : '#ff6b6b';
+        if (typeof _roundRect === 'function') { _roundRect(ctx, trackX, trackY, fillW, trackH, 12); ctx.fill(); }
+        const sign = row.delta > 0 ? '+' : '';
+        ctx.fillStyle = isGood ? '#54ffab' : '#ff6b6b';
+        ctx.font = '700 20px "Barlow Condensed", sans-serif';
+        ctx.fillText(sign + row.delta + (row.unit || '%'), trackX + trackW + 14, by + 18);
+      });
+    }
+
+    // ── ZONE 5: top lifts (y=760–1000) ──────────────────────────────────────
+    if (prGains.length) {
+      ctx.fillStyle = '#54ffab'; ctx.font = '600 18px "DM Mono", monospace';
+      ctx.fillText('TOP LIFT IMPROVEMENTS', 70, 790);
+      prGains.forEach((pr, i) => {
+        const ly = 820 + i * 70;
+        ctx.fillStyle = '#f0faf2'; ctx.font = '700 28px "Barlow Condensed", sans-serif';
+        ctx.fillText(pr.exercise.toUpperCase(), 70, ly);
+        ctx.fillStyle = 'rgba(179,207,187,.88)'; ctx.font = '500 20px "DM Mono", monospace';
+        ctx.fillText(pr.before + 'kg → ' + pr.after + 'kg', 70, ly + 26);
+        ctx.fillStyle = '#54ffab'; ctx.font = '700 22px "Barlow Condensed", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('+' + pr.pct + '%', 1010, ly);
+        ctx.textAlign = 'left';
+      });
+    }
+
+    // ── watermark ────────────────────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(211,228,216,.58)'; ctx.font = '500 18px "DM Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('Built with FORGE · #ForgeProof · ' + new Date().toISOString().slice(0, 10), W - 70, 1335);
+    ctx.textAlign = 'left';
+
+    return canvas;
+  }
+
+  // ── exports ──────────────────────────────────────────────────────────────
   window._pcGetWindow       = _getWindow;
   window._pcGetWeightDelta  = _getWeightDelta;
   window._pcGetInBodyDelta  = _getInBodyDelta;
   window._pcGetTopPRGains   = _getTopPRGains;
   window._pcGetSessionCount = _getSessionCount;
   window._pcGetGoal         = _getGoal;
+  window._pcDrawCard        = _drawProgressProofCard;
 
 }());
