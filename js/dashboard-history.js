@@ -629,35 +629,52 @@ function _renderOverviewSnapshot() {
   if (readinessCard) {
     readinessCard.setAttribute('role', 'button');
     readinessCard.setAttribute('tabindex', '0');
-    readinessCard.setAttribute('title', isAr ? 'عرض تفصيل الجاهزية' : 'Open readiness breakdown');
-    const openBreakdown = () => {
-      const progressBtn = document.querySelector('.dash-tab[data-tab="progress"]');
-      if (typeof switchDashTab === 'function') switchDashTab('progress', progressBtn || null);
-      if (typeof _renderProgressReadinessHub === 'function') _renderProgressReadinessHub();
-      const hub = document.getElementById('progress-readiness-hub');
-      if (hub) {
-        try { hub.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_e) {}
+    readinessCard.setAttribute('title', isAr ? 'أدخل بيانات الجاهزية اليومية' : 'Enter daily readiness data');
+    const openReadinessPanel = () => {
+      // Stay in overview tab, open the readiness panel via accordion
+      const overviewBtn = document.querySelector('.dash-tab[data-tab="overview"]');
+      if (typeof switchDashTab === 'function') switchDashTab('overview', overviewBtn || null);
+      // Find readiness panel index in the overview accordion
+      const panels = Array.from(document.querySelectorAll('#view-dashboard .panel[data-dash-tab="overview"]'));
+      const rdIdx  = panels.findIndex(p => p.id === 'readiness-panel');
+      if (rdIdx >= 0) {
+        _overviewAccordionOpenIndex = rdIdx;
+        if (typeof _applyOverviewAccordion === 'function') _applyOverviewAccordion();
+        const rdPanel = document.getElementById('readiness-panel');
+        if (rdPanel) setTimeout(() => { try { rdPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_e) {} }, 80);
       }
+      if (typeof renderReadinessPanel === 'function') renderReadinessPanel();
     };
-    readinessCard.onclick = openBreakdown;
+    readinessCard.onclick = openReadinessPanel;
     readinessCard.onkeydown = (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        openBreakdown();
-      }
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openReadinessPanel(); }
     };
   }
   if (ring && val) {
-    let r = 60;
+    // Show manual readiness score from forge_readiness if available, else fall back to coach state
+    let r = 0;
     try {
-      if (typeof window.buildCoachUnifiedState === 'function') {
-        r = Math.max(0, Math.min(100, Number(window.buildCoachUnifiedState()?.readiness?.score || 60)));
+      const today2 = new Date();
+      const tk2 = today2.getFullYear() + '-' + String(today2.getMonth()+1).padStart(2,'0') + '-' + String(today2.getDate()).padStart(2,'0');
+      const _rdData = JSON.parse(localStorage.getItem('forge_readiness') || '{}')[tk2] || {};
+      if (_rdData.energy || _rdData.totalSleep || _rdData.hrv || _rdData.rhr) {
+        // Recompute from stored data using same formula helpers
+        const _sl = (typeof _rdSleepScore === 'function') ? _rdSleepScore(_rdData.totalSleep ?? null, _rdData.deepSleep ?? null, _rdData.remSleep ?? null) : null;
+        const _hv = (typeof _rdHrvScore === 'function') ? _rdHrvScore(_rdData.hrv ?? null) : null;
+        const _rh = (typeof _rdRhrScore === 'function') ? _rdRhrScore(_rdData.rhr ?? null) : null;
+        const _en = (typeof _rdEnergyScore === 'function') ? _rdEnergyScore(_rdData.energy ?? null) : null;
+        const _rc = (typeof _rdRecoveryScore === 'function') ? _rdRecoveryScore(JSON.parse(localStorage.getItem('forge_workouts') || '[]'), tk2) : 100;
+        const _sc = (typeof _rdComputeScore === 'function') ? _rdComputeScore(_sl, _hv, _rh, _en, _rc) : null;
+        if (_sc !== null) r = _sc;
       }
     } catch (_e) {}
-    const ringColor = r >= 75 ? '#2ecc71' : (r >= 55 ? '#f39c12' : '#e74c3c');
-    ring.style.setProperty('--pct', String(r));
+    if (!r && typeof window.buildCoachUnifiedState === 'function') {
+      try { r = Math.max(0, Math.min(100, Number(window.buildCoachUnifiedState()?.readiness?.score || 0))); } catch (_e) {}
+    }
+    const ringColor = r >= 70 ? '#39ff8f' : (r >= 40 ? '#ffb800' : (r > 0 ? '#ff6b6b' : 'rgba(255,255,255,.3)'));
+    ring.style.setProperty('--pct', String(r || 0));
     ring.style.setProperty('--ring-color', ringColor);
-    val.textContent = String(Math.round(r));
+    val.textContent = r > 0 ? String(Math.round(r)) : '—';
   }
 
   // Update heatmap badge to show recovery context

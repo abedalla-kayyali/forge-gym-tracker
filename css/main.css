@@ -13658,6 +13658,18 @@ body[data-theme="solar"] .xp-fill {
 
 .ctoday-star:hover { transform:scale(1.15); border-color:var(--accent); }
 
+/* Readiness shortcut card in Coach Today */
+.ctoday-readiness-card{transition:transform .15s,box-shadow .15s;}
+.ctoday-readiness-card:hover{transform:translateY(-1px);box-shadow:0 22px 44px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04);}
+.ctoday-readiness-card:active{transform:scale(.98);}
+.ctoday-readiness-row{display:flex;align-items:center;gap:14px;}
+.ctoday-readiness-ring{width:54px;height:54px;flex-shrink:0;border-radius:50%;border:2.5px solid var(--rd-color,rgba(255,255,255,.2));display:flex;align-items:center;justify-content:center;}
+.ctoday-readiness-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;line-height:1;}
+.ctoday-readiness-info{flex:1;display:flex;flex-direction:column;gap:3px;}
+.ctoday-readiness-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;}
+.ctoday-readiness-hint{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.4;}
+.ctoday-readiness-arrow{font-size:22px;color:var(--text3);flex-shrink:0;margin-right:-2px;}
+
 .ctoday-ci-submit {
 
   flex:1; padding:10px; border:none; border-radius:10px;

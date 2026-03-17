@@ -5642,6 +5642,55 @@ function renderCoachToday() {
       </div>`;
   }
 
+  // ── Readiness Check-In shortcut card ──────────────────────────────────────
+  const _rdToday = (() => {
+    try {
+      const _tk = new Date().toISOString().slice(0,10);
+      return JSON.parse(localStorage.getItem('forge_readiness') || '{}')[_tk] || {};
+    } catch(_e) { return {}; }
+  })();
+  const _rdHasData = !!((_rdToday.energy) || (_rdToday.totalSleep) || (_rdToday.hrv) || (_rdToday.rhr));
+  const _rdScore = (() => {
+    if (!_rdHasData) return null;
+    try {
+      const _sl = (typeof _rdSleepScore === 'function') ? _rdSleepScore(_rdToday.totalSleep ?? null, _rdToday.deepSleep ?? null, _rdToday.remSleep ?? null) : null;
+      const _hv = (typeof _rdHrvScore === 'function') ? _rdHrvScore(_rdToday.hrv ?? null) : null;
+      const _rh = (typeof _rdRhrScore === 'function') ? _rdRhrScore(_rdToday.rhr ?? null) : null;
+      const _en = (typeof _rdEnergyScore === 'function') ? _rdEnergyScore(_rdToday.energy ?? null) : null;
+      const _rc = 100;
+      return (typeof _rdComputeScore === 'function') ? _rdComputeScore(_sl, _hv, _rh, _en, _rc) : null;
+    } catch(_e) { return null; }
+  })();
+  const _rdColor2 = _rdScore === null ? 'rgba(255,255,255,.3)' : (_rdScore >= 70 ? '#39ff8f' : (_rdScore >= 40 ? '#ffb800' : '#ff6b6b'));
+  const _rdLabel2 = _rdScore === null ? (_ctAr ? 'لم يُسجَّل بعد' : 'Not logged yet') : (_rdScore >= 70 ? (_ctAr ? 'جاهزية عالية' : 'HIGH READINESS') : (_rdScore >= 40 ? (_ctAr ? 'معتدل' : 'MODERATE') : (_ctAr ? 'جاهزية منخفضة' : 'LOW READINESS')));
+  const _rdNavFn = `(function(){
+    const ob=document.querySelector('.dash-tab[data-tab="overview"]');
+    if(typeof switchDashTab==='function') switchDashTab('overview',ob||null);
+    const ps=Array.from(document.querySelectorAll('#view-dashboard .panel[data-dash-tab="overview"]'));
+    const ri=ps.findIndex(p=>p.id==='readiness-panel');
+    if(ri>=0){_overviewAccordionOpenIndex=ri;if(typeof _applyOverviewAccordion==='function')_applyOverviewAccordion();}
+    const rp=document.getElementById('readiness-panel');
+    if(rp) setTimeout(()=>{try{rp.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}},80);
+    if(typeof renderReadinessPanel==='function') renderReadinessPanel();
+  })()`;
+  const readinessShortcutCard = `
+    <div class="ctoday-card ctoday-readiness-card" onclick="${_rdNavFn.replace(/"/g,"'")}" style="cursor:pointer;">
+      <div class="ctoday-readiness-row">
+        <div class="ctoday-readiness-ring" style="--rd-color:${_rdColor2};">
+          <span class="ctoday-readiness-val" style="color:${_rdColor2};">${_rdScore !== null ? _rdScore : '—'}</span>
+        </div>
+        <div class="ctoday-readiness-info">
+          <div class="ctoday-card-title" style="margin-bottom:2px;">⚡ ${_ctAr ? 'الجاهزية اليومية' : 'Daily Readiness'}</div>
+          <div class="ctoday-readiness-label" style="color:${_rdColor2};">${_rdLabel2}</div>
+          <div class="ctoday-readiness-hint">${_rdHasData
+            ? (_rdToday.totalSleep ? `💤 ${_rdToday.totalSleep}h` : '') + (_rdToday.hrv ? `  💓 HRV ${_rdToday.hrv}` : '') + (_rdToday.rhr ? `  ❤️ ${_rdToday.rhr}bpm` : '')
+            : (_ctAr ? 'اضغط لإدخال النوم، معدل ضربات القلب، وHRV' : 'Tap to enter Sleep, HRV & Resting HR')
+          }</div>
+        </div>
+        <span class="ctoday-readiness-arrow">›</span>
+      </div>
+    </div>`;
+
   // Game Plan
   const allMuscles = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Glutes','Calves','Forearms'];
   const lastSession = workouts.length ? workouts[workouts.length - 1] : null;
@@ -5897,6 +5946,7 @@ function renderCoachToday() {
   el.innerHTML = `
     <div class="ctoday-wrap">
       <div class="ctoday-greeting">${greetLine}</div>
+      ${readinessShortcutCard}
       ${checkinCard}
       ${gamePlanCard}
       ${adaptCard}
