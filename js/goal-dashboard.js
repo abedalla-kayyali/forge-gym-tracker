@@ -640,6 +640,97 @@
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
 
+  // ── Weight Stall Detection ─────────────────────────────────────────────────
+  // Returns true if body weight hasn't changed meaningfully in last N days
+  function _detectWeightStall(days) {
+    const bw = _bwLog()
+      .filter(e => e.date >= _daysAgo(days))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    if (bw.length < 4) return false;
+
+    const weights = bw.map(e => +e.weight).filter(Boolean);
+    const min = Math.min(...weights);
+    const max = Math.max(...weights);
+    return (max - min) <= 0.5; // less than 500g variance = stall
+  }
+
+  // ── 1-tap macro adjustment ─────────────────────────────────────────────────
+  function applyMacroReduction(type, amount) {
+    try {
+      const targets = JSON.parse(localStorage.getItem('forge_macro_targets') || '{}');
+      const profile = JSON.parse(localStorage.getItem('forge_profile') || '{}');
+      const currentCarbs = targets.carbs || profile.targetCarbs || 0;
+      const currentKcal  = targets.kcal  || profile.targetKcal  || 0;
+
+      const newCarbs = Math.max(50, currentCarbs - amount);
+      const newKcal  = Math.max(1200, currentKcal - (amount * 4)); // 4 kcal/g carb
+
+      const updated = { ...targets, carbs: newCarbs, kcal: newKcal, updatedAt: new Date().toISOString(), reason: 'auto-steer: plateau' };
+      localStorage.setItem('forge_macro_targets', JSON.stringify(updated));
+
+      if (typeof showToast === 'function') {
+        showToast(`✅ Carb target reduced by ${amount}g (now ${newCarbs}g). Check your nutrition tab.`, 'success', 5000);
+      }
+      renderMacroSteeringCard();
+    } catch(e) { console.warn('[macro-steer]', e); }
+  }
+  window.applyMacroReduction = applyMacroReduction;
+
+  // ── Render macro steering card ─────────────────────────────────────────────
+  function renderMacroSteeringCard() {
+    const el = document.getElementById('macro-steering-card');
+    if (!el) return;
+
+    const profile = _profile();
+    if (profile.goal !== 'fat_loss' && profile.goal !== 'weight_loss') {
+      el.style.display = 'none';
+      return;
+    }
+
+    const isStalled = _detectWeightStall(10);
+    if (!isStalled) {
+      el.style.display = 'none';
+      return;
+    }
+
+    // Don't nag within 7 days of last adjustment
+    try {
+      const targets = JSON.parse(localStorage.getItem('forge_macro_targets') || '{}');
+      if (targets.updatedAt) {
+        const daysSince = (Date.now() - new Date(targets.updatedAt).getTime()) / 86400000;
+        if (daysSince < 7) { el.style.display = 'none'; return; }
+      }
+    } catch {}
+
+    el.style.display = 'block';
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'msc-btn msc-btn-dismiss';
+    dismissBtn.textContent = 'Dismiss';
+    dismissBtn.addEventListener('click', () => { el.style.display = 'none'; });
+
+    const applyBtn = document.createElement('button');
+    applyBtn.className = 'msc-btn msc-btn-apply';
+    applyBtn.textContent = '⚡ Apply Adjustment';
+    applyBtn.addEventListener('click', () => applyMacroReduction('carbs', 37));
+
+    const askBtn = document.createElement('button');
+    askBtn.className = 'msc-btn msc-btn-ask';
+    askBtn.textContent = 'Ask Coach';
+    askBtn.addEventListener('click', () => document.getElementById('ask-forge-fab')?.click());
+
+    el.innerHTML = `
+      <div class="msc-header">
+        <span class="msc-icon">📊</span>
+        <div class="msc-title">Fat-Loss Plateau Detected</div>
+      </div>
+      <div class="msc-body">No weight change in 10 days. Your body has adapted to your current intake.</div>
+      <div class="msc-suggestion">Coach suggests: <strong>Reduce carbs by 150 kcal/day</strong> to break the stall.</div>
+      <div class="msc-actions"></div>
+    `;
+    el.querySelector('.msc-actions').append(applyBtn, askBtn, dismissBtn);
+  }
+  window.renderMacroSteeringCard = renderMacroSteeringCard;
+
   // ── Main render ───────────────────────────────────────────────────────────
   function renderGoalDashboard() {
     const el = document.getElementById('goal-dashboard-body');
@@ -684,6 +775,7 @@
         Lagging = outcomes (slow to change). Leading = behaviors (you control these now).
       </div>
     `;
+    renderMacroSteeringCard();
   }
 
   // ── Global API ────────────────────────────────────────────────────────────

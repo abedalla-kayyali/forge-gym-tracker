@@ -23303,3 +23303,22 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .cic-btn-primary { background: var(--accent); color: white; }
 .cic-btn-dismiss { background: var(--bg3); color: var(--text2); }
 @keyframes slideDown { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+/* Macro steering card */
+.macro-steering-card {
+  background: color-mix(in srgb, #f59e0b 10%, var(--bg2));
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 12px 14px;
+}
+.msc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.msc-icon { font-size: 20px; }
+.msc-title { font-size: 14px; font-weight: 600; color: var(--text1); }
+.msc-body { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 6px; }
+.msc-suggestion { font-size: 13px; color: var(--text1); margin-bottom: 12px; }
+.msc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.msc-btn { font-size: 12px; padding: 6px 14px; border-radius: 20px; border: none; cursor: pointer; }
+.msc-btn-apply { background: #f59e0b; color: white; font-weight: 600; }
+.msc-btn-ask { background: var(--accent); color: white; }
+.msc-btn-dismiss { background: var(--bg3); color: var(--text2); }
