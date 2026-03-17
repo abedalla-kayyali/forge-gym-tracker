@@ -6611,7 +6611,7 @@ function renderCoachPlan() {
   const muscleCounts = {};
   workouts.forEach(w => { muscleCounts[w.muscle] = (muscleCounts[w.muscle]||0)+1; });
   const untrained = allMuscles.filter(m => !muscleCounts[m]);
-  const goal = userProfile?.goal || 'muscle';
+  const goal = (typeof userProfile !== 'undefined' ? userProfile : {})?.goal || 'muscle';
 
   const SPLITS = {
     muscle:   ['Chest','Back','Shoulders','Legs','Biceps','Triceps','Core','Rest'],
@@ -6620,12 +6620,28 @@ function renderCoachPlan() {
     endurance:['Core','Back','Legs','Shoulders','Chest','Core','Rest','Rest'],
     recomp:   ['Chest','Legs','Back','Core','Shoulders','Forearms','Rest','Rest'],
   };
-  const split = SPLITS[goal] || SPLITS.muscle;
-  let planDays = split.slice(0,7);
-  untrained.forEach((m, i) => {
-    const restIdx = planDays.indexOf('Rest');
-    if (restIdx !== -1 && i < 2) planDays[restIdx] = m;
-  });
+
+  // Try to use user's actual forge_split setup first
+  let planDays;
+  const _forgeSplit = (() => { try { return JSON.parse(localStorage.getItem('forge_split') || 'null'); } catch { return null; } })();
+  const _dayKeys = ['mon','tue','wed','thu','fri','sat','sun'];
+  const _splitConfigured = _forgeSplit && _dayKeys.filter(d => _forgeSplit[d] && _forgeSplit[d] !== 'Rest').length >= 3;
+
+  if (_splitConfigured) {
+    // Use user's actual split — map day keys to plan day objects
+    planDays = _dayKeys.map(d => {
+      const muscle = _forgeSplit[d] || 'Rest';
+      return muscle === 'Rest' ? 'Rest' : muscle;
+    });
+  } else {
+    // Fallback to goal-based template
+    const split = SPLITS[goal] || SPLITS.muscle;
+    planDays = split.slice(0,7);
+    untrained.forEach((m, i) => {
+      const restIdx = planDays.indexOf('Rest');
+      if (restIdx !== -1 && i < 2) planDays[restIdx] = m;
+    });
+  }
 
   // Fallback exercises per muscle
   const FALLBACK_EX = {
