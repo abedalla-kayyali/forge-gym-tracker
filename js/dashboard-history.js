@@ -4265,7 +4265,7 @@ function renderReadinessPanel() {
     badge.style.color = accentColor;
   }
 
-  var CIRC    = 226.2;
+  var CIRC    = 301.6;
   var ringFill = score !== null ? (CIRC * score / 100) : 0;
   var ringDash = ringFill + ' ' + CIRC;
   var scoreTxt = score !== null ? score : '—';
@@ -4303,12 +4303,12 @@ function renderReadinessPanel() {
     '<div class="rd-wrap">' +
       '<div class="rd-hero">' +
         '<div class="rd-ring-wrap">' +
-          '<svg width="80" height="80" viewBox="0 0 80 80" class="rd-ring-svg">' +
-            '<circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>' +
-            '<circle class="rd-ring-arc" cx="40" cy="40" r="36" fill="none"' +
-            ' stroke="' + accentColor + '" stroke-width="6"' +
+          '<svg width="110" height="110" viewBox="0 0 110 110" class="rd-ring-svg">' +
+            '<circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="7"/>' +
+            '<circle class="rd-ring-arc" cx="55" cy="55" r="48" fill="none"' +
+            ' stroke="' + accentColor + '" stroke-width="7"' +
             ' stroke-dasharray="' + ringDash + '"' +
-            ' stroke-linecap="round" transform="rotate(-90 40 40)"/>' +
+            ' stroke-linecap="round" transform="rotate(-90 55 55)"/>' +
           '</svg>' +
           '<div class="rd-ring-inner"><span class="rd-ring-score" style="color:' + accentColor + '">' + scoreTxt + '</span></div>' +
         '</div>' +
@@ -4321,46 +4321,52 @@ function renderReadinessPanel() {
 
       '<div class="rd-section">' +
         '<div class="rd-section-title">💤 SLEEP LAST NIGHT</div>' +
-        '<div class="rd-input-grid">' +
+        '<div class="rd-sleep-stack">' +
 
-          // TOTAL sleep — h + min
-          '<div class="rd-input-box"><span class="rd-input-label">TOTAL</span>' +
+          '<div class="rd-sleep-row">' +
+            '<div class="rd-sleep-row-left"><span class="rd-sleep-icon">🌙</span><span class="rd-sleep-row-label">TOTAL</span></div>' +
             '<div class="rd-input-hm-row">' +
               '<input class="rd-input-field rd-input-hm" id="rd-ts-h" type="number" min="0" max="14" step="1" placeholder="0"' +
               ' value="' + _hmH(totalSleep) + '"' +
-              ' oninput="window._rdSaveHM(\'totalSleep\',this.value,document.getElementById(\'rd-ts-m\').value)">' +
+              ' onblur="window._rdSaveHM(\'totalSleep\',this.value,document.getElementById(\'rd-ts-m\').value)"' +
+              ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
               '<span class="rd-input-unit">h</span>' +
               '<input class="rd-input-field rd-input-hm" id="rd-ts-m" type="number" min="0" max="59" step="1" placeholder="0"' +
               ' value="' + _hmM(totalSleep) + '"' +
-              ' oninput="window._rdSaveHM(\'totalSleep\',document.getElementById(\'rd-ts-h\').value,this.value)">' +
+              ' onblur="window._rdSaveHM(\'totalSleep\',document.getElementById(\'rd-ts-h\').value,this.value)"' +
+              ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
               '<span class="rd-input-unit">min</span>' +
             '</div>' +
           '</div>' +
 
-          // DEEP sleep — h + min
-          '<div class="rd-input-box"><span class="rd-input-label">DEEP</span>' +
+          '<div class="rd-sleep-row">' +
+            '<div class="rd-sleep-row-left"><span class="rd-sleep-icon">🔵</span><span class="rd-sleep-row-label">DEEP</span></div>' +
             '<div class="rd-input-hm-row">' +
               '<input class="rd-input-field rd-input-hm" id="rd-ds-h" type="number" min="0" max="6" step="1" placeholder="0"' +
               ' value="' + _hmH(deepSleep) + '"' +
-              ' oninput="window._rdSaveHM(\'deepSleep\',this.value,document.getElementById(\'rd-ds-m\').value)">' +
+              ' onblur="window._rdSaveHM(\'deepSleep\',this.value,document.getElementById(\'rd-ds-m\').value)"' +
+              ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
               '<span class="rd-input-unit">h</span>' +
               '<input class="rd-input-field rd-input-hm" id="rd-ds-m" type="number" min="0" max="59" step="1" placeholder="0"' +
               ' value="' + _hmM(deepSleep) + '"' +
-              ' oninput="window._rdSaveHM(\'deepSleep\',document.getElementById(\'rd-ds-h\').value,this.value)">' +
+              ' onblur="window._rdSaveHM(\'deepSleep\',document.getElementById(\'rd-ds-h\').value,this.value)"' +
+              ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
               '<span class="rd-input-unit">min</span>' +
             '</div>' +
           '</div>' +
 
-          // REM sleep — h + min
-          '<div class="rd-input-box"><span class="rd-input-label">REM</span>' +
+          '<div class="rd-sleep-row">' +
+            '<div class="rd-sleep-row-left"><span class="rd-sleep-icon">💜</span><span class="rd-sleep-row-label">REM</span></div>' +
             '<div class="rd-input-hm-row">' +
               '<input class="rd-input-field rd-input-hm" id="rd-rs-h" type="number" min="0" max="6" step="1" placeholder="0"' +
               ' value="' + _hmH(remSleep) + '"' +
-              ' oninput="window._rdSaveHM(\'remSleep\',this.value,document.getElementById(\'rd-rs-m\').value)">' +
+              ' onblur="window._rdSaveHM(\'remSleep\',this.value,document.getElementById(\'rd-rs-m\').value)"' +
+              ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
               '<span class="rd-input-unit">h</span>' +
               '<input class="rd-input-field rd-input-hm" id="rd-rs-m" type="number" min="0" max="59" step="1" placeholder="0"' +
               ' value="' + _hmM(remSleep) + '"' +
-              ' oninput="window._rdSaveHM(\'remSleep\',document.getElementById(\'rd-rs-h\').value,this.value)">' +
+              ' onblur="window._rdSaveHM(\'remSleep\',document.getElementById(\'rd-rs-h\').value,this.value)"' +
+              ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
               '<span class="rd-input-unit">min</span>' +
             '</div>' +
           '</div>' +
@@ -4377,14 +4383,16 @@ function renderReadinessPanel() {
         '<div class="rd-section-title">💓 RECOVERY METRICS</div>' +
         '<div class="rd-input-grid rd-input-grid-2">' +
           '<div class="rd-input-box"><span class="rd-input-label">HRV TODAY</span><div class="rd-input-row">' +
-            '<input class="rd-input-field" type="number" min="1" max="250" step="1" placeholder="—"' +
+            '<input class="rd-input-field rd-input-number" type="number" min="1" max="250" step="1" placeholder="—"' +
             ' value="' + (hrv != null ? hrv : '') + '"' +
-            ' oninput="window._rdSave(\'hrv\',this.value)">' +
+            ' onblur="window._rdSave(\'hrv\',this.value)"' +
+            ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
             '<span class="rd-input-unit">ms</span></div></div>' +
           '<div class="rd-input-box"><span class="rd-input-label">RESTING HR</span><div class="rd-input-row">' +
-            '<input class="rd-input-field" type="number" min="30" max="120" step="1" placeholder="—"' +
+            '<input class="rd-input-field rd-input-number" type="number" min="30" max="120" step="1" placeholder="—"' +
             ' value="' + (rhr != null ? rhr : '') + '"' +
-            ' oninput="window._rdSave(\'rhr\',this.value)">' +
+            ' onblur="window._rdSave(\'rhr\',this.value)"' +
+            ' onkeydown="if(event.key===\'Enter\')this.blur()">' +
             '<span class="rd-input-unit">bpm</span></div></div>' +
         '</div>' +
         '<div class="rd-tip">Check HRV and RHR in Apple Health, Garmin Connect, Huawei Health, or Samsung Health each morning.</div>' +
