@@ -37,7 +37,9 @@ Output format: {"exercise":"string","weight":number,"unit":"kg"|"lbs","reps":num
       messages: [{ role: "user", content: `Parse this workout voice log: "${transcript}"` }]
     });
 
-    const raw = (response.content[0] as { type: string; text: string }).text.trim();
+    const rawText = (response.content[0] as { type: string; text: string }).text.trim();
+    // Strip markdown code fences if model wraps output despite instructions
+    const raw = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
     // Validate it's JSON
     let parsed: unknown;
