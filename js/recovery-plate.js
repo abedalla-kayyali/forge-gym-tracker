@@ -93,9 +93,9 @@ function renderRecoveryHeatmap() {
     if (overreached || hoursAgo < window_ * 0.33) {
       z.classList.add('recovery-fresh');       // red — still recovering / overreached
     } else if (hoursAgo < window_ * 0.66) {
-      z.classList.add('recovery-mid');         // orange
+      z.classList.add('recovery-mid');         // yellow
     } else if (hoursAgo < window_) {
-      z.classList.add('recovery-almost');      // yellow
+      z.classList.add('recovery-almost');      // orange
     } else {
       z.classList.add('recovery-good');        // green — fully recovered
     }
