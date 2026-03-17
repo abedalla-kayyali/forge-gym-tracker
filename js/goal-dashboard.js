@@ -648,10 +648,14 @@
       .sort((a, b) => a.date.localeCompare(b.date));
     if (bw.length < 4) return false;
 
-    const weights = bw.map(e => +e.weight).filter(Boolean);
+    const weights = bw.map(e => +e.weight).filter(w => w > 0 && Number.isFinite(w));
+    if (weights.length < 4) return false;
     const min = Math.min(...weights);
     const max = Math.max(...weights);
-    return (max - min) <= 0.5; // less than 500g variance = stall
+    // Normalize: if entries are in lbs, threshold is 1.1 lbs ≈ 500g equivalent
+    const unit = bw[0]?.unit || 'kg';
+    const threshold = unit === 'lbs' ? 1.1 : 0.5;
+    return (max - min) <= threshold;
   }
 
   // ── 1-tap macro adjustment ─────────────────────────────────────────────────
@@ -661,6 +665,12 @@
       const profile = JSON.parse(localStorage.getItem('forge_profile') || '{}');
       const currentCarbs = targets.carbs || profile.targetCarbs || 0;
       const currentKcal  = targets.kcal  || profile.targetKcal  || 0;
+
+      // Guard: don't write floor values if user hasn't set their macro targets yet
+      if (!currentCarbs && !currentKcal) {
+        if (typeof showToast === 'function') showToast('Set your macro targets in Profile first.', 'warning', 4000);
+        return;
+      }
 
       const newCarbs = Math.max(50, currentCarbs - amount);
       const newKcal  = Math.max(1200, currentKcal - (amount * 4)); // 4 kcal/g carb
@@ -724,7 +734,7 @@
         <div class="msc-title">Fat-Loss Plateau Detected</div>
       </div>
       <div class="msc-body">No weight change in 10 days. Your body has adapted to your current intake.</div>
-      <div class="msc-suggestion">Coach suggests: <strong>Reduce carbs by 150 kcal/day</strong> to break the stall.</div>
+      <div class="msc-suggestion">Coach suggests: <strong>Reduce carbs by ~148 kcal/day (37g)</strong> to break the stall.</div>
       <div class="msc-actions"></div>
     `;
     el.querySelector('.msc-actions').append(applyBtn, askBtn, dismissBtn);
