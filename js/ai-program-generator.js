@@ -287,8 +287,14 @@
     const splitDays = Array.from({ length: _dayCount }, (_, i) => ({ muscles: _dayMuscles[i] || [] }));
     body.innerHTML = '<div class="apg-wrap"><div class="apg-generating"><span class="apg-spinner"></span>Building your program…</div></div>';
     const prompt = _buildProgramContext(splitDays, refinementNote || '');
-    const raw = await _callProgramLLM(prompt);
-    const program = _parseProgramResponse(raw, _dayCount);
+
+    // Retry once — LLM occasionally emits malformed JSON on first attempt
+    let program = null;
+    for (let attempt = 0; attempt < 2 && !program; attempt++) {
+      const raw = await _callProgramLLM(prompt);
+      program = _parseProgramResponse(raw, _dayCount);
+    }
+
     if (!program) {
       body.innerHTML = `<div class="apg-wrap">
         <div class="apg-error-msg">Couldn't generate program — try again.</div>
