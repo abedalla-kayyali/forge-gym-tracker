@@ -580,6 +580,10 @@
             <label id="exercise-name-label" data-i18n="form.exercise" style="flex:1;">Exercise Name</label>
             <button class="btn-ex-browse btn-ex-swap" id="swap-btn" onclick="openSwapModal()" style="display:none" data-i18n="form.swap">? Swap</button>
             <button class="btn-ex-browse btn-ex-form" type="button" onclick="openFormInspector(document.getElementById('exercise-name')?.value || '')" data-i18n="form.form">Form</button>
+            <button class="btn-ex-browse btn-ex-voice" type="button" id="workout-mic-btn"
+              onclick="workoutVoiceToggle()" title="Tap to speak: 'Exercise, weight, reps, RPE'">
+              🎤
+            </button>
             <button class="btn-ex-browse" onclick="openExLib()"><span data-i18n="form.browse">Browse</span></button>
           </div>
           <input type="text" id="exercise-name" placeholder="e.g. Bench Press, Squat?" autocomplete="off" autocapitalize="words" data-i18n-placeholder="form.exercisePlaceholder" oninput="showAutocomplete(this.value);updateLastSessionHint();updatePRPath();_updateSwapBtn(this.value);if(this.value.trim()){const p=document.getElementById('muscle-history-panel');if(p)p.style.display='none';}">
@@ -9318,6 +9322,93 @@ function showJit(id, targetEl, text) {
   setTimeout(dismiss, 4000);
   tip.addEventListener('click', dismiss);
 }
+
+// ── Voice-to-Log ─────────────────────────────────────────────────────────────
+const FORGE_PARSE_FN = (window.FORGE_CONFIG?.SUPABASE_URL || '') + '/functions/v1/forge-parse';
+let _voiceRecognition = null;
+let _voiceActive = false;
+
+function setupWorkoutVoiceInput() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const btn = document.getElementById('workout-mic-btn');
+  if (!SpeechRecognition || !btn) {
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+
+  _voiceRecognition = new SpeechRecognition();
+  _voiceRecognition.continuous = false;
+  _voiceRecognition.interimResults = false;
+  _voiceRecognition.lang = 'en-US';
+
+  _voiceRecognition.onstart  = () => { _voiceActive = true;  btn.classList.add('voice-active');    btn.textContent = '🔴'; };
+  _voiceRecognition.onend    = () => { _voiceActive = false; btn.classList.remove('voice-active'); btn.textContent = '🎤'; };
+  _voiceRecognition.onerror  = () => { _voiceActive = false; btn.classList.remove('voice-active'); btn.textContent = '🎤'; };
+
+  _voiceRecognition.onresult = async (event) => {
+    const transcript = event.results[0]?.[0]?.transcript || '';
+    if (!transcript) return;
+
+    if (typeof showToast === 'function') showToast(`Heard: "${transcript}"`, 'info', 2500);
+
+    const session = await window._sb?.auth?.getSession?.();
+    const token = session?.data?.session?.access_token;
+    if (!token) return;
+
+    try {
+      const resp = await fetch(FORGE_PARSE_FN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ transcript })
+      });
+      const data = await resp.json();
+      if (data.error) {
+        if (typeof showToast === 'function') showToast('Couldn\'t parse — try "Bench press, 80kg, 8 reps"', 'error');
+        return;
+      }
+
+      // Auto-fill exercise name
+      if (data.exercise) {
+        const exInput = document.getElementById('exercise-name');
+        if (exInput) {
+          exInput.value = data.exercise;
+          exInput.dispatchEvent(new Event('input'));
+          if (typeof pickExercise === 'function') pickExercise(data.exercise);
+        }
+      }
+
+      // Auto-fill last set row — wait briefly for ghost sets to load
+      await new Promise(r => setTimeout(r, 100));
+      const setRows = document.querySelectorAll('#sets-container .set-row');
+      const targetRow = setRows.length ? setRows[setRows.length - 1] : null;
+
+      if (targetRow) {
+        const wEl = targetRow.querySelector('.set-weight');
+        const rEl = targetRow.querySelector('.set-reps');
+        if (wEl && data.weight != null) { wEl.value = data.weight; wEl.classList.remove('ghost-placeholder'); wEl.dispatchEvent(new Event('input')); }
+        if (rEl && data.reps  != null) { rEl.value = data.reps;   rEl.classList.remove('ghost-placeholder'); rEl.dispatchEvent(new Event('input')); }
+      }
+
+      if (typeof showToast === 'function') {
+        showToast(`✅ ${data.exercise || ''} ${data.weight != null ? data.weight : ''}${data.unit || ''} × ${data.reps != null ? data.reps : ''} reps`, 'success', 3000);
+      }
+    } catch {
+      if (typeof showToast === 'function') showToast('Voice log failed — try again', 'error');
+    }
+  };
+}
+
+function workoutVoiceToggle() {
+  if (!_voiceRecognition) setupWorkoutVoiceInput();
+  if (!_voiceRecognition) return;
+  if (_voiceActive) {
+    _voiceRecognition.stop();
+  } else {
+    _voiceRecognition.start();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', setupWorkoutVoiceInput);
 
 function showPRCelebration(exerciseName, topWeight, unit) {
   const overlay = document.getElementById('pr-celebrate-overlay');
