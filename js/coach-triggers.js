@@ -17,7 +17,11 @@
   // ── Fire a short proactive coach message (max 80 tokens) ──────────────────
   async function _fireCoachMessage(triggerKey, systemNote, userPrompt, onResult) {
     if (_onCooldown(triggerKey)) return;
-    _setCooldown(triggerKey);
+
+    if (!window.FORGE_CONFIG?.SUPABASE_URL) {
+      console.warn('[coach-triggers] FORGE_CONFIG not ready');
+      return;
+    }
 
     const session = await window._sb?.auth?.getSession?.();
     const token = session?.data?.session?.access_token;
@@ -39,6 +43,7 @@
         })
       });
       if (!resp.ok) return;
+      _setCooldown(triggerKey); // set cooldown only on successful response
       const reader = resp.body?.getReader();
       if (!reader) return;
       let text = '';
@@ -73,12 +78,14 @@
     card.className = 'coach-intercept-card';
     card.innerHTML = `
       <div class="cic-icon">🤖</div>
-      <div class="cic-message">${message}</div>
+      <div class="cic-message"></div>
       <div class="cic-actions">
         ${cta1Label ? `<button class="cic-btn cic-btn-primary" id="cic-cta1">${cta1Label}</button>` : ''}
         <button class="cic-btn cic-btn-dismiss" id="cic-dismiss">Log anyway</button>
       </div>
     `;
+    // Set message via textContent to prevent XSS from LLM output
+    card.querySelector('.cic-message').textContent = message;
     const anchor = document.getElementById('muscle-btn-grid') || document.getElementById('sets-container');
     if (anchor) anchor.parentNode.insertBefore(card, anchor);
 
@@ -99,7 +106,8 @@
     if (_onCooldown(triggerKey)) return;
 
     const status = window._getMuscleRecoveryStatus?.(muscleName);
-    if (!status || status.hoursAgo >= 48) return;
+    const recoveryWindow = (window._COACH_RECOVERY_WINDOW?.[muscleName.toLowerCase()] || 48);
+    if (!status || status.hoursAgo >= recoveryWindow) return;
 
     const alternatives = window._getRecoveredMuscles?.() || [];
     const altStr = alternatives.slice(0, 2).join(' or ') || 'another muscle group';
