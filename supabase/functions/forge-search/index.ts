@@ -36,6 +36,7 @@ serve(async (req) => {
   let history: Array<{ role: string; content: string }> = [];
   let clientDate = new Date().toISOString();
   let clientTz = 'UTC';
+  let userContext = '';
 
   try {
     const body = await req.json();
@@ -45,6 +46,7 @@ serve(async (req) => {
     if (Array.isArray(body.history)) history = body.history.slice(-6);
     if (body.client_date) clientDate = String(body.client_date);
     if (body.client_tz) clientTz = String(body.client_tz);
+    if (body.user_context) userContext = String(body.user_context).slice(0, 2000);
   } catch {
     return new Response('Bad request', { status: 400 });
   }
@@ -136,7 +138,18 @@ serve(async (req) => {
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 300,
             stream: true,
-            system: `You are FORGE, a personal gym assistant. Today is ${dateStr} and the current time is ${timeStr}. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and numbers when relevant. When the user asks about "today", "this week", or "recently", use the current date to interpret what that means. Format responses cleanly: use **bold** for key numbers and names, use bullet points (- item) for lists, avoid markdown headings (#). Keep answers short and direct. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
+            system: `You are FORGE, a personal gym AI coach. Today is ${dateStr}, current time is ${timeStr}.
+
+${userContext ? `## USER PROFILE & CURRENT STATS\n${userContext}\n` : ''}
+## YOUR ROLE
+Answer questions about the user's training, nutrition, body composition, progress, KPIs, and strategy. Use the user profile above as always-available context — it tells you their goals, current stats, training phase, and averages. The training log entries below provide specific historical data to search through.
+
+When asked about goals: compare current stats to target stats and give honest, specific feedback.
+When asked about strategy: use their training phase, split, and frequency to give actionable advice.
+When asked about KPIs: compute from the data (volume trends, PR frequency, nutrition averages, weight trend).
+When asked about "what to fix": be direct and prioritize the top 2-3 actionable improvements.
+
+Format: use **bold** for key numbers and names, use - bullet points for lists, avoid # headings. Be concise and direct. Never make up data not present in the profile or log entries.`,
             messages: [
               ...history,
               {

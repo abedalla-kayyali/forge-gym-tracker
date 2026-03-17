@@ -102,6 +102,138 @@
     return parts.join('. ') + '.';
   }
 
+  // ─── User profile context (injected into every Claude call) ─────────────
+
+  function buildUserContext() {
+    const lines = [];
+    try {
+      // Profile & Goals
+      const p = JSON.parse(localStorage.getItem('forge_profile') || '{}');
+      if (p.name)   lines.push(`Name: ${p.name}`);
+      if (p.gender) lines.push(`Gender: ${p.gender}`);
+      if (p.age || p.dob) lines.push(`Age: ${p.age || ''}`);
+      if (p.height) lines.push(`Height: ${p.height}${p.heightUnit || 'cm'}`);
+      if (p.goal)   lines.push(`Primary goal: ${p.goal}`);
+      if (p.targetWeight)     lines.push(`Target weight: ${p.targetWeight}${p.targetWeightUnit || 'kg'}`);
+      if (p.targetBodyFat)    lines.push(`Target body fat: ${p.targetBodyFat}%`);
+      if (p.targetMuscleMass) lines.push(`Target muscle mass: ${p.targetMuscleMass}kg`);
+      if (p.targetMuscle)     lines.push(`Target muscle focus: ${p.targetMuscle}`);
+      if (p.activityLevel)    lines.push(`Activity level: ${p.activityLevel}`);
+      if (p.inbodyBmr)        lines.push(`BMR (InBody): ${p.inbodyBmr} kcal`);
+    } catch {}
+
+    try {
+      // Latest bodyweight
+      const bw = JSON.parse(localStorage.getItem('forge_bodyweight') || '[]');
+      const latest = Array.isArray(bw) ? bw[bw.length - 1] : null;
+      if (latest?.weight) lines.push(`Current weight: ${latest.weight}${latest.unit || 'kg'} (${latest.date?.slice(0,10) || 'recent'})`);
+      if (latest?.bodyFat)    lines.push(`Current body fat: ${latest.bodyFat}%`);
+      if (latest?.muscleMass) lines.push(`Current muscle mass: ${latest.muscleMass}kg`);
+    } catch {}
+
+    try {
+      // Latest InBody test
+      const tests = JSON.parse(localStorage.getItem('forge_inbody_tests') || '[]');
+      const ib = Array.isArray(tests) ? tests[tests.length - 1] : null;
+      if (ib) {
+        const ibParts = [`InBody test (${ib.date?.slice(0,10) || 'recent'}):`];
+        if (ib.weight)      ibParts.push(`weight ${ib.weight}kg`);
+        if (ib.muscleMass)  ibParts.push(`muscle ${ib.muscleMass}kg`);
+        if (ib.bodyFat)     ibParts.push(`fat ${ib.bodyFat}%`);
+        if (ib.visceralFat) ibParts.push(`visceral fat level ${ib.visceralFat}`);
+        if (ib.bmr)         ibParts.push(`BMR ${ib.bmr}kcal`);
+        if (ib.inbodyScore) ibParts.push(`InBody score ${ib.inbodyScore}`);
+        lines.push(ibParts.join(' '));
+      }
+    } catch {}
+
+    try {
+      // Latest body measurements
+      const meas = JSON.parse(localStorage.getItem('forge_measurements') || '[]');
+      const latest = Array.isArray(meas) ? meas[meas.length - 1] : null;
+      if (latest) {
+        const parts = [`Body measurements (${latest.date?.slice(0,10) || 'recent'}):`];
+        const keys = ['waist','hips','chest','shoulders','leftArm','rightArm','neck','leftThigh','rightThigh','calves'];
+        keys.forEach(k => { if (latest[k]) parts.push(`${k} ${latest[k]}cm`); });
+        if (parts.length > 1) lines.push(parts.join(', '));
+      }
+    } catch {}
+
+    try {
+      // Mesocycle / training phase
+      const meso = JSON.parse(localStorage.getItem('forge_mesocycle') || 'null');
+      if (meso?.name) {
+        const mesoParts = [`Current training phase: ${meso.name}`];
+        if (meso.goal)         mesoParts.push(`goal: ${meso.goal}`);
+        if (meso.currentWeek && meso.durationWeeks) mesoParts.push(`week ${meso.currentWeek}/${meso.durationWeeks}`);
+        if (meso.startDate)    mesoParts.push(`started ${meso.startDate?.slice(0,10)}`);
+        lines.push(mesoParts.join(', '));
+      }
+    } catch {}
+
+    try {
+      // Weekly training split
+      const split = JSON.parse(localStorage.getItem('forge_split') || '{}');
+      if (split && typeof split === 'object') {
+        const days = ['mon','tue','wed','thu','fri','sat','sun'];
+        const splitParts = days.map(d => split[d] ? `${d}: ${Array.isArray(split[d]) ? split[d].join('+') : split[d]}` : null).filter(Boolean);
+        if (splitParts.length) lines.push(`Weekly split: ${splitParts.join(' | ')}`);
+      }
+    } catch {}
+
+    try {
+      // Workout stats summary
+      const workouts = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
+      if (Array.isArray(workouts) && workouts.length) {
+        const now = Date.now();
+        const thisWeek = workouts.filter(w => w.date && (now - new Date(w.date).getTime()) < 7*86400000);
+        const thisMonth = workouts.filter(w => w.date && (now - new Date(w.date).getTime()) < 30*86400000);
+        const prs = workouts.filter(w => w.isPR);
+        lines.push(`Total workouts logged: ${workouts.length}`);
+        lines.push(`Workouts this week: ${thisWeek.length}, this month: ${thisMonth.length}`);
+        if (prs.length) lines.push(`Total PRs achieved: ${prs.length}`);
+        // Most trained muscles this month
+        const muscleCounts = {};
+        thisMonth.forEach(w => { if (w.muscle) muscleCounts[w.muscle] = (muscleCounts[w.muscle] || 0) + 1; });
+        const topMuscles = Object.entries(muscleCounts).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([m,c])=>`${m}(${c}x)`).join(', ');
+        if (topMuscles) lines.push(`Most trained this month: ${topMuscles}`);
+      }
+    } catch {}
+
+    try {
+      // Nutrition summary (last 7 days)
+      const meals = JSON.parse(localStorage.getItem('forge_meals') || '{}');
+      if (meals && typeof meals === 'object') {
+        const now = new Date();
+        let totalKcal = 0, totalProtein = 0, days = 0;
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(now); d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0,10);
+          const dayMeals = meals[key];
+          if (Array.isArray(dayMeals) && dayMeals.length) {
+            dayMeals.forEach(m => {
+              totalKcal    += +(m.kcal || m.calories || 0);
+              totalProtein += +(m.p || m.protein || 0);
+            });
+            days++;
+          }
+        }
+        if (days > 0) {
+          lines.push(`Avg daily calories (last ${days} days): ${Math.round(totalKcal/days)} kcal`);
+          lines.push(`Avg daily protein (last ${days} days): ${Math.round(totalProtein/days)}g`);
+        }
+      }
+    } catch {}
+
+    try {
+      // Achievements
+      const ach = JSON.parse(localStorage.getItem('forge_achievements') || '[]');
+      if (Array.isArray(ach) && ach.length) lines.push(`Achievements unlocked: ${ach.length}`);
+    } catch {}
+
+    return lines.length ? lines.join('\n') : '';
+  }
+
   // ─── Build all ingest items from localStorage ─────────────────────────────
 
   function buildAllItems() {
@@ -190,6 +322,48 @@
       });
     } catch {}
 
+    // InBody tests
+    try {
+      const tests = JSON.parse(localStorage.getItem('forge_inbody_tests') || '[]');
+      (Array.isArray(tests) ? tests : []).forEach((t, i) => {
+        if (!t) return;
+        const dateKey = t.date ? t.date.slice(0, 10) : `idx${i}`;
+        const parts = [`InBody test on ${fmtDate(t.date)}`];
+        if (t.weight)       parts.push(`weight: ${t.weight}kg`);
+        if (t.muscleMass)   parts.push(`muscle mass: ${t.muscleMass}kg`);
+        if (t.bodyFat)      parts.push(`body fat: ${t.bodyFat}%`);
+        if (t.visceralFat)  parts.push(`visceral fat level: ${t.visceralFat}`);
+        if (t.bmr)          parts.push(`BMR: ${t.bmr} kcal`);
+        if (t.inbodyScore)  parts.push(`InBody score: ${t.inbodyScore}`);
+        items.push({
+          id: `inbody_${dateKey.replace(/-/g, '')}_${i}`,
+          type: 'inbody',
+          date: dateKey,
+          content: parts.join(', ') + '.',
+          metadata: { weight: t.weight || 0, body_fat: t.bodyFat || 0, muscle_mass: t.muscleMass || 0 },
+        });
+      });
+    } catch {}
+
+    // Body measurements
+    try {
+      const meas = JSON.parse(localStorage.getItem('forge_measurements') || '[]');
+      (Array.isArray(meas) ? meas : []).forEach((m, i) => {
+        if (!m) return;
+        const dateKey = m.date ? m.date.slice(0, 10) : `idx${i}`;
+        const keys = ['waist','hips','chest','shoulders','leftArm','rightArm','neck','leftThigh','rightThigh','calves'];
+        const vals = keys.filter(k => m[k]).map(k => `${k}: ${m[k]}cm`);
+        if (!vals.length) return;
+        items.push({
+          id: `meas_${dateKey.replace(/-/g, '')}_${i}`,
+          type: 'measurement',
+          date: dateKey,
+          content: `Body measurements on ${fmtDate(m.date)}: ${vals.join(', ')}.`,
+          metadata: { waist: m.waist || 0, chest: m.chest || 0 },
+        });
+      });
+    } catch {}
+
     return items;
   }
 
@@ -227,6 +401,7 @@
         history,
         client_date: new Date().toISOString(),
         client_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        user_context: buildUserContext(),
       }),
     });
     if (!res.ok) throw new Error(`search ${res.status}`);
@@ -875,7 +1050,8 @@
     }
     const TYPE_LABELS = {
       workout: 'Workout', bodyweight: 'Weight', meal: 'Meal',
-      cardio: 'Cardio', bw_workout: 'Bodyweight', unknown: '?',
+      cardio: 'Cardio', bw_workout: 'Bodyweight',
+      inbody: 'InBody', measurement: 'Measurements', unknown: '?',
     };
     const wrap = document.createElement('div');
     wrap.innerHTML = results.map(r => {
