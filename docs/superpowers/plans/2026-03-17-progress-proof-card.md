@@ -1,6 +1,6 @@
 # Progress Proof Card Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Status: COMPLETE as of v224 (2026-03-17)**
 
 **Goal:** Build a shareable 1080×1350px Canvas progress card that shows goal-aware stats (weight Δ, BF%, PRs, sessions, streak) over the user's active mesocycle window, triggered from the Progress tab and Sunday prompt.
 
