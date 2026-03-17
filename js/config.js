@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v179';
-window.FORGE_BUILD   = '2026-03-17 (feat: Progressive Overload Score panel in Progress tab — 28-day per-muscle POS)';
+window.FORGE_VERSION = 'v180';
+window.FORGE_BUILD   = '2026-03-17 (feat: Volume Landmarks MEV/MRV panel in Progress tab — Israetel model, 8 muscle groups, 7-day sets)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

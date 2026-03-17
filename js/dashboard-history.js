@@ -692,6 +692,7 @@ function switchDashTab(name, btn) {
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
   if (name === 'nutrition' && typeof renderWeeklyNutritionReport === 'function') renderWeeklyNutritionReport();
   if (name === 'progress' && typeof window.FORGE_OVERLOAD !== 'undefined') window.FORGE_OVERLOAD.renderOverloadScoreCard('overload-score-card');
+  if (name === 'progress' && typeof renderVolumeLandmarks === 'function') renderVolumeLandmarks();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
     _renderProgressReadinessHub();
@@ -3410,4 +3411,111 @@ function renderWeeklyNutritionReport() {
     </div>`;
 }
 window.renderWeeklyNutritionReport = renderWeeklyNutritionReport;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VOLUME LANDMARKS  (MEV / MRV per muscle · Israetel model · P1 · v180)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderVolumeLandmarks() {
+  const el = document.getElementById('volume-landmarks-body');
+  if (!el) return;
+
+  // ── Israetel MEV/MRV landmarks (sets/week) ────────────────────────────────
+  const LANDMARKS = [
+    { muscle: 'Chest',      mev: 8,  mrv: 20 },
+    { muscle: 'Back',       mev: 10, mrv: 25 },
+    { muscle: 'Shoulders',  mev: 8,  mrv: 20 },
+    { muscle: 'Biceps',     mev: 6,  mrv: 20 },
+    { muscle: 'Triceps',    mev: 6,  mrv: 18 },
+    { muscle: 'Legs',       mev: 8,  mrv: 20 },
+    { muscle: 'Glutes',     mev: 4,  mrv: 16 },
+    { muscle: 'Core',       mev: 0,  mrv: 16 },
+  ];
+
+  // ── Count working sets per muscle in last 7 days ──────────────────────────
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  const allW = (typeof workouts !== 'undefined' ? workouts : null) || _lsGet('forge_workouts', []);
+  const cutoff = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+
+  const setsPerMuscle = {};
+  allW.forEach(w => {
+    if (!w.date || w.date < cutoff) return;
+    const m = (w.muscle || '').trim();
+    if (!m) return;
+    const workingSets = Array.isArray(w.sets)
+      ? w.sets.filter(s => s.type !== 'warmup').length
+      : 0;
+    setsPerMuscle[m] = (setsPerMuscle[m] || 0) + workingSets;
+  });
+
+  // ── Status helpers ────────────────────────────────────────────────────────
+  function _status(sets, mev, mrv) {
+    if (sets === 0) return 'vl-zero';
+    if (mev === 0) return sets <= mrv ? 'vl-ok' : 'vl-over';  // Core: no MEV floor
+    if (sets < mev) return 'vl-low';
+    if (sets >= mrv) return 'vl-over';
+    if (sets >= mrv * 0.85) return 'vl-warn';
+    return 'vl-ok';
+  }
+  function _statusLabel(status) {
+    return { 'vl-zero': 'No sets', 'vl-low': 'Below MEV', 'vl-ok': 'Effective', 'vl-warn': 'Near MRV', 'vl-over': 'Above MRV' }[status] || '';
+  }
+
+  // ── Bar position: map sets onto 0→MRV scale ───────────────────────────────
+  function _barPct(sets, mrv) {
+    return Math.min(100, Math.round((sets / Math.max(mrv, 1)) * 100));
+  }
+  function _mevPct(mev, mrv) {
+    return Math.round((mev / Math.max(mrv, 1)) * 100);
+  }
+
+  const rows = LANDMARKS.map(({ muscle, mev, mrv }) => {
+    const sets   = setsPerMuscle[muscle] || 0;
+    const status = _status(sets, mev, mrv);
+    const label  = _statusLabel(status);
+    const barPct = _barPct(sets, mrv);
+    const mevPct = _mevPct(mev, mrv);
+
+    return `
+      <div class="vl-row">
+        <div class="vl-header-row">
+          <span class="vl-muscle">${muscle}</span>
+          <span class="vl-sets-count ${status}">${sets} <span class="vl-sets-unit">sets</span></span>
+          <span class="vl-badge ${status}">${label}</span>
+        </div>
+        <div class="vl-bar-track">
+          ${mev > 0 ? `<div class="vl-mev-line" style="left:${mevPct}%" title="MEV: ${mev} sets"></div>` : ''}
+          <div class="vl-bar-fill ${status}" style="width:${barPct}%"></div>
+        </div>
+        <div class="vl-range-labels">
+          <span>0</span>
+          ${mev > 0 ? `<span class="vl-mev-label" style="left:${mevPct}%">MEV ${mev}</span>` : ''}
+          <span>MRV ${mrv}</span>
+        </div>
+      </div>`;
+  });
+
+  const totalLogged = Object.keys(setsPerMuscle).length;
+  const lowMuscles  = LANDMARKS.filter(({ muscle, mev }) => mev > 0 && (setsPerMuscle[muscle] || 0) < mev).map(l => l.muscle);
+  const overMuscles = LANDMARKS.filter(({ muscle, mrv }) => (setsPerMuscle[muscle] || 0) >= mrv).map(l => l.muscle);
+
+  const summaryHtml = (lowMuscles.length || overMuscles.length) ? `
+    <div class="vl-summary">
+      ${lowMuscles.length ? `<div class="vl-summary-item vl-low">⬇ Under-stimulated: <strong>${lowMuscles.join(', ')}</strong></div>` : ''}
+      ${overMuscles.length ? `<div class="vl-summary-item vl-over">⬆ Overreach risk: <strong>${overMuscles.join(', ')}</strong></div>` : ''}
+    </div>` : '';
+
+  el.innerHTML = `
+    <div class="vl-legend">
+      <span class="vl-dot vl-low"></span>Below MEV
+      <span class="vl-dot vl-ok"></span>Effective
+      <span class="vl-dot vl-warn"></span>Near MRV
+      <span class="vl-dot vl-over"></span>Above MRV
+    </div>
+    ${summaryHtml}
+    <div class="vl-list">${rows.join('')}</div>
+    <div class="vl-footnote">MEV = Minimum Effective Volume · MRV = Maximum Recoverable Volume · Israetel model</div>`;
+}
+window.renderVolumeLandmarks = renderVolumeLandmarks;
 

@@ -22913,3 +22913,34 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .wnr-wow-delta.wnr-neutral{color:var(--text3);}
 .wnr-targets-row{font-size:10px;color:var(--text3);border-top:1px solid var(--border);padding-top:8px;}
 
+/* ═══════════════════════════════════════════════════════════════
+   VOLUME LANDMARKS — MEV / MRV  (Israetel · P1 · v180)
+═══════════════════════════════════════════════════════════════ */
+.vl-legend{display:flex;align-items:center;gap:10px;font-size:10px;color:var(--text2);margin-bottom:12px;flex-wrap:wrap;}
+.vl-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px;flex-shrink:0;}
+.vl-dot.vl-low{background:#ff5050;}.vl-dot.vl-ok{background:var(--accent);}.vl-dot.vl-warn{background:#ff9f2a;}.vl-dot.vl-over{background:#ff5050;opacity:.6;}
+.vl-summary{margin-bottom:12px;display:flex;flex-direction:column;gap:5px;}
+.vl-summary-item{font-size:11px;padding:6px 10px;border-radius:8px;}
+.vl-summary-item.vl-low{background:rgba(255,80,80,.08);color:#ff8080;border-left:3px solid #ff5050;}
+.vl-summary-item.vl-over{background:rgba(255,159,42,.08);color:#ff9f2a;border-left:3px solid #ff9f2a;}
+.vl-list{display:flex;flex-direction:column;gap:14px;}
+.vl-row{}
+.vl-header-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.vl-muscle{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text);flex:1;}
+.vl-sets-count{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;line-height:1;}
+.vl-sets-count.vl-zero{color:var(--text3);}.vl-sets-count.vl-low{color:#ff5050;}.vl-sets-count.vl-ok{color:var(--accent);}.vl-sets-count.vl-warn{color:#ff9f2a;}.vl-sets-count.vl-over{color:#ff9f2a;}
+.vl-sets-unit{font-size:9px;font-weight:400;color:var(--text3);}
+.vl-badge{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 7px;border-radius:20px;text-transform:uppercase;}
+.vl-badge.vl-zero{background:var(--bg3);color:var(--text3);border:1px solid var(--border);}
+.vl-badge.vl-low{background:rgba(255,80,80,.12);color:#ff5050;border:1px solid rgba(255,80,80,.25);}
+.vl-badge.vl-ok{background:rgba(57,255,143,.12);color:var(--accent);border:1px solid rgba(57,255,143,.28);}
+.vl-badge.vl-warn{background:rgba(255,159,42,.12);color:#ff9f2a;border:1px solid rgba(255,159,42,.28);}
+.vl-badge.vl-over{background:rgba(255,159,42,.10);color:#ff9f2a;border:1px solid rgba(255,159,42,.22);}
+.vl-bar-track{position:relative;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:visible;margin-bottom:4px;}
+.vl-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;position:relative;z-index:1;}
+.vl-bar-fill.vl-zero{background:rgba(255,255,255,.06);}.vl-bar-fill.vl-low{background:#ff5050;opacity:.7;}.vl-bar-fill.vl-ok{background:var(--accent);opacity:.8;}.vl-bar-fill.vl-warn{background:#ff9f2a;}.vl-bar-fill.vl-over{background:#ff9f2a;opacity:.6;}
+.vl-mev-line{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.35);border-radius:1px;z-index:2;}
+.vl-range-labels{position:relative;display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);}
+.vl-mev-label{position:absolute;transform:translateX(-50%);color:rgba(255,255,255,.35);}
+.vl-footnote{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;border-top:1px solid var(--border);padding-top:8px;margin-top:10px;letter-spacing:.3px;}
+
