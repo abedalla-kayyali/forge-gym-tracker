@@ -3947,14 +3947,14 @@ function renderDailyNonNegotiables() {
   const isWeekend = [0, 6].includes(today.getDay());
 
   // ── Auto-detect habits ────────────────────────────────────────────────────
-  const weightLogged = Array.isArray(_bw) && _bw.some(e => (e.date || e.d || '') === todayKey);
+  const weightLogged = Array.isArray(_bw) && _bw.some(e => (e.date || e.d || '').slice(0,10) === todayKey);
 
   const protTarget = Math.round(parseFloat(_up.weight || 75) * 1.8);
   const todayMeals = Array.isArray(_meals?.[todayKey]) ? _meals[todayKey] : [];
   const todayProt  = todayMeals.reduce((s, m) => s + (parseFloat(m.protein || m.p) || 0), 0);
   const proteinHit = protTarget > 0 && todayProt >= protTarget * 0.9;
 
-  const sessionDone = Array.isArray(_wrk) && _wrk.some(w => w.date === todayKey);
+  const sessionDone = Array.isArray(_wrk) && _wrk.some(w => (w.date || '').slice(0,10) === todayKey);
   const _rdyToday   = _lsGet('forge_readiness', {})[todayKey] || {};
   const sleepHours  = parseFloat(_rdyToday.totalSleep) || 0;
   const sleepDone   = sleepHours >= 7;

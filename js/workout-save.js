@@ -112,6 +112,7 @@ function _saveWeightedWorkout() {
       });
     }
     save();
+    if (typeof window.renderDailyNonNegotiables === 'function') setTimeout(() => window.renderDailyNonNegotiables(), 300);
 
     document.getElementById('exercise-name').value = '';
     if (typeof _resetEffortSelector === 'function') _resetEffortSelector();

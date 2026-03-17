@@ -131,6 +131,7 @@ function logBodyWeight() {
   renderCompCards();
   renderFFMICards();
   _updateHdrStats();
+  if (typeof renderDailyNonNegotiables === 'function') renderDailyNonNegotiables();
 }
 
 // Wrapper used by stats-tab log button - also collapses form and refreshes
