@@ -1777,6 +1777,18 @@
     }
   }
 
+  // ─── Public API ──────────────────────────────────────────────────────────
+  window.FORGE_ASK = {
+    open: openModal,
+    openWithQuery: function (q) {
+      openModal();
+      setTimeout(() => {
+        const inp = document.getElementById('rag-input');
+        if (inp) { inp.value = q; handleSearch(); }
+      }, 420);
+    },
+  };
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

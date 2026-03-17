@@ -5792,6 +5792,7 @@ function renderCoachToday() {
       <div class="ctoday-card">
         <div class="ctoday-card-title">${_ctAr ? 'خطة اليوم' : "Today's Game Plan"}</div>
         <div class="ctoday-plan-note">${_ctAr ? 'سجل أول تمرين لك لفتح توصيات مخصصة!' : 'Log your first workout to unlock personalised recommendations!'}</div>
+        <button class="ctoday-ci-submit" style="margin-top:10px;" onclick="window.FORGE_ASK?.openWithQuery('What should I train today?')">${_ctAr ? '🤖 اسأل مدربي' : '🤖 Ask AI Coach'}</button>
       </div>`;
   } else {
     const suggest = suggestMuscles.length ? suggestMuscles : allMuscles.slice(0,3);
@@ -5805,6 +5806,7 @@ function renderCoachToday() {
         <div class="ctoday-plan-label">${_ctAr ? 'مقترح اليوم:' : 'Suggested for today:'}</div>
         <div class="ctoday-plan-muscles">${suggest.map(m => `<span class="ctoday-muscle-chip" onclick="if(typeof selectMuscle==='function'){selectMuscle('${m}');}if(typeof switchView==='function'){switchView('log',document.getElementById('bnav-log'));}" title="${_ctAr ? 'ابدأ التمرين' : 'Start workout'}">${m}</span>`).join('')}</div>
         <div class="ctoday-plan-note">${_ctAr ? 'اضغط على العضلة للانتقال إلى التسجيل' : 'Tap a muscle chip to jump to Log'}</div>
+        <button class="ctoday-ci-submit" style="margin-top:10px;" onclick="window.FORGE_ASK?.openWithQuery('What should I train today? Consider my split, recovery status, and recent sessions.')">${_ctAr ? '🤖 اسأل مدربي' : '🤖 Ask AI Coach'}</button>
       </div>`;
   }
 
