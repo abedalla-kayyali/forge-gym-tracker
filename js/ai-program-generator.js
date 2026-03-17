@@ -154,8 +154,9 @@
         return r;
       } catch {
         if (pass === 0) {
-          // Repair: LLM sometimes omits opening quote on string values — e.g. "name": Fly"
-          jsonStr = jsonStr.replace(/:\s*([A-Za-z(][^,}\]\n"]*?)"/g, ': "$1"');
+          // Repair: LLM sometimes omits opening quote — e.g. "name": Fly" → "name": "Fly"
+          // Only target known string fields to avoid corrupting valid values inside strings
+          jsonStr = jsonStr.replace(/"(name|reps|label)":\s*([A-Za-z(][^,}\]\n"]*?)"/g, '"$1": "$2"');
         }
       }
     }
