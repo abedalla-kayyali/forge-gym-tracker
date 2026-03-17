@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v212';
-window.FORGE_BUILD   = '2026-03-17 (feat: dashboard FX — DNN/energy/ring sounds+ripple, readiness action plan)';
+window.FORGE_VERSION = 'v213';
+window.FORGE_BUILD   = '2026-03-17 (fix: Ask FORGE FAB bottom-left + weekly report calendar-week throttle)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

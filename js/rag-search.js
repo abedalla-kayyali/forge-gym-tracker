@@ -840,24 +840,30 @@
 
   function checkWeeklyReport() {
     const WEEKLY_KEY = 'forge_last_weekly_report';
+    // Show once per calendar week (Mon–Sun)
+    const now = new Date();
+    const daysSinceMon = (now.getDay() + 6) % 7;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - daysSinceMon);
+    weekStart.setHours(0, 0, 0, 0);
     const last = localStorage.getItem(WEEKLY_KEY);
-    if (last && (Date.now() - Number(last)) < 6 * 86400000) return;
+    if (last && Number(last) >= weekStart.getTime()) return;
     try {
       const workouts = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
       const bw       = JSON.parse(localStorage.getItem('forge_bodyweight') || '[]');
       const meals    = JSON.parse(localStorage.getItem('forge_meals') || '{}');
-      const now = Date.now();
+      const nowMs = Date.now();
       const weekMs = 7 * 86400000;
-      const thisWeek = workouts.filter(w => w.date && (now - new Date(w.date).getTime()) < weekMs);
+      const thisWeek = workouts.filter(w => w.date && (nowMs - new Date(w.date).getTime()) < weekMs);
       if (thisWeek.length === 0) return;
       const lastWeek = workouts.filter(w => {
-        const age = now - new Date(w.date || 0).getTime();
+        const age = nowMs - new Date(w.date || 0).getTime();
         return w.date && age >= weekMs && age < 2 * weekMs;
       });
       const prs = thisWeek.filter(w => w.isPR).length;
       let totalKcal = 0, totalProtein = 0, nutritionDays = 0;
       for (let i = 0; i < 7; i++) {
-        const d = new Date(now); d.setDate(d.getDate() - i);
+        const d = new Date(nowMs); d.setDate(d.getDate() - i);
         const key = d.toISOString().slice(0, 10);
         const dayMeals = meals[key];
         if (Array.isArray(dayMeals) && dayMeals.length) {
@@ -865,10 +871,11 @@
           nutritionDays++;
         }
       }
-      const sortedBW   = [...bw].filter(e => e.date).sort((a,b) => new Date(b.date) - new Date(a.date));
-      const currentW   = sortedBW[0]?.weight;
-      const prevW      = sortedBW.find(e => (now - new Date(e.date).getTime()) >= weekMs)?.weight;
+      const sortedBW    = [...bw].filter(e => e.date).sort((a,b) => new Date(b.date) - new Date(a.date));
+      const currentW    = sortedBW[0]?.weight;
+      const prevW       = sortedBW.find(e => (nowMs - new Date(e.date).getTime()) >= weekMs)?.weight;
       const weightDelta = currentW && prevW ? parseFloat((currentW - prevW).toFixed(1)) : null;
+      // Mark shown AFTER we know we have data to display
       localStorage.setItem(WEEKLY_KEY, Date.now().toString());
       showWeeklyReport({
         thisWeek: thisWeek.length, lastWeek: lastWeek.length, prs,
@@ -1160,7 +1167,7 @@
       .rag-index-status { font-size:.74rem; color:rgba(138,158,138,.5); flex:1; font-family:inherit; }
       .rag-btn-stale { border-color:rgba(57,255,143,.5) !important; color:var(--accent,#39ff8f) !important; }
       #rag-fab-wrap {
-        position:fixed; right:16px;
+        position:fixed; left:16px;
         bottom:calc(72px + env(safe-area-inset-bottom,0px));
         display:flex; flex-direction:column; align-items:center; gap:6px; z-index:1000;
       }
