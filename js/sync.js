@@ -209,8 +209,10 @@
     if (!steps || typeof steps !== 'object') return;
     const rows = Object.entries(steps).map(([date, val]) => {
       // Keys in stepsData use toDateString() format; convert to YYYY-MM-DD for Supabase
+      // Use local date parts (not toISOString) to avoid UTC off-by-one for UTC+ timezones
       const d = new Date(date);
-      const isoDate = isNaN(d.getTime()) ? date : d.toISOString().slice(0, 10);
+      const isoDate = isNaN(d.getTime()) ? date :
+        d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       return {
         user_id: userId,
         date: isoDate,
