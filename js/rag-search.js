@@ -352,6 +352,61 @@
 
   // ─── Modal UI ─────────────────────────────────────────────────────────────
 
+  let activeFilter = '';
+
+  const SUGGESTIONS = [
+    'Best bench press ever?',
+    'How has my squat progressed?',
+    'Protein intake this week',
+    'Last chest workout',
+    'Heaviest deadlift?',
+    'Cardio sessions this month',
+  ];
+
+  function renderSuggestions() {
+    const el = document.getElementById('rag-suggestions');
+    if (!el) return;
+    el.innerHTML = SUGGESTIONS.map(s =>
+      `<button class="rag-chip" data-query="${s}">${s}</button>`
+    ).join('');
+    el.querySelectorAll('.rag-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('rag-input');
+        if (input) input.value = btn.dataset.query;
+        el.style.display = 'none';
+        handleSearch();
+      });
+    });
+    el.style.display = 'flex';
+  }
+
+  function showSkeleton() {
+    const container = document.getElementById('rag-results');
+    if (!container) return;
+    container.innerHTML = Array(3).fill(`
+      <div class="rag-skeleton">
+        <div class="rag-skel-line short"></div>
+        <div class="rag-skel-line"></div>
+        <div class="rag-skel-line medium"></div>
+      </div>
+    `).join('');
+  }
+
+  function renderOnboarding() {
+    const ts = localStorage.getItem(INGEST_KEY);
+    if (ts) return;
+    const container = document.getElementById('rag-results');
+    if (!container) return;
+    container.innerHTML = `
+      <div class="rag-onboarding">
+        <div class="rag-onboard-icon">🔍</div>
+        <div class="rag-onboard-title">Ask FORGE anything</div>
+        <div class="rag-onboard-body">Search your training history in plain English — best bench press, protein last week, how has my squat progressed.</div>
+        <div class="rag-onboard-body" style="margin-top:6px;">Tap <strong>Index my data</strong> below to get started.</div>
+      </div>
+    `;
+  }
+
   function createModal() {
     const el = document.createElement('div');
     el.id = 'rag-modal';
@@ -370,6 +425,14 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
         </div>
+        <div class="rag-filters" id="rag-filters">
+          <button class="rag-filter active" data-type="">All</button>
+          <button class="rag-filter" data-type="workout">Workouts</button>
+          <button class="rag-filter" data-type="meal">Meals</button>
+          <button class="rag-filter" data-type="cardio">Cardio</button>
+          <button class="rag-filter" data-type="bodyweight">Body</button>
+        </div>
+        <div id="rag-suggestions" class="rag-suggestions"></div>
         <div id="rag-status" class="rag-status" style="display:none;"></div>
         <div id="rag-results" class="rag-results"></div>
         <div class="rag-footer">
@@ -435,6 +498,37 @@
       .rag-btn-secondary:disabled { opacity:.4; cursor:not-allowed; }
       .rag-index-status { font-size:.75rem; color:var(--text2); flex:1; }
       .rag-btn-stale { border-color:var(--accent) !important; color:var(--accent) !important; }
+      .rag-filters { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; }
+      .rag-filters::-webkit-scrollbar { display:none; }
+      .rag-filter {
+        background:none; border:1px solid var(--border2); border-radius:20px;
+        color:var(--text2); font-size:.75rem; padding:4px 12px;
+        cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0;
+      }
+      .rag-filter.active { background:var(--accent); border-color:var(--accent); color:#000; font-weight:700; }
+      .rag-suggestions { display:flex; flex-wrap:wrap; gap:6px; }
+      .rag-chip {
+        background:var(--bg3); border:1px solid var(--border2); border-radius:20px;
+        color:var(--text2); font-size:.75rem; padding:5px 12px;
+        cursor:pointer; transition:border-color .15s, color .15s; white-space:nowrap;
+      }
+      .rag-chip:active { border-color:var(--accent); color:var(--accent); }
+      .rag-skeleton {
+        background:var(--bg3); border:1px solid var(--border);
+        border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px;
+      }
+      .rag-skel-line {
+        height:10px; border-radius:6px; width:100%;
+        background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);
+        background-size:200% 100%; animation:ragShimmer 1.4s infinite;
+      }
+      .rag-skel-line.short { width:35%; }
+      .rag-skel-line.medium { width:65%; }
+      @keyframes ragShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+      .rag-onboarding { text-align:center; padding:24px 16px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+      .rag-onboard-icon { font-size:2rem; }
+      .rag-onboard-title { font-size:1rem; font-weight:700; color:var(--text); }
+      .rag-onboard-body { font-size:.82rem; color:var(--text2); line-height:1.5; max-width:280px; }
       .rag-answer {
         background:var(--panel); border:1px solid var(--accent);
         border-radius:12px; padding:14px 16px;
@@ -467,6 +561,15 @@
     document.getElementById('rag-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') handleSearch();
     });
+    document.getElementById('rag-filters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.rag-filter');
+      if (!btn) return;
+      document.querySelectorAll('.rag-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.type;
+      const q = document.getElementById('rag-input')?.value?.trim();
+      if (q) handleSearch();
+    });
   }
 
   function updateIndexStatus() {
@@ -491,6 +594,8 @@
     if (modal) {
       modal.classList.add('open');
       updateIndexStatus();
+      renderOnboarding();
+      renderSuggestions();
       setTimeout(() => document.getElementById('rag-input')?.focus(), 300);
     }
   }
@@ -553,25 +658,34 @@
     if (!query) return;
     btn.disabled = true;
     showStatus('');
+    document.getElementById('rag-suggestions').style.display = 'none';
     const resultsContainer = document.getElementById('rag-results');
-    resultsContainer.innerHTML = '';
+    showSkeleton();
 
-    // Answer card rendered immediately — tokens stream into it
+    // Answer card — appended after first token arrives (clears skeleton then)
     const answerEl = document.createElement('div');
     answerEl.className = 'rag-answer rag-answer-streaming';
-    resultsContainer.appendChild(answerEl);
+    let firstToken = true;
 
     try {
       await searchQuery(
         query,
-        null,
-        (token) => { answerEl.textContent += token; },
+        activeFilter || null,
+        (token) => {
+          if (firstToken) {
+            resultsContainer.innerHTML = ''; // clear skeleton
+            resultsContainer.appendChild(answerEl);
+            firstToken = false;
+          }
+          answerEl.textContent += token;
+        },
         (results) => { renderResults(results); }
       );
       answerEl.classList.remove('rag-answer-streaming');
+      if (firstToken) resultsContainer.innerHTML = ''; // clear skeleton if no tokens
       if (!answerEl.textContent.trim()) answerEl.remove();
     } catch (e) {
-      answerEl.remove();
+      resultsContainer.innerHTML = '';
       showStatus('Search failed: ' + (e.message || 'unknown error'));
     } finally {
       btn.disabled = false;
