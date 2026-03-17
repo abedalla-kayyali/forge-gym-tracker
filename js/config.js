@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v208';
-window.FORGE_BUILD   = '2026-03-17 (feat: readiness premium UI — stacked sleep rows, bigger ring, blur-save HRV/RHR)';
+window.FORGE_VERSION = 'v209';
+window.FORGE_BUILD   = '2026-03-17 (feat: Ask FORGE — follow-up chips, voice input, save answers, weekly report, personalized chips, workout context)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

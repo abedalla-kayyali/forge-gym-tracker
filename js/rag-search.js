@@ -231,6 +231,35 @@
       if (Array.isArray(ach) && ach.length) lines.push(`Achievements unlocked: ${ach.length}`);
     } catch {}
 
+    try {
+      // Today's planned training from weekly split + muscle recovery
+      const split = JSON.parse(localStorage.getItem('forge_split') || '{}');
+      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+      const todayKey = dayNames[new Date().getDay()];
+      const todayPlan = split[todayKey];
+      if (todayPlan) {
+        const muscles = Array.isArray(todayPlan) ? todayPlan.join(' + ') : todayPlan;
+        lines.push(`Today's planned training (${todayKey}): ${muscles}`);
+      } else if (Object.keys(split).length) {
+        lines.push(`Today (${todayKey}): rest day per split`);
+      }
+      const workoutsForRecovery = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
+      const muscleDatesR = {};
+      workoutsForRecovery.forEach(w => {
+        if (w.muscle && w.date) {
+          const t = new Date(w.date).getTime();
+          if (!muscleDatesR[w.muscle] || t > muscleDatesR[w.muscle]) muscleDatesR[w.muscle] = t;
+        }
+      });
+      const recoveryStatus = Object.entries(muscleDatesR)
+        .map(([m, t]) => {
+          const d = Math.floor((Date.now() - t) / 86400000);
+          return `${m}: ${d === 0 ? 'trained today' : d === 1 ? '1 day rest' : `${d} days rest`}`;
+        })
+        .slice(0, 10).join(', ');
+      if (recoveryStatus) lines.push(`Muscle recovery status: ${recoveryStatus}`);
+    } catch {}
+
     return lines.length ? lines.join('\n') : '';
   }
 
@@ -674,6 +703,38 @@
     },
   };
 
+  function buildPersonalizedChips(contextKey) {
+    const base = (PAGE_CONTEXT[contextKey] || PAGE_CONTEXT.default).suggestions.slice();
+    try {
+      const workouts = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
+      const now = Date.now();
+      if (workouts.length) {
+        const muscleDates = {};
+        workouts.forEach(w => {
+          if (w.muscle && w.date) {
+            const t = new Date(w.date).getTime();
+            if (!muscleDates[w.muscle] || t > muscleDates[w.muscle]) muscleDates[w.muscle] = t;
+          }
+        });
+        const neglected = Object.entries(muscleDates).sort((a,b) => a[1] - b[1])[0];
+        if (neglected) base[0] = `When did I last train ${neglected[0]}?`;
+        const recentPR = workouts.filter(w => w.isPR && w.exercise)
+          .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+        if (recentPR) base[1] = `How is my ${recentPR.exercise} progressing?`;
+        const trainedToday = workouts.some(w => w.date && (now - new Date(w.date).getTime()) < 86400000);
+        if (!trainedToday) base[2] = 'What should I train today?';
+      }
+    } catch {}
+    try {
+      const meals = JSON.parse(localStorage.getItem('forge_meals') || '{}');
+      const today = new Date().toISOString().slice(0, 10);
+      const todayMeals = meals[today] || [];
+      const todayProtein = todayMeals.reduce((s,m) => s + +(m.p || m.protein || 0), 0);
+      if (todayProtein > 0 && todayProtein < 120) base[3] = 'Did I hit my protein target today?';
+    } catch {}
+    return base.slice(0, 6);
+  }
+
   function getPageContext() {
     const activeNav = document.querySelector('.bnav-btn.active');
     const view = activeNav?.id?.replace('bnav-', '') || 'default';
@@ -698,7 +759,17 @@
       else lbl.style.display = 'none';
     }
 
-    el.innerHTML = ctx.suggestions.map(s =>
+    const ctxKey = (() => {
+      const activeNav = document.querySelector('.bnav-btn.active');
+      const view = activeNav?.id?.replace('bnav-', '') || 'default';
+      if (view === 'dashboard') {
+        const subTab = document.querySelector('.dash-tab.active')?.dataset?.tab || 'overview';
+        return `dashboard/${subTab}`;
+      }
+      return view;
+    })();
+    const chips = buildPersonalizedChips(ctxKey);
+    el.innerHTML = chips.map(s =>
       `<button class="rag-chip" data-query="${s}">${s}</button>`
     ).join('');
     el.querySelectorAll('.rag-chip').forEach(btn => {
@@ -739,6 +810,111 @@
     `;
   }
 
+  function showWeeklyReport(stats) {
+    const container = document.getElementById('rag-results');
+    if (!container) return;
+    const { thisWeek, lastWeek, prs, avgKcal, avgProtein, weightDelta } = stats;
+    const trend = thisWeek > lastWeek ? '↑' : thisWeek < lastWeek ? '↓' : '=';
+    const weightStr = weightDelta !== null ? (weightDelta > 0 ? `+${weightDelta}kg` : `${weightDelta}kg`) : null;
+    const card = document.createElement('div');
+    card.className = 'rag-weekly-report';
+    const statItems = [
+      `<div class="rag-weekly-stat"><span class="rag-weekly-val">${thisWeek} ${trend}</span><span class="rag-weekly-lbl">Sessions</span></div>`,
+      prs > 0 ? `<div class="rag-weekly-stat"><span class="rag-weekly-val">${prs} 🏆</span><span class="rag-weekly-lbl">PRs</span></div>` : '',
+      avgKcal ? `<div class="rag-weekly-stat"><span class="rag-weekly-val">${avgKcal}</span><span class="rag-weekly-lbl">Avg kcal</span></div>` : '',
+      avgProtein ? `<div class="rag-weekly-stat"><span class="rag-weekly-val">${avgProtein}g</span><span class="rag-weekly-lbl">Protein</span></div>` : '',
+      weightStr ? `<div class="rag-weekly-stat"><span class="rag-weekly-val">${weightStr}</span><span class="rag-weekly-lbl">Weight</span></div>` : '',
+    ].filter(Boolean).join('');
+    card.innerHTML = `
+      <div class="rag-weekly-header">📊 Weekly Report</div>
+      <div class="rag-weekly-grid">${statItems}</div>
+      <button class="rag-chip" id="rag-weekly-ask">Ask FORGE for weekly advice →</button>`;
+    card.querySelector('#rag-weekly-ask').addEventListener('click', () => {
+      const input = document.getElementById('rag-input');
+      if (input) input.value = 'Based on my weekly stats, what should I focus on this week?';
+      card.remove();
+      handleSearch();
+    });
+    container.appendChild(card);
+  }
+
+  function checkWeeklyReport() {
+    const WEEKLY_KEY = 'forge_last_weekly_report';
+    const last = localStorage.getItem(WEEKLY_KEY);
+    if (last && (Date.now() - Number(last)) < 6 * 86400000) return;
+    try {
+      const workouts = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
+      const bw       = JSON.parse(localStorage.getItem('forge_bodyweight') || '[]');
+      const meals    = JSON.parse(localStorage.getItem('forge_meals') || '{}');
+      const now = Date.now();
+      const weekMs = 7 * 86400000;
+      const thisWeek = workouts.filter(w => w.date && (now - new Date(w.date).getTime()) < weekMs);
+      if (thisWeek.length === 0) return;
+      const lastWeek = workouts.filter(w => {
+        const age = now - new Date(w.date || 0).getTime();
+        return w.date && age >= weekMs && age < 2 * weekMs;
+      });
+      const prs = thisWeek.filter(w => w.isPR).length;
+      let totalKcal = 0, totalProtein = 0, nutritionDays = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now); d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const dayMeals = meals[key];
+        if (Array.isArray(dayMeals) && dayMeals.length) {
+          dayMeals.forEach(m => { totalKcal += +(m.kcal||m.calories||0); totalProtein += +(m.p||m.protein||0); });
+          nutritionDays++;
+        }
+      }
+      const sortedBW   = [...bw].filter(e => e.date).sort((a,b) => new Date(b.date) - new Date(a.date));
+      const currentW   = sortedBW[0]?.weight;
+      const prevW      = sortedBW.find(e => (now - new Date(e.date).getTime()) >= weekMs)?.weight;
+      const weightDelta = currentW && prevW ? parseFloat((currentW - prevW).toFixed(1)) : null;
+      localStorage.setItem(WEEKLY_KEY, Date.now().toString());
+      showWeeklyReport({
+        thisWeek: thisWeek.length, lastWeek: lastWeek.length, prs,
+        avgKcal:    nutritionDays > 0 ? Math.round(totalKcal / nutritionDays) : null,
+        avgProtein: nutritionDays > 0 ? Math.round(totalProtein / nutritionDays) : null,
+        weightDelta,
+      });
+    } catch {}
+  }
+
+  function renderSaved() {
+    const container = document.getElementById('rag-results');
+    if (!container) return;
+    container.innerHTML = '';
+    document.getElementById('rag-suggestions').style.display = 'none';
+    try {
+      const saved = JSON.parse(localStorage.getItem('forge_saved_answers') || '[]');
+      if (saved.length === 0) {
+        const p = document.createElement('p');
+        p.style.cssText = 'color:var(--text2);font-size:.85rem;text-align:center;padding:24px 0;font-family:inherit;';
+        p.textContent = 'No saved answers yet. Tap Save on any answer to keep it here.';
+        container.appendChild(p);
+        return;
+      }
+      saved.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'rag-saved-card';
+        card.innerHTML = `
+          <div class="rag-saved-question">${item.question}</div>
+          <div class="rag-answer" style="margin-top:4px;font-size:.85rem;">${renderMarkdown(item.answer)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:.7rem;color:var(--text3,#4a5e4a);">${item.date || ''}</span>
+            <button class="rag-unsave-btn" data-id="${item.id}">Remove</button>
+          </div>`;
+        card.querySelector('.rag-unsave-btn').addEventListener('click', (e) => {
+          try {
+            const s = JSON.parse(localStorage.getItem('forge_saved_answers') || '[]');
+            localStorage.setItem('forge_saved_answers', JSON.stringify(s.filter(x => x.id !== Number(e.target.dataset.id))));
+          } catch {}
+          card.remove();
+        });
+        container.appendChild(card);
+      });
+    } catch {}
+  }
+
   function createModal() {
     const el = document.createElement('div');
     el.id = 'rag-modal';
@@ -751,6 +927,9 @@
             <span class="rag-context-label" id="rag-context-label" style="display:none;"></span>
           </div>
           <div style="display:flex;gap:4px;align-items:center;">
+            <button class="rag-clear" id="rag-saved-btn" title="Saved answers" aria-label="Saved answers">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </button>
             <button class="rag-clear" id="rag-clear" title="New conversation" aria-label="New conversation">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
             </button>
@@ -761,6 +940,9 @@
         </div>
         <div class="rag-input-row">
           <input id="rag-input" type="text" class="rag-input" placeholder="e.g. best chest session, protein this week..." autocomplete="off" />
+          <button id="rag-mic-btn" class="rag-mic-btn" aria-label="Voice input" title="Speak your question">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
           <button id="rag-search-btn" class="rag-btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           </button>
@@ -835,6 +1017,15 @@
       }
       .rag-btn-primary:active { transform:scale(.92); }
       .rag-btn-primary:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+      .rag-mic-btn {
+        background:none; border:1.5px solid var(--border2,#2a3a2a); border-radius:12px;
+        color:var(--text2,#8a9e8a); padding:11px 12px; cursor:pointer;
+        display:flex; align-items:center; justify-content:center;
+        transition:all .15s; flex-shrink:0;
+      }
+      .rag-mic-btn:active { border-color:var(--accent,#39ff8f); color:var(--accent,#39ff8f); }
+      .rag-mic-active { border-color:var(--accent,#39ff8f) !important; color:var(--accent,#39ff8f) !important; background:rgba(57,255,143,.08) !important; animation:ragMicPulse 1s ease-in-out infinite; }
+      @keyframes ragMicPulse { 0%,100%{box-shadow:0 0 0 0 rgba(57,255,143,.3)} 50%{box-shadow:0 0 0 6px rgba(57,255,143,0)} }
 
       /* Type filters */
       .rag-filters { display:flex; gap:7px; overflow-x:auto; padding-bottom:2px; }
@@ -856,6 +1047,28 @@
         transition:border-color .15s, color .15s, background .15s; white-space:nowrap;
       }
       .rag-chip:active { border-color:var(--accent,#39ff8f); color:var(--accent,#39ff8f); background:rgba(57,255,143,.06); }
+      .rag-save-btn {
+        display:inline-flex; align-items:center; gap:5px; margin-top:10px;
+        background:none; border:1px solid var(--border2,#2a3a2a); border-radius:8px;
+        color:var(--text3,#4a5e4a); font-size:.72rem; font-family:inherit; font-weight:600;
+        padding:5px 10px; cursor:pointer; transition:all .15s;
+      }
+      .rag-save-btn:active { border-color:var(--accent,#39ff8f); color:var(--accent,#39ff8f); }
+      .rag-save-btn:disabled { cursor:default; }
+      .rag-saved-card { background:var(--bg3,#0a120a); border:1px solid var(--border,#1e2e1e); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+      .rag-saved-question { font-size:.78rem; font-weight:700; color:var(--accent,#39ff8f); }
+      .rag-unsave-btn { background:none; border:none; color:var(--text3,#4a5e4a); font-size:.72rem; font-family:inherit; cursor:pointer; padding:2px 0; }
+      .rag-unsave-btn:active { color:#ff4444; }
+      .rag-weekly-report { background:linear-gradient(135deg,rgba(57,255,143,.07),rgba(57,255,143,.02)); border:1.5px solid rgba(57,255,143,.2); border-radius:16px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+      .rag-weekly-header { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--accent,#39ff8f); }
+      .rag-weekly-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(72px,1fr)); gap:8px; }
+      .rag-weekly-stat { display:flex; flex-direction:column; align-items:center; gap:2px; background:rgba(0,0,0,.25); border-radius:10px; padding:9px 6px; }
+      .rag-weekly-val { font-size:1.05rem; font-weight:800; color:var(--text,#e8f4e8); }
+      .rag-weekly-lbl { font-size:.65rem; color:var(--text2,#8a9e8a); text-align:center; }
+      .rag-followup-row { display:flex; flex-wrap:wrap; gap:6px; padding-top:2px; align-items:center; }
+      .rag-followup-label { font-size:.65rem; color:var(--text3,#4a5e4a); font-weight:600; letter-spacing:.04em; white-space:nowrap; }
+      .rag-followup-chip { font-size:.72rem !important; border-color:rgba(57,255,143,.18) !important; color:var(--text3,#4a5e4a) !important; }
+      .rag-followup-chip:active { color:var(--accent,#39ff8f) !important; border-color:var(--accent,#39ff8f) !important; }
 
       /* Status */
       .rag-status { font-size:.8rem; color:var(--text2,#8a9e8a); text-align:center; font-family:inherit; }
@@ -962,6 +1175,7 @@
       renderOnboarding();
       renderSuggestions();
     });
+    document.getElementById('rag-saved-btn').addEventListener('click', renderSaved);
     document.getElementById('rag-search-btn').addEventListener('click', handleSearch);
     document.getElementById('rag-index-btn').addEventListener('click', handleIndex);
     document.getElementById('rag-input').addEventListener('keydown', (e) => {
@@ -1001,6 +1215,7 @@
       modal.classList.add('open');
       updateIndexStatus();
       renderOnboarding();
+      checkWeeklyReport();
       renderSuggestions();
       setTimeout(() => document.getElementById('rag-input')?.focus(), 300);
     }
@@ -1071,6 +1286,39 @@
     container.appendChild(wrap);
   }
 
+  function renderFollowUpChips(query) {
+    const container = document.getElementById('rag-results');
+    if (!container) return;
+    const q = query.toLowerCase();
+    let chips;
+    if (q.includes('goal') || q.includes('target') || q.includes('close')) {
+      chips = ['What should I fix first?', 'How is my nutrition tracking?', 'Am I on track this week?'];
+    } else if (q.includes('protein') || q.includes('calor') || q.includes('nutrit') || q.includes('macro')) {
+      chips = ['Am I close to my calorie goal?', 'How does this compare to my target?', 'What should I eat more of?'];
+    } else if (q.includes('train') || q.includes('workout') || q.includes('session') || q.includes('today')) {
+      chips = ['How is my recovery looking?', 'What muscle should I hit next?', 'Am I overtraining anything?'];
+    } else if (q.includes('progress') || q.includes('improv') || q.includes('pr') || q.includes('record')) {
+      chips = ['Which lift needs most work?', 'How has my volume changed?', 'What should I focus on next?'];
+    } else if (q.includes('weight') || q.includes('fat') || q.includes('body') || q.includes('muscle')) {
+      chips = ['Am I close to my goal weight?', 'How is my body fat trending?', 'How is my muscle mass changing?'];
+    } else {
+      chips = ['What should I prioritize this week?', 'How does this compare to last month?', 'What would you recommend?'];
+    }
+    const row = document.createElement('div');
+    row.className = 'rag-followup-row';
+    row.innerHTML = '<span class="rag-followup-label">Ask next:</span>' +
+      chips.map(c => `<button class="rag-chip rag-followup-chip" data-query="${c}">${c}</button>`).join('');
+    row.querySelectorAll('.rag-followup-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById('rag-input');
+        if (input) input.value = btn.dataset.query;
+        row.remove();
+        handleSearch();
+      });
+    });
+    container.appendChild(row);
+  }
+
   async function handleSearch() {
     const input = document.getElementById('rag-input');
     const btn   = document.getElementById('rag-search-btn');
@@ -1115,6 +1363,23 @@
         conversationHistory.push({ role: 'user', content: query });
         conversationHistory.push({ role: 'assistant', content: rawText });
         if (conversationHistory.length > 6) conversationHistory.splice(0, 2);
+        // Save button
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'rag-save-btn';
+        saveBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Save`;
+        saveBtn.addEventListener('click', () => {
+          try {
+            const saved = JSON.parse(localStorage.getItem('forge_saved_answers') || '[]');
+            saved.unshift({ id: Date.now(), question: query, answer: rawText, date: new Date().toISOString().slice(0,10) });
+            if (saved.length > 50) saved.pop();
+            localStorage.setItem('forge_saved_answers', JSON.stringify(saved));
+          } catch {}
+          saveBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Saved`;
+          saveBtn.disabled = true;
+          saveBtn.style.color = 'var(--accent,#39ff8f)';
+        });
+        answerEl.appendChild(saveBtn);
+        renderFollowUpChips(query);
       }
     } catch (e) {
       resultsContainer.innerHTML = '';
@@ -1140,6 +1405,31 @@
     } finally {
       btn.disabled = false;
     }
+  }
+
+  // ─── Voice input ─────────────────────────────────────────────────────────
+
+  function setupVoiceInput() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('rag-mic-btn');
+    if (!SR || !micBtn) { micBtn && (micBtn.style.display = 'none'); return; }
+    const recog = new SR();
+    recog.continuous = false;
+    recog.interimResults = false;
+    recog.lang = 'en-US';
+    let listening = false;
+    micBtn.addEventListener('click', () => {
+      if (listening) { recog.stop(); return; }
+      try { recog.start(); } catch {}
+    });
+    recog.onstart = () => { listening = true; micBtn.classList.add('rag-mic-active'); };
+    recog.onend   = () => { listening = false; micBtn.classList.remove('rag-mic-active'); };
+    recog.onerror = () => { listening = false; micBtn.classList.remove('rag-mic-active'); };
+    recog.onresult = (e) => {
+      const transcript = e.results[0][0].transcript.trim();
+      const input = document.getElementById('rag-input');
+      if (input && transcript) { input.value = transcript; handleSearch(); }
+    };
   }
 
   // ─── FAB button ──────────────────────────────────────────────────────────
@@ -1193,6 +1483,21 @@
     if (!window.FORGE_CONFIG?.SUPABASE_URL || window.FORGE_CONFIG.SUPABASE_URL.includes('YOUR_PROJECT')) return;
     createModal();
     createFab();
+    setupVoiceInput();
+    // Auto re-index if stale (>3 days) or never indexed
+    const lastIngest = localStorage.getItem(INGEST_KEY);
+    const daysSince = lastIngest ? (Date.now() - Number(lastIngest)) / 86400000 : Infinity;
+    if (daysSince > 3) {
+      setTimeout(async () => {
+        if (!window._sb || !(await getAuthHeader())) return;
+        try {
+          await runFullIngest(() => {});
+          console.debug('[FORGE RAG] auto re-indexed (stale)');
+        } catch (e) {
+          console.debug('[FORGE RAG] auto re-index failed:', e.message);
+        }
+      }, 6000);
+    }
   }
 
   if (document.readyState === 'loading') {
