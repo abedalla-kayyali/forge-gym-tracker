@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v216';
-window.FORGE_BUILD   = '2026-03-17 (feat: premium FX — sounds, particles, FAB halo, animated input border, answer flash)';
+window.FORGE_VERSION = 'v217';
+window.FORGE_BUILD   = '2026-03-17 (feat: coach triggers, recovery heatmap, macro steering, ghost mode, adaptive timer, PR overlay, voice-to-log, RAG form check)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
