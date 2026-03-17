@@ -162,8 +162,10 @@
         return r;
       } catch {
         if (pass === 0) {
-          // Repair: LLM sometimes omits opening quote — e.g. "name": Fly" → "name": "Fly"
-          // Only target known string fields to avoid corrupting valid values inside strings
+          // Repair 1: bare exercise name after closing brace — e.g. },\n  Chest Fly",\n  "sets":
+          // LLM omits the {"name": prefix on subsequent exercises
+          jsonStr = jsonStr.replace(/}\s*,\s*\n(\s*)([A-Z][^"{\n,]{1,60})",/g, '},\n$1{"name": "$2",');
+          // Repair 2: missing opening quote on known string fields — e.g. "name": Fly" → "name": "Fly"
           jsonStr = jsonStr.replace(/"(name|reps|label)":\s*([A-Za-z(][^,}\]\n"]*?)"/g, '"$1": "$2"');
         }
       }
