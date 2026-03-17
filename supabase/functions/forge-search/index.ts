@@ -33,12 +33,14 @@ serve(async (req) => {
   let query: string;
   let nResults = 8;
   let typeFilter: string | null = null;
+  let history: Array<{ role: string; content: string }> = [];
 
   try {
     const body = await req.json();
     query = body.query?.trim();
     if (body.n_results) nResults = Math.min(20, Math.max(1, Number(body.n_results)));
     if (body.type_filter) typeFilter = String(body.type_filter);
+    if (Array.isArray(body.history)) history = body.history.slice(-6);
   } catch {
     return new Response('Bad request', { status: 400 });
   }
@@ -126,10 +128,13 @@ serve(async (req) => {
             max_tokens: 300,
             stream: true,
             system: `You are FORGE, a personal gym assistant. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and other numbers when relevant. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
-            messages: [{
-              role: 'user',
-              content: `My question: ${query}\n\nRelevant entries from my training log:\n${context}`,
-            }],
+            messages: [
+              ...history,
+              {
+                role: 'user',
+                content: `My question: ${query}\n\nRelevant entries from my training log:\n${context}`,
+              },
+            ],
           }),
         });
 

@@ -213,14 +213,14 @@
     return res.json();
   }
 
-  async function searchQuery(query, typeFilter, onToken, onResults) {
+  async function searchQuery(query, typeFilter, onToken, onResults, history = []) {
     const authHeader = await getAuthHeader();
     if (!authHeader) throw new Error('Not signed in');
     const res = await fetch(SEARCH_FN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': authHeader,
                  'apikey': window.FORGE_CONFIG?.SUPABASE_ANON },
-      body: JSON.stringify({ query, n_results: 8, type_filter: typeFilter || null }),
+      body: JSON.stringify({ query, n_results: 8, type_filter: typeFilter || null, history }),
     });
     if (!res.ok) throw new Error(`search ${res.status}`);
 
@@ -353,6 +353,7 @@
   // ─── Modal UI ─────────────────────────────────────────────────────────────
 
   let activeFilter = '';
+  let conversationHistory = [];
 
   const SUGGESTIONS = [
     'Best bench press ever?',
@@ -415,9 +416,14 @@
       <div class="rag-sheet">
         <div class="rag-header">
           <span class="rag-title">Ask FORGE</span>
-          <button class="rag-close" id="rag-close" aria-label="Close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <button class="rag-clear" id="rag-clear" title="New conversation" aria-label="New conversation">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+            </button>
+            <button class="rag-close" id="rag-close" aria-label="Close">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
         </div>
         <div class="rag-input-row">
           <input id="rag-input" type="text" class="rag-input" placeholder="e.g. best chest session, protein this week..." autocomplete="off" />
@@ -461,6 +467,8 @@
       .rag-title { font-size:1.1rem; font-weight:700; color:var(--accent); letter-spacing:.05em; }
       .rag-close { background:none; border:none; color:var(--text2); padding:4px; cursor:pointer; border-radius:8px; display:flex; }
       .rag-close:active { background:var(--border); }
+      .rag-clear { background:none; border:none; color:var(--text3); padding:4px; cursor:pointer; border-radius:8px; display:flex; transition:color .15s; }
+      .rag-clear:active { color:var(--accent); }
       .rag-input-row { display:flex; gap:8px; }
       .rag-input {
         flex:1; background:var(--bg3); border:1px solid var(--border2); border-radius:10px;
@@ -556,6 +564,13 @@
     // Event listeners
     document.getElementById('rag-backdrop').addEventListener('click', closeModal);
     document.getElementById('rag-close').addEventListener('click', closeModal);
+    document.getElementById('rag-clear').addEventListener('click', () => {
+      conversationHistory = [];
+      document.getElementById('rag-input').value = '';
+      document.getElementById('rag-results').innerHTML = '';
+      renderOnboarding();
+      renderSuggestions();
+    });
     document.getElementById('rag-search-btn').addEventListener('click', handleSearch);
     document.getElementById('rag-index-btn').addEventListener('click', handleIndex);
     document.getElementById('rag-input').addEventListener('keydown', (e) => {
@@ -679,11 +694,19 @@
           }
           answerEl.textContent += token;
         },
-        (results) => { renderResults(results); }
+        (results) => { renderResults(results); },
+        conversationHistory
       );
       answerEl.classList.remove('rag-answer-streaming');
       if (firstToken) resultsContainer.innerHTML = ''; // clear skeleton if no tokens
-      if (!answerEl.textContent.trim()) answerEl.remove();
+      if (!answerEl.textContent.trim()) {
+        answerEl.remove();
+      } else {
+        // Save exchange to history (max 3 pairs = 6 messages)
+        conversationHistory.push({ role: 'user', content: query });
+        conversationHistory.push({ role: 'assistant', content: answerEl.textContent });
+        if (conversationHistory.length > 6) conversationHistory.splice(0, 2);
+      }
     } catch (e) {
       resultsContainer.innerHTML = '';
       showStatus('Search failed: ' + (e.message || 'unknown error'));
