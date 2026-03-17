@@ -23056,3 +23056,38 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .dnn-weekend-badge{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;color:#ff9f2a;background:rgba(255,159,42,.1);border:1px solid rgba(255,159,42,.25);border-radius:4px;padding:2px 6px;margin-bottom:4px;}
 .dnn-optional .dnn-pill-label{color:var(--text3);}
 .dnn-opt-tag{font-size:8px;color:var(--text3);font-style:italic;}
+
+/* ── Mesocycle / Training Phase Tracker (v187) ────────────────────────────── */
+.meso-wrap{display:flex;flex-direction:column;gap:10px;}
+.meso-header{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid rgba(var(--phase-color-rgb,57,255,20),.15);border-left:3px solid var(--phase-color,var(--accent));border-radius:0 8px 8px 0;padding:10px 12px;}
+.meso-phase-icon{font-size:22px;flex-shrink:0;}
+.meso-phase-info{flex:1;display:flex;flex-direction:column;gap:2px;}
+.meso-phase-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:.3px;}
+.meso-phase-dates{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);}
+.meso-change-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:14px;padding:4px 8px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.meso-change-btn:hover{border-color:var(--text2);color:var(--text);}
+.meso-progress-wrap{display:flex;flex-direction:column;gap:4px;}
+.meso-progress-track{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.meso-progress-fill{height:100%;border-radius:4px;transition:width .6s ease;}
+.meso-progress-labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);}
+.meso-deload-suggest{background:rgba(255,159,42,.08);border:1px solid rgba(255,159,42,.25);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text2);line-height:1.4;}
+.meso-deload-suggest strong{color:#ff9f2a;}
+.meso-done-banner{background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--accent);}
+.meso-hints{display:flex;flex-direction:column;gap:5px;}
+.meso-hint-row{display:flex;align-items:center;gap:8px;}
+.meso-hint-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0;}
+.meso-hint-text{font-size:12px;color:var(--text2);line-height:1.4;}
+.meso-hint-text strong{color:var(--text);}
+.meso-duration-row{display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);padding-top:8px;}
+.meso-dur-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-right:2px;}
+.meso-dur-btn{padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text3);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s;}
+.meso-dur-btn:hover{border-color:var(--text2);color:var(--text);}
+.meso-dur-btn.meso-dur-active{border-color:var(--accent);color:var(--accent);background:rgba(57,255,20,.07);}
+.meso-setup{display:flex;flex-direction:column;gap:10px;}
+.meso-setup-label{font-size:12px;color:var(--text2);}
+.meso-phase-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.meso-phase-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;}
+.meso-phase-btn:hover{border-color:var(--phase-color,var(--accent));background:rgba(57,255,20,.05);}
+.meso-phase-btn-icon{font-size:18px;}
+.meso-phase-btn-label{font-size:9px;color:var(--text2);font-family:'DM Mono',monospace;text-align:center;}
+.meso-setup-hint{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}

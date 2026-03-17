@@ -697,6 +697,7 @@ function switchDashTab(name, btn) {
   if (name === 'nutrition' && typeof renderAdaptiveTDEE === 'function') renderAdaptiveTDEE();
   if (name === 'progress' && typeof window.FORGE_OVERLOAD !== 'undefined') window.FORGE_OVERLOAD.renderOverloadScoreCard('overload-score-card');
   if (name === 'progress' && typeof renderVolumeLandmarks === 'function') renderVolumeLandmarks();
+  if (name === 'progress' && typeof renderMesocyclePanel === 'function') renderMesocyclePanel();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
     _renderProgressReadinessHub();
@@ -4210,5 +4211,146 @@ function renderMacroTiming() {
     </div>`;
 }
 window.renderMacroTiming = renderMacroTiming;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MESOCYCLE / TRAINING PHASE TRACKER  (Pillar 5.1 · P2 · v187)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMesocyclePanel() {
+  const el = document.getElementById('mesocycle-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _lsSave(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
+  }
+
+  const meso = _lsGet('forge_mesocycle', null);
+
+  // ── Phase metadata ─────────────────────────────────────────────────────────
+  const PHASES = {
+    hypertrophy:  { label: 'Hypertrophy',   icon: '💪', color: 'var(--accent)', repRange: '8–15 reps', rest: '60–90s', note: 'Volume-focused. Aim for MEV–MRV range.' },
+    strength:     { label: 'Strength',       icon: '🏋️', color: '#ff9f2a',       repRange: '3–6 reps',  rest: '2–5 min', note: 'Heavy loads. Fewer sets, longer rest.' },
+    cut:          { label: 'Cut',            icon: '🔥', color: '#ff5050',       repRange: '10–15 reps', rest: '45–75s', note: 'Maintain strength. Slight calorie deficit.' },
+    maintenance:  { label: 'Maintenance',    icon: '⚖️', color: '#64b5f6',       repRange: '8–12 reps', rest: '60–90s', note: 'Keep volume at MEV. No progression needed.' },
+    deload:       { label: 'Deload',         icon: '🌿', color: '#81c784',       repRange: '10–15 reps', rest: '60s',   note: 'Drop volume 40–50%. Light weights only.' },
+  };
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  const badge = document.getElementById('mesocycle-badge');
+
+  // ── No active mesocycle — show setup form ─────────────────────────────────
+  if (!meso || !meso.phase || !meso.startDate) {
+    if (badge) badge.textContent = 'SET UP';
+    el.innerHTML = `
+      <div class="meso-setup">
+        <div class="meso-setup-label">Select your current training phase:</div>
+        <div class="meso-phase-grid">
+          ${Object.entries(PHASES).map(([key, p]) => `
+            <button class="meso-phase-btn" onclick="window._mesoSetPhase('${key}')" style="--phase-color:${p.color}">
+              <span class="meso-phase-btn-icon">${p.icon}</span>
+              <span class="meso-phase-btn-label">${p.label}</span>
+            </button>`).join('')}
+        </div>
+        <div class="meso-setup-hint">Duration will be set after choosing a phase.</div>
+      </div>`;
+    return;
+  }
+
+  const phase = PHASES[meso.phase] || PHASES.hypertrophy;
+  const startDate = new Date(meso.startDate);
+  const durationWeeks = meso.durationWeeks || 8;
+
+  // Days elapsed and remaining
+  const msPerDay   = 86400000;
+  const daysElapsed = Math.max(0, Math.floor((today - startDate) / msPerDay));
+  const daysTotal   = durationWeeks * 7;
+  const daysLeft    = Math.max(0, daysTotal - daysElapsed);
+  const weeksElapsed = Math.floor(daysElapsed / 7);
+  const pct         = Math.min(100, Math.round(daysElapsed / daysTotal * 100));
+
+  if (badge) badge.textContent = `WEEK ${weeksElapsed + 1}/${durationWeeks}`;
+
+  // ── Deload suggestion: after 4–6 weeks of non-deload volume phases ────────
+  const isVolumePhase = ['hypertrophy', 'strength'].includes(meso.phase);
+  const deloadSuggestion = isVolumePhase && weeksElapsed >= 4
+    ? `<div class="meso-deload-suggest">⚠️ You've trained ${weeksElapsed} weeks in ${phase.label} — consider a <strong>deload week</strong> to recover.</div>`
+    : '';
+
+  // ── Phase done banner ─────────────────────────────────────────────────────
+  const phaseDone = daysLeft === 0;
+  const doneBanner = phaseDone
+    ? `<div class="meso-done-banner">✅ ${phase.label} phase complete — time to reassess and start a new phase!</div>`
+    : '';
+
+  // ── Rep range & rest hint ─────────────────────────────────────────────────
+  const hintHtml = `
+    <div class="meso-hints">
+      <div class="meso-hint-row"><span class="meso-hint-icon">🎯</span><span class="meso-hint-text">Rep range: <strong>${phase.repRange}</strong></span></div>
+      <div class="meso-hint-row"><span class="meso-hint-icon">⏱️</span><span class="meso-hint-text">Rest: <strong>${phase.rest}</strong></span></div>
+      <div class="meso-hint-row"><span class="meso-hint-icon">💡</span><span class="meso-hint-text">${phase.note}</span></div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="meso-wrap">
+      <div class="meso-header" style="--phase-color:${phase.color}">
+        <span class="meso-phase-icon">${phase.icon}</span>
+        <div class="meso-phase-info">
+          <span class="meso-phase-name" style="color:${phase.color}">${phase.label}</span>
+          <span class="meso-phase-dates">${meso.startDate} · ${durationWeeks} weeks</span>
+        </div>
+        <button class="meso-change-btn" onclick="window._mesoReset()" title="Change phase">↺</button>
+      </div>
+      <div class="meso-progress-wrap">
+        <div class="meso-progress-track">
+          <div class="meso-progress-fill" style="width:${pct}%;background:${phase.color}"></div>
+        </div>
+        <div class="meso-progress-labels">
+          <span>${daysElapsed}d elapsed</span>
+          <span>${pct}%</span>
+          <span>${daysLeft}d left</span>
+        </div>
+      </div>
+      ${deloadSuggestion}
+      ${doneBanner}
+      ${hintHtml}
+      <div class="meso-duration-row">
+        <span class="meso-dur-label">Duration:</span>
+        ${[4,6,8,12].map(w => `<button class="meso-dur-btn${meso.durationWeeks === w ? ' meso-dur-active' : ''}" onclick="window._mesoSetDuration(${w})">${w}w</button>`).join('')}
+      </div>
+    </div>`;
+}
+
+// Set a new training phase (resets start date to today)
+window._mesoSetPhase = function(phase) {
+  function _lsGet(key, fb) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; } }
+  function _lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {} }
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const existing = _lsGet('forge_mesocycle', {});
+  _lsSave('forge_mesocycle', { ...existing, phase, startDate: todayKey, durationWeeks: existing.durationWeeks || 8 });
+  if (typeof showToast === 'function') showToast(`Training phase set: ${phase.charAt(0).toUpperCase() + phase.slice(1)}`, 'success');
+  renderMesocyclePanel();
+};
+
+// Update duration without resetting start date
+window._mesoSetDuration = function(weeks) {
+  function _lsGet(key, fb) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; } }
+  function _lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {} }
+  const existing = _lsGet('forge_mesocycle', {});
+  _lsSave('forge_mesocycle', { ...existing, durationWeeks: weeks });
+  renderMesocyclePanel();
+};
+
+// Reset / change phase
+window._mesoReset = function() {
+  function _lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {} }
+  _lsSave('forge_mesocycle', null);
+  renderMesocyclePanel();
+};
+window.renderMesocyclePanel = renderMesocyclePanel;
 
 
