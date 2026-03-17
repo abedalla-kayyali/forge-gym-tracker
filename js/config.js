@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v193';
-window.FORGE_BUILD   = '2026-03-17 (feat: OPT-3 Daily Readiness Score manual check-in; OPT-4 Habits duel scope:dnn + DNN challenge CTA)';
+window.FORGE_VERSION = 'v194';
+window.FORGE_BUILD   = '2026-03-17 (feat: Ask FORGE — RAG natural language search via Supabase pgvector)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
