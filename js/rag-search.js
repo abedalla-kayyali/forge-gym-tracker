@@ -928,25 +928,26 @@
       .rag-index-status { font-size:.75rem; color:var(--text2,#8a9e8a); flex:1; font-family:inherit; }
       .rag-btn-stale { border-color:var(--accent,#39ff8f) !important; color:var(--accent,#39ff8f) !important; }
       #rag-fab-wrap {
-        position:fixed; left:16px; top:calc(16px + env(safe-area-inset-top,0px));
-        display:flex; align-items:center; gap:8px; z-index:1000;
+        position:fixed; right:16px;
+        bottom:calc(72px + env(safe-area-inset-bottom,0px));
+        display:flex; flex-direction:column; align-items:center; gap:6px; z-index:1000;
       }
       #rag-fab {
-        width:46px; height:46px; border-radius:50%;
+        width:52px; height:52px; border-radius:16px;
         background:var(--accent); color:#000;
         border:none; cursor:pointer; flex-shrink:0;
         display:flex; align-items:center; justify-content:center;
-        box-shadow:0 4px 16px rgba(57,255,143,.3);
-        transition:transform .15s;
+        box-shadow:0 4px 20px rgba(57,255,143,.35);
+        transition:transform .15s, box-shadow .15s;
       }
-      #rag-fab:active { transform:scale(.92); }
+      #rag-fab:active { transform:scale(.91); box-shadow:0 2px 8px rgba(57,255,143,.2); }
       .rag-fab-pill {
         background:var(--panel); border:1px solid var(--accent);
-        color:var(--accent); font-size:.7rem; font-weight:700;
-        padding:4px 10px; border-radius:20px;
+        color:var(--accent); font-size:.68rem; font-weight:700;
+        padding:3px 9px; border-radius:20px;
         white-space:nowrap; letter-spacing:.04em;
         opacity:0; transition:opacity .4s ease;
-        pointer-events:none;
+        pointer-events:none; order:-1;
       }
     `;
     document.head.appendChild(style);
@@ -1163,7 +1164,16 @@
     wrap.innerHTML = `
       <span id="rag-fab-pill" class="rag-fab-pill"></span>
       <button id="rag-fab" aria-label="Ask FORGE">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <!-- dumbbell -->
+          <rect x="1.5" y="9.5" width="3.5" height="5" rx="1"/>
+          <rect x="5" y="10.5" width="2" height="3" rx=".5"/>
+          <rect x="7" y="11" width="10" height="2" rx=".5"/>
+          <rect x="17" y="10.5" width="2" height="3" rx=".5"/>
+          <rect x="19" y="9.5" width="3.5" height="5" rx="1"/>
+          <!-- sparkle top-right -->
+          <path d="M20.5 1 L21.1 3.4 L23.5 4 L21.1 4.6 L20.5 7 L19.9 4.6 L17.5 4 L19.9 3.4 Z" opacity=".9"/>
+        </svg>
       </button>
     `;
     document.body.appendChild(wrap);
