@@ -300,6 +300,41 @@
     if (typeof showToast === 'function') showToast('Progress image saved', 'var(--accent)');
   }
 
+  // ── sunday prompt + init ────────────────────────────────────────────────
+
+  function _progressCardInit() {
+    const today = new Date();
+    if (today.getDay() !== 0) return; // Sunday only (0 = Sunday)
+    const todayKey = today.toISOString().slice(0, 10);
+    if (localStorage.getItem('forge_progress_card_last_sunday') === todayKey) return;
+
+    // Check ≥1 workout this week (Mon–Sun)
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // back to Monday
+    weekStart.setHours(0, 0, 0, 0);
+    const weekStartISO = weekStart.toISOString();
+    const wos = (typeof workouts !== 'undefined' ? workouts : _lsGet('forge_workouts', []));
+    const thisWeek = wos.filter(w => w && w.date && w.date >= weekStartISO);
+    if (!thisWeek.length) return;
+
+    localStorage.setItem('forge_progress_card_last_sunday', todayKey);
+    setTimeout(() => {
+      if (typeof showToast === 'function') {
+        showToast('🏆 Share your week?', 'var(--accent)');
+      }
+      // attach tap handler to last toast shown
+      setTimeout(() => {
+        const toasts = document.querySelectorAll('.toast, .snack, [class*="toast"]');
+        const last = toasts[toasts.length - 1];
+        if (last && !last._pcBound) {
+          last._pcBound = true;
+          last.style.cursor = 'pointer';
+          last.addEventListener('click', () => openProgressProofModal());
+        }
+      }, 100);
+    }, 1500);
+  }
+
   // ── exports ──────────────────────────────────────────────────────────────
   window._pcGetWindow       = _getWindow;
   window._pcGetWeightDelta  = _getWeightDelta;
@@ -313,5 +348,7 @@
   window.closeProgressProofModal   = closeProgressProofModal;
   window.shareProgressProofCard    = shareProgressProofCard;
   window.downloadProgressProofCard = downloadProgressProofCard;
+
+  window._progressCardInit = _progressCardInit;
 
 }());
