@@ -1189,6 +1189,78 @@
         pointer-events:none; order:-1;
         backdrop-filter:blur(8px);
       }
+
+      /* ── Premium FX ──────────────────────────────────────────────── */
+
+      /* FAB: pulsing halo ring */
+      #rag-fab { position:relative; overflow:visible; }
+      #rag-fab::before {
+        content:''; position:absolute; inset:-7px; border-radius:22px;
+        box-shadow:0 0 0 0 rgba(57,255,143,.55);
+        animation:ragFabHalo 2.8s ease-in-out infinite;
+        pointer-events:none;
+      }
+      @keyframes ragFabHalo {
+        0%   { box-shadow:0 0 0 0   rgba(57,255,143,.55); }
+        60%  { box-shadow:0 0 0 14px rgba(57,255,143,0);  }
+        100% { box-shadow:0 0 0 0   rgba(57,255,143,0);   }
+      }
+
+      /* FAB: sparkle slowly orbits */
+      #rag-fab svg path { animation:ragSparkSpin 7s linear infinite; transform-origin:20.5px 4px; }
+      @keyframes ragSparkSpin { to { transform:rotate(360deg); } }
+
+      /* Input: animated gradient border on focus */
+      .rag-input:focus {
+        border-color:transparent !important;
+        background:
+          linear-gradient(#0d1710,#0d1710) padding-box,
+          linear-gradient(90deg,#39ff8f,#2dd97a,#00e5ff,#39ff8f) border-box !important;
+        background-size:auto, 300% auto !important;
+        animation:ragInputFlow 2s linear infinite !important;
+        box-shadow:0 0 0 3px rgba(57,255,143,.07) !important;
+      }
+      @keyframes ragInputFlow { 0%{background-position:auto,0% 50%} 100%{background-position:auto,300% 50%} }
+
+      /* Search button ripple */
+      @keyframes ragRipple { to{transform:scale(2.8);opacity:0} }
+
+      /* Streaming answer: gradient left-border pulse */
+      .rag-answer-streaming {
+        border-left:2px solid transparent !important;
+        border-image:linear-gradient(180deg,#39ff8f 0%,#2dd97a 50%,#00e5ff 100%) 1 !important;
+        animation:ragFadeIn .35s ease, ragStreamPulse 1.8s ease-in-out infinite !important;
+      }
+      @keyframes ragStreamPulse { 0%,100%{opacity:1} 50%{opacity:.82} }
+
+      /* Answer: green flash when stream completes */
+      @keyframes ragAnswerFlash {
+        0%   { box-shadow:0 0 0   rgba(57,255,143,0), inset 0 0 0   rgba(57,255,143,0); }
+        25%  { box-shadow:0 0 28px rgba(57,255,143,.35), inset 0 0 20px rgba(57,255,143,.12); }
+        100% { box-shadow:0 0 0   rgba(57,255,143,0), inset 0 0 0   rgba(57,255,143,0); }
+      }
+      .rag-answer-flash { animation:ragAnswerFlash .9s ease-out forwards !important; }
+
+      /* Sheet: very subtle background breathing */
+      .rag-sheet { animation:ragSlideUp .32s cubic-bezier(.22,.68,0,1.15), ragBgBreath 9s ease-in-out .4s infinite !important; }
+      @keyframes ragBgBreath {
+        0%,100%{ background:linear-gradient(170deg,#131f14 0%,#0d1710 100%); }
+        50%    { background:linear-gradient(170deg,#162818 0%,#0f1e13 100%); }
+      }
+
+      /* Chips: staggered entrance */
+      .rag-chip { animation:ragFadeIn .32s ease both; }
+      .rag-chip:nth-child(1){animation-delay:.00s} .rag-chip:nth-child(2){animation-delay:.05s}
+      .rag-chip:nth-child(3){animation-delay:.10s} .rag-chip:nth-child(4){animation-delay:.15s}
+      .rag-chip:nth-child(5){animation-delay:.20s} .rag-chip:nth-child(6){animation-delay:.25s}
+
+      /* FORGE AI badge: shimmer sweep */
+      .rag-ai-badge {
+        background-size:200% auto !important;
+        background-image:linear-gradient(90deg,rgba(57,255,143,.08) 0%,rgba(57,255,143,.18) 50%,rgba(57,255,143,.08) 100%) !important;
+        animation:ragBadgeShimmer 3s linear infinite;
+      }
+      @keyframes ragBadgeShimmer { 0%{background-position:200%} 100%{background-position:-200%} }
     `;
     document.head.appendChild(style);
 
@@ -1245,6 +1317,10 @@
       checkWeeklyReport();
       renderSuggestions();
       setTimeout(() => document.getElementById('rag-input')?.focus(), 300);
+      // FX
+      playSound('open');
+      const fab = document.getElementById('rag-fab');
+      if (fab) spawnParticles(fab, 10);
     }
   }
 
@@ -1373,6 +1449,8 @@
     const query = input?.value?.trim();
     if (!query) return;
     btn.disabled = true;
+    addRipple(btn);
+    playSound('send');
     showStatus('');
     document.getElementById('rag-suggestions').style.display = 'none';
     const resultsContainer = document.getElementById('rag-results');
@@ -1412,6 +1490,10 @@
         answerEl.remove();
       } else {
         answerEl.innerHTML = renderMarkdown(rawText);
+        // FX: flash glow + particles + chime when answer arrives
+        answerEl.classList.add('rag-answer-flash');
+        playSound('done');
+        spawnParticles(answerEl, 8);
         conversationHistory.push({ role: 'user', content: query });
         conversationHistory.push({ role: 'assistant', content: rawText });
         if (conversationHistory.length > 6) conversationHistory.splice(0, 2);
@@ -1429,6 +1511,8 @@
           saveBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Saved`;
           saveBtn.disabled = true;
           saveBtn.style.color = 'var(--accent,#39ff8f)';
+          playSound('save');
+          spawnParticles(saveBtn, 6);
         });
         answerEl.appendChild(saveBtn);
         renderFollowUpChips(query);
@@ -1526,6 +1610,90 @@
     if (nav) {
       new MutationObserver(updateFabLabel).observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
     }
+  }
+
+  // ─── Premium FX ──────────────────────────────────────────────────────────
+
+  let _audioCtx = null;
+  function _getAudioCtx() {
+    if (!_audioCtx) {
+      try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {}
+    }
+    return _audioCtx;
+  }
+
+  // playSound('open' | 'send' | 'done' | 'save') — all via Web Audio API, no files
+  function playSound(type) {
+    try {
+      const ctx = _getAudioCtx();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      const now = ctx.currentTime;
+      // Each note: {f=freq Hz, t=offset s, d=duration s, v=peak volume}
+      const SEQ = {
+        open: [{f:523,t:0,d:.09,v:.06},{f:659,t:.1,d:.09,v:.06},{f:784,t:.2,d:.14,v:.07}],
+        send: [{f:660,t:0,d:.05,v:.05},{f:495,t:.06,d:.07,v:.04}],
+        done: [{f:784,t:0,d:.13,v:.07},{f:1047,t:.2,d:.22,v:.07}],
+        save: [{f:880,t:0,d:.11,v:.06}],
+      };
+      (SEQ[type] || []).forEach(({f,t,d,v}) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + t);
+        gain.gain.setValueAtTime(0, now + t);
+        gain.gain.linearRampToValueAtTime(v, now + t + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + t + d);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + t);
+        osc.stop(now + t + d + 0.06);
+      });
+    } catch {}
+  }
+
+  // Burst N tiny green particles from the bounding rect centre of `el`
+  function spawnParticles(el, count) {
+    count = count || 10;
+    try {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top  + rect.height / 2;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        const size = 3 + Math.random() * 4;
+        p.style.cssText = 'position:fixed;pointer-events:none;z-index:99999;border-radius:50%;'
+          + 'left:' + cx + 'px;top:' + cy + 'px;'
+          + 'width:' + size + 'px;height:' + size + 'px;'
+          + 'background:' + (Math.random() > .3 ? '#39ff8f' : (Math.random() > .5 ? '#fff' : '#00e5ff')) + ';'
+          + 'transform:translate(-50%,-50%);';
+        document.body.appendChild(p);
+        const angle  = (Math.PI * 2 * i / count) + (Math.random() * .6 - .3);
+        const dist   = 28 + Math.random() * 52;
+        const tx     = Math.cos(angle) * dist;
+        const ty     = Math.sin(angle) * dist - 18;
+        const dur    = 480 + Math.random() * 280;
+        const anim   = p.animate([
+          { transform:'translate(-50%,-50%) scale(1)', opacity:1 },
+          { transform:'translate(calc(-50% + ' + tx + 'px),calc(-50% + ' + ty + 'px)) scale(0)', opacity:0 }
+        ], { duration:dur, easing:'cubic-bezier(.22,.68,0,1)', fill:'forwards' });
+        anim.onfinish = () => p.remove();
+      }
+    } catch {}
+  }
+
+  // Material-style ripple on a button element
+  function addRipple(btn) {
+    try {
+      const r = document.createElement('span');
+      r.style.cssText = 'position:absolute;border-radius:50%;background:rgba(0,0,0,.18);'
+        + 'width:100%;padding-bottom:100%;top:0;left:0;transform:scale(0);opacity:1;'
+        + 'pointer-events:none;animation:ragRipple .42s ease-out forwards;';
+      btn.style.position = 'relative';
+      btn.style.overflow = 'hidden';
+      btn.appendChild(r);
+      setTimeout(() => r.remove(), 500);
+    } catch {}
   }
 
   // ─── Init ────────────────────────────────────────────────────────────────
