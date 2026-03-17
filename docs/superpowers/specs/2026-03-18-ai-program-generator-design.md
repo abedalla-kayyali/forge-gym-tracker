@@ -53,7 +53,7 @@ Active program (existing flow unchanged)
 
 ### Context Sent to LLM
 
-Built by `_buildProgramContext(splitDays)` where `splitDays` is an array of `{ muscles: string[] }`:
+Built by `_buildProgramContext(splitDays, refinementNote)` where `splitDays` is an array of `{ muscles: string[] }`:
 
 | Source | Fields used |
 |---|---|
@@ -99,13 +99,68 @@ Return ONLY a JSON code block. No explanation. Format:
 Provide 4-6 exercises per day. Prioritize lagging muscles. Use exercises the user has logged before where appropriate.
 ```
 
+If `refinementNote` is non-empty, append as the final line of the prompt:
+```
+User refinement note: <refinementNote>
+```
+
+### forge-search Fetch Call
+
+`_callProgramLLM` uses the exact same pattern as `coach-triggers.js` (`_fireCoachMessage`):
+
+```js
+const session = await window._sb?.auth?.getSession?.();
+const token = session?.data?.session?.access_token;
+// if no token → return null (auth gate)
+
+const resp = await fetch(SEARCH_FN, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    query: prompt,          // full prompt string
+    type_filter: null,
+    coach_mode: true,
+    coach_system: 'You are a personal training program generator. Return only valid JSON.',
+    max_tokens: 800
+  })
+});
+```
+
+`SEARCH_FN = window.FORGE_CONFIG?.SUPABASE_URL + '/functions/v1/forge-search'`
+
+### SSE Stream Collection
+
+Follow the exact buffered decode pattern from `coach-triggers.js`:
+
+```js
+const reader = resp.body?.getReader();
+let text = '', buf = '';
+const decoder = new TextDecoder();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  buf += decoder.decode(value, { stream: true });
+  const lines = buf.split('\n'); buf = lines.pop();
+  for (const ln of lines) {
+    if (!ln.startsWith('data: ')) continue;
+    const raw = ln.slice(6).trim();
+    if (raw === '[DONE]') break;
+    try { text += JSON.parse(raw)?.token || ''; } catch {}
+  }
+}
+// text now contains full LLM response string
+```
+
 ### LLM Response Parsing
 
-1. Collect full SSE stream into a string
-2. Extract JSON from ` ```json ... ``` ` code block (regex)
-3. `JSON.parse()` the extracted string
-4. Validate: `result.name` (string), `result.days` (array, length matches requested days), each day has `label`, `muscles`, `exercises` array
-5. On parse/validation failure: show error toast + "Try regenerating"
+1. Collect full SSE stream into `text` string (see above)
+2. Extract JSON: `const m = text.match(/```json\s*([\s\S]*?)```/); const jsonStr = m?.[1]?.trim();`
+3. `JSON.parse(jsonStr)`
+4. Validate: `result.name` (string), `result.days` (array, length === requested day count), each day has `label` (string), `muscles` (array), `exercises` (array with ≥1 item each having `name`, `sets`, `reps`)
+5. On parse/validation failure: return `null` → caller shows error toast + Regenerate button
 
 ### Generated Program Storage
 
@@ -114,6 +169,9 @@ Key: `forge_ai_program`
 ```json
 {
   "name": "Hypertrophy Split",
+  "startDate": "2026-03-18",
+  "generatedAt": "2026-03-18",
+  "splitDays": 3,
   "days": [
     {
       "label": "Push Day",
@@ -123,11 +181,11 @@ Key: `forge_ai_program`
         {"name": "Incline DB Press", "sets": 3, "reps": "10-12"}
       ]
     }
-  ],
-  "generatedAt": "2026-03-18",
-  "splitDays": 3
+  ]
 }
 ```
+
+`_aiProgramActivate(program)` writes `startDate` as today's ISO date (`new Date().toISOString().slice(0,10)`) into the stored object before saving. This is required by `_getProgramDayIndex()` which uses date arithmetic on `startDate`.
 
 No new Supabase columns. No new localStorage keys beyond `forge_ai_program`.
 
@@ -135,38 +193,71 @@ No new Supabase columns. No new localStorage keys beyond `forge_ai_program`.
 
 ## Active Program Integration
 
-`program-panel.js` `_activeProg` reads from `forge_ai_program` when present:
-- `prog.days` array maps to existing day chip + session card rendering
-- `startProgramWorkout()` loads `day.exercises[0].name` into the exercise input (existing behavior)
-- `day.exs` array (existing field) is populated from `day.exercises.map(e => e.name)`
-- `day.muscle` (existing field) is populated from `day.muscles[0]` (primary muscle for `selectMuscle()`)
+### Storage Precedence
 
-The existing `activateProgram()` / `deactivateProgram()` functions are replaced by `_aiProgramActivate()` / `_aiProgramDeactivate()` which read/write `forge_ai_program`.
+`_activeProg` in `program-panel.js` is initialized by reading `forge_ai_program` first. The old static active-program key is `forge_active_program`. Precedence:
+
+1. `forge_ai_program` — wins if present (AI-generated program)
+2. `forge_active_program` — legacy static template activation (kept for backwards compatibility, but no new writes)
+
+If `forge_ai_program` exists, `_activeProg` is set to the AI program object. `forge_active_program` is ignored.
+
+### Shape Adapter
+
+`program-panel.js` renders `_activeProg` using `day.exs[]` and `day.muscle`. AI program days use `day.exercises[]` and `day.muscles[]`. The adapter runs once at init and when rendering:
+
+```js
+// Convert AI program day → panel-compatible shape
+function _adaptDay(day) {
+  return {
+    ...day,
+    exs:   day.exs   || day.exercises.map(e => e.name),
+    muscle: day.muscle || day.muscles[0]  // primary muscle for selectMuscle()
+  };
+}
+```
+
+`day.muscles[0]` as the primary muscle for `selectMuscle()` is intentional — the workout logger filters by one muscle at a time. All muscles in the combo are shown as labels in the session card UI but only the primary is passed to `selectMuscle()`.
+
+### Activation / Deactivation
+
+`_aiProgramActivate(program)`:
+1. Sets `program.startDate = new Date().toISOString().slice(0,10)`
+2. `localStorage.setItem('forge_ai_program', JSON.stringify(program))`
+3. Calls `renderProgramPanel()`
+
+`_aiProgramDeactivate()`:
+1. `localStorage.removeItem('forge_ai_program')`
+2. Calls `renderProgramPanel()` → shows split builder again
+
+`_getProgramDayIndex()` works unchanged — date arithmetic on `startDate`.
 
 ---
 
 ## File Structure
 
 ### New file: `js/ai-program-generator.js`
-IIFE, ~250 lines. Responsibilities:
-- `renderAIProgramGenerator()` — main entry point, renders split builder or preview or generating state into `#programs-panel-body`
-- `_buildSplitBuilder(prefill)` — renders day count picker + muscle chip rows
-- `_buildProgramContext(splitDays)` — assembles LLM prompt string
-- `_callProgramLLM(prompt, refinementNote)` — calls `forge-search`, collects stream, returns raw text
-- `_parseProgramResponse(raw)` — extracts + validates JSON, returns program object or null
-- `_renderProgramPreview(program, splitDays)` — renders preview cards + refinement input + buttons
-- `_aiProgramActivate(program)` — saves to `forge_ai_program`, calls `renderProgramPanel()`
-- `_aiProgramDeactivate()` — clears `forge_ai_program`, calls `renderProgramPanel()`
+IIFE, ~280 lines. Responsibilities:
+- `renderAIProgramGenerator()` — main entry point, renders split builder into `#programs-panel-body`
+- `_buildSplitBuilder(prefill)` — renders day count picker + muscle chip rows; `prefill` is array of `{muscles:[]}` from `forge_split` if available
+- `_buildProgramContext(splitDays, refinementNote)` — assembles full LLM prompt string
+- `_callProgramLLM(prompt)` — calls `forge-search` with SSE buffered decode, returns full text string or null on error
+- `_parseProgramResponse(raw, expectedDays)` — extracts JSON from code block, validates structure, returns program object or null
+- `_renderProgramPreview(program, splitDays)` — renders preview cards + refinement input + Regenerate/Activate buttons into `#programs-panel-body`
+- `_aiProgramActivate(program)` — writes `startDate`, saves to `forge_ai_program`, calls `renderProgramPanel()`
+- `_aiProgramDeactivate()` — removes `forge_ai_program`, calls `renderProgramPanel()`
 - Exports to `window`: `window.renderAIProgramGenerator`, `window._aiProgramActivate`, `window._aiProgramDeactivate`
 
 ### Modify: `js/program-panel.js`
-- `renderProgramPanel()`: when no active program, call `renderAIProgramGenerator()` instead of rendering static `TRAINING_PROGRAMS` grid
-- `_activeProg` init: check `forge_ai_program` first
-- `activateProgram()` / `deactivateProgram()`: delegate to `_aiProgramActivate` / `_aiProgramDeactivate` when AI generator is available
-- `_getProgramDayIndex()`: works unchanged (date arithmetic on `startDate`)
+- `_activeProg` init (top of file): read `forge_ai_program` first; fall back to `forge_active_program`
+- `renderProgramPanel()`: when `!_activeProg`, call `window.renderAIProgramGenerator?.()` instead of rendering static `TRAINING_PROGRAMS` grid
+- When rendering active program day cards: run `_adaptDay(day)` (defined in `ai-program-generator.js`, exported to `window._adaptDay`) to normalize `exs`/`muscle` fields
 
 ### `index.html` changes
-1. `<script src="js/ai-program-generator.js">` after `program-panel.js`
+1. `<script src="js/ai-program-generator.js">` immediately after `<script src="js/program-panel.js">`
+
+### `css/main.css`
+Append all `apg-*` CSS classes to the end of `css/main.css` (same pattern as weekly-review `.wr-*` classes).
 
 ### `js/config.js`
 `v231` → `v232`
@@ -175,8 +266,9 @@ IIFE, ~250 lines. Responsibilities:
 
 ## Auth Gate
 
-- Check `window._forgeUser` (existing auth check pattern)
-- If not signed in: render `<div class="apg-auth-gate">Sign in to generate your AI program.</div>` in place of generate button
+- Get session token via `window._sb?.auth?.getSession?.()`
+- If token is null/undefined: render `<div class="apg-auth-gate">Sign in to generate your AI program.</div>` in `#programs-panel-body`
+- Auth check happens inside `_callProgramLLM` — if no token, return null immediately
 
 ---
 
@@ -184,26 +276,28 @@ IIFE, ~250 lines. Responsibilities:
 
 | Scenario | Behavior |
 |---|---|
-| JSON parse fails | Toast "Couldn't parse program — try regenerating" + show Regenerate button |
-| Network error | Toast "Connection error — check your internet" |
-| LLM returns wrong day count | Validate and show error + Regenerate |
-| No muscles selected for a day | Disable GENERATE button, show inline hint |
-| Guest user | Auth gate message instead of button |
+| JSON parse fails | `_parseProgramResponse` returns null → show error message + Regenerate button (no toast) |
+| Network / fetch error | Catch block → show "Connection error — try again" inline + Regenerate button |
+| LLM returns wrong day count | Validation in `_parseProgramResponse` returns null → same as parse failure |
+| No muscles selected for a day | GENERATE button stays disabled; inline hint: "Select muscles for each day" |
+| Guest user (no token) | `apg-auth-gate` message shown instead of split builder |
+| LLM returns no JSON code block | regex match returns null → same as parse failure |
 
 ---
 
-## CSS Classes (new, prefixed `apg-`)
+## CSS Classes (new, prefixed `apg-`, appended to `css/main.css`)
 
 ```
 apg-wrap, apg-section-title
-apg-day-count-row, apg-day-count-btn (active state)
+apg-day-count-row, apg-day-count-btn (+ .active state)
 apg-day-slot, apg-day-slot-label
-apg-muscle-chips, apg-chip (selected state)
-apg-generate-btn, apg-generating
+apg-muscle-chips, apg-chip (+ .selected state)
+apg-generate-btn (+ :disabled state)
+apg-generating (spinner + text)
 apg-preview-name, apg-day-strip, apg-day-card
-apg-exercise-row (name · sets × reps)
-apg-refine-input, apg-regen-btn, apg-activate-btn
-apg-auth-gate
+apg-day-card-label, apg-exercise-list, apg-exercise-row
+apg-refine-row, apg-refine-input, apg-regen-btn, apg-activate-btn
+apg-auth-gate, apg-error-msg
 ```
 
 ---
@@ -213,6 +307,6 @@ apg-auth-gate
 - Vanilla JS IIFE only — no new dependencies
 - `forge-search` Edge Function reused (no backend changes)
 - `let` globals accessed directly (`workouts`, `userProfile`) — never `window.X`
-- XSS: all LLM-returned strings via `textContent` or escaped before innerHTML
+- XSS: all LLM-returned strings (program name, exercise names, day labels) escaped via `_esc()` before innerHTML
 - `max_tokens: 800` for the LLM call (sufficient for 3–6 day programs)
-- Auth-gated — guests cannot generate
+- Auth-gated — guests see auth gate message, cannot generate
