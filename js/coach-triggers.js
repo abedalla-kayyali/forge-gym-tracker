@@ -294,6 +294,18 @@
 
   window.FORGE_COACH.checkDailyReadiness = _checkDailyReadiness;
 
+  // ── Helper: parse debrief text into structured sections ──────────────────
+  function _parseDebriefSections(text) {
+    // Try to split on (1), (2), (3) markers
+    const parts = text.split(/\(\d\)/).map(s => s.replace(/^\s*[^:]*:\s*/, '').trim()).filter(Boolean);
+    if (parts.length >= 2) return parts.slice(0, 3);
+    // Fallback: split on double newline or just return as single block
+    const lines = text.split(/\n{2,}/).filter(Boolean);
+    if (lines.length >= 2) return lines.slice(0, 3);
+    return [text.trim()];
+  }
+  window._parseDebriefSections = _parseDebriefSections;
+
   // ── Trigger: session debrief card (fires after workout save) ─────────────
   async function generateSessionDebrief(summary) {
     // Auth: get live session token
@@ -319,33 +331,33 @@
 
     if (!window.FORGE_CONFIG?.SUPABASE_URL) return;
 
-    // Build debrief card using DOM methods (same style as fetchFormCue)
+    // Build debrief card using DOM methods (premium design)
     const existing = document.getElementById('coach-debrief-card');
     if (existing) existing.remove();
 
     const card = document.createElement('div');
     card.id = 'coach-debrief-card';
-    card.className = 'coach-intercept-card';
+    card.className = 'cdb-card';
 
-    const iconDiv = document.createElement('div');
-    iconDiv.className = 'cic-icon';
-    iconDiv.textContent = '💬';
+    // Header
+    const header = document.createElement('div');
+    header.className = 'cdb-header';
+    header.innerHTML = '<span class="cdb-icon">✦</span><span class="cdb-title">SESSION DEBRIEF</span><span class="cdb-date">' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}) + '</span>';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'cdb-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); card.remove(); });
+    header.appendChild(closeBtn);
 
+    // Scrollable content area
     const msgDiv = document.createElement('div');
-    msgDiv.className = 'cic-message';
-    msgDiv.style.opacity = '0.5';
-    msgDiv.textContent = 'Generating session debrief…';
+    msgDiv.className = 'cdb-body';
+    const loadingSpan = document.createElement('span');
+    loadingSpan.className = 'cdb-loading';
+    loadingSpan.textContent = 'Generating debrief…';
+    msgDiv.appendChild(loadingSpan);
 
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'cic-actions';
-    const dismissBtn = document.createElement('button');
-    dismissBtn.className = 'cic-btn cic-btn-dismiss';
-    dismissBtn.textContent = 'Dismiss';
-    dismissBtn.addEventListener('click', () => card.remove());
-    actionsDiv.appendChild(dismissBtn);
-
-    card.append(iconDiv, msgDiv, actionsDiv);
-    card.addEventListener('click', () => card.remove());
+    card.append(header, msgDiv);
 
     const viewLog = document.getElementById('view-log');
     if (viewLog) {
@@ -364,7 +376,7 @@
         body: JSON.stringify({
           query,
           coach_mode: true,
-          coach_system: 'You are FORGE. Give a 3-line post-workout debrief. Line 1: accomplished. Line 2: overload verdict. Line 3: recovery. Max 120 words.',
+          coach_system: 'You are FORGE. Give a 3-line post-workout debrief. Line 1: accomplished. Line 2: overload verdict. Line 3: recovery. Max 120 words. Plain text only, no markdown.',
           max_tokens: 150
         })
       });
@@ -377,8 +389,7 @@
       if (!reader) { card.remove(); return; }
       const decoder = new TextDecoder();
       let text = '';
-      msgDiv.style.opacity = '';
-      msgDiv.textContent = '';
+      msgDiv.innerHTML = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -393,8 +404,35 @@
         });
         msgDiv.textContent = text;
       }
-      if (!text.trim()) card.remove();
-      else setTimeout(() => card?.remove(), 30000); // auto-dismiss after 30s
+      if (text.trim()) {
+        try {
+          localStorage.setItem('forge_last_debrief', JSON.stringify({
+            text: text.trim(),
+            date: new Date().toISOString(),
+            muscles: summary?.muscles || []
+          }));
+        } catch (_) {}
+      }
+      if (!text.trim()) {
+        card.remove();
+      } else {
+        // Render structured sections
+        msgDiv.innerHTML = '';
+        const sections = _parseDebriefSections(text);
+        sections.forEach((s, i) => {
+          const row = document.createElement('div');
+          row.className = 'cdb-section';
+          const lbl = document.createElement('div');
+          lbl.className = 'cdb-section-label';
+          lbl.textContent = ['01 · ACCOMPLISHED', '02 · OVERLOAD', '03 · RECOVERY'][i] || ('0' + (i+1));
+          const txt = document.createElement('div');
+          txt.className = 'cdb-section-text';
+          txt.textContent = s;
+          row.append(lbl, txt);
+          msgDiv.appendChild(row);
+        });
+        setTimeout(() => card?.remove(), 60000); // auto-dismiss after 60s
+      }
     } catch (e) {
       card.remove();
     }

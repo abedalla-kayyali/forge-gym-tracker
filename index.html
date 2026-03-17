@@ -5778,6 +5778,27 @@ function renderCoachToday() {
     </div>
   </div>`;
 
+  // Last debrief re-access card
+  let debriefCard = '';
+  try {
+    const _ld = JSON.parse(localStorage.getItem('forge_last_debrief') || 'null');
+    if (_ld && _ld.text) {
+      const _ldDate = new Date(_ld.date);
+      const _ldIsToday = _ldDate.toDateString() === new Date().toDateString();
+      const _ldLabel = _ldIsToday ? 'Today' : _ldDate.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+      const _ldPreview = _ld.text.slice(0, 90).replace(/\([\d]\)/g, '').trim() + (_ld.text.length > 90 ? '…' : '');
+      debriefCard = `<div class="cdb-recap-card" onclick="window._showLastDebrief && window._showLastDebrief()">
+        <div class="cdb-recap-header">
+          <span class="cdb-recap-icon">✦</span>
+          <span class="cdb-recap-title">SESSION DEBRIEF</span>
+          <span class="cdb-recap-date">${_esc(_ldLabel)}</span>
+          <span class="cdb-recap-arrow">›</span>
+        </div>
+        <div class="cdb-recap-preview">${_esc(_ldPreview)}</div>
+      </div>`;
+    }
+  } catch (_) {}
+
   // Game Plan
   const allMuscles = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Glutes','Calves','Forearms'];
   const lastSession = workouts.length ? workouts[workouts.length - 1] : null;
@@ -6037,6 +6058,7 @@ function renderCoachToday() {
     <div class="ctoday-wrap">
       <div class="ctoday-greeting">${greetLine}</div>
       ${checkinCard}
+      ${debriefCard}
       ${gamePlanCard}
       ${adaptCard}
       ${nextWinCard}
@@ -6046,6 +6068,46 @@ function renderCoachToday() {
       ${caliCard}
       ${quickBWCard}
     </div>`;
+
+  window._showLastDebrief = function() {
+    try {
+      const _ld = JSON.parse(localStorage.getItem('forge_last_debrief') || 'null');
+      if (!_ld || !_ld.text) return;
+      const existing = document.getElementById('coach-debrief-card');
+      if (existing) { existing.scrollIntoView({behavior:'smooth', block:'start'}); return; }
+      const sections = typeof _parseDebriefSections === 'function' ? _parseDebriefSections(_ld.text) : [_ld.text];
+      const card = document.createElement('div');
+      card.id = 'coach-debrief-card';
+      card.className = 'cdb-card';
+      const ldDate = new Date(_ld.date).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+      const header = document.createElement('div');
+      header.className = 'cdb-header';
+      header.innerHTML = '<span class="cdb-icon">✦</span><span class="cdb-title">SESSION DEBRIEF</span><span class="cdb-date">' + ldDate + '</span>';
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'cdb-close';
+      closeBtn.innerHTML = '×';
+      closeBtn.addEventListener('click', (e) => { e.stopPropagation(); card.remove(); });
+      header.appendChild(closeBtn);
+      const body = document.createElement('div');
+      body.className = 'cdb-body';
+      sections.forEach((s, i) => {
+        const row = document.createElement('div');
+        row.className = 'cdb-section';
+        const lbl = document.createElement('div');
+        lbl.className = 'cdb-section-label';
+        lbl.textContent = ['01 · ACCOMPLISHED', '02 · OVERLOAD', '03 · RECOVERY'][i] || ('0' + (i+1));
+        const txt = document.createElement('div');
+        txt.className = 'cdb-section-text';
+        txt.textContent = s;
+        row.append(lbl, txt);
+        body.appendChild(row);
+      });
+      card.append(header, body);
+      const coachToday = document.getElementById('coach-tab-today');
+      if (coachToday) coachToday.insertBefore(card, coachToday.firstChild);
+      setTimeout(() => card?.scrollIntoView({behavior:'smooth', block:'start'}), 50);
+    } catch (_) {}
+  };
 
 }
 
