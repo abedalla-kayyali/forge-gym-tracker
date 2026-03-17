@@ -138,22 +138,28 @@
   function _parseProgramResponse(raw, expectedDays) {
     if (!raw) return null;
     const m = raw.match(/```json\s*([\s\S]*?)```/);
-    const jsonStr = m?.[1]?.trim();
+    let jsonStr = m?.[1]?.trim();
     if (!jsonStr) return null;
-    try {
-      const r = JSON.parse(jsonStr);
-      if (typeof r.name !== 'string') return null;
-      if (!Array.isArray(r.days) || r.days.length !== expectedDays) return null;
-      for (const d of r.days) {
-        if (!d.label || !Array.isArray(d.muscles) || !Array.isArray(d.exercises) || d.exercises.length < 1) return null;
-        for (const ex of d.exercises) {
-          if (!ex.name || !ex.sets || !ex.reps) return null;
+    for (let pass = 0; pass < 2; pass++) {
+      try {
+        const r = JSON.parse(jsonStr);
+        if (typeof r.name !== 'string') return null;
+        if (!Array.isArray(r.days) || r.days.length !== expectedDays) return null;
+        for (const d of r.days) {
+          if (!d.label || !Array.isArray(d.muscles) || !Array.isArray(d.exercises) || d.exercises.length < 1) return null;
+          for (const ex of d.exercises) {
+            if (!ex.name || !ex.sets || !ex.reps) return null;
+          }
+        }
+        return r;
+      } catch {
+        if (pass === 0) {
+          // Repair: LLM sometimes omits opening quote on string values — e.g. "name": Fly"
+          jsonStr = jsonStr.replace(/:\s*([A-Za-z(][^,}\]\n"]*?)"/g, ': "$1"');
         }
       }
-      return r;
-    } catch {
-      return null;
     }
+    return null;
   }
 
   // ── Activate / Deactivate ──────────────────────────────────────────────────
