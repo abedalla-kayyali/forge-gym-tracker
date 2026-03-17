@@ -44,9 +44,15 @@ serve(async (req) => {
   }
 
   if (!query || query.length < 2) {
-    return new Response(JSON.stringify({ answer: '', results: [] }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const enc = new TextEncoder();
+    const empty = new ReadableStream({
+      start(c) {
+        c.enqueue(enc.encode(`event: meta\ndata: ${JSON.stringify({ results: [] })}\n\n`));
+        c.enqueue(enc.encode(`event: done\ndata: {}\n\n`));
+        c.close();
+      },
     });
+    return new Response(empty, { headers: { ...corsHeaders, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } });
   }
 
   // Embed the query
@@ -81,54 +87,95 @@ serve(async (req) => {
   }
 
   const results = data ?? [];
-
-  // No results — return early without calling Claude
-  if (results.length === 0) {
-    return new Response(JSON.stringify({ answer: "I couldn't find any relevant data for that. Try indexing your data first.", results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  }
-
-  // Build context from top results
-  const context = results
-    .map((r: { type: string; content: string }, i: number) => `[${i + 1}] (${r.type}) ${r.content}`)
-    .join('\n');
-
-  // Call Claude for a natural language answer
-  let answer = '';
   const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (anthropicKey) {
-    try {
-      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': anthropicKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 300,
-          system: `You are FORGE, a personal gym assistant. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and other numbers when relevant. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
-          messages: [{
-            role: 'user',
-            content: `My question: ${query}\n\nRelevant entries from my training log:\n${context}`,
-          }],
-        }),
-      });
 
-      if (claudeRes.ok) {
-        const claudeData = await claudeRes.json();
-        answer = claudeData.content?.[0]?.text ?? '';
-      } else {
-        console.warn('[forge-search] Claude API error', claudeRes.status);
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      // Send results first so UI can render cards immediately
+      controller.enqueue(encoder.encode(
+        `event: meta\ndata: ${JSON.stringify({ results })}\n\n`
+      ));
+
+      if (!anthropicKey || results.length === 0) {
+        if (results.length === 0) {
+          controller.enqueue(encoder.encode(
+            `event: token\ndata: ${JSON.stringify({ token: "I couldn't find any relevant data. Try indexing your data first." })}\n\n`
+          ));
+        }
+        controller.enqueue(encoder.encode(`event: done\ndata: {}\n\n`));
+        controller.close();
+        return;
       }
-    } catch (e) {
-      console.warn('[forge-search] Claude call failed', e);
-    }
-  }
 
-  return new Response(JSON.stringify({ answer, results }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const context = results
+        .map((r: { type: string; content: string }, i: number) =>
+          `[${i + 1}] (${r.type}) ${r.content}`)
+        .join('\n');
+
+      try {
+        const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': anthropicKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 300,
+            stream: true,
+            system: `You are FORGE, a personal gym assistant. Answer the user's question using only the provided training data entries. Be concise and specific — include dates, weights, reps, and other numbers when relevant. If the data doesn't fully answer the question, say so briefly. Never make up data.`,
+            messages: [{
+              role: 'user',
+              content: `My question: ${query}\n\nRelevant entries from my training log:\n${context}`,
+            }],
+          }),
+        });
+
+        if (claudeRes.ok && claudeRes.body) {
+          const reader = claudeRes.body.getReader();
+          const dec = new TextDecoder();
+          let buf = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n');
+            buf = lines.pop() ?? '';
+            let eventType = '';
+            for (const line of lines) {
+              if (line.startsWith('event:')) { eventType = line.slice(6).trim(); continue; }
+              if (line.startsWith('data:')) {
+                try {
+                  const payload = JSON.parse(line.slice(5).trim());
+                  if (eventType === 'content_block_delta' && payload.delta?.text) {
+                    controller.enqueue(encoder.encode(
+                      `event: token\ndata: ${JSON.stringify({ token: payload.delta.text })}\n\n`
+                    ));
+                  }
+                } catch { /* skip non-JSON */ }
+              }
+            }
+          }
+        } else {
+          console.warn('[forge-search] Claude API error', claudeRes.status);
+        }
+      } catch (e) {
+        console.warn('[forge-search] Claude stream failed', e);
+      }
+
+      controller.enqueue(encoder.encode(`event: done\ndata: {}\n\n`));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
   });
 });

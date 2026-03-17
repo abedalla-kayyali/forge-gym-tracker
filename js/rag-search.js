@@ -213,7 +213,7 @@
     return res.json();
   }
 
-  async function searchQuery(query, typeFilter) {
+  async function searchQuery(query, typeFilter, onToken, onResults) {
     const authHeader = await getAuthHeader();
     if (!authHeader) throw new Error('Not signed in');
     const res = await fetch(SEARCH_FN, {
@@ -223,7 +223,30 @@
       body: JSON.stringify({ query, n_results: 8, type_filter: typeFilter || null }),
     });
     if (!res.ok) throw new Error(`search ${res.status}`);
-    return res.json();
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    let eventType = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (line.startsWith('event:')) { eventType = line.slice(6).trim(); continue; }
+        if (line.startsWith('data:')) {
+          try {
+            const payload = JSON.parse(line.slice(5).trim());
+            if (eventType === 'meta') onResults && onResults(payload.results);
+            else if (eventType === 'token') onToken && onToken(payload.token);
+          } catch { /* skip */ }
+        }
+        if (line === '') eventType = '';
+      }
+    }
   }
 
   // ─── Full bulk ingest ─────────────────────────────────────────────────────
@@ -418,6 +441,11 @@
         font-size:.88rem; color:var(--text); line-height:1.6;
         white-space:pre-wrap;
       }
+      .rag-answer-streaming::after {
+        content: '▋'; color:var(--accent);
+        animation: ragBlink .7s step-end infinite;
+      }
+      @keyframes ragBlink { 50% { opacity:0; } }
       #rag-fab {
         position:fixed; right:16px; bottom:calc(74px + env(safe-area-inset-bottom,0px));
         width:46px; height:46px; border-radius:50%;
@@ -524,15 +552,26 @@
     const query = input?.value?.trim();
     if (!query) return;
     btn.disabled = true;
-    showStatus('Thinking...');
-    document.getElementById('rag-results').innerHTML = '';
+    showStatus('');
+    const resultsContainer = document.getElementById('rag-results');
+    resultsContainer.innerHTML = '';
+
+    // Answer card rendered immediately — tokens stream into it
+    const answerEl = document.createElement('div');
+    answerEl.className = 'rag-answer rag-answer-streaming';
+    resultsContainer.appendChild(answerEl);
+
     try {
-      const { answer, results, error } = await searchQuery(query, null);
-      if (error) throw new Error(error);
-      showStatus('');
-      renderAnswer(answer);
-      renderResults(results);
+      await searchQuery(
+        query,
+        null,
+        (token) => { answerEl.textContent += token; },
+        (results) => { renderResults(results); }
+      );
+      answerEl.classList.remove('rag-answer-streaming');
+      if (!answerEl.textContent.trim()) answerEl.remove();
     } catch (e) {
+      answerEl.remove();
       showStatus('Search failed: ' + (e.message || 'unknown error'));
     } finally {
       btn.disabled = false;
