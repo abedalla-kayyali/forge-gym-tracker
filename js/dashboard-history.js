@@ -682,6 +682,9 @@ function switchDashTab(name, btn) {
   });
   // C2: Load photo gallery when body tab opens
   if (name === 'body' && typeof _renderPhotoGallery === 'function') _renderPhotoGallery();
+  if (name === 'body' && typeof renderInBodyPanel === 'function') renderInBodyPanel();
+  if (name === 'body' && typeof renderMeasurementsPanel === 'function') renderMeasurementsPanel();
+  if (name === 'overview' && typeof renderGoalDashboard === 'function') renderGoalDashboard();
   // Render Calisthenics Journey when progress tab opens
   if (name === 'progress' && typeof renderCaliJourney === 'function') renderCaliJourney();
   // Render Calisthenics Dashboard when cali tab opens

@@ -22686,3 +22686,156 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   FORGE MODAL — shared overlay + card used by InBody & Measurements
+═══════════════════════════════════════════════════════════════ */
+.forge-modal-overlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);align-items:flex-end;justify-content:center;overflow-y:auto;}
+.forge-modal-overlay.open{display:flex;}
+.forge-modal-card{background:var(--bg2,#0d1a14);border:1px solid var(--border2,rgba(57,255,143,.18));border-radius:18px 18px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0);}
+.forge-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;border-bottom:1px solid var(--border2,rgba(57,255,143,.12));}
+.forge-modal-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text,#e0ffe8);letter-spacing:.3px;}
+.forge-modal-close{background:none;border:none;color:var(--text3,#5a8a70);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;}
+.forge-modal-close:hover{color:#ff6b6b;}
+.forge-modal-body{padding:16px 18px 20px;}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE 1 — INBODY TEST LOG
+═══════════════════════════════════════════════════════════════ */
+.ib-empty-note{padding:20px;text-align:center;color:var(--text3);font-size:13px;}
+.ib-test-date{font-size:11px;color:var(--text3);padding:0 0 8px;letter-spacing:.4px;text-transform:uppercase;}
+.ib-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:8px;}
+.ib-sum-card{background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:12px 10px 10px;text-align:center;position:relative;overflow:hidden;}
+.ib-sum-card.ib-card-accent{border-top:3px solid #ff6b6b;background:linear-gradient(180deg,rgba(255,107,107,.06) 0%,transparent 100%);}
+.ib-sum-card.ib-card-green{border-top:3px solid #39ff8f;background:linear-gradient(180deg,rgba(57,255,143,.06) 0%,transparent 100%);}
+.ib-sum-card.ib-card-score{border-top:3px solid #64b4ff;background:linear-gradient(180deg,rgba(100,180,255,.06) 0%,transparent 100%);}
+.ib-sum-card.ib-card-warn{border-top:3px solid #ffb800;background:linear-gradient(180deg,rgba(255,184,0,.06) 0%,transparent 100%);}
+.ib-sum-val{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--text);line-height:1;}
+.ib-sum-lbl{font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.3px;text-transform:uppercase;}
+.ib-sum-delta{margin-top:6px;}
+.ib-delta-pos{display:inline-block;background:rgba(57,255,143,.15);color:#39ff8f;font-size:11px;padding:2px 6px;border-radius:10px;}
+.ib-delta-neg{display:inline-block;background:rgba(255,107,107,.15);color:#ff6b6b;font-size:11px;padding:2px 6px;border-radius:10px;}
+.ib-delta-neutral{display:inline-block;background:rgba(180,180,180,.1);color:var(--text3);font-size:11px;padding:2px 6px;border-radius:10px;}
+.ib-segmental-wrap{background:var(--bg4,#0a1510);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;margin:10px 14px;}
+.ib-segmental-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.ib-segmental-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.ib-seg-cell{text-align:center;}
+.ib-seg-val{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--text2);}
+.ib-seg-lbl{font-size:9px;color:var(--text3);margin-top:2px;}
+.ib-seg-trunk .ib-seg-val{color:#39ff8f;font-size:22px;}
+.ib-history-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+.ib-hist-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.ib-hist-date{font-size:13px;font-weight:600;color:var(--text2);}
+.ib-delete-btn{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:0 2px;line-height:1;transition:color .15s;}
+.ib-delete-btn:hover{color:#ff6b6b;}
+.ib-chips-row{display:flex;flex-wrap:wrap;gap:5px;}
+.ib-chip{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text2);}
+.ib-chip-fat{border-color:rgba(255,107,107,.4);color:#ffaaaa;}
+.ib-chip-muscle{border-color:rgba(57,255,143,.3);color:#39ff8f;}
+.ib-chip-score{border-color:rgba(100,180,255,.3);color:#64b4ff;}
+.ib-chip-warn{border-color:rgba(255,180,0,.4);color:#ffb800;}
+.ib-hist-notes{font-size:11px;color:var(--text3);margin-top:6px;font-style:italic;}
+.ib-form-section-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+.ib-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ib-form-field{display:flex;flex-direction:column;gap:4px;}
+.ib-form-lbl{font-size:11px;color:var(--text3);}
+.ib-chart-empty{text-align:center;color:var(--text3);font-size:12px;padding:12px 0;}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE 2 — BODY MEASUREMENTS TRACKER
+═══════════════════════════════════════════════════════════════ */
+.meas-empty-note{padding:20px;text-align:center;color:var(--text3);font-size:13px;}
+.meas-test-date{font-size:11px;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;padding:0 0 8px;}
+.meas-whr-card{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.meas-whr-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;color:var(--text);}
+.meas-whr-lbl{font-size:12px;color:var(--text3);flex:1;}
+.meas-whr-risk{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.meas-risk-low{background:rgba(57,255,143,.12);color:#39ff8f;border:1px solid rgba(57,255,143,.3);}
+.meas-risk-mod{background:rgba(255,180,0,.12);color:#ffb800;border:1px solid rgba(255,180,0,.3);}
+.meas-risk-high{background:rgba(255,107,107,.12);color:#ff6b6b;border:1px solid rgba(255,107,107,.3);}
+.meas-cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.meas-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;transition:border-color .2s;}
+.meas-card:hover{border-color:var(--accent);}
+.meas-card-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--text);line-height:1;}
+.meas-card-unit{font-size:10px;color:var(--text3);}
+.meas-card-lbl{font-size:10px;color:var(--text3);margin-top:3px;}
+.meas-card-delta{font-size:11px;margin-top:5px;}
+.meas-delta-pos{display:inline-block;background:rgba(57,255,143,.15);color:#39ff8f;font-size:11px;padding:2px 6px;border-radius:10px;}
+.meas-delta-neg{display:inline-block;background:rgba(255,107,107,.15);color:#ff6b6b;font-size:11px;padding:2px 6px;border-radius:10px;}
+.meas-tab-btn{flex-shrink:0;padding:4px 12px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:color .15s,border-color .15s,background .15s;}
+.meas-tab-btn.active{background:var(--accent);border-color:var(--accent);color:#0a1510;font-weight:600;}
+.meas-tab-btn:hover:not(.active){color:var(--text2);border-color:var(--border2);}
+.meas-history-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+.meas-hist-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.meas-hist-date{font-size:12px;font-weight:600;color:var(--text2);}
+.meas-hist-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.meas-hist-chip{font-size:11px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text2);}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE 3 — PROGRESSIVE OVERLOAD ENGINE
+   Note: #last-session-hint block-level styles removed — container
+   already carries inline green-dim styling.
+═══════════════════════════════════════════════════════════════ */
+.ol-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.ol-date{font-size:11px;color:var(--text3);}
+.ol-status{font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px;}
+.ol-up{background:rgba(57,255,143,.15);color:#39ff8f;}
+.ol-flat{background:rgba(180,180,180,.1);color:var(--text3);}
+.ol-down{background:rgba(255,107,107,.15);color:#ff6b6b;}
+.ol-streak-badge{font-size:11px;background:rgba(255,160,0,.15);color:#ffb800;border:1px solid rgba(255,160,0,.3);border-radius:10px;padding:3px 8px;}
+.ol-sets-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.ol-set-chip{font-family:'DM Mono',monospace;font-size:11px;background:rgba(57,255,143,.05);border:1px solid rgba(57,255,143,.2);border-radius:8px;padding:3px 10px;color:var(--text2);}
+.ol-target{font-size:12px;color:var(--text2);margin-bottom:4px;}
+.ol-target strong{color:#39ff8f;font-size:14px;}
+.ol-plateau-warn{font-size:12px;color:#ffb800;background:rgba(255,180,0,.08);border-left:3px solid #ffb800;border-radius:0 8px 8px 0;padding:8px 12px;margin-top:6px;}
+.ol-empty{padding:14px;text-align:center;color:var(--text3);font-size:12px;}
+.ol-overall-score{display:flex;flex-direction:column;align-items:center;padding:14px 0 10px;gap:3px;}
+.ol-overall-val{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:700;line-height:1;}
+.ol-overall-lbl{font-size:12px;color:var(--text3);}
+.ol-overall-target{font-size:10px;color:var(--text3);}
+.ol-muscle-list{display:flex;flex-direction:column;gap:8px;padding:0 4px 10px;}
+.ol-muscle-row{display:flex;align-items:center;gap:10px;}
+.ol-muscle-name{font-size:12px;color:var(--text2);width:72px;flex-shrink:0;}
+.ol-score-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.ol-score-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.ol-score-good{background:#39ff8f;color:#39ff8f;}
+.ol-score-ok{background:#ffb800;color:#ffb800;}
+.ol-score-low{background:#ff6b6b;color:#ff6b6b;}
+.ol-score-pct{font-size:11px;font-weight:600;width:34px;text-align:right;}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE 4 — GOAL DASHBOARD
+═══════════════════════════════════════════════════════════════ */
+.gd-momentum-bar{display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,var(--bg3),var(--bg4,#0a1510));border:1px solid var(--border2);border-radius:16px;padding:16px 18px;margin-bottom:14px;}
+.gd-bar-green{border-left:4px solid #39ff8f;background:linear-gradient(135deg,rgba(57,255,143,.06),var(--bg4,#0a1510));}
+.gd-bar-yellow{border-left:4px solid #ffb800;background:linear-gradient(135deg,rgba(255,184,0,.06),var(--bg4,#0a1510));}
+.gd-bar-red{border-left:4px solid #ff6b6b;background:linear-gradient(135deg,rgba(255,107,107,.06),var(--bg4,#0a1510));}
+.gd-momentum-score{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:800;line-height:1;flex-shrink:0;}
+.gd-momentum-pct{font-size:22px;}
+.gd-score-green{color:#39ff8f;}
+.gd-score-yellow{color:#ffb800;}
+.gd-score-red{color:#ff6b6b;}
+.gd-momentum-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:4px;}
+.gd-momentum-msg{font-size:13px;color:var(--text2);line-height:1.4;}
+.gd-goal-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding:0 0 12px;border-bottom:1px solid var(--border);}
+.gd-section-title{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.gd-kpi-list{display:flex;flex-direction:column;gap:0;}
+.gd-kpi-row{display:grid;grid-template-columns:130px 1fr auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.gd-kpi-row:last-child{border-bottom:none;}
+.gd-kpi-label{font-size:12px;color:var(--text3);}
+.gd-kpi-value{font-size:13px;font-weight:600;color:var(--text);}
+.gd-kpi-status{font-size:14px;flex-shrink:0;}
+.gd-kpi-note{grid-column:1/-1;font-size:10px;color:var(--text3);padding:0 0 4px;margin-top:-3px;}
+.gd-ok{color:#39ff8f;}
+.gd-warn{color:#ffb800;}
+.gd-na{font-size:11px;color:var(--text3);}
+.gd-footer{font-size:10px;color:var(--text3);margin-top:14px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5;font-style:italic;}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIRST ENTRY REWARD BANNER
+═══════════════════════════════════════════════════════════════ */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.first-entry-reward{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(57,255,143,.1),rgba(57,255,143,.04));border:1px solid rgba(57,255,143,.3);border-radius:14px;padding:14px 16px;margin:10px 14px;animation:fadeInUp .4s ease;}
+.fer-icon{font-size:32px;flex-shrink:0;}
+.fer-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent);}
+.fer-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+

@@ -866,6 +866,15 @@
       <div id="cardio-stats-zone"></div>
     </div>
 
+    <!-- ═══ GOAL DASHBOARD — Am I on Track? ═══ -->
+    <div class="panel" id="goal-dashboard-panel" data-dash-tab="overview">
+      <div class="panel-header">
+        <span class="panel-title">🎯 Am I on Track?</span>
+        <span class="panel-badge" id="goal-dashboard-badge">GOAL</span>
+      </div>
+      <div id="goal-dashboard-body" style="padding:10px 14px 14px;"></div>
+    </div>
+
     <!-- MUSCLE HEATMAP -->
     <div class="panel" id="muscle-heatmap-panel" data-dash-tab="overview">
       <div class="panel-header">
@@ -1016,6 +1025,37 @@
         <div data-i18n="photos.empty">No photos yet. Add your first progress pic!</div>
       </div>
       <div id="photo-gallery-grid" class="photo-gallery-grid" style="display:none;"></div>
+    </div>
+
+    <!-- ═══ INBODY TEST LOG ═══ -->
+    <div class="panel" data-dash-tab="body" id="inbody-panel">
+      <div class="panel-header">
+        <span class="panel-title">🧬 InBody Tests</span>
+        <button class="panel-badge" onclick="openInBodyForm()" style="cursor:pointer;border:none;background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:10px;letter-spacing:.5px;">+ ADD TEST</button>
+      </div>
+      <div id="inbody-summary-cards" style="padding:10px 14px 4px;"></div>
+      <div style="padding:6px 14px 0;">
+        <div id="inbody-chart-empty" style="display:none;text-align:center;color:var(--text3);font-size:12px;padding:12px 0;">Add 2+ tests to see BF% vs Muscle trend</div>
+        <div class="chart-inner h180"><canvas id="inbody-trend-chart"></canvas></div>
+      </div>
+      <div class="bcomp-history-header" style="margin-top:8px;"><span>TEST HISTORY</span></div>
+      <div id="inbody-history-list" style="padding:6px 14px 14px;"></div>
+    </div>
+
+    <!-- ═══ BODY MEASUREMENTS TRACKER ═══ -->
+    <div class="panel" data-dash-tab="body" id="measurements-panel">
+      <div class="panel-header">
+        <span class="panel-title">📏 Body Measurements</span>
+        <button class="panel-badge" onclick="openMeasurementsForm()" style="cursor:pointer;border:none;background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:10px;letter-spacing:.5px;">+ LOG</button>
+      </div>
+      <div id="meas-summary-cards" style="padding:10px 14px 4px;"></div>
+      <div style="padding:0 14px 0;">
+        <div id="meas-chart-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
+        <div id="meas-chart-empty" style="display:none;text-align:center;color:var(--text3);font-size:12px;padding:12px 0;">Add 2+ entries to see trends</div>
+        <div class="chart-inner h160"><canvas id="meas-trend-chart"></canvas></div>
+      </div>
+      <div class="bcomp-history-header" style="margin-top:8px;"><span>MEASUREMENT HISTORY</span></div>
+      <div id="meas-history-list" style="padding:6px 14px 14px;"></div>
     </div>
 
     <!-- PROGRESS HIGHLIGHTS -->
@@ -9128,6 +9168,10 @@ if (document.readyState === 'loading') {
 <script src="js/cali-dashboard.js"></script>
 <script src="js/ui-layout-theme.js"></script>
 <script src="js/muscle-detail-modal.js"></script>
+<script src="js/inbody-log.js"></script>
+<script src="js/body-measurements.js"></script>
+<script src="js/overload-engine.js"></script>
+<script src="js/goal-dashboard.js"></script>
 <script src="js/bootstrap.js"></script>
 
 <!-- ???????????????????????????????????????????????????????????
@@ -9494,6 +9538,182 @@ if (document.readyState === 'loading') {
       <button class="mdc-share-btn" onclick="_shareMuscleCard()">SHARE</button>
     </div>
     <div class="mdc-forge-brand">FORGE GYM TRACKER</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     INBODY TEST MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="inbody-modal" class="forge-modal-overlay" onclick="if(event.target===this)closeInBodyForm()">
+  <div class="forge-modal-card">
+    <div class="forge-modal-header">
+      <span class="forge-modal-title">🧬 Log InBody Test</span>
+      <button class="forge-modal-close" onclick="closeInBodyForm()">×</button>
+    </div>
+    <div class="forge-modal-body">
+      <div class="ib-form-section-title">Test Date</div>
+      <input type="date" id="ib-date" class="pf-input" style="width:100%;margin-bottom:14px;">
+
+      <div class="ib-form-section-title">Core Metrics</div>
+      <div class="ib-form-grid">
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Body Weight (kg)</label>
+          <input type="number" id="ib-weight" class="pf-input" placeholder="e.g. 78.5" step="0.1" min="30">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Body Fat %</label>
+          <input type="number" id="ib-bf" class="pf-input" placeholder="e.g. 18.5" step="0.1" min="2" max="60">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Skeletal Muscle (kg)</label>
+          <input type="number" id="ib-smm" class="pf-input" placeholder="e.g. 36.0" step="0.1" min="10">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Fat Mass (kg)</label>
+          <input type="number" id="ib-bfm" class="pf-input" placeholder="e.g. 14.5" step="0.1" min="0">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">BMR (kcal)</label>
+          <input type="number" id="ib-bmr" class="pf-input" placeholder="e.g. 1750" step="1" min="800" max="4000">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Total Body Water (L)</label>
+          <input type="number" id="ib-tbw" class="pf-input" placeholder="e.g. 42.0" step="0.1">
+        </div>
+      </div>
+
+      <div class="ib-form-section-title" style="margin-top:12px;">Advanced (Optional)</div>
+      <div class="ib-form-grid">
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Visceral Fat Level</label>
+          <input type="number" id="ib-visceral" class="pf-input" placeholder="1–20" step="1" min="1" max="20">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">InBody Score</label>
+          <input type="number" id="ib-score" class="pf-input" placeholder="0–100" step="1" min="0" max="100">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Phase Angle (°)</label>
+          <input type="number" id="ib-phase" class="pf-input" placeholder="e.g. 6.2" step="0.1">
+        </div>
+      </div>
+
+      <div class="ib-form-section-title" style="margin-top:12px;">Segmental Lean Mass (kg, Optional)</div>
+      <div class="ib-form-grid">
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Left Arm</label>
+          <input type="number" id="ib-lean-la" class="pf-input" placeholder="e.g. 3.5" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Right Arm</label>
+          <input type="number" id="ib-lean-ra" class="pf-input" placeholder="e.g. 3.6" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Trunk</label>
+          <input type="number" id="ib-lean-trunk" class="pf-input" placeholder="e.g. 24.0" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Left Leg</label>
+          <input type="number" id="ib-lean-ll" class="pf-input" placeholder="e.g. 9.2" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Right Leg</label>
+          <input type="number" id="ib-lean-rl" class="pf-input" placeholder="e.g. 9.4" step="0.1">
+        </div>
+      </div>
+
+      <div class="ib-form-section-title" style="margin-top:12px;">Notes (Optional)</div>
+      <textarea id="ib-notes" class="pf-input" rows="2" placeholder="e.g. Post-cut test, hydrated well..." style="width:100%;resize:vertical;"></textarea>
+
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeInBodyForm()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;" onclick="saveInBodyEntry()">💾 Save Test</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     BODY MEASUREMENTS MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="measurements-modal" class="forge-modal-overlay" onclick="if(event.target===this)closeMeasurementsForm()">
+  <div class="forge-modal-card">
+    <div class="forge-modal-header">
+      <span class="forge-modal-title">📏 Log Measurements</span>
+      <button class="forge-modal-close" onclick="closeMeasurementsForm()">×</button>
+    </div>
+    <div class="forge-modal-body">
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">
+        <div style="flex:1;">
+          <label class="ib-form-lbl">Date</label>
+          <input type="date" id="meas-date" class="pf-input" style="width:100%;">
+        </div>
+        <div>
+          <label class="ib-form-lbl">Unit</label>
+          <select id="meas-unit" class="pf-input">
+            <option value="cm">cm</option>
+            <option value="in">inches</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ib-form-section-title">Core</div>
+      <div class="ib-form-grid">
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Waist</label>
+          <input type="number" id="meas-waist" class="pf-input" placeholder="e.g. 80" step="0.1" min="30">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Hips</label>
+          <input type="number" id="meas-hips" class="pf-input" placeholder="e.g. 95" step="0.1" min="30">
+        </div>
+      </div>
+
+      <div class="ib-form-section-title" style="margin-top:10px;">Upper Body</div>
+      <div class="ib-form-grid">
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Chest</label>
+          <input type="number" id="meas-chest" class="pf-input" placeholder="e.g. 100" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Shoulders</label>
+          <input type="number" id="meas-shoulders" class="pf-input" placeholder="e.g. 118" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Left Arm</label>
+          <input type="number" id="meas-leftArm" class="pf-input" placeholder="e.g. 36" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Right Arm</label>
+          <input type="number" id="meas-rightArm" class="pf-input" placeholder="e.g. 36" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Neck</label>
+          <input type="number" id="meas-neck" class="pf-input" placeholder="e.g. 38" step="0.1">
+        </div>
+      </div>
+
+      <div class="ib-form-section-title" style="margin-top:10px;">Lower Body</div>
+      <div class="ib-form-grid">
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Left Thigh</label>
+          <input type="number" id="meas-leftThigh" class="pf-input" placeholder="e.g. 58" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Right Thigh</label>
+          <input type="number" id="meas-rightThigh" class="pf-input" placeholder="e.g. 58" step="0.1">
+        </div>
+        <div class="ib-form-field">
+          <label class="ib-form-lbl">Calves</label>
+          <input type="number" id="meas-calves" class="pf-input" placeholder="e.g. 38" step="0.1">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeMeasurementsForm()">Cancel</button>
+        <button class="btn btn-primary" style="flex:2;" onclick="saveMeasurementEntry()">💾 Save</button>
+      </div>
+    </div>
   </div>
 </div>
 

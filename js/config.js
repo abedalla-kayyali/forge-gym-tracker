@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v169';
-window.FORGE_BUILD   = '2026-03-16 (Fix: i18n.js curly-quote delimiters on heat.tier1-5, restoring dashboard render)';
+window.FORGE_VERSION = 'v174';
+window.FORGE_BUILD   = '2026-03-17 (feat: momentum bar color classes, OPT-5 first-entry reward badges for InBody + Measurements)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
