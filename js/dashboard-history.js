@@ -718,6 +718,7 @@ function switchDashTab(name, btn) {
   if (name === 'progress' && typeof renderMesocyclePanel === 'function') renderMesocyclePanel();
   if (name === 'progress' && typeof renderSplitPlanner === 'function') renderSplitPlanner();
   if (name === 'progress' && typeof renderMonthlyReport === 'function') renderMonthlyReport();
+  if (name === 'progress' && typeof window.renderWeeklyReview === 'function') window.renderWeeklyReview();
   if (name === 'progress' && typeof window._progressCardInit === 'function') window._progressCardInit();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {

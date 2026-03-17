@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v230';
-window.FORGE_BUILD   = '2026-03-17 (feat: v230 — steps habit manual toggle + step count indicator)';
+window.FORGE_VERSION = 'v231';
+window.FORGE_BUILD   = '2026-03-18 (feat: v231 — Weekly Review Card in Progress tab)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
