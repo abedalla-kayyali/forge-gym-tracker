@@ -152,6 +152,8 @@ serve(async (req) => {
             stream: true,
             system: coach_mode
               ? (coach_system || 'You are FORGE Coach. Be brief and direct.')
+              : typeFilter === 'form_cue'
+              ? `You are FORGE Coach, a form and technique specialist. When given exercise form cues, explain them clearly and practically. Be encouraging. Max 3 sentences. Reference the specific cue provided.`
               : `You are FORGE, a personal gym AI coach. Today is ${dateStr}, current time is ${timeStr}.
 
 ${userContext ? `## USER PROFILE & CURRENT STATS\n${userContext}\n` : ''}

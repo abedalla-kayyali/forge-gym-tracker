@@ -3759,6 +3759,10 @@ function updateLastSessionHint() {
   const setsText = prev.sets.map((s,i) => `Set ${i+1}: ${s.reps} reps ? ${s.weight}${s.unit}`).join(' &nbsp;|&nbsp; ');
   document.getElementById('last-session-content').innerHTML = `<b>${d}</b> &nbsp; ${setsText}`;
   document.getElementById('last-session-hint').style.display = 'block';
+  // Proactive form cue if plateaued
+  if (typeof window.FORGE_COACH?.fetchFormCue === 'function') {
+    window.FORGE_COACH.fetchFormCue(name);
+  }
 }
 
 // ???????????????????????????????????????????

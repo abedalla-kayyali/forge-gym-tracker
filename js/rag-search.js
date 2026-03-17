@@ -393,6 +393,26 @@
       });
     } catch {}
 
+    // Form cues — ingest EXERCISE_DB tips into vector DB
+    try {
+      const exDB = (typeof EXERCISE_DB !== 'undefined' ? EXERCISE_DB : []);
+      exDB.forEach(ex => {
+        if (!ex?.n || !ex?.t) return;
+        items.push({
+          id: `form_${ex.n.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          type: 'form_cue',
+          date: '2026-01-01',
+          content: `${ex.n} (${ex.m || 'general'}) form tip: ${ex.t}`,
+          metadata: {
+            exercise: ex.n,
+            muscle: ex.m || '',
+            equipment: ex.e || '',
+            media_key: ex.mediaKey || ''
+          }
+        });
+      });
+    } catch {}
+
     return items;
   }
 
@@ -960,6 +980,7 @@
           <button class="rag-filter" data-type="meal">Meals</button>
           <button class="rag-filter" data-type="cardio">Cardio</button>
           <button class="rag-filter" data-type="bodyweight">Body</button>
+          <button class="rag-filter" data-type="form_cue">Form</button>
         </div>
         <div id="rag-suggestions" class="rag-suggestions"></div>
         <div id="rag-status" class="rag-status" style="display:none;"></div>

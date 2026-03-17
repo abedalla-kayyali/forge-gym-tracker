@@ -145,5 +145,85 @@
     );
   };
 
+  // ── Trigger: plateau → proactive form cue fetch ───────────────────────────
+  window.FORGE_COACH.fetchFormCue = async function (exerciseName) {
+    if (!exerciseName) return;
+    const plateau = window.FORGE_OVERLOAD?.getPlateauLength?.(exerciseName) || 0;
+    if (plateau < 2) return;
+
+    const triggerKey = `form_cue_${exerciseName}_${new Date().toDateString()}`;
+    if (_onCooldown(triggerKey)) return;
+    _setCooldown(triggerKey);
+
+    const session = await window._sb?.auth?.getSession?.();
+    const token = session?.data?.session?.access_token;
+    if (!token) return;
+
+    const SEARCH_FN_FC = window.FORGE_CONFIG?.SUPABASE_URL + '/functions/v1/forge-search';
+    if (!SEARCH_FN_FC || SEARCH_FN_FC === 'undefined/functions/v1/forge-search') return;
+    try {
+      const resp = await fetch(SEARCH_FN_FC, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ query: `${exerciseName} form tip technique cue`, typeFilter: 'form_cue', max_tokens: 150 })
+      });
+      if (!resp.ok) return;
+      const reader = resp.body?.getReader();
+      if (!reader) return;
+      let text = '';
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        chunk.split('\n').forEach(line => {
+          if (line.startsWith('data: ')) {
+            const d = line.slice(6).trim();
+            if (d && d !== '[DONE]') {
+              try { text += JSON.parse(d)?.token || ''; } catch {}
+            }
+          }
+        });
+      }
+      if (text.trim()) {
+        const existing = document.getElementById('coach-form-cue-card');
+        if (existing) existing.remove();
+        const card = document.createElement('div');
+        card.id = 'coach-form-cue-card';
+        card.className = 'coach-intercept-card';
+
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'cic-icon';
+        iconDiv.textContent = '📐';
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'cic-message';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Form Cue: ';
+        msgDiv.appendChild(strong);
+        msgDiv.appendChild(document.createTextNode(text.trim()));
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'cic-actions';
+
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'cic-btn cic-btn-primary';
+        moreBtn.textContent = 'See More';
+        moreBtn.addEventListener('click', () => document.getElementById('ask-forge-fab')?.click());
+
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'cic-btn cic-btn-dismiss';
+        dismissBtn.textContent = 'Got it';
+        dismissBtn.addEventListener('click', () => card.remove());
+
+        actionsDiv.append(moreBtn, dismissBtn);
+        card.append(iconDiv, msgDiv, actionsDiv);
+
+        const anchor = document.getElementById('last-session-hint') || document.getElementById('sets-container');
+        if (anchor) anchor.parentNode.insertBefore(card, anchor.nextSibling);
+      }
+    } catch {}
+  };
+
   console.log('[FORGE] Coach triggers loaded');
 })();
