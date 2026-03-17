@@ -41,6 +41,7 @@ serve(async (req) => {
   let coach_mode = false;
   let coach_system = '';
   let max_tokens = 900;
+  let prefill = '';
 
   try {
     const body = await req.json();
@@ -54,6 +55,7 @@ serve(async (req) => {
     if (body.coach_mode) coach_mode = Boolean(body.coach_mode);
     if (body.coach_system) coach_system = String(body.coach_system).slice(0, 500);
     if (body.max_tokens) max_tokens = Math.min(2000, Math.max(10, Number(body.max_tokens)));
+    if (body.prefill) prefill = String(body.prefill).slice(0, 200);
   } catch {
     return new Response('Bad request', { status: 400 });
   }
@@ -172,6 +174,7 @@ Format: use **bold** for key numbers and names, use - bullet points for lists, a
                 role: 'user',
                 content: `My question: ${query}\n\nRelevant entries from my training log:\n${context}`,
               },
+              ...(prefill ? [{ role: 'assistant', content: prefill }] : []),
             ],
           }),
         });

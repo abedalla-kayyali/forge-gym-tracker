@@ -89,6 +89,10 @@
   }
 
   // ── LLM call (SSE buffered decode — same pattern as coach-triggers.js) ──────
+  // Uses assistant prefill ('```json\n{') so the model is forced to complete
+  // a valid JSON object rather than starting from scratch (eliminates structural errors).
+  const _PROGRAM_PREFILL = '```json\n{';
+
   async function _callProgramLLM(prompt) {
     const session = await window._sb?.auth?.getSession?.();
     const token = session?.data?.session?.access_token;
@@ -105,8 +109,9 @@
           query: prompt,
           type_filter: null,
           coach_mode: true,
-          coach_system: 'You are a personal training program generator. Return only valid JSON in a code block.',
-          max_tokens: 1500
+          coach_system: 'You are a personal training program generator. Return only valid JSON. Complete the JSON object already started.',
+          max_tokens: 1500,
+          prefill: _PROGRAM_PREFILL
         })
       });
       if (!resp.ok) return null;
@@ -127,7 +132,8 @@
           try { text += JSON.parse(raw)?.token || ''; } catch {}
         }
       }
-      return text.trim() || null;
+      // Prepend prefill — API streams only tokens AFTER the prefill content
+      return (_PROGRAM_PREFILL + text).trim() || null;
     } catch (e) {
       console.warn('[ai-program-generator] LLM call failed:', e);
       return null;
