@@ -5295,16 +5295,8 @@ function _renderAskChips() {
     <div class="ask-chips-row">${questions.map((q,i) => `<button class="ask-chip" onclick="_askCoach(${i})">${q}</button>`).join('')}</div>`;
 }
 
-function _askCoach(idx) {
-  // Switch to Insights tab so the answer is visible
-  const insBtn = document.querySelector('.coach-tab[onclick*="insights"]');
-  if (typeof coachSwitchTab === 'function') coachSwitchTab('insights', insBtn);
-
+function _askCoachFallback(idx, bubble) {
   const _ar = (typeof currentLang !== 'undefined') && currentLang === 'ar';
-  const body = document.getElementById('coach-body');
-  if (!body) return;
-  body.querySelectorAll('.ask-answer').forEach(e => e.remove());
-
   const allMuscles = ['Chest','Back','Shoulders','Legs','Core','Biceps','Triceps','Glutes','Calves','Forearms'];
   const muscleCounts = {};
   const muscleLastDate = {};
@@ -5388,12 +5380,81 @@ function _askCoach(idx) {
       : `Based on ${wt.toFixed(0)}kg bodyweight + ${goal} goal: target <strong>${proteinG}g protein/day</strong>. Spread across 4-5 meals.`;
   }
 
-  const ans = document.createElement('div');
-  ans.className = 'coach-bubble ask-answer';
-  ans.style.cssText = 'border-left:3px solid var(--accent);margin-bottom:10px;';
-  ans.innerHTML = `<strong>${title}</strong><br><span style="font-size:13px;">${text}</span>`;
-  body.insertBefore(ans, body.firstChild);
-  ans.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  bubble.style.cssText = 'border-left:3px solid var(--accent);margin-bottom:10px;';
+  bubble.innerHTML = `<strong>${title}</strong><br><span style="font-size:13px;">${text}</span>`;
+  bubble.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+async function _askCoach(idx) {
+  const _ar = (typeof currentLang !== 'undefined') && currentLang === 'ar';
+  const questions = _ar
+    ? ["ماذا أتمرن اليوم؟","هل عندي إفراط في التمرين؟","كيف توازني العضلي؟","كيف التقدم؟","كم أحتاج بروتين؟"]
+    : ["What to train today?","Am I overtraining?","How's my balance?","How's my progress?","How much protein?"];
+  const q = questions[idx];
+  if (!q) return;
+
+  // Switch to Insights tab so the answer is visible
+  const insBtn = document.querySelector('.coach-tab[onclick*="insights"]');
+  if (typeof coachSwitchTab === 'function') coachSwitchTab('insights', insBtn);
+
+  // Remove existing answer bubbles
+  document.querySelectorAll('#coach-body .ask-answer').forEach(e => e.remove());
+
+  // Create fresh answer bubble
+  const wrap = document.getElementById('coach-body');
+  if (!wrap) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'coach-bubble ask-answer';
+  bubble.innerHTML = `<span style="opacity:.5;font-size:12px;">${_esc(q)}&hellip;</span>`;
+  wrap.prepend(bubble);
+
+  const _fallback = () => _askCoachFallback(idx, bubble);
+
+  // Auth — guests fall back to rule-based
+  let token;
+  try {
+    const sess = await window._sb?.auth?.getSession?.();
+    token = sess?.data?.session?.access_token;
+  } catch (_) {}
+  if (!token) { _fallback(); return; }
+
+  const ctx = typeof window._forgeUserContext === 'function' ? window._forgeUserContext() : '';
+
+  try {
+    const resp = await fetch(`${window.FORGE_CONFIG.SUPABASE_URL}/functions/v1/forge-search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        query: q,
+        user_context: ctx,
+        coach_mode: true,
+        coach_system: 'You are FORGE coach. Answer the athlete\'s question directly in 1-2 sentences. Reference their actual training data.',
+        max_tokens: 150
+      })
+    });
+    if (!resp.ok) { _fallback(); return; }
+
+    bubble.innerHTML = '';
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', text = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const ln of lines) {
+        if (ln.startsWith('data:')) {
+          try {
+            const d = JSON.parse(ln.slice(6).trim());
+            if (d === '[DONE]') break;
+            if (d?.token) { text += d.token; bubble.textContent = text; }
+          } catch (_) {}
+        }
+      }
+    }
+    if (!text.trim()) _fallback();
+  } catch (_e) { _fallback(); }
 }
 
 // Navigate to the Progress tab and scroll to a specific panel
