@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v194';
-window.FORGE_BUILD   = '2026-03-17 (feat: Ask FORGE — RAG natural language search via Supabase pgvector)';
+window.FORGE_VERSION = 'v195';
+window.FORGE_BUILD   = '2026-03-17 (fix: reduce RAG ingest batch size to prevent edge fn timeout)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

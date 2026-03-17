@@ -10,7 +10,7 @@
   const INGEST_FN  = window.FORGE_CONFIG?.SUPABASE_URL + '/functions/v1/forge-ingest';
   const SEARCH_FN  = window.FORGE_CONFIG?.SUPABASE_URL + '/functions/v1/forge-search';
   const INGEST_KEY = 'forge_rag_last_ingest';   // localStorage: last full ingest timestamp
-  const BATCH_SIZE = 25;                        // items per ingest batch
+  const BATCH_SIZE = 5;                         // items per ingest batch (keep small — edge fn AI inference is slow)
 
   const MUSCLE_LABELS = {
     chest:'Chest', back:'Back', shoulders:'Shoulders', biceps:'Biceps',
