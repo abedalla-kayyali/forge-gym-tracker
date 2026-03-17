@@ -4466,6 +4466,19 @@ function renderSplitPlanner() {
     ? Math.round(hitWorkoutDays / plannedPastWorkout.length * 100)
     : null;
 
+  // ── Suggested splits per training phase ──────────────────────────────────
+  const SUGGESTED_SPLITS = {
+    hypertrophy: { mon:'push', tue:'pull', wed:'legs', thu:'push', fri:'pull', sat:'legs', sun:'rest' },
+    strength:    { mon:'push', tue:'rest', wed:'pull', thu:'rest', fri:'legs', sat:'rest', sun:'rest' },
+    cut:         { mon:'upper', tue:'cardio', wed:'lower', thu:'rest', fri:'upper', sat:'cardio', sun:'rest' },
+    maintenance: { mon:'full', tue:'rest', wed:'full', thu:'rest', fri:'full', sat:'rest', sun:'rest' },
+    deload:      { mon:'full', tue:'rest', wed:'rest', thu:'full', fri:'rest', sat:'rest', sun:'rest' },
+  };
+  const meso = _lsGet('forge_mesocycle', null);
+  const mesoPhase = (meso && meso.phase) || null;
+  const suggestedSplit = SUGGESTED_SPLITS[mesoPhase] || SUGGESTED_SPLITS.hypertrophy;
+  const phaseDisplayName = mesoPhase ? (mesoPhase.charAt(0).toUpperCase() + mesoPhase.slice(1)) : 'Hypertrophy (PPL)';
+
   // ── Plan summary strip (shown above the grid) ─────────────────────────────
   const planPills = DAYS.map(dow => {
     const slotKey  = split[dow] || 'rest';
@@ -4476,10 +4489,17 @@ function renderSplitPlanner() {
       <span class="sp-plan-type">${isActive ? slot.label : 'Rest'}</span>
     </div>`;
   }).join('');
+  const suggestHtml = !hasAnyPlan ? `
+    <div class="sp-suggest">
+      <span class="sp-suggest-label">${mesoPhase ? `Based on your <strong>${phaseDisplayName}</strong> phase — apply a suggested split?` : 'No training phase set — apply a PPL split to get started?'}</span>
+      <button class="sp-suggest-btn" onclick="window._splitApplySuggested('${mesoPhase || 'hypertrophy'}')">Apply ${phaseDisplayName} Split</button>
+    </div>` : '';
+
   const planStripHtml = `
     <div class="sp-plan-strip">
       <div class="sp-plan-strip-label">${hasAnyPlan ? 'YOUR PLAN — tap any day to change' : 'NO PLAN SET — tap any day to assign a workout type'}</div>
       <div class="sp-plan-pills">${planPills}</div>
+      ${suggestHtml}
     </div>`;
 
   // ── Render day cards ───────────────────────────────────────────────────────
@@ -4527,6 +4547,22 @@ window._splitCycle = function(dow) {
   const next   = ORDER[(ORDER.indexOf(cur) + 1) % ORDER.length];
   split[dow]   = next;
   _lsSave('forge_split', split);
+  renderSplitPlanner();
+};
+// Apply a suggested split based on training phase
+window._splitApplySuggested = function(phase) {
+  function _lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {} }
+  const SUGGESTED_SPLITS = {
+    hypertrophy: { mon:'push', tue:'pull', wed:'legs', thu:'push', fri:'pull', sat:'legs', sun:'rest' },
+    strength:    { mon:'push', tue:'rest', wed:'pull', thu:'rest', fri:'legs', sat:'rest', sun:'rest' },
+    cut:         { mon:'upper', tue:'cardio', wed:'lower', thu:'rest', fri:'upper', sat:'cardio', sun:'rest' },
+    maintenance: { mon:'full', tue:'rest', wed:'full', thu:'rest', fri:'full', sat:'rest', sun:'rest' },
+    deload:      { mon:'full', tue:'rest', wed:'rest', thu:'full', fri:'rest', sat:'rest', sun:'rest' },
+  };
+  const chosen = SUGGESTED_SPLITS[phase] || SUGGESTED_SPLITS.hypertrophy;
+  _lsSave('forge_split', chosen);
+  const label = phase ? (phase.charAt(0).toUpperCase() + phase.slice(1)) : 'Suggested';
+  if (typeof showToast === 'function') showToast(`${label} split applied!`, 'success');
   renderSplitPlanner();
 };
 window.renderSplitPlanner = renderSplitPlanner;

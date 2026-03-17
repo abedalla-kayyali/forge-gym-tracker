@@ -5321,6 +5321,25 @@ function _askCoach(idx) {
   ans.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
+// Navigate to the Progress tab and scroll to a specific panel
+function _navToProgressPanel(panelId) {
+  // Switch outer view to Dashboard
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  const dv = document.getElementById('view-dashboard');
+  if (dv) dv.classList.add('active');
+  const nb = document.querySelector('.bnav-btn[data-view="view-dashboard"]');
+  if (nb) nb.classList.add('active');
+  // Switch to Progress tab
+  const btn = document.querySelector('.dash-tab[data-tab="progress"]');
+  if (typeof switchDashTab === 'function') switchDashTab('progress', btn);
+  // Scroll to target panel
+  setTimeout(() => {
+    const panel = document.getElementById(panelId);
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
 // Coach tab switcher
 function coachSwitchTab(tab, btn) {
   ['today','train','insights','plan','nutrition','cali'].forEach(t => {
@@ -6504,7 +6523,35 @@ function renderCoachPlan() {
 
   const untrainedNames = untrained.slice(0,4).map(m => _cpAr ? (MUSCLE_AR[m]||m) : m).join(', ');
 
-  el.innerHTML = subToggle + `
+  // ── Training Setup quick-access card ──────────────────────────────────────
+  const _cpMeso  = (function(){ try { const r = localStorage.getItem('forge_mesocycle'); return r ? JSON.parse(r) : null; } catch(_e){ return null; } })();
+  const _cpSplit = (function(){ try { const r = localStorage.getItem('forge_split'); return r ? JSON.parse(r) : {}; } catch(_e){ return {}; } })();
+  const _phaseSet   = _cpMeso && _cpMeso.phase && _cpMeso.startDate;
+  const _splitSet   = Object.values(_cpSplit).some(v => v && v !== 'rest');
+  const _phaseLabel = _phaseSet ? (_cpMeso.phase.charAt(0).toUpperCase() + _cpMeso.phase.slice(1)) : (_cpAr ? 'غير محدد' : 'Not set');
+  const _splitLabel = _splitSet ? Object.values(_cpSplit).filter(v => v && v !== 'rest').length + (_cpAr ? ' أيام تدريب/أسبوع' : ' workout days/week') : (_cpAr ? 'غير محدد' : 'Not set');
+  const trainingSetupHtml = `
+    <div class="cplan-setup-card">
+      <div class="cplan-setup-hdr">${_cpAr ? '⚙️ إعداد التدريب' : '⚙️ TRAINING SETUP'}</div>
+      <div class="cplan-setup-row">
+        <span class="cplan-setup-icon">🏋️</span>
+        <div class="cplan-setup-info">
+          <div class="cplan-setup-key">${_cpAr ? 'المرحلة التدريبية' : 'Training Phase'}</div>
+          <div class="cplan-setup-val${_phaseSet ? ' cplan-setup-ok' : ' cplan-setup-warn'}">${_phaseLabel}${_phaseSet ? ' · Wk '+Math.floor((Date.now()-new Date(_cpMeso.startDate))/(7*86400000))+1+'/'+(_cpMeso.durationWeeks||8) : ''}</div>
+        </div>
+        <button class="cplan-setup-btn" onclick="_navToProgressPanel('mesocycle-panel')">${_cpAr ? 'ضبط ←' : '→ Set up'}</button>
+      </div>
+      <div class="cplan-setup-row">
+        <span class="cplan-setup-icon">📅</span>
+        <div class="cplan-setup-info">
+          <div class="cplan-setup-key">${_cpAr ? 'الخطة الأسبوعية' : 'Weekly Split'}</div>
+          <div class="cplan-setup-val${_splitSet ? ' cplan-setup-ok' : ' cplan-setup-warn'}">${_splitLabel}</div>
+        </div>
+        <button class="cplan-setup-btn" onclick="_navToProgressPanel('split-planner-panel')">${_cpAr ? 'ضبط ←' : '→ Set up'}</button>
+      </div>
+    </div>`;
+
+  el.innerHTML = subToggle + trainingSetupHtml + `
     <div style="padding:10px 16px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;">
       ${_cpAr ? (goalLabelAr) : goalLabelEn} | ${_cpAr ? 'مخصّصة تلقائيًا - اضغط يومًا للتفاصيل' : 'Auto-personalised | tap a day to expand'}
     </div>

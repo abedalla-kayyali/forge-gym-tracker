@@ -23163,3 +23163,23 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .sp-plan-day{font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);text-transform:uppercase;}
 .sp-plan-type{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;color:var(--text3);}
 .sp-plan-pill.sp-plan-active .sp-plan-type{color:var(--pill-color,var(--accent));}
+
+/* ── Split Planner — Suggested Split CTA (v191) ─────────────────────────── */
+.sp-suggest{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(57,255,143,.05);border:1px dashed rgba(57,255,143,.25);border-radius:6px;padding:8px 10px;margin-top:6px;flex-wrap:wrap;}
+.sp-suggest-label{font-size:11px;color:var(--text2);flex:1;}
+.sp-suggest-label strong{color:var(--accent);}
+.sp-suggest-btn{padding:5px 12px;background:rgba(57,255,143,.12);border:1px solid rgba(57,255,143,.35);border-radius:6px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:.3px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.sp-suggest-btn:hover{background:rgba(57,255,143,.22);}
+
+/* ── Coach Plan — Training Setup Card (v191) ─────────────────────────────── */
+.cplan-setup-card{margin:8px 12px 0;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;}
+.cplan-setup-hdr{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.6px;color:var(--text3);text-transform:uppercase;margin-bottom:2px;}
+.cplan-setup-row{display:flex;align-items:center;gap:8px;}
+.cplan-setup-icon{font-size:16px;flex-shrink:0;}
+.cplan-setup-info{flex:1;display:flex;flex-direction:column;gap:1px;}
+.cplan-setup-key{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;}
+.cplan-setup-val{font-size:12px;color:var(--text2);}
+.cplan-setup-val.cplan-setup-ok{color:var(--accent);}
+.cplan-setup-val.cplan-setup-warn{color:var(--warn);}
+.cplan-setup-btn{padding:4px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text2);font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.cplan-setup-btn:hover{border-color:var(--accent);color:var(--accent);}

@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v190';
-window.FORGE_BUILD   = '2026-03-17 (feat: Monthly Progress Report + Split Planner plan strip + adherence fix)';
+window.FORGE_VERSION = 'v191';
+window.FORGE_BUILD   = '2026-03-17 (feat: Split suggested split CTA + Coach Plan training setup card + nav helper)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
