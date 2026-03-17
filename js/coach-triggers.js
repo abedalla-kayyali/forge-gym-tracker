@@ -297,14 +297,20 @@
   // ── Trigger: session debrief card (fires after workout save) ─────────────
   async function generateSessionDebrief(summary) {
     const dateKey = new Date().toDateString();
-    const cdKey = 'session_debrief_' + dateKey;
-    if (_onCooldown(cdKey)) return;
-    _setCooldown(cdKey);
 
     // Auth: get live session token
     const session = await window._sb?.auth?.getSession?.();
     const token = session?.data?.session?.access_token;
     if (!token) return; // guests skip debrief
+
+    // Calendar-day check (survives browser restart)
+    const todayStr = new Date().toDateString();
+    const lsKey = 'forge_debrief_date';
+    if (localStorage.getItem(lsKey) === todayStr) return;
+    const cdKey = 'session_debrief_' + dateKey;
+    if (_onCooldown(cdKey)) return;
+    _setCooldown(cdKey);
+    localStorage.setItem(lsKey, todayStr);
 
     const musclesStr = (summary?.muscles || []).join(', ') || 'unknown muscles';
     const setsStr = summary?.totalSets ?? '?';
@@ -345,9 +351,12 @@
     card.append(iconDiv, msgDiv, actionsDiv);
     card.addEventListener('click', () => card.remove());
 
-    const anchor = document.getElementById('last-session-hint') || document.getElementById('sets-container') || document.getElementById('muscle-btn-grid');
-    if (anchor) anchor.parentNode.insertBefore(card, anchor.nextSibling);
-    else document.body.appendChild(card);
+    const viewLog = document.getElementById('view-log');
+    if (viewLog) {
+      viewLog.insertBefore(card, viewLog.firstChild);
+    } else {
+      document.body.appendChild(card);
+    }
 
     try {
       const resp = await fetch(`${window.FORGE_CONFIG.SUPABASE_URL}/functions/v1/forge-search`, {
