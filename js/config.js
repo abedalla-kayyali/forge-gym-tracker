@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v214';
-window.FORGE_BUILD   = '2026-03-17 (fix: mobile keyboard no longer blocks Ask FORGE modal)';
+window.FORGE_VERSION = 'v215';
+window.FORGE_BUILD   = '2026-03-17 (fix: mobile keyboard modal fix — bottom:auto + window.resize + visualViewport)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

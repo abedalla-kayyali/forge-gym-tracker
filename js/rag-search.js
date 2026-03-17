@@ -1254,6 +1254,7 @@
     modal.classList.remove('open');
     // Reset any keyboard-shrink inline styles
     modal.style.top    = '';
+    modal.style.bottom = '';
     modal.style.height = '';
     const sheet = modal.querySelector('.rag-sheet');
     if (sheet) sheet.style.maxHeight = '';
@@ -1536,20 +1537,34 @@
     createFab();
     setupVoiceInput();
 
-    // Mobile keyboard fix: shrink sheet so it stays visible above the keyboard
+    // Mobile keyboard fix: keep sheet visible above the on-screen keyboard.
+    // Covers both iOS (visualViewport shrinks) and Android adjustResize (window resizes).
+    const _initH = window.innerHeight;
+    function _onKbResize() {
+      const modal = document.getElementById('rag-modal');
+      if (!modal || !modal.classList.contains('open')) return;
+      // Prefer visualViewport (iOS + modern Android); fall back to window.innerHeight
+      const availH   = window.visualViewport ? window.visualViewport.height   : window.innerHeight;
+      const offsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
+      const sheet = modal.querySelector('.rag-sheet');
+      if (availH < _initH - 100) {
+        // Keyboard is open — pin modal to visible viewport
+        modal.style.top    = offsetTop + 'px';
+        modal.style.bottom = 'auto';           // override inset:0's bottom:0
+        modal.style.height = availH + 'px';
+        if (sheet) sheet.style.maxHeight = (availH - 12) + 'px';
+      } else {
+        // Keyboard closed — restore defaults
+        modal.style.top    = '';
+        modal.style.bottom = '';
+        modal.style.height = '';
+        if (sheet) sheet.style.maxHeight = '';
+      }
+    }
+    window.addEventListener('resize', _onKbResize);
     if (window.visualViewport) {
-      const onVPResize = () => {
-        const modal = document.getElementById('rag-modal');
-        if (!modal || !modal.classList.contains('open')) return;
-        const vvh = window.visualViewport.height;
-        const vvo = window.visualViewport.offsetTop;
-        modal.style.top    = vvo + 'px';
-        modal.style.height = vvh + 'px';
-        const sheet = modal.querySelector('.rag-sheet');
-        if (sheet) sheet.style.maxHeight = Math.min(vvh * 0.95, vvh - 12) + 'px';
-      };
-      window.visualViewport.addEventListener('resize', onVPResize);
-      window.visualViewport.addEventListener('scroll', onVPResize);
+      window.visualViewport.addEventListener('resize', _onKbResize);
+      window.visualViewport.addEventListener('scroll', _onKbResize);
     }
     // Auto re-index if stale (>3 days) or never indexed
     const lastIngest = localStorage.getItem(INGEST_KEY);
