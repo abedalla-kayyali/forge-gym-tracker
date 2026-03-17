@@ -5,8 +5,8 @@
 // architecture: https://supabase.com/docs/guides/api/api-keys
 
 // App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v187';
-window.FORGE_BUILD   = '2026-03-17 (feat: Mesocycle / Training Phase Tracker in Progress tab — 5 phases, duration, deload alert)';
+window.FORGE_VERSION = 'v188';
+window.FORGE_BUILD   = '2026-03-17 (feat: Weekly Split Planner in Progress tab — 8 slot types, adherence tracking, deviation alerts)';
 
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',

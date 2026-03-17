@@ -698,6 +698,7 @@ function switchDashTab(name, btn) {
   if (name === 'progress' && typeof window.FORGE_OVERLOAD !== 'undefined') window.FORGE_OVERLOAD.renderOverloadScoreCard('overload-score-card');
   if (name === 'progress' && typeof renderVolumeLandmarks === 'function') renderVolumeLandmarks();
   if (name === 'progress' && typeof renderMesocyclePanel === 'function') renderMesocyclePanel();
+  if (name === 'progress' && typeof renderSplitPlanner === 'function') renderSplitPlanner();
   if (name === 'cardio' && typeof renderCardioStatsPanel === 'function') renderCardioStatsPanel();
   if (name === 'progress') {
     _renderProgressReadinessHub();
@@ -4353,4 +4354,157 @@ window._mesoReset = function() {
 };
 window.renderMesocyclePanel = renderMesocyclePanel;
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEKLY SPLIT PLANNER  (Pillar 5.2 · P2 · v188)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderSplitPlanner() {
+  const el = document.getElementById('split-planner-body');
+  if (!el) return;
+
+  function _lsGet(key, fb) {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; }
+  }
+  function _lsSave(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {}
+  }
+
+  const _wrk  = (typeof workouts !== 'undefined' ? workouts : null) || _lsGet('forge_workouts', []);
+  const split = _lsGet('forge_split', {});    // { mon:'push', tue:'pull', ... }
+
+  // ── Slot types ─────────────────────────────────────────────────────────────
+  const SLOTS = {
+    rest:    { label: 'Rest',      icon: '🛌', color: 'var(--text3)' },
+    push:    { label: 'Push',      icon: '🫸', color: 'var(--accent)' },
+    pull:    { label: 'Pull',      icon: '🫷', color: '#64b5f6' },
+    legs:    { label: 'Legs',      icon: '🦵', color: '#ff9f2a' },
+    upper:   { label: 'Upper',     icon: '💪', color: 'var(--accent)' },
+    lower:   { label: 'Lower',     icon: '🦿', color: '#ff9f2a' },
+    full:    { label: 'Full Body', icon: '🏋️', color: '#ce93d8' },
+    cardio:  { label: 'Cardio',    icon: '🏃', color: '#ff5050' },
+  };
+
+  const DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
+  const DAY_LABELS = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
+
+  // Day of week key for today
+  const today = new Date();
+  const todayDowIdx = (today.getDay() + 6) % 7; // 0=Mon…6=Sun
+  const todayDow    = DAYS[todayDowIdx];
+
+  // Date key for today and each week day (for workout lookup)
+  function _dayDateKey(dowIdx) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - todayDowIdx + dowIdx);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  // Map date keys → set of muscles trained that day
+  const trainedByDate = {};
+  (_wrk || []).forEach(w => {
+    if (w.date) {
+      trainedByDate[w.date] = trainedByDate[w.date] || new Set();
+      if (w.muscle) trainedByDate[w.date].add((w.muscle || '').toLowerCase());
+    }
+  });
+
+  // ── Adherence check: does the trained muscle match the planned slot? ────────
+  function _adherence(dow, dowIdx) {
+    const planned = split[dow] || 'rest';
+    const dateKey  = _dayDateKey(dowIdx);
+    const trained  = trainedByDate[dateKey];
+    const hasTrained = trained && trained.size > 0;
+
+    if (planned === 'rest') {
+      return hasTrained ? 'deviation' : 'ok';  // trained on rest day
+    }
+    if (!hasTrained) {
+      // Past day: miss; today/future: pending
+      const isPast = dowIdx < todayDowIdx || (dowIdx === todayDowIdx && new Date().getHours() >= 20);
+      return isPast ? 'miss' : 'pending';
+    }
+    // Rough match: push→chest/tricep/shoulder, pull→back/bicep, legs→legs/glutes/quads, etc.
+    const MUSCLE_MAP = {
+      push:   ['chest','tricep','shoulder','deltoid'],
+      pull:   ['back','bicep','lat','rhomboid','rear delt'],
+      legs:   ['legs','glutes','quad','hamstring','calf','leg'],
+      upper:  ['chest','back','shoulder','bicep','tricep','deltoid','lat'],
+      lower:  ['legs','glutes','quad','hamstring','calf','leg'],
+      full:   [],   // any workout = ok for full body
+      cardio: ['cardio','running','cycling'],
+    };
+    const expected = MUSCLE_MAP[planned] || [];
+    if (expected.length === 0) return 'ok'; // 'full' — any workout counts
+    const match = [...trained].some(m => expected.some(e => m.includes(e)));
+    return match ? 'ok' : 'deviation';
+  }
+
+  // ── Status indicators ───────────────────────────────────────────────────────
+  const STATUS_MARK  = { ok:'✓', miss:'✗', pending:'◌', deviation:'⚡' };
+  const STATUS_CLASS = { ok:'sp-ok', miss:'sp-miss', pending:'sp-pending', deviation:'sp-dev' };
+
+  // ── Deviation alert for today ─────────────────────────────────────────────
+  const todayStatus  = _adherence(todayDow, todayDowIdx);
+  const todayPlanned = split[todayDow] || null;
+  let alertHtml = '';
+  if (todayStatus === 'deviation') {
+    const planned = SLOTS[todayPlanned] || SLOTS.rest;
+    alertHtml = `<div class="sp-alert">⚡ Deviation — planned <strong>${planned.label}</strong> but logged a different muscle group today.</div>`;
+  } else if (todayStatus === 'miss' && todayPlanned && todayPlanned !== 'rest') {
+    const planned = SLOTS[todayPlanned] || SLOTS.rest;
+    alertHtml = `<div class="sp-alert sp-alert-miss">You haven't logged a <strong>${planned.label}</strong> session yet today.</div>`;
+  }
+
+  // ── Week adherence score ──────────────────────────────────────────────────
+  const pastDays = DAYS.slice(0, todayDowIdx + 1);
+  const pastStatuses = pastDays.map((d, i) => _adherence(d, i));
+  const hitCount = pastStatuses.filter(s => s === 'ok').length;
+  const adherencePct = pastDays.length > 0 ? Math.round(hitCount / pastDays.length * 100) : 0;
+
+  // ── Render day cells ───────────────────────────────────────────────────────
+  const dayCells = DAYS.map((dow, idx) => {
+    const slotKey  = split[dow] || 'rest';
+    const slot     = SLOTS[slotKey] || SLOTS.rest;
+    const isToday  = idx === todayDowIdx;
+    const status   = _adherence(dow, idx);
+    const isFuture = idx > todayDowIdx;
+    return `
+      <div class="sp-day${isToday ? ' sp-today' : ''}${isFuture ? ' sp-future' : ''}"
+           onclick="window._splitCycle('${dow}')" title="Tap to change ${DAY_LABELS[dow]}">
+        <span class="sp-day-label">${DAY_LABELS[dow]}</span>
+        <span class="sp-day-icon">${slot.icon}</span>
+        <span class="sp-day-slot" style="color:${slot.color}">${slot.label}</span>
+        ${!isFuture ? `<span class="sp-status ${STATUS_CLASS[status]}">${STATUS_MARK[status]}</span>` : '<span class="sp-status sp-pending">—</span>'}
+      </div>`;
+  }).join('');
+
+  const badge = document.getElementById('split-planner-badge');
+  if (badge) badge.textContent = `${adherencePct}% ADHERENCE`;
+
+  el.innerHTML = `
+    <div class="sp-wrap">
+      <div class="sp-grid">${dayCells}</div>
+      ${alertHtml}
+      <div class="sp-legend">
+        <span class="sp-legend-item sp-ok">✓ On track</span>
+        <span class="sp-legend-item sp-miss">✗ Missed</span>
+        <span class="sp-legend-item sp-dev">⚡ Deviation</span>
+        <span class="sp-legend-item sp-pending">◌ Upcoming</span>
+      </div>
+      <div class="sp-hint">Tap any day to cycle through workout types.</div>
+    </div>`;
+}
+
+// Cycle through split slot types for a day (tap to change)
+window._splitCycle = function(dow) {
+  function _lsGet(key, fb) { try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fb; } catch (_e) { return fb; } }
+  function _lsSave(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_e) {} }
+  const ORDER = ['rest','push','pull','legs','upper','lower','full','cardio'];
+  const split  = _lsGet('forge_split', {});
+  const cur    = split[dow] || 'rest';
+  const next   = ORDER[(ORDER.indexOf(cur) + 1) % ORDER.length];
+  split[dow]   = next;
+  _lsSave('forge_split', split);
+  renderSplitPlanner();
+};
+window.renderSplitPlanner = renderSplitPlanner;
 
