@@ -14,6 +14,16 @@
   }
   function _setCooldown(key) { try { sessionStorage.setItem('fct_' + key, String(Date.now())); } catch {} }
 
+  // ── Render LLM text as safe HTML (strips markdown) ───────────────────────
+  function _renderCoachText(el, text) {
+    const safe = text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+    el.innerHTML = safe;
+  }
+
   // ── Fire a short proactive coach message (max 80 tokens) ──────────────────
   async function _fireCoachMessage(triggerKey, systemNote, userPrompt, onResult) {
     if (_onCooldown(triggerKey)) return;
@@ -46,21 +56,19 @@
       _setCooldown(triggerKey); // set cooldown only on successful response
       const reader = resp.body?.getReader();
       if (!reader) return;
-      let text = '';
+      let text = '', buf = '';
       const decoder = new TextDecoder();
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
-        // forge-search emits: event: token\ndata: {"token":"..."}\n\n
-        chunk.split('\n').forEach(line => {
-          if (line.startsWith('data: ')) {
-            const d = line.slice(6).trim();
-            if (d && d !== '[DONE]') {
-              try { text += JSON.parse(d)?.token || ''; } catch {}
-            }
-          }
-        });
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n'); buf = lines.pop();
+        for (const ln of lines) {
+          if (!ln.startsWith('data: ')) continue;
+          const raw = ln.slice(6).trim();
+          if (raw === '[DONE]') break;
+          try { text += JSON.parse(raw)?.token || ''; } catch {}
+        }
       }
       if (text.trim() && typeof onResult === 'function') onResult(text.trim());
     } catch (e) {
@@ -84,8 +92,8 @@
         <button class="cic-btn cic-btn-dismiss" id="cic-dismiss">Log anyway</button>
       </div>
     `;
-    // Set message via textContent to prevent XSS from LLM output
-    card.querySelector('.cic-message').textContent = message;
+    // Render message — strips markdown to safe HTML
+    _renderCoachText(card.querySelector('.cic-message'), message);
     const anchor = document.getElementById('muscle-btn-grid') || document.getElementById('sets-container');
     if (anchor) anchor.parentNode.insertBefore(card, anchor);
 
@@ -236,7 +244,7 @@
         const _c = document.createElement('div');
         _c.id = 'coach-daily-brief'; _c.className = 'coach-intercept-card';
         const _i = document.createElement('div'); _i.className = 'cic-icon'; _i.textContent = '🤖';
-        const _m = document.createElement('div'); _m.className = 'cic-message'; _m.textContent = _cached;
+        const _m = document.createElement('div'); _m.className = 'cic-message'; _renderCoachText(_m, _cached);
         _c.appendChild(_i); _c.appendChild(_m);
         _wrapNow.insertBefore(_c, _wrapNow.firstChild);
       }
@@ -269,10 +277,10 @@
         // Update existing card if present (avoids duplicate after re-render)
         const existing = document.getElementById('coach-daily-brief');
         if (existing) {
-          existing.querySelector('.cic-message').textContent = text;
+          _renderCoachText(existing.querySelector('.cic-message'), text);
           return;
         }
-        // Build card using textContent to prevent XSS from LLM output
+        // Build card — renders markdown to safe HTML
         const card = document.createElement('div');
         card.id = 'coach-daily-brief';
         card.className = 'coach-intercept-card';
@@ -281,7 +289,7 @@
         icon.textContent = '🤖';
         const msg = document.createElement('div');
         msg.className = 'cic-message';
-        msg.textContent = text;
+        _renderCoachText(msg, text);
         sessionStorage.setItem('fct_dr_text', text);
         card.appendChild(icon);
         card.appendChild(msg);
@@ -402,8 +410,8 @@
             }
           }
         });
-        if (firstToken && text.length > 0) { msgDiv.innerHTML = ''; firstToken = false; }
-        msgDiv.textContent = text;
+        if (firstToken && text.length > 0) { firstToken = false; }
+        _renderCoachText(msgDiv, text);
       }
       if (text.trim()) {
         try {
