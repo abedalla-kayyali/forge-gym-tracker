@@ -5319,8 +5319,8 @@ function _askCoachFallback(idx, bubble) {
       const last = workouts[workouts.length-1]?.muscle || '';
       title = _ar ? 'اقتراح اليوم' : "Today's Suggestion";
       text  = _ar
-        ? `آخر جلسة: ${last}. العضلات التي ارتاحت 48+ ساعة: ${top3.join('، ')}. نقترح: <strong>${top3[0]||'Chest'}</strong>.`
-        : `Last session: ${last}. Muscles rested 48h+: ${top3.join(', ')}. We suggest: <strong>${top3[0]||'Chest'}</strong> or <strong>${top3[1]||'Back'}</strong>.`;
+        ? `آخر جلسة: ${_esc(last||'')}. العضلات التي ارتاحت 48+ ساعة: ${top3.join('، ')}. نقترح: <strong>${_esc(top3[0]||'Chest')}</strong>.`
+        : `Last session: ${_esc(last||'')}. Muscles rested 48h+: ${top3.join(', ')}. We suggest: <strong>${_esc(top3[0]||'Chest')}</strong> or <strong>${_esc(top3[1]||'Back')}</strong>.`;
     }
   } else if (idx === 1) {
     const wkCount = workouts.filter(w => new Date(w.date) > new Date(Date.now()-7*86400000)).length;
@@ -5376,8 +5376,8 @@ function _askCoachFallback(idx, bubble) {
     const proteinG = Math.round(wt * (FACTORS[goal]||2.0));
     title = _ar ? 'هدف البروتين اليومي' : 'Daily Protein Target';
     text  = _ar
-      ? `بناءً على وزن ${wt.toFixed(0)} كجم وهدف ${goal}: الهدف <strong>${proteinG}غ بروتين/يوم</strong>. وزّعه على 4-5 وجبات.`
-      : `Based on ${wt.toFixed(0)}kg bodyweight + ${goal} goal: target <strong>${proteinG}g protein/day</strong>. Spread across 4-5 meals.`;
+      ? `بناءً على وزن ${wt.toFixed(0)} كجم وهدف ${_esc(goal||'')}: الهدف <strong>${proteinG}غ بروتين/يوم</strong>. وزّعه على 4-5 وجبات.`
+      : `Based on ${wt.toFixed(0)}kg bodyweight + ${_esc(goal||'')} goal: target <strong>${proteinG}g protein/day</strong>. Spread across 4-5 meals.`;
   }
 
   bubble.style.cssText = 'border-left:3px solid var(--accent);margin-bottom:10px;';
@@ -5421,7 +5421,7 @@ async function _askCoach(idx) {
   const ctx = typeof window._forgeUserContext === 'function' ? window._forgeUserContext() : '';
 
   try {
-    const resp = await fetch(`${window.FORGE_CONFIG.SUPABASE_URL}/functions/v1/forge-search`, {
+    const resp = await fetch(`${window.FORGE_CONFIG?.SUPABASE_URL}/functions/v1/forge-search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({
@@ -5444,13 +5444,13 @@ async function _askCoach(idx) {
       buf += dec.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const ln of lines) {
-        if (ln.startsWith('data:')) {
-          try {
-            const d = JSON.parse(ln.slice(6).trim());
-            if (d === '[DONE]') break;
-            if (d?.token) { text += d.token; bubble.textContent = text; }
-          } catch (_) {}
-        }
+        if (!ln.startsWith('data: ')) continue;
+        const raw = ln.slice(6).trim();
+        if (raw === '[DONE]') break;
+        try {
+          const d = JSON.parse(raw);
+          if (d?.token) { text += d.token; bubble.textContent = text; }
+        } catch (_) {}
       }
     }
     if (!text.trim()) _fallback();
