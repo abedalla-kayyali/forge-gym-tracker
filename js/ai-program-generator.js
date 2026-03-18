@@ -34,9 +34,11 @@
   // ── Shape adapter: AI program day → program-panel-compatible shape ──────────
   // Exported so program-panel.js can call window._adaptDay(day)
   function _adaptDay(day) {
+    const rawMuscle = day.muscle || (day.muscles || [])[0] || '';
+    const muscle = rawMuscle ? rawMuscle.charAt(0).toUpperCase() + rawMuscle.slice(1) : '';
     return Object.assign({}, day, {
       exs:    day.exs    || (day.exercises || []).map(e => e.name),
-      muscle: day.muscle || (day.muscles   || [])[0] || ''
+      muscle
     });
   }
   window._adaptDay = _adaptDay;
