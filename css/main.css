@@ -23925,3 +23925,16 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   box-shadow: var(--shadow-glow);
 }
 .ob-step { animation: viewSlideIn var(--dur-base) var(--ease-smooth) both; }
+
+/* v238: wizard back button */
+.ob-back-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.ob-back-btn:hover { opacity: 1; }

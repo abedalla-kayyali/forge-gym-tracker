@@ -188,11 +188,15 @@
       }
       // Save name — use the same key as the rest of the app
       localStorage.setItem('forge_username', name.trim());
-      // Also update forge_profile object if it exists
+      // Always write to forge_profile (primary profile object used by the app)
       try {
-        var key = localStorage.getItem('forge_profile') ? 'forge_profile' : (localStorage.getItem('userProfile') ? 'userProfile' : null);
-        if (key) { var p2 = JSON.parse(localStorage.getItem(key) || '{}'); p2.name = name.trim(); localStorage.setItem(key, JSON.stringify(p2)); }
+        var existing = JSON.parse(localStorage.getItem('forge_profile') || '{}');
+        existing.name = name.trim();
+        localStorage.setItem('forge_profile', JSON.stringify(existing));
+        // Sync in-memory userProfile if available
+        if (typeof userProfile === 'object' && userProfile) userProfile.name = name.trim();
       } catch(e) {}
+      if (typeof renderProfile === 'function') renderProfile();
     }
 
     // Hide current step, show next
@@ -211,6 +215,14 @@
     if (next) next.hidden = false;
   };
 
+  window._obBack = function(fromStep) {
+    if (window.fx) { fx.sound('sndTap'); fx.haptic('hapTap'); }
+    var cur = document.getElementById('ob-step-' + fromStep);
+    var prev = document.getElementById('ob-step-' + (fromStep - 1));
+    if (cur) cur.hidden = true;
+    if (prev) prev.hidden = false;
+  };
+
   window._obFinish = function(level) {
     localStorage.setItem('forge_experience', level);
     localStorage.setItem('forge_onboarding_v238_done', '1');
@@ -218,6 +230,11 @@
     else if (typeof sndSave === 'function') sndSave();
     var wizard2 = document.getElementById('first-run-wizard');
     if (wizard2) wizard2.style.display = 'none';
+    // Clean up global handlers
+    delete window._obNext;
+    delete window._obBack;
+    delete window._obGoal;
+    delete window._obFinish;
   };
 })();
 
@@ -261,8 +278,18 @@ window.checkFeatureTip = function(workoutCount) {
   var daysSince = Math.floor((Date.now() - lastDate) / 86400000);
   if (daysSince < 3) return;
 
-  // Show re-engagement toast after 1s
+  // Show re-engagement toast after 1s (once per calendar day, only on home/log view)
   setTimeout(function() {
+    var today = new Date().toDateString();
+    if (localStorage.getItem('forge_reengagement_shown') === today) return;
+
+    // Only show if log or home tab is currently visible
+    var activeView = document.querySelector('[data-view].active, .view.active, .tab-content.active');
+    var viewId = activeView ? (activeView.id || activeView.dataset.view || '') : '';
+    var isHomeView = !viewId || viewId === 'log' || viewId === 'home' || viewId === 'dashboard';
+    if (!isHomeView) return;
+
+    localStorage.setItem('forge_reengagement_shown', today);
     var msg = '🔥 ' + daysSince + ' days since your last session. Your muscles are rested and ready!';
     if (typeof showToast === 'function') showToast(msg, 6000);
   }, 1000);
