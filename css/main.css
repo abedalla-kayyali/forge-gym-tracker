@@ -23770,6 +23770,14 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 
 /* ── v235: BUTTON SYSTEM ── */
 .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-base);
   background: linear-gradient(135deg, var(--accent), #00e676);
   color: #000;
   font-weight: 700;
@@ -23778,6 +23786,14 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 }
 .btn-primary:active { transform: scale(0.96); }
 .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: var(--text-base);
+  color: var(--text);
   background: transparent;
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(8px);
@@ -23788,7 +23804,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-[data-view].active { animation: viewSlideIn var(--dur-base) var(--ease-smooth); }
+[data-view].active { animation: viewSlideIn var(--dur-base) var(--ease-smooth) both; }
 
 /* ── v235: SKELETON LOADING ── */
 @keyframes shimmer {
