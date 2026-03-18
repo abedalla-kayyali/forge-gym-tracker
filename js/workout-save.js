@@ -53,6 +53,8 @@ function saveWorkout() {
 }
 
 function _saveWeightedWorkout() {
+  // Fix 1 (v237): capture set count BEFORE any DOM manipulation
+  var _savedSetCount = document.querySelectorAll('#sets-container .set-row').length || 0;
   const name = document.getElementById('exercise-name').value.trim();
   if (!selectedMuscle) { showToast(_ws('Select a muscle group first!', 'اختر مجموعة عضلية أولًا')); return; }
   if (!name) { showToast(_ws('Enter an exercise name!', 'أدخل اسم التمرين')); return; }
@@ -176,11 +178,10 @@ function _saveWeightedWorkout() {
           }, 4000);
         }
       })();
-      if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
-      if (typeof burstPR === 'function') burstPR(btn);
-      // v237: particle burst + PR text overlay
+      // Fix 3 (v237): single burst — use fx if available, else fall back to legacy calls
       if (window.fx) { fx.burst('PR', btn); fx.flash('PR'); }
+      else { if (typeof burstPR === 'function') burstPR(btn); if (typeof flashPR === 'function') flashPR(); }
       (function() {
         var _prEl = document.createElement('div');
         _prEl.className = 'pr-streak-overlay';
@@ -203,13 +204,12 @@ function _saveWeightedWorkout() {
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
       if (typeof burstSave === 'function') burstSave();
-      // v237: save celebration summary toast
+      // v237: save celebration summary toast (Fix 2: 2800ms avoids plateau toast at 1500ms; Fix 5: window.sessionStart fallback; Fix 1: _savedSetCount)
       (function() {
-        var _startTime = window._forgeSessionStart || sessionStart || Date.now();
+        var _startTime = window._forgeSessionStart || window.sessionStart || Date.now();
         var _dur = Math.round((Date.now() - _startTime) / 60000);
-        var _sets = document.querySelectorAll('#sets-container .set-row').length || 0;
-        var _msg = '\u2705 FORGED' + (_dur > 0 ? ' \u2014 ' + _dur + 'min' : '') + (_sets > 0 ? ' \u00b7 ' + _sets + ' sets' : '');
-        setTimeout(function() { if (typeof showToast === 'function') showToast(_msg, 4000); }, 1200);
+        var _msg = '\u2705 FORGED' + (_dur > 0 ? ' \u2014 ' + _dur + 'min' : '') + (_savedSetCount > 0 ? ' \u00b7 ' + _savedSetCount + ' sets' : '');
+        setTimeout(function() { if (typeof showToast === 'function') showToast(_msg, 4000); }, 2800);
       })();
     }
     // Plateau detection toast (fires 1.5s after save so it doesn't clash with workout-logged toast)

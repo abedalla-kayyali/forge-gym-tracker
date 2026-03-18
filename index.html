@@ -3446,7 +3446,16 @@ function switchView(name, btn) {
     }
   }
   if (name === 'more')      { renderBWHistory(); renderMyTemplates(); loadSettings(); renderProfile(); renderCompCards(); renderGuide(); }
-  if (name === 'log')       { setTimeout(_updateMuscleChipColors, 0); _initSessionCard(); }
+  if (name === 'log')       { setTimeout(_updateMuscleChipColors, 0); _initSessionCard();
+    // Fix 4 (v237): show/hide empty state on log tab open
+    (function() {
+      var emptyEl = document.getElementById('log-empty-state');
+      if (!emptyEl) return;
+      var hasSets = document.querySelectorAll('#sets-container .set-row, #bw-sets-container .bw-dot-row').length > 0;
+      var hasHistory = localStorage.getItem('forge_workouts') || localStorage.getItem('forge_bw_workouts');
+      emptyEl.style.display = (!hasSets && !hasHistory) ? 'block' : 'none';
+    })();
+  }
   // v236: sndTap on every tab switch
   if (window.fx && typeof fx.sound === 'function') fx.sound('sndTap');
   else if (typeof sndTap === 'function') sndTap();
