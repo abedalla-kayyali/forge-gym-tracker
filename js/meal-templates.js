@@ -39,6 +39,7 @@
     lib[id] = { id, name, kcal: Math.round(kcal), p: +p.toFixed(1), c: +c.toFixed(1), f: +f.toFixed(1), savedAt: new Date().toISOString() };
     _saveLibrary(lib);
     if (typeof showToast === 'function') showToast('"' + name + '" saved as template ✓');
+    _renderMiniChips();
     renderMealTemplatesPanel();
   };
 
@@ -68,8 +69,24 @@
     delete lib[id];
     _saveLibrary(lib);
     if (typeof showToast === 'function') showToast('"' + name + '" removed');
+    _renderMiniChips();
     renderMealTemplatesPanel();
   };
+
+  // ── Render inline mini chips row (in meal form) ─────────────────────────
+  function _renderMiniChips() {
+    const row = document.getElementById('meal-templates-chips');
+    if (!row) return;
+    const lib = _getLibrary();
+    const items = Object.values(lib)
+      .filter(i => i.id && i.id.startsWith('tmpl_') && i.kcal != null)
+      .sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+    if (items.length === 0) { row.innerHTML = ''; return; }
+    row.innerHTML = '<div class="mt-chips-label">Quick-add:</div>' +
+      items.map(t =>
+        `<span class="mt-chip" onclick="window._mtApplyTemplate('${_esc(t.id)}')" title="${_esc(t.kcal)} kcal · ${_esc(t.p)}g P">${_esc(t.name)}</span>`
+      ).join('');
+  }
 
   // ── Render templates panel ───────────────────────────────────────────────────
   function renderMealTemplatesPanel() {
@@ -77,7 +94,10 @@
     if (!body) return;
 
     const lib = _getLibrary();
-    const items = Object.values(lib).sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+    // Only show entries created by this system (have tmpl_ id and our flat macro shape)
+    const items = Object.values(lib)
+      .filter(i => i.id && i.id.startsWith('tmpl_') && i.kcal != null)
+      .sort((a, b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
 
     if (items.length === 0) {
       body.innerHTML = `<div class="mt-empty">
@@ -108,5 +128,20 @@
     body.innerHTML = cards;
   }
   window.renderMealTemplatesPanel = renderMealTemplatesPanel;
+  window.renderMealTemplateChips = _renderMiniChips;
+
+  // Auto-render chips whenever meal form is in DOM (nutrition tab opens dynamically)
+  // Poll briefly on load, then rely on MutationObserver
+  function _initChips() {
+    _renderMiniChips();
+    new MutationObserver(() => {
+      if (document.getElementById('meal-templates-chips')) _renderMiniChips();
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _initChips);
+  } else {
+    _initChips();
+  }
 
 })();

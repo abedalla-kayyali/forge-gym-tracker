@@ -23646,6 +23646,12 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .mt-delete-btn{font-family:'DM Mono',monospace;font-size:11px;padding:6px 10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text3);cursor:pointer;}
 .mt-delete-btn:hover{border-color:#ff6b6b;color:#ff6b6b;}
 
+.mt-chips-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;min-height:0;}
+.mt-chips-row:empty{display:none;}
+.mt-chips-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap;}
+.mt-chip{font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;color:var(--text2);cursor:pointer;white-space:nowrap;}
+.mt-chip:hover{border-color:var(--accent);color:var(--accent);}
+
 /* ── Deload Engine ───────────────────────────────────────────────────────── */
 .deload-modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px 20px;max-width:360px;width:100%;text-align:center;}
 .deload-icon{font-size:40px;margin-bottom:8px;}
