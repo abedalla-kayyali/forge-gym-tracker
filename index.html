@@ -3411,6 +3411,7 @@ function switchView(name, btn) {
         null;
       if (typeof coachSwitchTab === 'function') coachSwitchTab('nutrition', nutBtn);
       else if (typeof renderCoachNutrition === 'function') renderCoachNutrition();
+      if (typeof window.renderMealTemplateChips === 'function') window.renderMealTemplateChips();
     }, 0);
   }
 }

@@ -130,18 +130,11 @@
   window.renderMealTemplatesPanel = renderMealTemplatesPanel;
   window.renderMealTemplateChips = _renderMiniChips;
 
-  // Auto-render chips whenever meal form is in DOM (nutrition tab opens dynamically)
-  // Poll briefly on load, then rely on MutationObserver
-  function _initChips() {
-    _renderMiniChips();
-    new MutationObserver(() => {
-      if (document.getElementById('meal-templates-chips')) _renderMiniChips();
-    }).observe(document.body, { childList: true, subtree: true });
-  }
+  // Render chips once on load (in case nutrition form is already in DOM)
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', _initChips);
+    document.addEventListener('DOMContentLoaded', _renderMiniChips);
   } else {
-    _initChips();
+    _renderMiniChips();
   }
 
 })();
