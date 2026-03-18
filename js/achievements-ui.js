@@ -31,7 +31,7 @@ function showAchievement(a) {
   if (window.fx) {
     fx.sound('sndPR');
     fx.haptic('hapPR');
-    fx.burst('Save', achievementEl || document.body);
+    fx.burst('Save');
   } else {
     if (typeof sndPR === 'function') sndPR();
     if (typeof hapPR === 'function') hapPR();

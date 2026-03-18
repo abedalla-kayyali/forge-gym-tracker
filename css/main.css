@@ -23938,12 +23938,12 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   margin-bottom: var(--space-3);
 }
 
-/* ── v239: XP BAR ── */
-@keyframes xpOverflowFlash {
-  0%, 100% { background: linear-gradient(90deg, var(--accent), #00e676); }
-  50%       { background: #fff; }
+/* ── v239: XP BAR OVERFLOW FLASH (filter approach) ── */
+@keyframes xpFlashFilter {
+  0%, 100% { filter: brightness(1); }
+  50%       { filter: brightness(8); }
 }
-.xp-overflow-flash { animation: xpOverflowFlash 0.35s ease; }
+.xp-overflow-flash { animation: xpFlashFilter 0.35s ease; }
 
 /* ── v239: ACHIEVEMENT UNLOCK ── */
 @keyframes achieveUnlock {

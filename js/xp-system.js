@@ -72,9 +72,11 @@ function updateXPBar() {
 }
 
 // v239: animated XP bar fill
+var _xpRafHandle = null;
 function animateXPBar(fromPct, toPct, onLevelUp) {
   var bar = document.getElementById('xp-fill');
   if (!bar) return;
+  if (_xpRafHandle) { cancelAnimationFrame(_xpRafHandle); _xpRafHandle = null; }
   var duration = 600;
   var start = null;
   function step(ts) {
@@ -83,7 +85,8 @@ function animateXPBar(fromPct, toPct, onLevelUp) {
     var ease = 1 - Math.pow(1 - t, 3);
     var cur = fromPct + (toPct - fromPct) * ease;
     bar.style.width = cur + '%';
-    if (t < 1) { requestAnimationFrame(step); return; }
+    if (t < 1) { _xpRafHandle = requestAnimationFrame(step); return; }
+    _xpRafHandle = null;
     if (toPct >= 100 && onLevelUp) {
       bar.classList.add('xp-overflow-flash');
       setTimeout(function() {
@@ -93,7 +96,7 @@ function animateXPBar(fromPct, toPct, onLevelUp) {
       }, 350);
     }
   }
-  requestAnimationFrame(step);
+  _xpRafHandle = requestAnimationFrame(step);
 }
 window.animateXPBar = animateXPBar;
 
