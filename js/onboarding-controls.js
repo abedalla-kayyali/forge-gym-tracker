@@ -286,7 +286,7 @@ window.checkFeatureTip = function(workoutCount) {
     // Only show if log or home tab is currently visible
     var activeView = document.querySelector('[data-view].active, .view.active, .tab-content.active');
     var viewId = activeView ? (activeView.id || activeView.dataset.view || '') : '';
-    var isHomeView = !viewId || viewId === 'log' || viewId === 'home' || viewId === 'dashboard';
+    var isHomeView = viewId === 'log' || viewId === 'home' || viewId === 'dashboard' || viewId === 'view-log' || viewId === 'view-dashboard';
     if (!isHomeView) return;
 
     localStorage.setItem('forge_reengagement_shown', today);
