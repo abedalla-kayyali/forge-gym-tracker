@@ -631,7 +631,7 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <button class="btn btn-add" onclick="addSet()" data-i18n="form.addSet" style="flex:1;">+ Add Set</button>
-            <button class="ditto-btn" id="ditto-btn" onclick="dittoLastSet()" title="Copy last set" aria-label="Ditto — copy last set">⚡ Ditto Yesterday</button>
+            <button class="ditto-btn" id="ditto-btn" onclick="dittoLastSet()" title="Copy last set" aria-label="Ditto — copy last set">=</button>
             <button class="plate-open-btn" onclick="openPlateCalc()" title="Plate Calculator"><span data-i18n="form.plates">Plates</span></button>
           </div>
         </div>
@@ -7835,6 +7835,13 @@ function renderCoachNutrition() {
     acc.f += +m.f || 0;
     return acc;
   }, { kcal:0, p:0, c:0, f:0 });
+  if (typeof updateMacroRings === 'function') {
+    updateMacroRings(mealTotals.p, mealTotals.c, mealTotals.f, {
+      protein: proteinG,
+      carbs: carbG,
+      fat: fatG
+    });
+  }
   const rem = {
     kcal: Math.max(0, Math.round(targetCal - mealTotals.kcal)),
     p: Math.max(0, +(proteinG - mealTotals.p).toFixed(1)),

@@ -786,18 +786,18 @@
       </div>
     `;
     renderMacroSteeringCard();
+
+    // v241: ditto first-use tip — fires 2s after nutrition tab first opens
+    if (!localStorage.getItem('forge_ditto_tip_shown')) {
+      setTimeout(function() {
+        if (typeof showToast === 'function') showToast('⚡ Tap "Ditto Yesterday" to instantly repeat yesterday\'s meals!', 5000);
+        localStorage.setItem('forge_ditto_tip_shown', '1');
+      }, 2000);
+    }
   }
 
   // ── Global API ────────────────────────────────────────────────────────────
   window.renderGoalDashboard = renderGoalDashboard;
-
-  // v241: ditto first-use tip
-  if (!localStorage.getItem('forge_ditto_tip_shown')) {
-    setTimeout(function() {
-      if (typeof showToast === 'function') showToast('⚡ Tap "Ditto Yesterday" to instantly repeat yesterday\'s meals!', 5000);
-      localStorage.setItem('forge_ditto_tip_shown', '1');
-    }, 2000);
-  }
 
   // v241: update macro SVG rings
   function updateMacroRings(protein, carbs, fat, targets) {
