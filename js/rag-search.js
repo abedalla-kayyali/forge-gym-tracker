@@ -1028,6 +1028,11 @@
         </div>
         <div id="rag-suggestions" class="rag-suggestions"></div>
         <div id="rag-status" class="rag-status" style="display:none;"></div>
+        <div id="ask-typing-indicator" style="display:none;padding:8px 12px">
+          <span class="chat-typing-dot"></span>
+          <span class="chat-typing-dot"></span>
+          <span class="chat-typing-dot"></span>
+        </div>
         <div id="rag-results" class="rag-results"></div>
         <div class="rag-footer">
           <button id="rag-index-btn" class="rag-btn-secondary">Index my data</button>
@@ -1521,9 +1526,26 @@
     const resultsContainer = document.getElementById('rag-results');
     showSkeleton();
 
+    // User query bubble
+    const userBubble = document.createElement('div');
+    userBubble.className = 'chat-bubble-user';
+    userBubble.textContent = query;
+
+    // Typing indicator
+    var typingEl = document.getElementById('ask-typing-indicator');
+    if (!typingEl) {
+      typingEl = document.createElement('div');
+      typingEl.id = 'ask-typing-indicator';
+      typingEl.style.cssText = 'padding:8px 12px';
+      typingEl.innerHTML = '<span class="chat-typing-dot"></span><span class="chat-typing-dot"></span><span class="chat-typing-dot"></span>';
+      document.getElementById('rag-results').parentNode.insertBefore(typingEl, document.getElementById('rag-results'));
+    }
+    typingEl.style.display = 'block';
+    if (window.fx) fx.sound('sndSetLog');
+
     // Answer card — shown immediately, raw text during stream, markdown on done
     const answerEl = document.createElement('div');
-    answerEl.className = 'rag-answer rag-answer-streaming';
+    answerEl.className = 'rag-answer rag-answer-streaming chat-bubble-ai';
     const aiBadge = document.createElement('span');
     aiBadge.className = 'rag-ai-badge';
     aiBadge.innerHTML = `<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"/></svg>FORGE AI`;
@@ -1538,7 +1560,9 @@
         (token) => {
           if (firstToken) {
             resultsContainer.innerHTML = '';
+            resultsContainer.appendChild(userBubble);
             resultsContainer.appendChild(answerEl);
+            if (typingEl) typingEl.style.display = 'none';
             firstToken = false;
           }
           rawText += token;
@@ -1587,6 +1611,7 @@
       showStatus('Search failed: ' + (e.message || 'unknown error'));
     } finally {
       btn.disabled = false;
+      if (typingEl) typingEl.style.display = 'none';
     }
   }
 

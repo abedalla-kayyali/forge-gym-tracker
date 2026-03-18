@@ -449,5 +449,19 @@
 
   window.FORGE_COACH.generateSessionDebrief = generateSessionDebrief;
 
+  // v240: readiness count-up
+  function animateReadinessCount(el, target, duration) {
+    if (!el) return;
+    duration = duration || 800;
+    var start = performance.now();
+    (function step(now) {
+      var t = Math.min((now - start) / duration, 1);
+      var ease = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(target * ease);
+      if (t < 1) requestAnimationFrame(step);
+    })(start);
+  }
+  window.FORGE_COACH.animateReadinessCount = animateReadinessCount;
+
   console.log('[FORGE] Coach triggers loaded');
 })();
