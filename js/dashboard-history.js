@@ -5308,3 +5308,25 @@ window._mrShare = function() {
 window._mrPrint = function() { window.print(); };
 window.renderMonthlyReport = renderMonthlyReport;
 
+// ── v236: COLLAPSIBLE HEADER INIT ──────────────────────────────────────────
+(function initV236Header() {
+  function _wire() {
+    const btn = document.getElementById('header-expand-btn');
+    const hdr = document.getElementById('app-header');
+    if (!btn || !hdr) return;
+    if (btn._v236Wired) return;
+    btn._v236Wired = true;
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      hdr.classList.toggle('header-expanded');
+      if (window.fx && typeof fx.sound === 'function') fx.sound('sndTap');
+      else if (typeof sndTap === 'function') sndTap();
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _wire);
+  } else {
+    _wire();
+  }
+})();
+

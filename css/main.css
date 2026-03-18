@@ -23828,3 +23828,24 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   filter: drop-shadow(0 0 8px var(--accent));
 }
 .bnav-btn.active .bnav-label { color: var(--accent); }
+
+/* ── v236: COLLAPSIBLE HEADER ── */
+#header-ctx {
+  font-size: var(--text-sm, 11px);
+  color: var(--accent);
+  opacity: 0.8;
+}
+.header-collapse-zone {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height var(--dur-slow, 400ms) var(--ease-smooth, ease);
+}
+#app-header.header-expanded .header-collapse-zone {
+  max-height: 600px;
+}
+#app-header.header-expanded .header-expand-btn svg {
+  transform: rotate(180deg);
+}
+.header-expand-btn svg {
+  transition: transform var(--dur-base, 200ms) var(--ease-smooth, ease);
+}

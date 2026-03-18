@@ -41,6 +41,7 @@
         <span class="logo-word">FORGE</span>
         <span class="logo-tag" id="header-greeting">// Gym OS</span>
       </div>
+      <span id="header-ctx"></span>
       <div class="slim-strip-right">
         <div class="status-pill" id="session-pill"><div class="status-dot" id="session-dot"></div><span id="session-time">00:00</span></div>
         <button class="header-expand-btn" id="header-expand-btn" onclick="toggleHeader()" title="Expand header" aria-label="Toggle header">
@@ -2114,7 +2115,7 @@
       </svg>
     </span><span data-i18n="nav.history">History</span>
   </button>
-  <button class="bnav-btn" id="bnav-social" onclick="switchView('social',this)">
+  <button class="bnav-btn" id="bnav-social" onclick="switchView('social',this)" style="display:none">
     <span class="bnav-icon">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -2138,7 +2139,7 @@
       </svg>
     </span><span data-i18n="nav.nutrition">Nutrition</span>
   </button>
-  <button class="bnav-btn" id="bnav-more" onclick="switchView('more',this)">
+  <button class="bnav-btn" id="bnav-more" onclick="switchView('more',this)" style="display:none">
     <span class="bnav-icon">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
@@ -2668,6 +2669,9 @@ function sessionPillTap() {
 function toggleHeader() {
   const hdr = document.getElementById('app-header');
   if (hdr) hdr.classList.toggle('header-expanded');
+  // v236: sound FX on toggle
+  if (window.fx && typeof fx.sound === 'function') fx.sound('sndTap');
+  else if (typeof sndTap === 'function') sndTap();
 }
 
 function startWorkoutSession() {
@@ -3435,6 +3439,16 @@ function switchView(name, btn) {
   }
   if (name === 'more')      { renderBWHistory(); renderMyTemplates(); loadSettings(); renderProfile(); renderCompCards(); renderGuide(); }
   if (name === 'log')       { setTimeout(_updateMuscleChipColors, 0); _initSessionCard(); }
+  // v236: sndTap on every tab switch
+  if (window.fx && typeof fx.sound === 'function') fx.sound('sndTap');
+  else if (typeof sndTap === 'function') sndTap();
+  // v236: update contextual header label
+  (function() {
+    const ctxEl = document.getElementById('header-ctx');
+    if (!ctxEl) return;
+    const labels = { log: 'Log', dashboard: 'Stats', history: 'History', social: 'Social', coach: 'Coach', nutrition: 'Nutrition', more: 'More', body: 'Body' };
+    ctxEl.textContent = labels[name] || '';
+  })();
   if (name === 'social')    { if (window.FORGE_SOCIAL && typeof window.FORGE_SOCIAL.refresh === 'function') setTimeout(() => window.FORGE_SOCIAL.refresh(), 0); }
   if (name === 'coach')     {
     setTimeout(() => {
