@@ -138,6 +138,7 @@ function _saveWeightedWorkout() {
     postSaveHooks();
     _updateSaveBtnState();
     _checkEndSessionNudge();
+    if (typeof window.FORGE_DELOAD?.check === 'function') window.FORGE_DELOAD.check();
 
     btn.classList.remove('loading');
     btn.innerHTML = '<svg class="btn-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' + _ws('Log Workout', 'تسجيل التمرين');

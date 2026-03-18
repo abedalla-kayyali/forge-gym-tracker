@@ -710,6 +710,7 @@ function switchDashTab(name, btn) {
   // Render Calisthenics Dashboard when cali tab opens
   if (name === 'cali' && typeof renderCaliDash === 'function') renderCaliDash();
   if (name === 'nutrition' && typeof renderNutritionAnalyticsPanel === 'function') renderNutritionAnalyticsPanel();
+  if (name === 'nutrition' && typeof window.renderMealTemplatesPanel === 'function') window.renderMealTemplatesPanel();
   if (name === 'nutrition' && typeof renderWeeklyNutritionReport === 'function') renderWeeklyNutritionReport();
   if (name === 'nutrition' && typeof renderMacroTiming === 'function') renderMacroTiming();
   if (name === 'nutrition' && typeof renderAdaptiveTDEE === 'function') renderAdaptiveTDEE();

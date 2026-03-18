@@ -1189,6 +1189,17 @@
         <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Log meals to see your weekly report</div></div>
       </div>
     </div>
+    <!-- MEAL TEMPLATES -->
+    <div class="panel" data-dash-tab="nutrition" id="meal-templates-panel">
+      <div class="panel-header">
+        <span class="panel-title">Meal Templates</span>
+        <span class="panel-badge">QUICK-ADD</span>
+      </div>
+      <div id="meal-templates-body" style="padding:10px 14px 14px;">
+        <div class="mt-empty"><div class="mt-empty-icon">🥗</div><div class="mt-empty-title">No templates yet</div><div class="mt-empty-hint">Fill the meal form and tap <strong>Save as Template</strong></div></div>
+      </div>
+    </div>
+
     <!-- MACRO TIMING INTELLIGENCE -->
     <div class="panel" data-dash-tab="nutrition" id="macro-timing-panel">
       <div class="panel-header">
@@ -2172,6 +2183,18 @@
 </div>
 
 <!-- STAGNATION BREAK OVERLAY -->
+<!-- DELOAD INTERCEPT OVERLAY -->
+<div id="deload-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9990;align-items:center;justify-content:center;padding:20px;">
+  <div class="deload-modal">
+    <div class="deload-icon">🔋</div>
+    <div class="deload-title">Deload Week Detected</div>
+    <div class="deload-score-row" id="deload-score-label"></div>
+    <div id="deload-msg" class="deload-msg">Analyzing your fatigue signals…</div>
+    <button class="deload-btn-ok" onclick="document.getElementById('deload-overlay').style.display='none'">Got it, plan my deload</button>
+    <button class="deload-btn-skip" onclick="document.getElementById('deload-overlay').style.display='none'">Skip for now</button>
+  </div>
+</div>
+
 <div class="stagnation-overlay" id="stagnation-overlay" style="display:none">
   <div class="stagnation-modal">
     <div class="stagnation-icon">?</div>
@@ -2261,6 +2284,8 @@
 <script src="js/recovery-plate.js"></script>
 <script src="js/program-panel.js"></script>
 <script src="js/ai-program-generator.js"></script>
+<script src="js/meal-templates.js"></script>
+<script src="js/deload-engine.js"></script>
 <script src="js/rpe-swap.js"></script>
 <script src="js/template-manager.js"></script>
 <script src="js/dashboard-vol.js"></script>
@@ -8130,6 +8155,9 @@ function renderCoachNutrition() {
       </button>
       <button class="mtr-estimate-btn" onclick="_cnEstimateMealForm()" type="button">
         &#10024; ${tx('Estimate macros with AI','تقدير الماكروز بالذكاء الاصطناعي')}
+      </button>
+      <button class="mtr-save-template-btn" onclick="window._mtSaveAsTemplate()" type="button">
+        &#128203; ${tx('Save as Template','حفظ كقالب')}
       </button>
 
       <!-- Daily progress -->
