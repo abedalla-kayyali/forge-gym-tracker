@@ -51,7 +51,7 @@ function _onPhotoSelected(input) {
       c.getContext('2d').drawImage(img, 0, 0, w, h);
       const data = c.toDataURL('image/jpeg', 0.7);
       const photo = { id: Date.now(), date: new Date().toISOString().split('T')[0], data };
-      _photoDb.save(photo).then(() => _renderPhotoGallery());
+      _photoDb.save(photo).then(() => { _renderPhotoGallery(); if (typeof window._pcUpdateCompareBtn === 'function') window._pcUpdateCompareBtn(); });
     };
     img.src = ev.target.result;
   };
@@ -98,7 +98,7 @@ function _photoFullView(id) {
 function _deletePhoto(id) {
   const _ar = typeof currentLang !== 'undefined' && currentLang === 'ar';
   if (!confirm(_ar ? 'حذف هذه الصورة؟' : 'Delete this photo?')) return;
-  _photoDb.delete(id).then(() => _renderPhotoGallery());
+  _photoDb.delete(id).then(() => { _renderPhotoGallery(); if (typeof window._pcUpdateCompareBtn === 'function') window._pcUpdateCompareBtn(); });
 }
 
 // BODY COMPOSITION (body fat + muscle mass)

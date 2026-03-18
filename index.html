@@ -1052,6 +1052,7 @@
       <div class="panel-header">
         <span class="panel-title" data-i18n="photos.title">Progress Photos</span>
         <button class="panel-badge" onclick="addProgressPhoto()" style="cursor:pointer;border:none;background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:10px;letter-spacing:.5px;" data-i18n="photos.add">+ ADD</button>
+        <button id="photo-compare-btn" class="panel-badge" onclick="window.openPhotoCompare()" style="display:none;cursor:pointer;border:none;background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:6px;padding:3px 10px;font-size:10px;letter-spacing:.5px;margin-left:6px;">⚡ Compare</button>
       </div>
       <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="_onPhotoSelected(this)">
       <div id="photo-gallery-empty" style="padding:18px;text-align:center;color:var(--text3);font-size:13px;">
@@ -2183,6 +2184,47 @@
 </div>
 
 <!-- STAGNATION BREAK OVERLAY -->
+<!-- PHOTO COMPARE OVERLAY -->
+<div id="photo-compare-overlay">
+  <div class="pc-header">
+    <button class="pc-close-btn" onclick="window._pcClose()">✕</button>
+    <span class="pc-title">COMPARE</span>
+    <div class="pc-mode-toggle">
+      <button class="pc-mode-btn active" id="pc-btn-side" onclick="window._pcSetMode('side')">≡</button>
+      <button class="pc-mode-btn" id="pc-btn-slider" onclick="window._pcSetMode('slider')">◫</button>
+    </div>
+  </div>
+  <div class="pc-slots" id="pc-slots">
+    <div class="pc-slot" id="pc-slot-before" onclick="window._pcOpenPicker('before')">
+      <img id="pc-img-before" src="" alt="Before">
+      <div class="pc-slot-label">
+        <div class="pc-slot-tag">BEFORE</div>
+        <div class="pc-slot-date" id="pc-date-before"></div>
+        <div class="pc-slot-stat" id="pc-stat-before"></div>
+      </div>
+    </div>
+    <div class="pc-slot" id="pc-slot-after" onclick="window._pcOpenPicker('after')">
+      <img id="pc-img-after" src="" alt="After">
+      <div class="pc-slot-label">
+        <div class="pc-slot-tag">AFTER</div>
+        <div class="pc-slot-date" id="pc-date-after"></div>
+        <div class="pc-slot-stat" id="pc-stat-after"></div>
+      </div>
+    </div>
+    <div class="pc-divider" id="pc-divider" style="display:none;">
+      <div class="pc-divider-handle">⇔</div>
+    </div>
+  </div>
+  <div class="pc-delta-bar" id="pc-delta-bar"></div>
+  <div class="pc-picker" id="pc-picker" style="display:none;">
+    <div class="pc-picker-header">
+      <span class="pc-picker-title">SELECT PHOTO</span>
+      <button class="pc-picker-cancel" onclick="window._pcClosePicker()">✕ Cancel</button>
+    </div>
+    <div class="pc-picker-grid" id="pc-picker-grid"></div>
+  </div>
+</div>
+
 <!-- DELOAD INTERCEPT OVERLAY -->
 <div id="deload-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9990;align-items:center;justify-content:center;padding:20px;">
   <div class="deload-modal">
@@ -2310,6 +2352,7 @@
 <script src="js/checkin-actions.js"></script>
 <script src="js/icon-repair.js"></script>
 <script src="js/bodycomp-photos.js"></script>
+<script src="js/photo-compare.js"></script>
 <script src="js/guide-compcards.js"></script>
 <script src="js/muscle-overlay.js"></script>
 <script>
