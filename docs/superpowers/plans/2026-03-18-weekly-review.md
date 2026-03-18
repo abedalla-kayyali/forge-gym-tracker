@@ -1,6 +1,6 @@
 # Weekly Review Card Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add a permanent Weekly Review panel to the Progress tab showing leading KPI performance vs last week, a forward projection toward goal, and data-driven "1 win + 1 fix" coaching insights.
 
@@ -26,7 +26,7 @@
 **Files:**
 - Create: `js/weekly-review.js`
 
-- [ ] **Step 1: Create the IIFE shell with week-bounds helper**
+- [x] **Step 1: Create the IIFE shell with week-bounds helper**
 
 Create `js/weekly-review.js`:
 
@@ -74,7 +74,7 @@ Create `js/weekly-review.js`:
   }
 ```
 
-- [ ] **Step 2: Add protein days helper**
+- [x] **Step 2: Add protein days helper**
 
 Append inside the IIFE:
 
@@ -121,7 +121,7 @@ Append inside the IIFE:
   }
 ```
 
-- [ ] **Step 3: Add weight projection helper**
+- [x] **Step 3: Add weight projection helper**
 
 Append inside the IIFE:
 
@@ -173,7 +173,7 @@ Append inside the IIFE:
   }
 ```
 
-- [ ] **Step 4: Add win/fix selection helper**
+- [x] **Step 4: Add win/fix selection helper**
 
 Append inside the IIFE:
 
@@ -272,7 +272,7 @@ Append inside the IIFE:
   }
 ```
 
-- [ ] **Step 5: Commit data helpers**
+- [x] **Step 5: Commit data helpers**
 
 ```bash
 git add js/weekly-review.js
@@ -286,7 +286,7 @@ git commit -m "feat: weekly-review data helpers (week bounds, KPI calc, projecti
 **Files:**
 - Modify: `js/weekly-review.js`
 
-- [ ] **Step 1: Add projection HTML helper**
+- [x] **Step 1: Add projection HTML helper**
 
 Append inside the IIFE:
 
@@ -314,7 +314,7 @@ Append inside the IIFE:
   }
 ```
 
-- [ ] **Step 2: Add KPI grid and win/fix HTML helpers**
+- [x] **Step 2: Add KPI grid and win/fix HTML helpers**
 
 Append inside the IIFE:
 
@@ -350,7 +350,7 @@ Append inside the IIFE:
   }
 ```
 
-- [ ] **Step 3: Add main renderWeeklyReview function**
+- [x] **Step 3: Add main renderWeeklyReview function**
 
 Append inside the IIFE:
 
@@ -412,7 +412,7 @@ Append inside the IIFE:
 })();
 ```
 
-- [ ] **Step 4: Commit render function**
+- [x] **Step 4: Commit render function**
 
 ```bash
 git add js/weekly-review.js
@@ -427,7 +427,7 @@ git commit -m "feat: weekly-review render function — projection, KPI grid, win
 - Modify: `index.html` (around line 1143 — before `monthly-report-panel`)
 - Modify: `js/dashboard-history.js` (around line 720)
 
-- [ ] **Step 1: Add panel HTML to index.html**
+- [x] **Step 1: Add panel HTML to index.html**
 
 In `index.html`, find this comment (around line 1143):
 ```html
@@ -449,7 +449,7 @@ Insert BEFORE it:
     </div>
 ```
 
-- [ ] **Step 2: Add script tag to index.html**
+- [x] **Step 2: Add script tag to index.html**
 
 Find:
 ```html
@@ -461,7 +461,7 @@ Add after it:
 <script src="js/weekly-review.js"></script>
 ```
 
-- [ ] **Step 3: Add render call to dashboard-history.js**
+- [x] **Step 3: Add render call to dashboard-history.js**
 
 Find (around line 720):
 ```js
@@ -473,7 +473,7 @@ Add after it:
   if (name === 'progress' && typeof window.renderWeeklyReview === 'function') window.renderWeeklyReview();
 ```
 
-- [ ] **Step 4: Add CSS to css/main.css**
+- [x] **Step 4: Add CSS to css/main.css**
 
 Append to `css/main.css`:
 
@@ -508,7 +508,7 @@ Append to `css/main.css`:
 .wr-empty{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:center;padding:18px 0;}
 ```
 
-- [ ] **Step 5: Commit wiring**
+- [x] **Step 5: Commit wiring**
 
 ```bash
 git add index.html js/dashboard-history.js css/main.css
@@ -522,7 +522,7 @@ git commit -m "feat: wire weekly-review panel into Progress tab"
 **Files:**
 - Modify: `js/config.js`
 
-- [ ] **Step 1: Update version**
+- [x] **Step 1: Update version**
 
 In `js/config.js`, change:
 ```js
@@ -535,7 +535,7 @@ window.FORGE_VERSION = 'v231';
 window.FORGE_BUILD   = '2026-03-18 (feat: v231 — Weekly Review Card in Progress tab)';
 ```
 
-- [ ] **Step 2: Commit and push**
+- [x] **Step 2: Commit and push**
 
 ```bash
 git add js/config.js
@@ -549,11 +549,11 @@ git push
 
 After implementation, verify in the browser:
 
-- [ ] Progress tab shows "Weekly Review" panel above Monthly Report
-- [ ] With < 3 days elapsed: shows "Come back after Wednesday" message
-- [ ] With data: projection line shows weight trend or "no data" message
-- [ ] KPI grid shows 4–5 rows with correct hit counts
-- [ ] Delta arrows show ↑/↓/→ vs last week when last week data exists
-- [ ] Win insight highlights the highest-scoring KPI
-- [ ] Fix insight highlights the lowest-scoring KPI with specific numbers
-- [ ] Panel re-renders each time Progress tab is opened
+- [x] Progress tab shows "Weekly Review" panel above Monthly Report
+- [x] With < 3 days elapsed: shows "Come back after Wednesday" message
+- [x] With data: projection line shows weight trend or "no data" message
+- [x] KPI grid shows 4–5 rows with correct hit counts
+- [x] Delta arrows show ↑/↓/→ vs last week when last week data exists
+- [x] Win insight highlights the highest-scoring KPI
+- [x] Fix insight highlights the lowest-scoring KPI with specific numbers
+- [x] Panel re-renders each time Progress tab is opened

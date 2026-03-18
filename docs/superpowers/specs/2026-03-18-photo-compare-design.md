@@ -48,9 +48,10 @@ Reads from existing:
 ### Mode toggle
 - **Side-by-side** (default): two `<img>` elements each taking 50% width, `object-fit: cover`
 - **Slider**: After photo sits on top with `clip-path: inset(0 X% 0 0)` where X is controlled by drag position. Draggable vertical divider line.
+  - `mousemove` / `touchmove` listeners registered with `{ passive: false }` so `e.preventDefault()` can block page scroll on mobile without throwing a passive-listener console error.
 
 ### Photo picker
-Tapping a Before/After slot enters "pick mode": gallery thumbnails shown in a scrollable grid below the comparison. Tapping a thumbnail replaces that slot and exits pick mode.
+Tapping a Before/After slot enters "pick mode": gallery thumbnails shown in a scrollable grid below the comparison. Tapping a thumbnail replaces that slot and exits pick mode. Tapping outside the thumbnail grid (or tapping a "✕ Cancel" button shown at the top of the picker) exits pick mode without changing the selection.
 
 ---
 
@@ -70,6 +71,20 @@ For each selected photo, find the nearest data point within ±7 days:
 |------|---------|---------|
 | Weight | `forge_bodyweight` entry nearest photo date | `75 kg` |
 | BF% | `forge_inbody_tests` entry nearest photo date | `19%` |
+
+**`forge_bodyweight` shape** (array in localStorage):
+```js
+[{ date: "2026-03-18T...", weight: 75.5, unit: "kg", bodyFat: 19.2, muscleMass: 36 }, ...]
+```
+Nearest-date lookup: `Math.abs(new Date(entry.date) - photoDate)` → pick minimum within 7 × 86400000 ms.
+
+**`forge_inbody_tests` shape** (array in localStorage):
+```js
+[{ id: "abc123", date: "2026-03-18", bf: 19.2, smm: 36.0, weight: 75.5, ... }, ...]
+```
+Use `entry.bf` for BF%. Date field is `"YYYY-MM-DD"` string.
+
+**Overlay z-index:** `9970` — below `confirm-overlay` (9990) and `deload-overlay` (9990) so those can appear on top if needed.
 
 Delta bar shows: `After − Before` for each stat. Negative weight/BF = green (good). Positive = red.
 

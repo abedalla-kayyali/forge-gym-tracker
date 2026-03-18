@@ -625,20 +625,31 @@ git push
 
 ---
 
+## Post-Shipping Fixes (2026-03-18)
+
+All 4 tasks shipped. Several E2E bugs found and fixed:
+
+1. **"Sign in" shown for logged-in users** — SW serving old JS. Fixed by clearing SW/caches.
+2. **"Couldn't generate program"** — `forge-search` was hard-capping `max_tokens` at 500, truncating JSON. Fixed: raised cap to 2000.
+3. **JSON corruption on Day 3/4** — Haiku produces malformed JSON for multi-day output. Fixed: switched from 1 call (4 days) → 2 parallel half-calls → **1 call per day in parallel** (`Promise.all`), each with `max_tokens:400` and assistant prefill `\`\`\`json\n[`.
+4. **5 JSON repair patterns** added to `_parseDayResponse`: bare exercise name, merged reps, dropped muscles array, unclosed reps, missing open quote.
+5. **`forge-search` redeployed** with `prefill` param support (assistant message appended) and `max_tokens` cap 2000.
+
 ## Manual Testing Checklist
 
 After implementation, verify in the browser:
 
-- [ ] Programs tab with no active program shows split builder (not old template grid)
-- [ ] Day count buttons [3][4][5][6] switch the number of day slots
-- [ ] Tapping muscle chips toggles selection (green = selected)
-- [ ] GENERATE button is disabled when any day has 0 muscles
-- [ ] GENERATE button triggers spinner + "Building your program…"
-- [ ] After generation: program name, day strip, day cards with exercises all show correctly
-- [ ] Exercise rows show "name · sets×reps" format
-- [ ] Refinement input + REGENERATE sends note to LLM and re-renders preview
-- [ ] ACTIVATE saves to localStorage `forge_ai_program` and shows today's session card
-- [ ] Today's session card shows correct day label and exercises
-- [ ] START SESSION button loads exercises into workout logger
-- [ ] "Change program" / deactivate clears `forge_ai_program` and returns to split builder
-- [ ] Guest user (not signed in) sees auth gate message
+- [x] Programs tab with no active program shows split builder (not old template grid)
+- [x] Day count buttons [3][4][5][6] switch the number of day slots
+- [x] Tapping muscle chips toggles selection (green = selected)
+- [x] GENERATE button is disabled when any day has 0 muscles
+- [x] GENERATE button triggers spinner + "Building your program…"
+- [x] After generation: program name, day strip, day cards with exercises all show correctly
+- [x] Exercise rows show "name · sets×reps" format
+- [x] Refinement input + REGENERATE sends note to LLM and re-renders preview
+- [x] ACTIVATE saves to localStorage `forge_ai_program` and shows confirmation screen
+- [x] VIEW ACTIVE PROGRAM shows day label, exercises, weekly schedule strip
+- [x] No undefined in DAY label (prog.short optional) or notes (day.note optional)
+- [x] START SESSION button loads exercises into workout logger (muscle capitalization fix needed — _adaptDay now capitalizes)
+- [x] "Change program" / deactivate clears `forge_ai_program` and returns to split builder
+- [x] Guest user (not signed in) sees auth gate message

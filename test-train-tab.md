@@ -1,0 +1,218 @@
+- generic [ref=e1]:
+  - text: ✓
+  - generic [ref=e877]:
+    - generic [ref=e878]:
+      - img [ref=e880]
+      - generic [ref=e883]:
+        - generic [ref=e884]: Performance Console
+        - generic [ref=e885]: FORGE COACH
+        - generic [ref=e886]: Ready to analyse?
+      - generic [ref=e888]: TODAY
+    - generic [ref=e889]:
+      - button "Today" [ref=e890] [cursor=pointer]:
+        - img [ref=e891]
+        - text: Today
+      - button "Insights" [ref=e894] [cursor=pointer]
+      - button "Train" [active] [ref=e895] [cursor=pointer]:
+        - img [ref=e896]
+        - text: Train
+      - button "Cardio" [ref=e898] [cursor=pointer]:
+        - img [ref=e899]
+        - text: Cardio
+      - button "Week Plan" [ref=e901] [cursor=pointer]
+      - button "Cali" [ref=e902] [cursor=pointer]:
+        - img [ref=e903]
+        - text: Cali
+    - generic [ref=e907]:
+      - generic [ref=e908]:
+        - text: Ask your coach
+        - generic [ref=e909]: INSIGHTS
+      - generic [ref=e910]:
+        - button "What to train today?" [ref=e911] [cursor=pointer]
+        - button "Am I overtraining?" [ref=e912] [cursor=pointer]
+        - button "How's my balance?" [ref=e913] [cursor=pointer]
+        - button "How's my progress?" [ref=e914] [cursor=pointer]
+        - button "How much protein?" [ref=e915] [cursor=pointer]
+    - generic [ref=e916]:
+      - generic [ref=e917]:
+        - generic [ref=e918]: COACH SETUP
+        - generic [ref=e919]: Set a goal to unlock better coaching.
+        - generic [ref=e920]: Coach can still work without it, but goal-based plans and nutrition targets will be weaker.
+      - generic [ref=e921]:
+        - button "Set Goal" [ref=e922]
+        - button "Hide" [ref=e923]
+    - generic [ref=e1067]:
+      - generic [ref=e1068]:
+        - generic [ref=e1069]:
+          - generic [ref=e1070]: Mode Launcher
+          - heading "Choose Your Session" [level=3] [ref=e1071]
+          - generic [ref=e1072]: Launch the right mode fast instead of hunting through the app.
+        - generic [ref=e1073]:
+          - generic [ref=e1074]: "Pick your session type directly from Coach. Weekly mix: W 0 | BW 0 | Cardio 0"
+          - generic [ref=e1075]:
+            - button "Start Weighted" [ref=e1076]
+            - button "Start Bodyweight" [ref=e1077]
+          - generic [ref=e1078]:
+            - button "Start Cardio" [ref=e1079]
+            - button "Cardio Analytics" [ref=e1080]
+          - generic [ref=e1081]:
+            - button "Open 1v1 Duel" [ref=e1082]
+            - button "Volume Duel" [ref=e1083]
+      - generic [ref=e1084]:
+        - generic [ref=e1085]:
+          - img [ref=e1087]
+          - generic [ref=e1089]:
+            - generic [ref=e1090]: Today's Session
+            - generic [ref=e1091]: Shoulders
+            - generic [ref=e1092]: Hypertrophy | Tap any exercise below to start
+        - generic [ref=e1093]:
+          - generic [ref=e1094] [cursor=pointer]:
+            - generic [ref=e1095]:
+              - generic [ref=e1096]: Barbell Overhead Press
+              - generic [ref=e1097]: Start
+            - generic [ref=e1099]: No record yet | set one!
+          - generic [ref=e1100] [cursor=pointer]:
+            - generic [ref=e1101]:
+              - generic [ref=e1102]: Dumbbell Shoulder Press
+              - generic [ref=e1103]: Start
+            - generic [ref=e1105]: No record yet | set one!
+          - generic [ref=e1106] [cursor=pointer]:
+            - generic [ref=e1107]:
+              - generic [ref=e1108]: Lateral Raise
+              - generic [ref=e1109]: Start
+            - generic [ref=e1111]: No record yet | set one!
+          - generic [ref=e1112] [cursor=pointer]:
+            - generic [ref=e1113]:
+              - generic [ref=e1114]: Face Pull
+              - generic [ref=e1115]: Start
+            - generic [ref=e1117]: No record yet | set one!
+        - generic [ref=e1118]: Targets are set at +2.5% above your current PR | progressive overload.
+  - navigation [ref=e243]:
+    - button "Log" [ref=e244] [cursor=pointer]:
+      - img [ref=e246]
+      - generic [ref=e248]: Log
+    - button "Stats" [ref=e249] [cursor=pointer]:
+      - img [ref=e251]
+      - generic [ref=e252]: Stats
+    - button "History" [ref=e253] [cursor=pointer]:
+      - img [ref=e255]
+      - generic [ref=e258]: History
+    - button "Social" [ref=e259] [cursor=pointer]:
+      - img [ref=e261]
+      - generic [ref=e264]: Social
+    - button "Coach" [ref=e265] [cursor=pointer]:
+      - img [ref=e267]
+      - generic [ref=e270]: Coach
+    - button "Nutrition" [ref=e271] [cursor=pointer]:
+      - img [ref=e273]
+      - generic [ref=e275]: Nutrition
+    - button "More" [ref=e276] [cursor=pointer]:
+      - img [ref=e278]
+      - generic [ref=e281]: More
+  - generic:
+    - generic:
+      - generic: Are you sure?
+      - generic:
+        - button "Cancel"
+        - button "Delete"
+  - generic:
+    - generic:
+      - img
+    - generic: ACHIEVEMENT UNLOCKED
+    - generic: First Blood
+    - generic: Logged your first workout
+  - generic [ref=e282]:
+    - generic [ref=e283]:
+      - img [ref=e285]
+      - generic [ref=e289]:
+        - generic [ref=e290]: CHEST
+        - generic [ref=e291]: 0 sessions logged
+      - button "Close" [ref=e292] [cursor=pointer]:
+        - img [ref=e293]
+    - generic [ref=e295]:
+      - generic [ref=e296]:
+        - generic [ref=e297]: "0"
+        - generic [ref=e298]: sessions logged
+      - generic [ref=e299]:
+        - generic [ref=e300]: "0"
+        - generic [ref=e301]: Total Vol
+      - generic [ref=e302]:
+        - generic [ref=e303]: "?"
+        - generic [ref=e304]: Best PR
+      - generic [ref=e305]:
+        - generic [ref=e306]: "?"
+        - generic [ref=e307]: Last Trained
+    - generic [ref=e308]:
+      - button "History" [ref=e309] [cursor=pointer]
+      - button "Tips" [ref=e310] [cursor=pointer]
+      - button "Exercises" [ref=e311] [cursor=pointer]
+    - button "Train This Muscle" [ref=e314] [cursor=pointer]:
+      - img [ref=e315]
+      - text: Train This Muscle
+  - generic: Refreshing?
+  - generic:
+    - generic:
+      - generic:
+        - img
+      - generic: LEVEL UP!
+      - generic: WARRIOR
+      - generic: You've reached the next tier
+  - generic:
+    - generic:
+      - generic: 🏆
+      - generic: Skill Unlocked
+      - generic: ARCHER PUSH-UP
+      - generic: "Next up: One-Arm Push-Up"
+  - button "AR" [ref=e317] [cursor=pointer]
+  - button "Rest Timer" [ref=e318] [cursor=pointer]:
+    - img
+    - img [ref=e319]
+  - generic:
+    - button "1m"
+    - button "90s"
+    - button "2m"
+    - button "3m"
+  - button "Toggle sound" [ref=e322] [cursor=pointer]:
+    - img [ref=e323]
+  - generic [ref=e327]:
+    - generic [ref=e328]:
+      - img [ref=e329]
+      - generic [ref=e331]: "90"
+    - generic [ref=e332]:
+      - generic [ref=e333]: REST TIMER
+      - generic [ref=e334]: 01:30
+      - generic [ref=e335]: tap ? to start
+    - button "STOP" [ref=e336] [cursor=pointer]
+  - generic:
+    - generic: ⏰
+    - generic:
+      - generic: REST COMPLETE!
+      - generic: TIME TO HIT YOUR NEXT SET
+  - generic:
+    - generic:
+      - generic:
+        - button "✕"
+        - generic: REPS
+        - button "DONE ✓"
+      - generic:
+        - generic: "0"
+      - generic:
+        - button "7"
+        - button "8"
+        - button "9"
+        - button "4"
+        - button "5"
+        - button "6"
+        - button "1"
+        - button "2"
+        - button "3"
+        - button "."
+        - button "0"
+        - button "Backspace":
+          - img
+  - generic:
+    - generic: "3"
+  - generic [ref=e337]:
+    - generic: Coach
+    - button "Ask FORGE" [ref=e338] [cursor=pointer]:
+      - img [ref=e339]
