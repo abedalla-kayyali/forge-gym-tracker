@@ -26,6 +26,9 @@
 
   --safe-bot: env(safe-area-inset-bottom, 0px);
 
+  --text1: #e8f5e9;
+  --card: #131c14;
+
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
