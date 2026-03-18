@@ -60,8 +60,65 @@ function updateXPBar() {
   document.getElementById('level-icon').textContent = lvl.icon;
   document.getElementById('level-name').textContent = _rankName;
   document.getElementById('xp-label').textContent = next ? `${xp} / ${lvl.max} XP` : `${xp} XP - ${_maxLabel}`;
-  document.getElementById('xp-fill').style.width = pct + '%';
-  document.getElementById('xp-fill').style.background =
+  var _xpFill = document.getElementById('xp-fill');
+  var _oldPct = _xpFill ? parseFloat(_xpFill.style.width) || 0 : 0;
+  if (_xpFill) _xpFill.style.background =
     `linear-gradient(90deg, #1a7a3f, ${lvl.color || '#2ecc71'}, #39ff8f)`;
+  // v239: animated XP bar fill
+  animateXPBar(_oldPct, pct, pct >= 100 ? function() {
+    if (typeof showLevelUp === 'function') showLevelUp(lvl);
+  } : null);
   if (typeof _updateMascot === 'function') _updateMascot();
 }
+
+// v239: animated XP bar fill
+function animateXPBar(fromPct, toPct, onLevelUp) {
+  var bar = document.getElementById('xp-fill');
+  if (!bar) return;
+  var duration = 600;
+  var start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    var t = Math.min((ts - start) / duration, 1);
+    var ease = 1 - Math.pow(1 - t, 3);
+    var cur = fromPct + (toPct - fromPct) * ease;
+    bar.style.width = cur + '%';
+    if (t < 1) { requestAnimationFrame(step); return; }
+    if (toPct >= 100 && onLevelUp) {
+      bar.classList.add('xp-overflow-flash');
+      setTimeout(function() {
+        bar.classList.remove('xp-overflow-flash');
+        bar.style.width = '0%';
+        if (typeof onLevelUp === 'function') onLevelUp();
+      }, 350);
+    }
+  }
+  requestAnimationFrame(step);
+}
+window.animateXPBar = animateXPBar;
+
+// v239: streak at-risk detection
+function checkStreakAtRisk() {
+  var streakEl = document.querySelector('.hdr-streak-pill');
+  if (!streakEl) return;
+  var now = new Date();
+  var isEvening = now.getHours() >= 18;
+  var workoutList = [];
+  try {
+    workoutList = JSON.parse(localStorage.getItem('forge_workouts') || '[]')
+      .concat(JSON.parse(localStorage.getItem('forge_bw_workouts') || '[]'));
+  } catch(e) {}
+  var today = now.toDateString();
+  var workedOutToday = workoutList.some(function(w) {
+    return new Date(w.date || w.timestamp || w.savedAt || 0).toDateString() === today;
+  });
+  streakEl.classList.toggle('streak-at-risk', isEvening && !workedOutToday);
+}
+window.checkStreakAtRisk = checkStreakAtRisk;
+// Run on load and every 5 minutes
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { checkStreakAtRisk(); });
+} else {
+  checkStreakAtRisk();
+}
+setInterval(checkStreakAtRisk, 5 * 60 * 1000);

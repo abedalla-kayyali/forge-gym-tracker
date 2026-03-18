@@ -26,6 +26,21 @@ function showAchievement(a) {
   if ('vibrate' in navigator) navigator.vibrate([100, 50, 100, 50, 200]);
   clearTimeout(_achTimeout);
   _achTimeout = setTimeout(() => popup.classList.remove('show'), 3200);
+  // v239: achievement unlock FX
+  var achievementEl = popup;
+  if (window.fx) {
+    fx.sound('sndPR');
+    fx.haptic('hapPR');
+    fx.burst('Save', achievementEl || document.body);
+  } else {
+    if (typeof sndPR === 'function') sndPR();
+    if (typeof hapPR === 'function') hapPR();
+    if (typeof burstSave === 'function') burstSave();
+  }
+  if (achievementEl) {
+    achievementEl.classList.add('achievement-unlock-anim');
+    setTimeout(function() { achievementEl.classList.remove('achievement-unlock-anim'); }, 700);
+  }
 }
 
 function dismissAchievement() {
