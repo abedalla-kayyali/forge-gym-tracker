@@ -54,12 +54,12 @@ function renderProgramPanel() {
     `<span class="prog-sched-chip${i === dayIdx ? ' today' : ''}${!d.muscle ? ' rest-chip' : ''}">${d.label}</span>`
   ).join('');
   const sessionHtml = !day.muscle
-    ? `<div class="prog-rest-card"><div class="prog-rest-icon">🛌</div><div class="prog-rest-title">${t('program.restDay')}</div><div class="prog-rest-note">${day.note} — recharge for tomorrow</div></div>`
+    ? `<div class="prog-rest-card"><div class="prog-rest-icon">🛌</div><div class="prog-rest-title">${t('program.restDay')}</div><div class="prog-rest-note">${day.note || ''} — recharge for tomorrow</div></div>`
     : '<div class="prog-session-card">' +
-      `<div class="prog-session-day">DAY ${dayIdx + 1} · ${prog.short}</div>` +
+      `<div class="prog-session-day">DAY ${dayIdx + 1}${prog.short ? ' · ' + prog.short : ''}</div>` +
       `<div class="prog-session-title">${day.label}</div>` +
       `<div class="prog-session-ex">${day.exs.join(' · ')}</div>` +
-      `<div class="prog-session-note">${day.note}</div>` +
+      `${day.note ? `<div class="prog-session-note">${day.note}</div>` : ''}` +
       `<button class="prog-start-btn" onclick="startProgramWorkout()">${t('program.startSession')}</button>` +
       '</div>';
   body.innerHTML =
