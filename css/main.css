@@ -23862,7 +23862,8 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 .header-slim-strip {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
+  padding: calc(var(--space-2) + var(--safe-top, 0px)) var(--space-4) var(--space-2);
   min-height: 44px;
 }
