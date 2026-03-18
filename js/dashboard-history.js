@@ -5318,7 +5318,6 @@ window.renderMonthlyReport = renderMonthlyReport;
     btn._v236Wired = true;
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
-      hdr.classList.toggle('header-expanded');
       if (window.fx && typeof fx.sound === 'function') fx.sound('sndTap');
       else if (typeof sndTap === 'function') sndTap();
     });
