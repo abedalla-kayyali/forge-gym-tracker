@@ -25,6 +25,12 @@ function _getProgramDayIndex() {
 }
 
 function renderProgramPanel() {
+  // Always re-read from localStorage so activations done after page load are reflected
+  try {
+    const ai = localStorage.getItem('forge_ai_program');
+    if (ai) _activeProg = JSON.parse(ai);
+    else _activeProg = JSON.parse(localStorage.getItem('forge_active_program') || 'null');
+  } catch (_) {}
   const body = document.getElementById('programs-panel-body');
   const badge = document.getElementById('prog-panel-badge');
   if (!body) return;
