@@ -24017,3 +24017,7 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   30%           { transform: translateY(-6px); opacity: 1; }
 }
 .ob-back-btn:hover { opacity: 1; }
+
+/* ── v241: TEMPLATE CHIP STAGGER ── */
+.template-chip { transition: opacity var(--dur-base) var(--ease-spring), transform var(--dur-base) var(--ease-spring); }
+.template-chip-hidden { opacity: 0; transform: translateY(8px); }

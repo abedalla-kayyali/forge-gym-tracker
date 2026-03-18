@@ -791,6 +791,46 @@
   // ── Global API ────────────────────────────────────────────────────────────
   window.renderGoalDashboard = renderGoalDashboard;
 
+  // v241: ditto first-use tip
+  if (!localStorage.getItem('forge_ditto_tip_shown')) {
+    setTimeout(function() {
+      if (typeof showToast === 'function') showToast('⚡ Tap "Ditto Yesterday" to instantly repeat yesterday\'s meals!', 5000);
+      localStorage.setItem('forge_ditto_tip_shown', '1');
+    }, 2000);
+  }
+
+  // v241: update macro SVG rings
+  function updateMacroRings(protein, carbs, fat, targets) {
+    var circ = 201;
+    function setRing(id, val, target, labelId, grams) {
+      var circle = document.getElementById(id);
+      var label = document.getElementById(labelId);
+      if (!circle) return;
+      var pct = target > 0 ? Math.min(val / target, 1) : 0;
+      var toOffset = circ - (circ * pct);
+      var fromOffset = parseFloat(circle.getAttribute('stroke-dashoffset')) || circ;
+      var start = null;
+      (function step(ts) {
+        if (!start) start = ts;
+        var t = Math.min((ts - start) / 500, 1);
+        var ease = 1 - Math.pow(1 - t, 3);
+        var cur = fromOffset + (toOffset - fromOffset) * ease;
+        circle.setAttribute('stroke-dashoffset', cur);
+        if (t < 1) { requestAnimationFrame(step); return; }
+        if (pct >= 1) {
+          circle.style.filter = 'drop-shadow(0 0 6px ' + circle.getAttribute('stroke') + ')';
+          if (window.fx) { fx.sound('sndMacroGoal'); fx.haptic('hapSave'); }
+          else if (typeof sndSave === 'function') sndSave();
+        }
+      })(performance.now());
+      if (label) label.textContent = Math.round(grams) + 'g';
+    }
+    setRing('macro-ring-p', protein, (targets && (targets.protein || targets.p)) || 150, 'macro-ring-p-label', protein);
+    setRing('macro-ring-c', carbs,   (targets && (targets.carbs   || targets.c)) || 250, 'macro-ring-c-label', carbs);
+    setRing('macro-ring-f', fat,     (targets && (targets.fat     || targets.f)) || 65,  'macro-ring-f-label', fat);
+  }
+  window.updateMacroRings = updateMacroRings;
+
   // Re-render when relevant data updates
   ['forge:inbody-updated', 'forge:measurements-updated'].forEach(ev => {
     window.addEventListener(ev, () => {

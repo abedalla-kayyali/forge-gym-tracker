@@ -56,6 +56,8 @@
     // Reset qty to 100g default
     set('meal-qty-input', 100);
     if (typeof showToast === 'function') showToast('"' + tmpl.name + '" loaded');
+    if (window.fx) { fx.sound('sndFoodPick'); fx.haptic('hapTap'); }
+    else if (typeof sndFoodPick === 'function') sndFoodPick();
     // Scroll up to form
     const form = document.getElementById('meal-name-input');
     if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -84,8 +86,12 @@
     if (items.length === 0) { row.innerHTML = ''; return; }
     row.innerHTML = '<div class="mt-chips-label">Quick-add:</div>' +
       items.map(t =>
-        `<span class="mt-chip" onclick="window._mtApplyTemplate('${_esc(t.id)}')" title="${_esc(t.kcal)} kcal · ${_esc(t.p)}g P">${_esc(t.name)}</span>`
+        `<span class="mt-chip template-chip template-chip-hidden" onclick="window._mtApplyTemplate('${_esc(t.id)}')" title="${_esc(t.kcal)} kcal · ${_esc(t.p)}g P">${_esc(t.name)}</span>`
       ).join('');
+    // v241: stagger chip reveal
+    row.querySelectorAll('.template-chip-hidden').forEach(function(chip, i) {
+      setTimeout(function() { chip.classList.remove('template-chip-hidden'); }, i * 50);
+    });
   }
 
   // ── Render templates panel ───────────────────────────────────────────────────

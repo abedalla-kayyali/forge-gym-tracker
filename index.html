@@ -631,7 +631,7 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <button class="btn btn-add" onclick="addSet()" data-i18n="form.addSet" style="flex:1;">+ Add Set</button>
-            <button class="ditto-btn" id="ditto-btn" onclick="dittoLastSet()" title="Copy last set" aria-label="Ditto ? copy last set">=</button>
+            <button class="ditto-btn" id="ditto-btn" onclick="dittoLastSet()" title="Copy last set" aria-label="Ditto — copy last set">⚡ Ditto Yesterday</button>
             <button class="plate-open-btn" onclick="openPlateCalc()" title="Plate Calculator"><span data-i18n="form.plates">Plates</span></button>
           </div>
         </div>
@@ -1197,6 +1197,30 @@
       </div>
       <div id="weekly-nutrition-body" style="padding:10px 14px 14px;">
         <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Log meals to see your weekly report</div></div>
+      </div>
+    </div>
+    <!-- v241: macro rings -->
+    <div class="panel" data-dash-tab="nutrition" id="macro-rings-panel">
+      <div class="panel-header">
+        <span class="panel-title">Macro Progress</span>
+        <span class="panel-badge">TODAY</span>
+      </div>
+      <div id="macro-rings-row" style="display:flex;justify-content:space-around;align-items:center;padding:var(--space-4) 0;flex-wrap:wrap;gap:var(--space-3)">
+        <div style="text-align:center">
+          <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--panel)" stroke-width="6"/><circle id="macro-ring-p" cx="40" cy="40" r="32" fill="none" stroke="#3498db" stroke-width="6" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+          <div style="font-size:var(--text-xs);color:var(--text);margin-top:4px">Protein</div>
+          <div id="macro-ring-p-label" style="font-size:var(--text-sm);color:#3498db;font-family:'DM Mono',monospace">0g</div>
+        </div>
+        <div style="text-align:center">
+          <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--panel)" stroke-width="6"/><circle id="macro-ring-c" cx="40" cy="40" r="32" fill="none" stroke="#e67e22" stroke-width="6" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+          <div style="font-size:var(--text-xs);color:var(--text);margin-top:4px">Carbs</div>
+          <div id="macro-ring-c-label" style="font-size:var(--text-sm);color:#e67e22;font-family:'DM Mono',monospace">0g</div>
+        </div>
+        <div style="text-align:center">
+          <svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" fill="none" stroke="var(--panel)" stroke-width="6"/><circle id="macro-ring-f" cx="40" cy="40" r="32" fill="none" stroke="#f1c40f" stroke-width="6" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dasharray="201" stroke-dashoffset="201"/></svg>
+          <div style="font-size:var(--text-xs);color:var(--text);margin-top:4px">Fat</div>
+          <div id="macro-ring-f-label" style="font-size:var(--text-sm);color:#f1c40f;font-family:'DM Mono',monospace">0g</div>
+        </div>
       </div>
     </div>
     <!-- MEAL TEMPLATES -->
