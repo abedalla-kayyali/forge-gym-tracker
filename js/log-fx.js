@@ -240,7 +240,14 @@
     else if (has('sh-end-btn'))                                { sndSessionEnd();   _vib([30,20,60]); popClass(btn,'lf-pressed',300); }
     else if (has('sh-quick-start'))                            { sndTap();          _vib(10); }
     else if (has('mode-toggle-btn'))                           { sndSwitch();       _vib(10); popClass(btn,'lf-pressed',200); }
-    else if (has('btn-add'))                                   { sndSetLog();       _vib([15,10,30]); popClass(btn,'lf-pressed',200); scorePop(btn,'+1 SET','#39ff8f'); }
+    else if (has('btn-add'))                                   { sndSetLog();       _vib([15,10,30]); popClass(btn,'lf-pressed',200); scorePop(btn,'+1 SET','#39ff8f');
+      // v237: flash the last logged set row
+      (function() {
+        var _rows = document.querySelectorAll('#sets-container .set-row');
+        var _lastRow = _rows.length ? _rows[_rows.length - 1] : null;
+        if (_lastRow) { _lastRow.classList.remove('set-flash'); void _lastRow.offsetWidth; _lastRow.classList.add('set-flash'); }
+      })();
+    }
     else if (has('ditto-btn') || has('bw-ditto-btn'))          { sndTap();          _vib(10); popClass(btn,'lf-pressed',180); scorePop(btn,'DITTO','#c084fc'); }
     else if (has('plate-open-btn'))                            { sndTap();          _vib(10); }
     else if (has('bw-reps-btn'))                               { sndQtyTick();      _vib(10); popClass(btn,'lf-pressed',120); }

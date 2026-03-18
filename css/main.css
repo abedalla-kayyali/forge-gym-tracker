@@ -23867,3 +23867,37 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   padding: calc(var(--space-2) + var(--safe-top, 0px)) var(--space-4) var(--space-2);
   min-height: 44px;
 }
+
+/* ── v237: SET ROW FLASH ── */
+@keyframes setRowFlash {
+  0%   { background: rgba(57,255,143,.3); }
+  100% { background: transparent; }
+}
+.set-flash {
+  animation: setRowFlash 450ms var(--ease-smooth) forwards;
+}
+
+/* ── v237: PR STREAK OVERLAY ── */
+.pr-streak-overlay {
+  position: fixed;
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: var(--text-4xl);
+  color: var(--accent);
+  letter-spacing: 4px;
+  z-index: 9999;
+  text-shadow: 0 0 30px var(--accent);
+  pointer-events: none;
+  animation: prStreakIn 300ms var(--ease-spring) forwards,
+             prStreakOut 400ms var(--ease-smooth) 1.5s forwards;
+}
+@keyframes prStreakIn {
+  from { opacity: 0; transform: translateX(-50%) scale(0.7); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+@keyframes prStreakOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

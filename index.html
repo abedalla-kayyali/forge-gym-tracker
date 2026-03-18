@@ -527,6 +527,14 @@
     </div>
 
     <!-- EXERCISE ENTRY -->
+    <!-- v237: empty state hero -->
+    <div id="log-empty-state" class="panel" style="text-align:center;padding:var(--space-6);display:none">
+      <div style="font-size:48px;margin-bottom:var(--space-3)">💪</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:var(--text-3xl);color:var(--accent);line-height:1.1">YOUR FIRST FORGE AWAITS</div>
+      <div style="color:var(--text);margin:var(--space-3) 0;font-size:var(--text-base)">Pick a muscle group to start your journey.</div>
+      <button class="btn-primary" style="margin-top:var(--space-4)" onclick="document.querySelector('.muscle-chips, [data-muscle-chips], #muscle-group-row')?.scrollIntoView({behavior:'smooth'})">START FIRST WORKOUT</button>
+    </div>
+
     <div class="log-section" id="section-exercise" data-section="exercise">
       <div class="section-edit-controls">
         <button class="sec-ctrl-btn sec-ctrl-up" onclick="moveSectionUp('section-exercise')" title="Move up">?</button>
@@ -8758,6 +8766,14 @@ function _runPostSaveSyncHooks() {
   if (typeof _updateWeeklyScoreLog === 'function') _updateWeeklyScoreLog();
   if (typeof checkDeloadNeeded          === 'function') checkDeloadNeeded();
   if (typeof _updateQuickStartVisibility === 'function') _updateQuickStartVisibility();
+  // v237: empty state hero visibility
+  (function() {
+    var _emptyEl = document.getElementById('log-empty-state');
+    if (!_emptyEl) return;
+    var _hasExercises = document.querySelectorAll('#sets-container .set-row, #bw-sets-container .bw-dot-row').length > 0;
+    var _hasWorkouts = (typeof workouts !== 'undefined' && workouts.length > 0) || (typeof bwWorkouts !== 'undefined' && bwWorkouts.length > 0);
+    _emptyEl.style.display = (!_hasExercises && !_hasWorkouts) ? 'block' : 'none';
+  })();
   if (typeof renderCaliJourney          === 'function') renderCaliJourney();
 }
 

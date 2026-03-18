@@ -135,9 +135,20 @@ function _saveWeightedWorkout() {
     }
     _updateMuscleTargetLabel();
     updateStatBar();
+    var _preStreak = typeof calcStreak === 'function' ? calcStreak() : 0;
     postSaveHooks();
     _updateSaveBtnState();
     _checkEndSessionNudge();
+    // v237: streak FX — fire if streak increased after save
+    (function(_old) {
+      setTimeout(function() {
+        var _new = typeof calcStreak === 'function' ? calcStreak() : 0;
+        if (_new > _old) {
+          if (window.fx) { fx.sound('sndMilestone'); fx.haptic('hapSave'); }
+          else { if (typeof sndMilestone === 'function') sndMilestone(); if (typeof hapSave === 'function') hapSave(); }
+        }
+      }, 400);
+    })(_preStreak);
     if (typeof window.FORGE_DELOAD?.check === 'function') window.FORGE_DELOAD.check();
 
     btn.classList.remove('loading');
@@ -168,6 +179,15 @@ function _saveWeightedWorkout() {
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
       if (typeof burstPR === 'function') burstPR(btn);
+      // v237: particle burst + PR text overlay
+      if (window.fx) { fx.burst('PR', btn); fx.flash('PR'); }
+      (function() {
+        var _prEl = document.createElement('div');
+        _prEl.className = 'pr-streak-overlay';
+        _prEl.textContent = 'PERSONAL RECORD';
+        document.body.appendChild(_prEl);
+        setTimeout(function() { _prEl.remove(); }, 2000);
+      })();
       if (typeof showPRCelebration === 'function') {
         const topW = Math.max(0, ...sets.filter(s => s.type !== 'warmup').map(s => +s.weight || 0));
         const u = sets[0]?.unit || (typeof settings !== 'undefined' ? settings.defaultUnit : 'kg') || 'kg';
@@ -183,6 +203,14 @@ function _saveWeightedWorkout() {
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
       if (typeof burstSave === 'function') burstSave();
+      // v237: save celebration summary toast
+      (function() {
+        var _startTime = window._forgeSessionStart || sessionStart || Date.now();
+        var _dur = Math.round((Date.now() - _startTime) / 60000);
+        var _sets = document.querySelectorAll('#sets-container .set-row').length || 0;
+        var _msg = '\u2705 FORGED' + (_dur > 0 ? ' \u2014 ' + _dur + 'min' : '') + (_sets > 0 ? ' \u00b7 ' + _sets + ' sets' : '');
+        setTimeout(function() { if (typeof showToast === 'function') showToast(_msg, 4000); }, 1200);
+      })();
     }
     // Plateau detection toast (fires 1.5s after save so it doesn't clash with workout-logged toast)
     if (typeof window.FORGE_OVERLOAD !== 'undefined' && typeof window.FORGE_OVERLOAD.getPlateauLength === 'function') {
@@ -302,7 +330,18 @@ function saveBwWorkout() {
     _updateMuscleTargetLabel();
     updateStatBar();
     if (typeof _updateMuscleChipColors === 'function') _updateMuscleChipColors();
+    var _bwPreStreak = typeof calcStreak === 'function' ? calcStreak() : 0;
     postSaveHooks();
+    // v237: streak FX — fire if streak increased after BW save
+    (function(_old) {
+      setTimeout(function() {
+        var _new = typeof calcStreak === 'function' ? calcStreak() : 0;
+        if (_new > _old) {
+          if (window.fx) { fx.sound('sndMilestone'); fx.haptic('hapSave'); }
+          else { if (typeof sndMilestone === 'function') sndMilestone(); if (typeof hapSave === 'function') hapSave(); }
+        }
+      }, 400);
+    })(_bwPreStreak);
 
     btn.classList.remove('loading');
     btn.innerHTML = '<svg class="btn-icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>' + _ws('Log Workout', 'تسجيل التمرين');
@@ -332,11 +371,30 @@ function saveBwWorkout() {
       })();
       if (typeof flashPR === 'function') flashPR();
       if (typeof sndPR === 'function') sndPR();
+      // v237: burstPR fix for bodyweight path + PR text overlay
+      if (window.fx) { fx.burst('PR', document.querySelector('#save-btn') || document.body); fx.flash('PR'); }
+      else {
+        if (typeof burstPR === 'function') burstPR(document.querySelector('#save-btn') || document.body);
+      }
+      (function() {
+        var _prEl = document.createElement('div');
+        _prEl.className = 'pr-streak-overlay';
+        _prEl.textContent = 'PERSONAL RECORD';
+        document.body.appendChild(_prEl);
+        setTimeout(function() { _prEl.remove(); }, 2000);
+      })();
     } else {
       showToast(_ws(`${name} logged! ${totalReps} total ${_prUnit}`, `${name} - ${totalReps} إجمالي ${_prUnit}`));
       if (typeof hapSave === 'function') hapSave();
       if (typeof flashSave === 'function') flashSave();
       if (typeof sndSave === 'function') sndSave();
+      // v237: save celebration summary toast (BW non-PR path)
+      (function() {
+        var _startTime = window._forgeSessionStart || sessionStart || Date.now();
+        var _dur = Math.round((Date.now() - _startTime) / 60000);
+        var _msg = '\u2705 FORGED' + (_dur > 0 ? ' \u2014 ' + _dur + 'min' : '') + ' \u00b7 ' + totalReps + ' total ' + _prUnit;
+        setTimeout(function() { if (typeof showToast === 'function') showToast(_msg, 4000); }, 1200);
+      })();
     }
     startTimer();
   }, 300);
