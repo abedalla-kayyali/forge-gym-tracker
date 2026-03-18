@@ -23901,3 +23901,27 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   from { opacity: 1; }
   to   { opacity: 0; }
 }
+
+/* ── v238: ONBOARDING WIZARD ── */
+@keyframes obLogoPulse {
+  0%,100% { filter: drop-shadow(0 0 10px var(--accent)); }
+  50%      { filter: drop-shadow(0 0 30px var(--accent)); }
+}
+.ob-goal-btn, .ob-level-btn {
+  padding: var(--space-4);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition: all var(--dur-base) var(--ease-spring);
+  line-height: 1.4;
+}
+.ob-goal-btn:hover, .ob-level-btn:hover,
+.ob-goal-btn:focus, .ob-level-btn:focus {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+.ob-step { animation: viewSlideIn var(--dur-base) var(--ease-smooth) both; }

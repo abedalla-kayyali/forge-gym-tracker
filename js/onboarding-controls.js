@@ -148,3 +148,122 @@
   window._onboardingCheck = function () { return false; };
   window._onbComplete = function () { return false; };
 })();
+
+// ── v238: First-run wizard ──
+(function initFirstRunWizard() {
+  // Check if wizard already shown
+  if (localStorage.getItem('forge_onboarding_v238_done')) return;
+
+  // Check if user already has data (existing user — skip wizard)
+  var hasName = localStorage.getItem('forge_username') || localStorage.getItem('forge_name') || localStorage.getItem('forge_profile_name');
+  var hasWorkouts = localStorage.getItem('forge_workouts') || localStorage.getItem('forge_bw_workouts');
+  // Also check if there's a profile object
+  try {
+    var p = JSON.parse(localStorage.getItem('forge_profile') || localStorage.getItem('userProfile') || '{}');
+    if (p && (p.name || p.username)) hasName = p.name || p.username;
+  } catch(e) {}
+
+  if (hasName || hasWorkouts) {
+    // Existing user — mark done silently
+    localStorage.setItem('forge_onboarding_v238_done', '1');
+    return;
+  }
+
+  // Show wizard
+  var wizard = document.getElementById('first-run-wizard');
+  if (!wizard) return;
+  wizard.style.display = 'block';
+
+  window._obNext = function(step) {
+    if (window.fx) { fx.sound('sndTap'); fx.haptic('hapTap'); }
+    else if (typeof sndTap === 'function') sndTap();
+
+    if (step === 2) {
+      var name = (document.getElementById('ob-name-input') || {}).value;
+      if (!name || !name.trim()) {
+        // Shake the input
+        var inp = document.getElementById('ob-name-input');
+        if (inp) { inp.style.borderColor = 'var(--danger)'; setTimeout(function() { inp.style.borderColor = ''; }, 1000); }
+        return;
+      }
+      // Save name — use the same key as the rest of the app
+      localStorage.setItem('forge_username', name.trim());
+      // Also update forge_profile object if it exists
+      try {
+        var key = localStorage.getItem('forge_profile') ? 'forge_profile' : (localStorage.getItem('userProfile') ? 'userProfile' : null);
+        if (key) { var p2 = JSON.parse(localStorage.getItem(key) || '{}'); p2.name = name.trim(); localStorage.setItem(key, JSON.stringify(p2)); }
+      } catch(e) {}
+    }
+
+    // Hide current step, show next
+    var cur = document.getElementById('ob-step-' + step);
+    var next = document.getElementById('ob-step-' + (step + 1));
+    if (cur) cur.hidden = true;
+    if (next) next.hidden = false;
+  };
+
+  window._obGoal = function(goal) {
+    if (window.fx) { fx.sound('sndTap'); fx.haptic('hapTap'); }
+    localStorage.setItem('forge_goal', goal);
+    var cur = document.getElementById('ob-step-3');
+    var next = document.getElementById('ob-step-4');
+    if (cur) cur.hidden = true;
+    if (next) next.hidden = false;
+  };
+
+  window._obFinish = function(level) {
+    localStorage.setItem('forge_experience', level);
+    localStorage.setItem('forge_onboarding_v238_done', '1');
+    if (window.fx) { fx.sound('sndSessionStart'); fx.haptic('hapSave'); }
+    else if (typeof sndSave === 'function') sndSave();
+    var wizard2 = document.getElementById('first-run-wizard');
+    if (wizard2) wizard2.style.display = 'none';
+  };
+})();
+
+// ── v238: Progressive feature tips (shown at workout milestones) ──
+window.checkFeatureTip = function(workoutCount) {
+  var TIPS = [
+    { at: 5,  id: 'voice',   msg: '🎤 Tip: Try Voice-to-Log! Tap the mic on any exercise.' },
+    { at: 10, id: 'heatmap', msg: '🔥 Tip: Check your Recovery Heatmap in the Coach tab.' },
+    { at: 15, id: 'coach',   msg: '🤖 Tip: Ask your AI Coach anything about your training.' },
+    { at: 20, id: 'program', msg: '⚡ Tip: Generate a personalized AI Program!' },
+  ];
+  var shown = JSON.parse(localStorage.getItem('forge_feature_tips_shown') || '[]');
+  var tip = null;
+  for (var i = 0; i < TIPS.length; i++) {
+    if (TIPS[i].at === workoutCount && shown.indexOf(TIPS[i].id) === -1) { tip = TIPS[i]; break; }
+  }
+  if (!tip) return;
+  shown.push(tip.id);
+  localStorage.setItem('forge_feature_tips_shown', JSON.stringify(shown));
+  if (typeof showToast === 'function') showToast(tip.msg, 5000);
+};
+
+// ── v238: Re-engagement (3+ days since last workout) ──
+(function checkReEngagement() {
+  var workouts = [];
+  try {
+    var w1 = JSON.parse(localStorage.getItem('forge_workouts') || '[]');
+    var w2 = JSON.parse(localStorage.getItem('forge_bw_workouts') || '[]');
+    workouts = w1.concat(w2);
+  } catch(e) {}
+  if (!workouts.length) return;
+
+  // Find most recent workout date
+  var lastDate = 0;
+  workouts.forEach(function(w) {
+    var d = new Date(w.date || w.timestamp || w.savedAt || 0).getTime();
+    if (d > lastDate) lastDate = d;
+  });
+  if (!lastDate) return;
+
+  var daysSince = Math.floor((Date.now() - lastDate) / 86400000);
+  if (daysSince < 3) return;
+
+  // Show re-engagement toast after 1s
+  setTimeout(function() {
+    var msg = '🔥 ' + daysSince + ' days since your last session. Your muscles are rested and ready!';
+    if (typeof showToast === 'function') showToast(msg, 6000);
+  }, 1000);
+})();
