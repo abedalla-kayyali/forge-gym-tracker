@@ -4,7 +4,8 @@
   const CFG = global.FORGE_CONFIG || {};
   const CLIENT_ID = CFG.GOOGLE_DRIVE_CLIENT_ID || '';
   const FILE_NAME = CFG.GOOGLE_DRIVE_BACKUP_FILE || 'FORGE_backup_latest.json';
-  const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+  const SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  const FOLDER_NAME = 'FORGE Backup';
 
   const LS = Object.freeze({
     ENABLED: 'forge_gdrive_backup_enabled',
@@ -111,12 +112,26 @@
     }
   }
 
+  async function _ensureFolder(interactive) {
+    const q = encodeURIComponent("name='" + FOLDER_NAME + "' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+    const searchRes = await _authedFetch('https://www.googleapis.com/drive/v3/files?q=' + q + '&fields=files(id)', {}, interactive);
+    const searchData = await searchRes.json();
+    if (searchData.files && searchData.files.length) return searchData.files[0].id;
+    const createRes = await _authedFetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+    }, interactive);
+    const folder = await createRes.json();
+    return folder.id;
+  }
+
   async function _findBackupFile(interactive) {
-    const q = encodeURIComponent("name='" + FILE_NAME + "' and 'appDataFolder' in parents and trashed=false");
+    const folderId = await _ensureFolder(interactive);
+    const q = encodeURIComponent("name='" + FILE_NAME + "' and '" + folderId + "' in parents and trashed=false");
     const url =
       'https://www.googleapis.com/drive/v3/files' +
-      '?spaces=appDataFolder' +
-      '&pageSize=1' +
+      '?pageSize=1' +
       '&orderBy=modifiedTime desc' +
       '&fields=files(id,name,modifiedTime)' +
       '&q=' + q;
@@ -124,7 +139,7 @@
     const data = await res.json();
     const file = Array.isArray(data.files) && data.files.length ? data.files[0] : null;
     if (file && file.id) _lsSet(LS.FILE_ID, file.id);
-    return file;
+    return { file, folderId };
   }
 
   function _buildMultipartBody(metadata, content, boundary) {
@@ -141,10 +156,10 @@
 
   async function _uploadPayload(payload, interactive, silent) {
     if (!payload || typeof payload !== 'object') throw new Error('Invalid backup payload');
-    const existing = await _findBackupFile(interactive);
+    const { file: existing, folderId } = await _findBackupFile(interactive);
     const metadata = existing
       ? { name: FILE_NAME, mimeType: 'application/json' }
-      : { name: FILE_NAME, mimeType: 'application/json', parents: ['appDataFolder'] };
+      : { name: FILE_NAME, mimeType: 'application/json', parents: [folderId] };
     const boundary = 'forge_backup_' + Date.now();
     const body = _buildMultipartBody(metadata, JSON.stringify(payload, null, 2), boundary);
     const method = existing ? 'PATCH' : 'POST';
@@ -220,7 +235,7 @@
       return;
     }
     try {
-      const file = await _findBackupFile(true);
+      const { file } = await _findBackupFile(true);
       if (!file || !file.id) {
         _toast('No Google Drive backup found yet', 'warn');
         return;
