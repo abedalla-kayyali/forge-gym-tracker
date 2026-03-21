@@ -13,6 +13,6 @@ window.FORGE_CONFIG = {
   SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucWV0bnpkZ3RiZXlzcW5tYmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzMzgsImV4cCI6MjA4ODcwOTMzOH0.yqgdzeFUyqU3Lkg6cyCt0Kl3l525kD60oTi_p93AuXw',
   FOOD_SEARCH_URL: 'https://mnqetnzdgtbeysqnmbkx.supabase.co/functions/v1/food-search',
   // Google Drive backup (OAuth client from Google Cloud Console)
-  GOOGLE_DRIVE_CLIENT_ID: '',
+  GOOGLE_DRIVE_CLIENT_ID: '938646591548-8ib1nh28e12r41111r36papki31p6lh8.apps.googleusercontent.com',
   GOOGLE_DRIVE_BACKUP_FILE: 'FORGE_backup_latest.json'
 };
