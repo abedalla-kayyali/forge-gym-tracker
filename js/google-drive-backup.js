@@ -172,10 +172,16 @@
       body
     }, interactive);
     const out = await res.json();
+    console.log('[FORGE gdrive] upload response:', out);
+    console.log('[FORGE gdrive] folder id:', folderId);
+    if (out && out.error) throw new Error('Upload failed: ' + JSON.stringify(out.error));
     if (out && out.id) _lsSet(LS.FILE_ID, out.id);
     _lsSet(LS.LAST_BACKUP_TS, String(Date.now()));
     _lsSet(LS.LAST_AUTO_DAY, _todayIso());
-    if (!silent) _toast('Google Drive backup updated');
+    if (!silent) {
+      const folderUrl = 'https://drive.google.com/drive/folders/' + folderId;
+      _toast('Backup saved! <a href="' + folderUrl + '" target="_blank" style="color:inherit;text-decoration:underline">Open folder</a>');
+    }
     _renderStatus();
     return out;
   }
