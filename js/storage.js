@@ -115,6 +115,19 @@
       .replace(/'/g, '&#39;');
   }
 
+  // Create high-entropy ids for persisted records to reduce collision risk.
+  function makeId(prefix) {
+    const p = (typeof prefix === 'string' && prefix.trim()) ? prefix.trim() : 'id';
+    try {
+      if (global.crypto && typeof global.crypto.randomUUID === 'function') {
+        return p + '_' + global.crypto.randomUUID();
+      }
+    } catch (_err) {
+      // Fall through to timestamp+random fallback.
+    }
+    return p + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+  }
+
   // ── Schema migration runner ──────────────────────────────────────────────────
   // Bump SCHEMA_VERSION when changing localStorage payload shapes.
   // Add migration blocks inside runMigrations() for each version step.
@@ -140,6 +153,7 @@
     lsGet,
     createIdbBackup,
     esc,
+    makeId,
     runMigrations
   };
 })(window);

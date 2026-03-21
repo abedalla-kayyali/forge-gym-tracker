@@ -1413,6 +1413,15 @@
     el.style.display = msg ? 'block' : 'none';
   }
 
+  function escapeHtml(text) {
+    return String(text == null ? '' : text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function renderMarkdown(text) {
     return text
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1453,15 +1462,17 @@
     const wrap = document.createElement('div');
     const cardsHtml = results.map(r => {
       const sim = Math.round((r.similarity || 0) * 100);
-      const label = TYPE_LABELS[r.type] || r.type;
+      const label = escapeHtml(TYPE_LABELS[r.type] || r.type);
+      const safeDate = escapeHtml(r.date || '');
+      const safeContent = escapeHtml(r.content || '');
       return `
         <div class="rag-card">
           <div class="rag-card-meta">
             <span class="rag-card-type">${label}</span>
-            <span class="rag-card-date">${r.date || ''}</span>
+            <span class="rag-card-date">${safeDate}</span>
             <span class="rag-card-sim">${sim}%</span>
           </div>
-          <div class="rag-card-content">${r.content || ''}</div>
+          <div class="rag-card-content">${safeContent}</div>
         </div>`;
     }).join('');
     wrap.innerHTML = `

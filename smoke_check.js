@@ -26,6 +26,7 @@ const requiredFiles = [
   'js/xp-system.js',
   'js/profile-avatar.js',
   'js/data-transfer.js',
+  'js/google-drive-backup.js',
   'js/achievements-ui.js',
   'js/coach-plan-controls.js',
   'js/share-helpers.js',
@@ -98,6 +99,7 @@ if (fs.existsSync(indexPath)) {
     '<script src="js/xp-system.js"></script>',
     '<script src="js/profile-avatar.js"></script>',
     '<script src="js/data-transfer.js"></script>',
+    '<script src="js/google-drive-backup.js"></script>',
     '<script src="js/achievements-ui.js"></script>',
     '<script src="js/coach-plan-controls.js"></script>',
     '<script src="js/share-helpers.js"></script>',
@@ -237,7 +239,9 @@ if (fs.existsSync(communityLibraryPath)) {
 
 if (fs.existsSync(exercisesPath)) {
   const exercises = fs.readFileSync(exercisesPath, 'utf8');
-  if (!exercises.includes('Workout not found? Add it')) fail('Missing weighted workout miss-state add CTA');
+  const hasLegacyCta = exercises.includes('Workout not found? Add it');
+  const hasCurrentCta = exercises.includes('Add New Exercise');
+  if (!hasLegacyCta && !hasCurrentCta) fail('Missing weighted workout miss-state add CTA');
   if (!exercises.includes('communityExercises')) fail('Missing weighted shared exercise merge hook');
 }
 

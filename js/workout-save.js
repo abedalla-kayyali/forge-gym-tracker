@@ -4,6 +4,13 @@ function _ws(en, ar) {
   return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
 }
 
+function _forgeRecordId(prefix) {
+  if (window.FORGE_STORAGE && typeof window.FORGE_STORAGE.makeId === 'function') {
+    return window.FORGE_STORAGE.makeId(prefix);
+  }
+  return (prefix || 'id') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
+
 // ═══════════════════════════════════════════
 //  BODYWEIGHT WORKOUTS DATA
 // ═══════════════════════════════════════════
@@ -93,7 +100,7 @@ function _saveWeightedWorkout() {
     const isPR = workSets.length > 0 && (prevMax.length === 0 || newMax > Math.max(...prevMax));
 
     const _wkEntry = {
-      id: Date.now(), date: new Date().toISOString(),
+      id: _forgeRecordId('wk'), date: new Date().toISOString(),
       muscle: selectedMuscle, exercise: name, sets, notes: '',
       angle: (typeof selectedAngle !== 'undefined' ? selectedAngle : null),
       totalVolume: sets.filter(s => s.type !== 'warmup').reduce((a, s) => a + s.reps * s.weight, 0), isPR,
@@ -292,7 +299,7 @@ function saveBwWorkout() {
     const totalReps = sets.reduce((a, s) => a + (s.reps || s.secs || 0), 0);
 
     bwWorkouts.push({
-      id: Date.now(), date: new Date().toISOString(),
+      id: _forgeRecordId('bwk'), date: new Date().toISOString(),
       exercise: name, muscle, sets, notes: '',
       totalReps, isPR, type: 'bodyweight', bwType: _currentBwType
     });

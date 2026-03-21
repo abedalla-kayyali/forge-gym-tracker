@@ -28,6 +28,14 @@
   function _lsSet(key, val) {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
   }
+  function _syncRecordId(kind, raw) {
+    const value = String(raw || '').trim();
+    if (value) return value;
+    if (window.FORGE_STORAGE && typeof window.FORGE_STORAGE.makeId === 'function') {
+      return window.FORGE_STORAGE.makeId(kind || 'sync');
+    }
+    return (kind || 'sync') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+  }
   async function _hasTable(table) {
     if (!window._sb || !table) return false;
     if (Object.prototype.hasOwnProperty.call(_tableCache, table)) return _tableCache[table];
@@ -93,7 +101,7 @@
     const workouts = _ls('forge_workouts');
     if (!Array.isArray(workouts) || workouts.length === 0) return;
     const rows = workouts.map(w => ({
-      id:      String(w.id || w.date || Date.now()),
+      id:      _syncRecordId('wk', w.id || w.date),
       user_id: userId,
       data:    w,
       date:    w.date ? new Date(w.date).toISOString() : new Date().toISOString()
@@ -105,7 +113,7 @@
     const bw = _ls('forge_bw_workouts');
     if (!Array.isArray(bw) || bw.length === 0) return;
     const rows = bw.map(w => ({
-      id:      String(w.id || w.date || Date.now()),
+      id:      _syncRecordId('bwk', w.id || w.date),
       user_id: userId,
       data:    w,
       date:    w.date ? new Date(w.date).toISOString() : new Date().toISOString()
@@ -118,7 +126,7 @@
     const cardio = _ls('forge_cardio');
     if (!Array.isArray(cardio) || cardio.length === 0) return;
     const rows = cardio.map(c => ({
-      id:      String(c.id || c.date || Date.now()),
+      id:      _syncRecordId('cardio', c.id || c.date),
       user_id: userId,
       data:    c,
       date:    c.date ? new Date(c.date).toISOString() : new Date().toISOString()
@@ -130,7 +138,7 @@
     const entries = _ls('forge_bodyweight');
     if (!Array.isArray(entries) || entries.length === 0) return;
     const rows = entries.map((e, i) => ({
-      id:      String(e.id || e.date || i),
+      id:      _syncRecordId('bw', e.id || e.date || i),
       user_id: userId,
       data:    e,
       date:    e.date || new Date().toISOString().slice(0, 10)
@@ -143,7 +151,7 @@
     const templates = _ls('forge_templates');
     if (!Array.isArray(templates) || templates.length === 0) return;
     const rows = templates.map(t => ({
-      id:      String(t.id || t.name || Math.random()),
+      id:      _syncRecordId('tmpl', t.id || t.name),
       user_id: userId,
       data:    t
     }));

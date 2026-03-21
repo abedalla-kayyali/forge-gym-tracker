@@ -22,6 +22,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/form-inspector.css">
@@ -1854,6 +1855,42 @@
           <span class="export-card-badge" style="background:rgba(96,165,250,.12);color:#60a5fa;border-color:rgba(96,165,250,.25)">JSON</span>
         </div>
 
+        <!-- Google Drive auto backup -->
+        <div class="export-card" onclick="toggleGoogleDriveBackup()">
+          <div class="export-card-icon" style="color:#34a853">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20l5-8 5 8"/><path d="M2 20l5-8h10l5 8"/><path d="M7 4h10l5 8H12z"/></svg>
+          </div>
+          <div class="export-card-text">
+            <div class="export-card-title" id="gdrive-backup-connect-title">Connect Google Drive Backup</div>
+            <div class="export-card-desc" id="gdrive-backup-connect-desc">Enable automatic JSON backup to your private Google Drive app data folder.</div>
+          </div>
+          <span class="export-card-badge" style="background:rgba(52,168,83,.12);color:#34a853;border-color:rgba(52,168,83,.25)">AUTO</span>
+        </div>
+        <div id="gdrive-backup-status" style="font-size:11px;color:var(--text3);margin:-4px 2px 0 2px;">Not connected</div>
+
+        <!-- Google Drive manual actions -->
+        <div class="export-card" onclick="backupNowToGoogleDrive()">
+          <div class="export-card-icon" style="color:#22c55e">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div class="export-card-text">
+            <div class="export-card-title">Backup to Google Drive Now</div>
+            <div class="export-card-desc">Upload the latest full JSON backup to Drive immediately.</div>
+          </div>
+          <span class="export-card-badge" style="background:rgba(34,197,94,.12);color:#22c55e;border-color:rgba(34,197,94,.25)">SYNC</span>
+        </div>
+
+        <div class="export-card" onclick="restoreLatestFromGoogleDrive()">
+          <div class="export-card-icon" style="color:#f59e0b">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="export-card-text">
+            <div class="export-card-title">Restore Latest from Google Drive</div>
+            <div class="export-card-desc">Download your latest Drive backup and restore all app data.</div>
+          </div>
+          <span class="export-card-badge" style="background:rgba(245,158,11,.12);color:#f59e0b;border-color:rgba(245,158,11,.25)">RESTORE</span>
+        </div>
+
         <!-- Restore -->
         <label class="export-card" style="cursor:pointer;">
           <div class="export-card-icon" style="color:#f97316">
@@ -2374,6 +2411,7 @@
 <script src="js/xp-system.js"></script>
 <script src="js/profile-avatar.js"></script>
 <script src="js/data-transfer.js"></script>
+<script src="js/google-drive-backup.js"></script>
 <script src="js/achievements-ui.js"></script>
 <script src="js/coach-plan-controls.js"></script>
 <script src="js/share-helpers.js"></script>
@@ -2536,6 +2574,7 @@ function save() {
   _persistCoreDataToLocalStorage();
   _mirrorCoreDataToIdb();
   if (typeof _syncPushDebounced === 'function') _syncPushDebounced();
+  if (window.FORGE_GDRIVE && typeof window.FORGE_GDRIVE.onSave === 'function') window.FORGE_GDRIVE.onSave();
 }
 
 function _persistCoreDataToLocalStorage() {

@@ -2,6 +2,13 @@ function _tm(en, ar) {
   return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
 }
 
+function _templateRecordId() {
+  if (window.FORGE_STORAGE && typeof window.FORGE_STORAGE.makeId === 'function') {
+    return window.FORGE_STORAGE.makeId('tmpl');
+  }
+  return 'tmpl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
+
 function openTemplateModal() {
   document.getElementById('template-modal').classList.add('open');
 }
@@ -16,7 +23,7 @@ function saveTemplate() {
   const exercises = document.getElementById('tmpl-exercises').value.trim();
   const icon = document.getElementById('tmpl-icon').value.trim() || '💪';
   if (!name || !exercises) { showToast(_tm('Fill in name and exercises!', 'أدخل الاسم والتمارين')); return; }
-  templates.push({ id: 't' + Date.now(), name, muscle, exercises, icon });
+  templates.push({ id: _templateRecordId(), name, muscle, exercises, icon });
   save(); renderMyTemplates(); renderTemplates();
   document.getElementById('template-modal').classList.remove('open');
   showToast(_tm('Template saved!', 'تم حفظ القالب!'));

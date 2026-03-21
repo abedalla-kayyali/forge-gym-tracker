@@ -12,6 +12,13 @@ function _cl(en, ar) {
   return (typeof currentLang !== 'undefined' && currentLang === 'ar') ? ar : en;
 }
 
+function _cardioRecordId(prefix) {
+  if (window.FORGE_STORAGE && typeof window.FORGE_STORAGE.makeId === 'function') {
+    return window.FORGE_STORAGE.makeId(prefix);
+  }
+  return (prefix || 'id') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
+
 const _cardioCategoryIcon = {
   cardio: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h4l2-4 4 8 2-4h6"/></svg>',
   hiit: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>',
@@ -175,7 +182,7 @@ function addCardioFromSearch() {
   const catRaw = String(catEl?.value || _cardioFilterCat || 'cardio').toLowerCase();
   const cat = ['cardio', 'hiit', 'sports', 'recovery'].includes(catRaw) ? catRaw : 'cardio';
   if (_cardioActivityExists(act, cat)) { showToast(_cl('Workout already exists', 'التمرين موجود مسبقًا')); return; }
-  _cardioCustomTypes.push({ id: 'cc_' + Date.now(), act, cat });
+  _cardioCustomTypes.push({ id: _cardioRecordId('cc'), act, cat });
   _saveCardioCustomTypes();
   _renderCardioCustomCards();
   _renderCardioActivityStreaks();
@@ -223,7 +230,7 @@ function submitCardioLog() {
   const xpEarned = Math.round(_base * (_mult[_selectedCardioAct.cat] || 1.0)) + _bonus;
 
   const entry = {
-    id:           Date.now(),
+    id:           _cardioRecordId('cardio'),
     date:         _isoKey(new Date()),
     category:     _selectedCardioAct.cat,
     activity:     _selectedCardioAct.act,
@@ -411,7 +418,7 @@ function addCustomCardioType() {
     String(x?.act || '').toLowerCase() === act.toLowerCase() && String(x?.cat || '') === cat
   );
   if (exists) { showToast(_cl('Card already exists', 'البطاقة موجودة مسبقًا')); return; }
-  _cardioCustomTypes.push({ id: 'cc_' + Date.now(), act, cat });
+  _cardioCustomTypes.push({ id: _cardioRecordId('cc'), act, cat });
   _saveCardioCustomTypes();
   _renderCardioCustomCards();
   _renderCardioActivityStreaks();
