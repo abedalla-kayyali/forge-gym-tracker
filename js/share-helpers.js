@@ -177,7 +177,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   const totalRows = groupedLogs.reduce((sum, group) => sum + group.rows.length, 0);
   const sectionCount = groupedLogs.length || 1;
   const listBaseH = 120 + (sectionCount * 44) + (totalRows * 72);
-  const H = Math.max(1350, 824 + listBaseH + 70);
+  const H = Math.max(1530, 1000 + listBaseH + 70);
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -356,8 +356,111 @@ async function _drawSessionShareCard(summaryOverride = null) {
     prY += 26;
   }
 
+  // ── ANALYTICS STRIP (y=808, h=176) ──────────────────────────────────────────
+  const _aY = 808, _aH = 176;
+
+  // Volume by muscle
+  const _volMap = {};
+  (s.logs || []).forEach(l => { if (l && l.muscle) _volMap[l.muscle] = (_volMap[l.muscle] || 0) + (Number(l.volume) || 0); });
+  const _volEntries = Object.entries(_volMap).sort((a, b) => b[1] - a[1]);
+  const _volTotal = _volEntries.reduce((t, [, v]) => t + v, 0);
+
+  // MVP lift (max weight × reps single set)
+  let _mvpEx = '', _mvpW = 0, _mvpR = 0, _mvpScore = 0;
+  (s.logs || []).forEach(l => {
+    (Array.isArray(l.sets) ? l.sets : []).forEach(st => {
+      const w = Number(st.weight) || 0, r = Number(st.reps) || 0;
+      if (w * r > _mvpScore) { _mvpScore = w * r; _mvpEx = l.exercise || '?'; _mvpW = w; _mvpR = r; }
+    });
+  });
+
+  // Best est. 1RM — Epley formula: w × (1 + r/30)
+  let _bestOrm = 0, _bestOrmEx = '';
+  (s.logs || []).forEach(l => {
+    (Array.isArray(l.sets) ? l.sets : []).forEach(st => {
+      const w = Number(st.weight) || 0, r = Number(st.reps) || 0;
+      const orm = r > 0 ? Math.round(w * (1 + r / 30)) : 0;
+      if (orm > _bestOrm) { _bestOrm = orm; _bestOrmEx = l.exercise || '?'; }
+    });
+  });
+
+  // Workout density
+  const _durMins = (() => { const ds = s.durStr || ''; if (!ds || ds === '--:--') return 0; const p = ds.split(':'); return (parseInt(p[0], 10) || 0) + (parseInt(p[1], 10) || 0) / 60; })();
+  const _density = (_durMins > 0 && Number(s.totalVol) > 0) ? Math.round(Number(s.totalVol) / _durMins) : 0;
+
+  // Fun weight equivalent
+  const _funKg = Number(s.totalVol) || 0;
+  const _funStr = _funKg >= 10000 ? `${(_funKg/6350).toFixed(1)} elephants` : _funKg >= 3000 ? `${(_funKg/1500).toFixed(1)} polar bears` : _funKg >= 500 ? `${(_funKg/80).toFixed(0)} people` : _funKg >= 100 ? `${(_funKg/10).toFixed(0)} bowling balls` : null;
+
+  // Box 1 — Volume breakdown bars (x=70, w=420)
+  ctx.fillStyle = 'rgba(13,24,18,.92)';
+  _roundRect(ctx, 70, _aY, 420, _aH, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(84,255,171,.22)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#54ffab'; ctx.font = '600 15px "DM Mono", monospace';
+  ctx.fillText('VOLUME BY MUSCLE', 86, _aY + 26);
+  if (_volEntries.length > 0) {
+    const _nb = Math.min(_volEntries.length, 6), _bh = 20, _bgap = 5;
+    const _bmaxW = 420 - 16 - 84 - 38;
+    let _by = _aY + 42;
+    for (let _bi = 0; _bi < _nb; _bi++) {
+      const [_bm, _bv] = _volEntries[_bi];
+      const _bp = _volTotal > 0 ? _bv / _volTotal : 0;
+      ctx.fillStyle = 'rgba(190,214,196,.8)'; ctx.font = '500 12px "DM Mono", monospace';
+      ctx.textAlign = 'right'; ctx.fillText(_bm.slice(0, 10), 86 + 80, _by + _bh - 4); ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(25,52,35,.9)'; _roundRect(ctx, 86 + 84, _by, _bmaxW, _bh, 4); ctx.fill();
+      const _bfw = Math.max(6, _bp * _bmaxW);
+      if (_bi === 0) { const _bg = ctx.createLinearGradient(86+84, 0, 86+84+_bfw, 0); _bg.addColorStop(0, '#39ff8f'); _bg.addColorStop(1, '#00c9b1'); ctx.fillStyle = _bg; }
+      else ctx.fillStyle = `rgba(57,255,143,${Math.max(0.25, 0.55 - _bi * 0.07)})`;
+      _roundRect(ctx, 86 + 84, _by, _bfw, _bh, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(190,214,196,.88)'; ctx.font = '600 11px "DM Mono", monospace';
+      ctx.fillText(Math.round(_bp * 100) + '%', 86 + 84 + _bmaxW + 5, _by + _bh - 4);
+      _by += _bh + _bgap;
+    }
+  }
+
+  // Box 2 — MVP lift (x=506, w=240)
+  ctx.fillStyle = 'rgba(13,24,18,.92)'; _roundRect(ctx, 506, _aY, 240, _aH, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,214,102,.28)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#ffd666'; ctx.font = '600 15px "DM Mono", monospace'; ctx.fillText('MVP LIFT', 522, _aY + 26);
+  if (_mvpEx) {
+    ctx.fillStyle = 'rgba(190,214,196,.85)'; ctx.font = '500 13px "DM Mono", monospace';
+    _wrapText(ctx, _mvpEx, 208).slice(0, 2).forEach((ln, i) => ctx.fillText(ln, 522, _aY + 50 + i * 17));
+    ctx.fillStyle = '#39ff8f'; ctx.font = '700 32px "Barlow Condensed", sans-serif';
+    ctx.fillText(_mvpW + 'kg × ' + _mvpR, 522, _aY + 106);
+    ctx.fillStyle = 'rgba(190,214,196,.5)'; ctx.font = '500 12px "DM Mono", monospace';
+    ctx.fillText('Heaviest Set', 522, _aY + 126);
+  } else {
+    ctx.fillStyle = 'rgba(190,214,196,.4)'; ctx.font = '500 13px "DM Mono", monospace';
+    ctx.fillText('No weighted sets', 522, _aY + 70);
+  }
+
+  // Box 3 — Advanced stats: est. 1RM / density / fun weight (x=762, w=248)
+  ctx.fillStyle = 'rgba(13,24,18,.92)'; _roundRect(ctx, 762, _aY, 248, _aH, 14); ctx.fill();
+  ctx.strokeStyle = 'rgba(78,197,255,.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#4ec5ff'; ctx.font = '600 15px "DM Mono", monospace'; ctx.fillText('ADVANCED STATS', 778, _aY + 26);
+  let _stY = _aY + 50;
+  if (_bestOrm > 0) {
+    ctx.fillStyle = 'rgba(190,214,196,.65)'; ctx.font = '500 12px "DM Mono", monospace';
+    ctx.fillText('Est. 1RM · ' + _bestOrmEx.slice(0, 14), 778, _stY);
+    ctx.fillStyle = '#f0faf2'; ctx.font = '700 26px "Barlow Condensed", sans-serif';
+    ctx.fillText(_bestOrm + ' kg', 778, _stY + 24); _stY += 46;
+  }
+  if (_density > 0) {
+    ctx.fillStyle = 'rgba(190,214,196,.65)'; ctx.font = '500 12px "DM Mono", monospace';
+    ctx.fillText('Workout Density', 778, _stY);
+    ctx.fillStyle = '#f0faf2'; ctx.font = '700 26px "Barlow Condensed", sans-serif';
+    ctx.fillText(_density + ' kg/min', 778, _stY + 24); _stY += 46;
+  }
+  if (_funStr) {
+    ctx.fillStyle = 'rgba(190,214,196,.65)'; ctx.font = '500 12px "DM Mono", monospace';
+    ctx.fillText('You lifted ≈', 778, _stY);
+    ctx.fillStyle = '#f0faf2'; ctx.font = '600 18px "Barlow Condensed", sans-serif';
+    ctx.fillText(_funStr, 778, _stY + 22);
+  }
+  // ── END ANALYTICS STRIP ──────────────────────────────────────────────────────
+
   const listX = 70;
-  const listY = 824;
+  const listY = 1000;
   const listW = W - 140;
   const listH = H - listY - 70;
   ctx.fillStyle = 'rgba(12,22,16,.94)';

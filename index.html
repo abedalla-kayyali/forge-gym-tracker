@@ -2929,7 +2929,62 @@ function _buildSessionBodyMapSVG(muscles, side) {
     return glow + fill + highlight;
   }).join('');
 
-  return `<svg viewBox="0 0 200 410" width="90" height="185" xmlns="http://www.w3.org/2000/svg">${defs}${sil}${paths}</svg>`;
+  // Muscle definition lines — subtle anatomy lines rendered above all zones
+  const lc = 'rgba(100,220,150,0.22)', lw = '0.6';
+  const frontDefLines =
+    // Abs: vertical midline + 2 horizontal segmentation lines
+    `<line x1="100" y1="143" x2="100" y2="196" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<line x1="69" y1="158" x2="131" y2="157" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<line x1="70" y1="172" x2="130" y2="171" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Chest: sternum line + inferior pec curve
+    `<line x1="100" y1="73" x2="100" y2="143" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M67 116 Q100 128 133 116" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Deltoid head separation
+    `<path d="M52 82 Q57 98 62 112" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M148 82 Q143 98 138 112" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Quad separations — left leg
+    `<path d="M74 232 Q74 265 75 305" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M83 232 Q84 268 85 310" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Quad separations — right leg
+    `<path d="M126 232 Q126 265 125 305" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M117 232 Q116 268 115 310" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Calf tibialis line
+    `<path d="M75 316 Q76 348 77 376" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M125 316 Q124 348 123 376" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Bicep teardrop peak
+    `<path d="M47 133 Q51 147 54 160" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M153 133 Q149 147 146 160" fill="none" stroke="${lc}" stroke-width="${lw}"/>`;
+
+  const backDefLines =
+    // Spine line full length
+    `<line x1="100" y1="65" x2="100" y2="232" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Trap internal division
+    `<path d="M78 96 Q100 100 122 96" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Lat / rhomboid border
+    `<path d="M84 123 Q80 154 68 187" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M116 123 Q120 154 132 187" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Rhomboid diamond marks
+    `<path d="M88 132 L100 150" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M112 132 L100 150" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Erector spinae parallel lines
+    `<line x1="94" y1="186" x2="93" y2="230" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<line x1="106" y1="186" x2="107" y2="230" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Glute central line + crease curve
+    `<line x1="100" y1="232" x2="100" y2="295" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M68 264 Q100 278 132 264" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Hamstring separation + inner sweep
+    `<line x1="100" y1="295" x2="100" y2="362" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M70 318 Q77 338 82 356" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M130 318 Q123 338 118 356" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Calf gastrocnemius heads
+    `<line x1="100" y1="366" x2="100" y2="404" stroke="${lc}" stroke-width="${lw}"/>` +
+    // Tricep long/lateral head boundary
+    `<path d="M45 128 Q51 148 54 164" fill="none" stroke="${lc}" stroke-width="${lw}"/>` +
+    `<path d="M155 128 Q149 148 146 164" fill="none" stroke="${lc}" stroke-width="${lw}"/>`;
+
+  const definitionLines = side === 'back' ? backDefLines : frontDefLines;
+
+  return `<svg viewBox="0 0 200 410" width="90" height="185" xmlns="http://www.w3.org/2000/svg">${defs}${sil}${paths}${definitionLines}</svg>`;
 }
 
 function _showSessionSummary(duration) {
