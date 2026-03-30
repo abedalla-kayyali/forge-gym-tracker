@@ -333,7 +333,6 @@ async function _drawSessionShareCard(summaryOverride = null) {
     ctx.shadowBlur = 22;
   }
   ctx.fillStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.18)' : 'rgba(44,58,47,.85)';
-  ctx.fillStyle = 'rgba(239,247,241,.95)';
   ctx.font = '600 23px "Barlow Condensed", sans-serif';
   const prRawText = prItems.length ? prItems.join(' | ') : 'No PR this session';
   const prWrapped = _wrapText(ctx, prRawText, rightW - 68);
