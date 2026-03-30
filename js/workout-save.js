@@ -304,10 +304,15 @@ function saveBwWorkout() {
 
     const totalReps = sets.reduce((a, s) => a + (s.reps || s.secs || 0), 0);
 
+    const durationSecs = _exTimerStart
+      ? Math.round((Date.now() - _exTimerStart) / 1000)
+      : 0;
+
     bwWorkouts.push({
       id: _forgeRecordId('bwk'), date: new Date().toISOString(),
       exercise: name, muscle, sets, notes: '',
-      totalReps, isPR, type: 'bodyweight', bwType: _currentBwType
+      totalReps, isPR, type: 'bodyweight', bwType: _currentBwType,
+      durationSecs
     });
     if (_sessionActive) {
       if (muscle) _sessionWkMuscles.add(muscle);
@@ -318,12 +323,14 @@ function saveBwWorkout() {
         sets: sets.map(s => ({ reps: s.reps || 0, secs: s.secs || 0 })),
         totalReps,
         volume: 0,
-        isPR
+        isPR,
+        durationSecs
       });
       if (typeof _updateSessionCard === 'function') _updateSessionCard();
       if (typeof _checkEndSessionNudge === 'function') _checkEndSessionNudge();
     }
     saveBwData();
+    _resetExTimer();
 
     // Fire Skill Unlock overlay if threshold was just crossed
     if (_skillJustUnlocked && _suBwEx) {
