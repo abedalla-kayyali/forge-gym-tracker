@@ -177,7 +177,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   const totalRows = groupedLogs.reduce((sum, group) => sum + group.rows.length, 0);
   const sectionCount = groupedLogs.length || 1;
   const listBaseH = 120 + (sectionCount * 44) + (totalRows * 72);
-  const H = Math.max(1530, 1000 + listBaseH + 70);
+  const H = Math.max(2000, 1380 + listBaseH + 70);
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -251,8 +251,8 @@ async function _drawSessionShareCard(summaryOverride = null) {
 
   const leftX = 70;
   const leftY = 372;
-  const leftW = 360;
-  const leftH = 420;
+  const leftW = 940;
+  const leftH = 800;
   ctx.fillStyle = 'rgba(13,24,18,.92)';
   _roundRect(ctx, leftX, leftY, leftW, leftH, 18);
   ctx.fill();
@@ -270,94 +270,32 @@ async function _drawSessionShareCard(summaryOverride = null) {
     const backSvg = _buildSessionBodyMapSVG(muscles, 'back') || '';
     const frontImg = await _svgMarkupToImage(frontSvg);
     const backImg = await _svgMarkupToImage(backSvg);
-    if (frontImg) ctx.drawImage(frontImg, leftX + 18, leftY + 46, 160, 320);
-    if (backImg)  ctx.drawImage(backImg,  leftX + 192, leftY + 46, 160, 320);
+    const svgW = 341, svgH = 700, svgGap = 20;
+    const svgPadX = Math.floor((leftW - svgW * 2 - svgGap) / 2);
+    if (frontImg) ctx.drawImage(frontImg, leftX + svgPadX, leftY + 54, svgW, svgH);
+    if (backImg)  ctx.drawImage(backImg,  leftX + svgPadX + svgW + svgGap, leftY + 54, svgW, svgH);
 
     ctx.strokeStyle = 'rgba(84,255,171,0.3)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(leftX + 18, leftY + 378); ctx.lineTo(leftX + 58, leftY + 378); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(leftX + 192, leftY + 378); ctx.lineTo(leftX + 232, leftY + 378); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(leftX + svgPadX, leftY + 766); ctx.lineTo(leftX + svgPadX + 60, leftY + 766); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(leftX + svgPadX + svgW + svgGap, leftY + 766); ctx.lineTo(leftX + svgPadX + svgW + svgGap + 60, leftY + 766); ctx.stroke();
 
     ctx.fillStyle = 'rgba(190,214,196,.85)';
-    ctx.font = '600 16px "DM Mono", monospace';
-    ctx.fillText('FRONT', leftX + 28, leftY + 393);
-    ctx.fillText('BACK', leftX + 202, leftY + 393);
+    ctx.font = '600 18px "DM Mono", monospace';
+    ctx.fillText('FRONT', leftX + svgPadX + 6, leftY + 783);
+    ctx.fillText('BACK', leftX + svgPadX + svgW + svgGap + 6, leftY + 783);
+
+    if (Array.isArray(s.muscles) && s.muscles.length) {
+      ctx.fillStyle = 'rgba(190,214,196,.7)';
+      ctx.font = '500 16px "DM Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.muscles.join(' · '), leftX + leftW / 2, leftY + leftH - 12);
+      ctx.textAlign = 'left';
+    }
   }
 
-  const rightX = 450;
-  const rightY = 372;
-  const rightW = 600;
-  const rightH = 420;
-  ctx.fillStyle = 'rgba(13,24,18,.92)';
-  _roundRect(ctx, rightX, rightY, rightW, rightH, 18);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(84,255,171,.28)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#54ffab';
-  ctx.font = '600 20px "DM Mono", monospace';
-  ctx.fillText('SESSION OUTPUT', rightX + 20, rightY + 34);
-
-  const out = [];
-  if (Number(s.totalVol) > 0) out.push('Weighted volume: ' + _fmtNum(s.totalVol));
-  if (Number(s.totalBwReps) > 0) out.push('Bodyweight reps: ' + _fmtNum(s.totalBwReps));
-  if (Number(s.totalCardioMins) > 0) out.push('Cardio: ' + _fmtNum(s.totalCardioMins) + ' min');
-  if (!out.length) out.push('No measurable output captured');
-  ctx.fillStyle = '#f0faf2';
-  ctx.font = '600 30px "Barlow Condensed", sans-serif';
-  let yy = rightY + 74;
-  for (let i = 0; i < out.length && i < 3; i++) {
-    ctx.fillText(out[i], rightX + 20, yy);
-    yy += 36;
-  }
-
-  const musclesText = (Array.isArray(s.muscles) && s.muscles.length)
-    ? s.muscles.join(', ')
-    : 'No specific muscles tracked';
-  ctx.fillStyle = '#9df8c8';
-  ctx.font = '700 18px "DM Mono", monospace';
-  ctx.fillText('MUSCLES TRAINED', rightX + 20, rightY + 171);
-  ctx.fillStyle = 'rgba(190,214,196,.88)';
-  ctx.font = '500 18px "Barlow", sans-serif';
-  const wrappedMuscles = _wrapText(ctx, musclesText, rightW - 40);
-  let my = rightY + 196;
-  for (let i = 0; i < wrappedMuscles.length && i < 3; i++) {
-    ctx.fillText(wrappedMuscles[i], rightX + 20, my);
-    my += 24;
-  }
-
-  const prItems = (s.logs || []).filter(l => l && l.isPR).map(l => l.exercise || l.activity || 'PR');
-  if ((s.prCount || 0) > 0) {
-    ctx.shadowColor = 'rgba(255,180,0,0.5)';
-    ctx.shadowBlur = 22;
-  }
-  ctx.fillStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.18)' : 'rgba(44,58,47,.85)';
-  ctx.font = '600 23px "Barlow Condensed", sans-serif';
-  const prRawText = prItems.length ? prItems.join(' | ') : 'No PR this session';
-  const prWrapped = _wrapText(ctx, prRawText, rightW - 68);
-  const prBoxH = Math.max(112, 60 + prWrapped.length * 28);
-  _roundRect(ctx, rightX + 18, rightY + 288, rightW - 36, prBoxH, 14);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.45)' : 'rgba(90,110,96,.28)';
-  ctx.stroke();
-
-  ctx.fillStyle = (s.prCount || 0) > 0 ? '#ffd666' : 'rgba(190,214,196,.74)';
-  ctx.font = '600 18px "DM Mono", monospace';
-  ctx.fillText((s.prCount || 0) > 0 ? ('PR HITS | ' + s.prCount) : 'PR HITS | 0', rightX + 34, rightY + 320);
-
-  ctx.fillStyle = 'rgba(239,247,241,.95)';
-  ctx.font = '600 23px "Barlow Condensed", sans-serif';
-  let prY = rightY + 352;
-  for (let pi = 0; pi < prWrapped.length; pi++) {
-    ctx.fillText(prWrapped[pi], rightX + 34, prY);
-    prY += 26;
-  }
-
-  // ── ANALYTICS STRIP (y=808, h=176) ──────────────────────────────────────────
-  const _aY = 808, _aH = 176;
+  // ── ANALYTICS STRIP (y=1188, h=176) ─────────────────────────────────────────
+  const _aY = 1188, _aH = 176;
 
   // Volume by muscle
   const _volMap = {};
@@ -460,7 +398,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   // ── END ANALYTICS STRIP ──────────────────────────────────────────────────────
 
   const listX = 70;
-  const listY = 1000;
+  const listY = 1380;
   const listW = W - 140;
   const listH = H - listY - 70;
   ctx.fillStyle = 'rgba(12,22,16,.94)';
