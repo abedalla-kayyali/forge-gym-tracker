@@ -99,12 +99,16 @@ function _saveWeightedWorkout() {
     const newMax = workSets.length ? Math.max(...workSets.map(s => s.weight)) : 0;
     const isPR = workSets.length > 0 && (prevMax.length === 0 || newMax > Math.max(...prevMax));
 
+    const durationSecs = _exTimerStart
+      ? Math.round((Date.now() - _exTimerStart) / 1000)
+      : 0;
     const _wkEntry = {
       id: _forgeRecordId('wk'), date: new Date().toISOString(),
       muscle: selectedMuscle, exercise: name, sets, notes: '',
       angle: (typeof selectedAngle !== 'undefined' ? selectedAngle : null),
       totalVolume: sets.filter(s => s.type !== 'warmup').reduce((a, s) => a + s.reps * s.weight, 0), isPR,
-      effort: _selectedEffort
+      effort: _selectedEffort,
+      durationSecs
     };
     workouts.push(_wkEntry);
     // Capture into active session
@@ -117,10 +121,12 @@ function _saveWeightedWorkout() {
         exercise: name,
         sets: workSetsOnly.map(s => ({ reps: s.reps, weight: s.weight, unit: s.unit || 'kg' })),
         volume: _wkEntry.totalVolume,
-        isPR: isPR
+        isPR: isPR,
+        durationSecs
       });
     }
     save();
+    _resetExTimer();
     if (typeof window.renderDailyNonNegotiables === 'function') setTimeout(() => window.renderDailyNonNegotiables(), 300);
 
     document.getElementById('exercise-name').value = '';
