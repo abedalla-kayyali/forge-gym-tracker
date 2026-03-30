@@ -206,9 +206,12 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.save();
   ctx.strokeStyle = 'rgba(84,255,171,0.02)';
   ctx.lineWidth = 1;
+  ctx.beginPath();
   for (let gx = -H; gx < W + H; gx += 12) {
-    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx + H, H); ctx.stroke();
+    ctx.moveTo(gx, 0);
+    ctx.lineTo(gx + H, H);
   }
+  ctx.stroke();
   ctx.restore();
 
   ctx.fillStyle = '#54ffab';
@@ -343,8 +346,13 @@ async function _drawSessionShareCard(summaryOverride = null) {
 
   ctx.fillStyle = 'rgba(239,247,241,.95)';
   ctx.font = '600 23px "Barlow Condensed", sans-serif';
-  const prText = prItems.length ? prItems.join(' | ') : 'No PR this session';
-  ctx.fillText(prText, rightX + 34, rightY + 362);
+  const prRawText = prItems.length ? prItems.join(' | ') : 'No PR this session';
+  const prWrapped = _wrapText(ctx, prRawText, rightW - 68);
+  let prY = rightY + 352;
+  for (let pi = 0; pi < Math.min(prWrapped.length, 3); pi++) {
+    ctx.fillText(prWrapped[pi], rightX + 34, prY);
+    prY += 26;
+  }
 
   const listX = 70;
   const listY = 824;
