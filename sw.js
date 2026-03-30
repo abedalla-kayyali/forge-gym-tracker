@@ -1,6 +1,6 @@
 // FORGE Gym Tracker - Service Worker
 // Keep this aligned with js/config.js FORGE_VERSION to avoid version/cache drift.
-const CACHE_NAME = 'forge-v244';
+const CACHE_NAME = 'forge-v245';
 
 const CORE_ASSETS = [
   './index.html',

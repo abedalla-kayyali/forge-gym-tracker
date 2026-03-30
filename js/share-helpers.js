@@ -214,6 +214,15 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.stroke();
   ctx.restore();
 
+  // Top accent bar — neon gradient across full width
+  const _accentGrad = ctx.createLinearGradient(0, 0, W, 0);
+  _accentGrad.addColorStop(0,   'rgba(84,255,171,0)');
+  _accentGrad.addColorStop(0.2, '#54ffab');
+  _accentGrad.addColorStop(0.7, '#00c9b1');
+  _accentGrad.addColorStop(1,   'rgba(84,255,171,0)');
+  ctx.fillStyle = _accentGrad;
+  ctx.fillRect(0, 0, W, 4);
+
   ctx.fillStyle = '#54ffab';
   ctx.font = '700 60px "Bebas Neue", sans-serif';
   ctx.fillText('FORGE SESSION', 70, 96);
@@ -227,11 +236,60 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.fillText((s.dateStr || '') + ' | ' + (s.timeStr || ''), 70, 179);
 
   const athleteName = _sessionShareUserName().toUpperCase();
-  ctx.fillStyle = 'rgba(221,240,227,.92)';
-  ctx.font = '700 24px "Barlow Condensed", sans-serif';
-  ctx.fillText('ATHLETE: ' + athleteName, 720, 96);
-
   const streakVal = typeof calcStreak === 'function' ? calcStreak() : 0;
+
+  // Session score (0–100 composite) + achievement tier
+  const _sessionScore = Math.min(100,
+    Math.min(40, Math.round((Number(s.totalVol) || 0) / 500)) +
+    Math.min(30, (s.prCount || 0) * 6) +
+    Math.min(20, streakVal * 2) +
+    Math.min(10, Math.round(Math.min((s.totalSets || 0), 50) / 50 * 10))
+  );
+  const _tier = Number(s.totalVol) >= 10000 || (s.prCount || 0) >= 6
+    ? { label: 'BEAST MODE', color: '#ff6b6b', glow: 'rgba(255,107,107,0.5)' }
+    : Number(s.totalVol) >= 5000 || (s.prCount || 0) >= 3
+    ? { label: 'ELITE',      color: '#ffd666', glow: 'rgba(255,214,102,0.5)' }
+    : Number(s.totalVol) >= 2000 || (s.prCount || 0) >= 1
+    ? { label: 'WARRIOR',    color: '#54ffab', glow: 'rgba(84,255,171,0.4)'  }
+    : { label: 'GRINDER',    color: 'rgba(190,214,196,.75)', glow: 'rgba(84,255,171,0.2)' };
+
+  // Score + tier panel (top-right)
+  const _spX = 700, _spY = 52, _spW = 310, _spH = 124;
+  ctx.save();
+  ctx.shadowColor = _tier.glow;
+  ctx.shadowBlur = 32;
+  ctx.fillStyle = 'rgba(7,16,11,.9)';
+  _roundRect(ctx, _spX, _spY, _spW, _spH, 14);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = _tier.color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+  // Labels inside panel
+  ctx.fillStyle = 'rgba(190,214,196,.55)';
+  ctx.font = '500 11px "DM Mono", monospace';
+  ctx.fillText('SESSION SCORE', _spX + 16, _spY + 20);
+  ctx.fillStyle = 'rgba(190,214,196,.55)';
+  ctx.fillText('ATHLETE: ' + athleteName, _spX + 16, _spY + 114);
+  // Tier label with glow
+  ctx.save();
+  ctx.shadowColor = _tier.glow;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = _tier.color;
+  ctx.font = '700 34px "Bebas Neue", sans-serif';
+  ctx.fillText(_tier.label, _spX + 16, _spY + 62);
+  ctx.restore();
+  // Score number (large, right-aligned inside panel)
+  ctx.save();
+  ctx.shadowColor = _tier.glow;
+  ctx.shadowBlur = 22;
+  ctx.fillStyle = _tier.color;
+  ctx.font = '700 72px "Bebas Neue", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(String(_sessionScore), _spX + _spW - 14, _spY + 108);
+  ctx.textAlign = 'left';
+  ctx.restore();
   const volumeVal = Number(s.totalVol) > 0 ? (_fmtNum(s.totalVol) + 'kg') : '-';
   const cards = [
     { label: 'DURATION', value: s.durStr || '00:00', accent: true },
@@ -260,6 +318,19 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
+  // Glow orbs behind body figures for depth
+  const svgW = 341, svgH = 700, svgGap = 20;
+  const svgPadX = Math.floor((leftW - svgW * 2 - svgGap) / 2);
+  const _orbY = leftY + 54 + svgH / 2;
+  [leftX + svgPadX + svgW / 2, leftX + svgPadX + svgW + svgGap + svgW / 2].forEach(cx => {
+    const orb = ctx.createRadialGradient(cx, _orbY, 40, cx, _orbY, 310);
+    orb.addColorStop(0, 'rgba(84,255,171,0.10)');
+    orb.addColorStop(0.5, 'rgba(84,255,171,0.04)');
+    orb.addColorStop(1, 'rgba(84,255,171,0)');
+    ctx.fillStyle = orb;
+    ctx.fillRect(leftX, leftY, leftW, leftH);
+  });
+
   ctx.fillStyle = '#54ffab';
   ctx.font = '600 20px "DM Mono", monospace';
   ctx.fillText('BODY MAP', leftX + 18, leftY + 34);
@@ -270,24 +341,27 @@ async function _drawSessionShareCard(summaryOverride = null) {
     const backSvg = _buildSessionBodyMapSVG(muscles, 'back') || '';
     const frontImg = await _svgMarkupToImage(frontSvg);
     const backImg = await _svgMarkupToImage(backSvg);
-    const svgW = 341, svgH = 700, svgGap = 20;
-    const svgPadX = Math.floor((leftW - svgW * 2 - svgGap) / 2);
     if (frontImg) ctx.drawImage(frontImg, leftX + svgPadX, leftY + 54, svgW, svgH);
     if (backImg)  ctx.drawImage(backImg,  leftX + svgPadX + svgW + svgGap, leftY + 54, svgW, svgH);
 
+    // FRONT / BACK labels — centered under each figure
     ctx.strokeStyle = 'rgba(84,255,171,0.3)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(leftX + svgPadX, leftY + 766); ctx.lineTo(leftX + svgPadX + 60, leftY + 766); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(leftX + svgPadX + svgW + svgGap, leftY + 766); ctx.lineTo(leftX + svgPadX + svgW + svgGap + 60, leftY + 766); ctx.stroke();
-
+    const _fCx = leftX + svgPadX + svgW / 2;
+    const _bCx = leftX + svgPadX + svgW + svgGap + svgW / 2;
+    ctx.beginPath(); ctx.moveTo(_fCx - 30, leftY + 762); ctx.lineTo(_fCx + 30, leftY + 762); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(_bCx - 30, leftY + 762); ctx.lineTo(_bCx + 30, leftY + 762); ctx.stroke();
     ctx.fillStyle = 'rgba(190,214,196,.85)';
     ctx.font = '600 18px "DM Mono", monospace';
-    ctx.fillText('FRONT', leftX + svgPadX + 6, leftY + 783);
-    ctx.fillText('BACK', leftX + svgPadX + svgW + svgGap + 6, leftY + 783);
+    ctx.textAlign = 'center';
+    ctx.fillText('FRONT', _fCx, leftY + 780);
+    ctx.fillText('BACK',  _bCx, leftY + 780);
+    ctx.textAlign = 'left';
 
+    // Muscles trained — centered at bottom of panel
     if (Array.isArray(s.muscles) && s.muscles.length) {
-      ctx.fillStyle = 'rgba(190,214,196,.7)';
-      ctx.font = '500 16px "DM Mono", monospace';
+      ctx.fillStyle = 'rgba(190,214,196,.6)';
+      ctx.font = '500 15px "DM Mono", monospace';
       ctx.textAlign = 'center';
       ctx.fillText(s.muscles.join(' · '), leftX + leftW / 2, leftY + leftH - 12);
       ctx.textAlign = 'left';
