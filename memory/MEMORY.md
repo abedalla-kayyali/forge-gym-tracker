@@ -1,64 +1,90 @@
-# FORGE App Memory
+﻿# FORGE App Memory
 
-Last updated: 2026-03-10
+Last updated: 2026-03-21 (Google Drive backup + export parity + security hardening)
 
-## What This Project Is
-- A static, local-first gym tracker PWA.
-- Main app is a single-page, vanilla JS application centered in `index.html`.
-- CSS and multiple data/helper modules are extracted into `css/` and `js/`.
+## Repository Snapshot
+- This repo is a large workspace; the production FORGE app is first-party code in `index.html`, `js/`, `css/`, `data/`, `icons/`, `supabase/`, and `scripts/`.
+- `docs/` is extensive planning/audit history (70+ files, mostly dated 2026-03).
+- There is also an `OpenViking/` subtree with third-party/C++ content; treat it as separate from main FORGE web app work unless explicitly requested.
+- Git currently shows multiple untracked directories (`.agents/`, `.claude/*`, `OpenViking/`, parts of `supabase/`), so avoid broad staging commands.
 
-## Core Runtime Model
-- Primary persistence: `localStorage` keys prefixed with `forge_`.
-- Backup persistence: IndexedDB mirror (`forge-v3` DB) via `js/storage.js` `createIdbBackup()`.
-- Offline support: service worker cache in `sw.js` (`CACHE_NAME = forge-v20`). Chart.js CDN is pre-cached on SW install so charts work offline after first load.
-- Dev serving: `node serve.js` on `http://127.0.0.1:8765` (loopback-only since 2026-03-10 security fix).
+## Current Runtime Model
+- Stack: static HTML + vanilla JS modules (no bundler, no package manager in app root).
+- Entry: `index.html` includes CDN libraries (Chart.js, Hammer.js, chartjs-plugin-zoom, Supabase JS) and then many local scripts.
+- App config is in `js/config.js`:
+  - `FORGE_VERSION = 'v241'`
+  - `FORGE_BUILD = '2026-03-18 (...)'`
+  - `FORGE_CONFIG` contains Supabase URL/anon key, `FOOD_SEARCH_URL`, and Google Drive backup config:
+    - `GOOGLE_DRIVE_CLIENT_ID` (must be set for prod)
+    - `GOOGLE_DRIVE_BACKUP_FILE` (default `FORGE_backup_latest.json`)
+- Bootstrap (`js/bootstrap.js`) registers service worker and aggressively checks for updates.
 
-## App Architecture (Practical View)
-- UI and most behavior are in `index.html` (very large monolithic script).
-- `js/storage.js` loads first — exports `window.FORGE_STORAGE` with: `KEYS`, `lsGet`, `createIdbBackup`, `esc()`, `runMigrations()`.
-- `js/exercises.js` contains exercise catalog and set-entry/exercise library helpers.
-- `js/i18n.js` contains translation dictionary + mobile/PWA install UX hooks.
-- Additional extracted modules: `ghost-autocomplete.js`, `dashboard-history.js`, `feedback-ui.js`, `recovery-plate.js`, `xp-system.js` (see `<script src>` tags in index.html lines ~2116–2146).
-- Charting relies on CDN Chart.js loaded in `index.html` (and pre-cached by SW).
+## Storage and Data Flow
+- Primary working store: `localStorage` (`forge_*` keys).
+- Backup mirror: IndexedDB (`forge-v3`, object store `kv`) via `window.FORGE_STORAGE.createIdbBackup()` in `js/storage.js`.
+- Migration hook: `window.FORGE_STORAGE.runMigrations()` with `SCHEMA_VERSION = 1`.
+- Backup/export layer (`js/data-transfer.js`) now has:
+  - `buildBackupPayload()` and `restoreBackupPayload()` helpers (shared by local file backup + Google Drive).
+  - JSON backup `version: 5` with `allForgeStorageRaw` full-fidelity snapshot of all `forge_*` keys.
+  - Full CSV export includes all structured sections plus `ALL FORGE STORAGE KEYS (FULL)`.
+- Sync model: offline-first, cloud sync in `js/sync.js`:
+  - Pull/push helpers (`_syncPull`, `_syncPush`, `_syncPushDebounced`, `_syncPushProfile`).
+  - Data pushes to Supabase tables: `workouts`, `bw_workouts`, `cardio`, `body_weight`, `templates`, `settings`, `meals`, `meal_library`, `checkins`, `water`, `steps`, `profiles`.
 
-## Major Domains
-- Workout logging:
-- Weighted: `_saveWeightedWorkout()`
-- Bodyweight: `saveBwWorkout()`
-- Analytics:
-- `renderDashboard()`, `renderVolumeChart()`, `updateWeightChart()`, `renderFreqChart()`
-- Coaching/gamification:
-- `renderCoach()`, `renderMissions()`, XP/level functions
-- Recovery and tracking:
-- Steps, water, check-in, body comp, progress photos, calendar
+## Frontend Module Topology
+- `js/` contains 68 first-party modules; key large files:
+  - `dashboard-history.js` (history/dashboard rendering core)
+  - `i18n.js` (translations + language behavior)
+  - `exercises.js` (exercise/program datasets)
+  - `rag-search.js` (RAG/coach search client behavior)
+  - `profile-avatar.js`, `social-ui.js`, `duels.js`, `coach-state.js`, `auth-ui.js`
+- New module:
+  - `js/google-drive-backup.js` handles Google OAuth token flow, upload/restore with Drive `appDataFolder`, connection state, and auto backup triggers.
+- CSS:
+  - `css/main.css` is the main design system/style file
+  - `css/entry-premium.css`, `css/form-inspector.css` are feature-specific overlays
+- `index.html` still contains substantial inline logic plus module-script loading; load order remains critical.
 
-## Key Data Keys (High Value)
-- `forge_workouts`
-- `forge_bw_workouts`
-- `forge_bodyweight`
-- `forge_templates`
-- `forge_settings`
-- `forge_meals` / `forge_meal_library`
-- `forge_profile`
-- `forge_theme`
-- `forge_accent`
-- `forge_layout`
-- `forge_steps`
-- `forge_deload_data`
-- `forge_schema_version` — written by `runMigrations()`; current value: `1`
+## Supabase / Backend Surfaces
+- Edge functions in `supabase/functions/`:
+  - `food-search`: USDA/OpenFoodFacts normalized nutrition lookup.
+  - `forge-search`: embedding similarity search + optional Anthropic streaming response.
+  - `forge-parse`: transcript-to-structured-workout parsing via Anthropic.
+  - `forge-ingest`: ingestion pipeline (present in tree; inspect before edits).
+  - `backup-engine`: scheduled export/backup orchestration incl. Google Sheets API integration.
+- SQL migrations:
+  - `001_forge_embeddings.sql`: pgvector table + `match_forge_embeddings` RPC + RLS policy.
+  - `20260319000000_backup_state.sql`: `backup_state` cursor table for backup pagination state.
+- Security update:
+  - `supabase/functions/forge-parse/index.ts` now enforces bearer auth and validates user with Supabase auth before processing.
 
-## Important Constraints
-- No test framework detected (manual verification only).
-- No build tooling or package manager detected.
-- Script load order matters: `storage.js` must load before other modules and before the main script block.
-- Refactors should preserve storage schema compatibility; use `runMigrations()` for shape changes.
+## PWA / Offline Notes
+- Service worker is `sw.js`, current cache name `forge-v241` (aligned with `FORGE_VERSION`).
+- It precaches selected core assets and CDN libs, uses mixed strategies (network-first for app shell/critical assets).
+- Version/cache mismatch previously existed and has been corrected in current tree.
 
-## Security Conventions (as of 2026-03-10)
-- **XSS:** Always wrap user-controlled strings in `_esc()` before inserting into `innerHTML`. `_esc` is `window.FORGE_STORAGE.esc` aliased at the top of the main script block. Numbers and controlled enums are safe without escaping.
-- **serve.js:** POST /save-icons is localhost-only. Static file handler uses `_safePath()` to prevent path traversal. Server binds to `127.0.0.1` (not `0.0.0.0`).
-- **postSaveHooks:** Re-entrancy guarded by `_postSaveRunning` flag; reset via `Promise.resolve().then()`.
+## Security and Reliability Conventions
+- Escape user-controlled HTML with `FORGE_STORAGE.esc()` (`_esc` alias in runtime usage).
+- `js/rag-search.js` source rendering now escapes retrieved content/date/labels before `innerHTML` injection.
+- `serve.js` binds to `127.0.0.1`, protects `/save-icons` to localhost, and uses `_safePath()` against traversal.
+- Sync has defensive fallbacks and pending flag (`forge_sync_pending`) when cloud push fails.
+- ID generation hardening:
+  - `FORGE_STORAGE.makeId(prefix)` added.
+  - Used for workout/cardio/template/custom record creation and sync fallback ID assignment in `js/sync.js`.
 
-## Existing Deep Reference
-- Detailed long-form map already exists in:
-- `FORGE_APP_REFERENCE.md`
-- This memory file is the fast operational summary; the reference file is the exhaustive map.
+## Operational Workflow Memory
+- Dev run: `node serve.js` then open `http://localhost:8765`.
+- Lightweight checks used in repo:
+  - `node check_v3.js`
+  - `node smoke_check.js`
+  - `node --check js/storage.js`
+  - `node --check serve.js`
+  - `node --check js/data-transfer.js`
+  - `node --check js/google-drive-backup.js`
+- Reference docs:
+  - Deep architecture map: `FORGE_APP_REFERENCE.md`
+  - Regression flow: `REGRESSION_CHECKLIST.md`
+
+## Known Footguns
+- This codebase has some mojibake/encoding artifacts in comments and older docs; preserve semantics when editing and avoid accidental mass re-encoding.
+- Because app logic is spread across large `index.html` blocks plus many global-script modules, renames and load-order changes can silently break runtime.

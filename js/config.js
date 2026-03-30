@@ -3,16 +3,8 @@
 // shipped in client-side code. Row Level Security (RLS) on the Supabase
 // project enforces access control server-side. This is correct per Supabase
 // architecture: https://supabase.com/docs/guides/api/api-keys
-
-// App version — update whenever the SW cache is bumped
-window.FORGE_VERSION = 'v242';
-window.FORGE_BUILD   = '2026-03-21 (fix: v242 — data backup system: cron isolation, CORS preflight, smoke check coverage)';
-
 window.FORGE_CONFIG = {
   SUPABASE_URL:  'https://mnqetnzdgtbeysqnmbkx.supabase.co',
-  SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucWV0bnpkZ3RiZXlzcW5tYmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzMzgsImV4cCI6MjA4ODcwOTMzOH0.yqgdzeFUyqU3Lkg6cyCt0Kl3l525kD60oTi_p93AuXw',
-  FOOD_SEARCH_URL: 'https://mnqetnzdgtbeysqnmbkx.supabase.co/functions/v1/food-search',
-  // Google Drive backup (OAuth client from Google Cloud Console)
-  GOOGLE_DRIVE_CLIENT_ID: '938646591548-8ib1nh28e12r41111r36papki31p6lh8.apps.googleusercontent.com',
-  GOOGLE_DRIVE_BACKUP_FILE: 'FORGE_backup_latest.json'
+  SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucWV0bnpkZ3RiZXlzcW5tYmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzMzgsImV4cCI6MjA4ODcwOTMzOH0.yqgdzeFUyqU3Lkg6cyCt0Kl3l525kD60oTi_p93AuXw'
 };
+
