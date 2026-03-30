@@ -24021,3 +24021,24 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
 /* ── v241: TEMPLATE CHIP STAGGER ── */
 .template-chip { transition: opacity var(--dur-base) var(--ease-spring), transform var(--dur-base) var(--ease-spring); }
 .template-chip-hidden { opacity: 0; transform: translateY(8px); }
+
+/* History session share button */
+.hist-share-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1px solid rgba(84,255,171,.35);
+  border-radius: 7px;
+  padding: 5px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.hist-share-btn:hover { background: rgba(84,255,171,.08); border-color: rgba(84,255,171,.6); }
+.hist-share-btn:active { opacity: .7; }
