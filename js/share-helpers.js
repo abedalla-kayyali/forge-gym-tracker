@@ -165,8 +165,8 @@ function _svgMarkupToImage(svgMarkup) {
   });
 }
 
-async function _drawSessionShareCard() {
-  const s = (typeof _lastSessionSummary !== 'undefined' && _lastSessionSummary) || null;
+async function _drawSessionShareCard(summaryOverride = null) {
+  const s = summaryOverride || (typeof _lastSessionSummary !== 'undefined' && _lastSessionSummary) || null;
   if (!s) return null;
 
   const canvas = document.createElement('canvas');
@@ -404,8 +404,8 @@ async function _drawSessionShareCard() {
   return canvas;
 }
 
-async function renderSessionSharePreview() {
-  const source = await _drawSessionShareCard();
+async function renderSessionSharePreview(summaryOverride = null) {
+  const source = await _drawSessionShareCard(summaryOverride);
   const target = _getSessionShareCanvas();
   if (!source || !target) return null;
   const ctx = target.getContext('2d');
@@ -417,10 +417,10 @@ async function renderSessionSharePreview() {
   return target;
 }
 
-async function _ensureSessionShareCanvas() {
-  const rendered = await renderSessionSharePreview();
+async function _ensureSessionShareCanvas(summaryOverride = null) {
+  const rendered = await renderSessionSharePreview(summaryOverride);
   if (rendered) return rendered;
-  return await _drawSessionShareCard();
+  return await _drawSessionShareCard(summaryOverride);
 }
 
 async function shareSession() {
