@@ -2893,6 +2893,25 @@ function _showSessionSummary(duration) {
     totalCardioMins,
     prCount
   };
+  // Persist session summary for history share
+  try {
+    const _ssNow = new Date();
+    const _ssHH = String(_ssNow.getHours()).padStart(2, '0');
+    const _ssMM = String(_ssNow.getMinutes()).padStart(2, '0');
+    const _ssDateKey = _ssNow.toISOString().slice(0, 10);
+    const _ssStoreKey = 'forge_session_' + _ssDateKey + '_' + _ssHH + '-' + _ssMM;
+    localStorage.setItem(_ssStoreKey, JSON.stringify(_lastSessionSummary));
+    // Prune: keep only 60 most recent session summaries
+    const _ssAllKeys = [];
+    for (let _i = 0; _i < localStorage.length; _i++) {
+      const _k = localStorage.key(_i);
+      if (_k && _k.startsWith('forge_session_')) _ssAllKeys.push(_k);
+    }
+    if (_ssAllKeys.length > 60) {
+      _ssAllKeys.sort();
+      _ssAllKeys.slice(0, _ssAllKeys.length - 60).forEach(_k => localStorage.removeItem(_k));
+    }
+  } catch (e) {}
   document.getElementById('wend-sub').textContent = dateStr + '  ?  ' + timeStr;
   document.getElementById('wend-stats').innerHTML = [
     {val: durStr,                                                      lbl: 'DURATION', accent: true},
