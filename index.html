@@ -3851,6 +3851,7 @@ function selectMuscle(muscleOrBtn, fromOverlay) {
   document.querySelectorAll('.muscle-chip:not(.muscle-chip-map)').forEach(c => {
     c.classList.toggle('active', (c.dataset.muscle || c.textContent.trim()) === muscle);
   });
+  _resetExTimer();
 }
 
 function _updateMuscleTargetLabel() {
