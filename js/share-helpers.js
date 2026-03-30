@@ -319,7 +319,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.stroke();
 
   // Glow orbs behind body figures for depth
-  const svgW = 341, svgH = 700, svgGap = 20;
+  const svgW = 341, svgH = 650, svgGap = 20;
   const svgPadX = Math.floor((leftW - svgW * 2 - svgGap) / 2);
   const _orbY = leftY + 54 + svgH / 2;
   [leftX + svgPadX + svgW / 2, leftX + svgPadX + svgW + svgGap + svgW / 2].forEach(cx => {
@@ -344,27 +344,48 @@ async function _drawSessionShareCard(summaryOverride = null) {
     if (frontImg) ctx.drawImage(frontImg, leftX + svgPadX, leftY + 54, svgW, svgH);
     if (backImg)  ctx.drawImage(backImg,  leftX + svgPadX + svgW + svgGap, leftY + 54, svgW, svgH);
 
-    // FRONT / BACK labels — centered under each figure
+    // FRONT / BACK labels — centered under each figure, clear of SVG bottom
     ctx.strokeStyle = 'rgba(84,255,171,0.3)';
     ctx.lineWidth = 1;
     const _fCx = leftX + svgPadX + svgW / 2;
     const _bCx = leftX + svgPadX + svgW + svgGap + svgW / 2;
-    ctx.beginPath(); ctx.moveTo(_fCx - 30, leftY + 762); ctx.lineTo(_fCx + 30, leftY + 762); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(_bCx - 30, leftY + 762); ctx.lineTo(_bCx + 30, leftY + 762); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(_fCx - 30, leftY + 716); ctx.lineTo(_fCx + 30, leftY + 716); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(_bCx - 30, leftY + 716); ctx.lineTo(_bCx + 30, leftY + 716); ctx.stroke();
     ctx.fillStyle = 'rgba(190,214,196,.85)';
     ctx.font = '600 18px "DM Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('FRONT', _fCx, leftY + 780);
-    ctx.fillText('BACK',  _bCx, leftY + 780);
+    ctx.fillText('FRONT', _fCx, leftY + 734);
+    ctx.fillText('BACK',  _bCx, leftY + 734);
     ctx.textAlign = 'left';
 
-    // Muscles trained — centered at bottom of panel
-    if (Array.isArray(s.muscles) && s.muscles.length) {
-      ctx.fillStyle = 'rgba(190,214,196,.6)';
-      ctx.font = '500 15px "DM Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(s.muscles.join(' · '), leftX + leftW / 2, leftY + leftH - 12);
-      ctx.textAlign = 'left';
+    // Muscle chip strip — pill badges with green dot, auto-centered
+    const _chipMuscles = Array.isArray(s.muscles) ? s.muscles : [];
+    if (_chipMuscles.length) {
+      ctx.font = '700 14px "DM Mono", monospace';
+      const _dotR = 4, _chipH = 30, _chipPadL = 22, _chipPadR = 12, _chipGap = 10;
+      const _chipWidths = _chipMuscles.map(m => ctx.measureText(m).width + _chipPadL + _chipPadR);
+      const _totalChipW = _chipWidths.reduce((a, b) => a + b, 0) + _chipGap * (_chipMuscles.length - 1);
+      let _cx = leftX + Math.max(16, (leftW - _totalChipW) / 2);
+      const _cy = leftY + 754;
+      _chipMuscles.forEach((m, i) => {
+        const chipW = _chipWidths[i];
+        ctx.fillStyle = 'rgba(10,22,16,.95)';
+        _roundRect(ctx, _cx, _cy, chipW, _chipH, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(84,255,171,.55)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        // Green dot
+        ctx.fillStyle = '#54ffab';
+        ctx.beginPath();
+        ctx.arc(_cx + 11, _cy + _chipH / 2, _dotR, 0, Math.PI * 2);
+        ctx.fill();
+        // Label
+        ctx.fillStyle = '#e5f6eb';
+        ctx.font = '700 14px "DM Mono", monospace';
+        ctx.fillText(m, _cx + _chipPadL, _cy + _chipH / 2 + 5);
+        _cx += chipW + _chipGap;
+      });
     }
   }
 
