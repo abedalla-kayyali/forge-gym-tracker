@@ -2503,6 +2503,8 @@ let sessionStart = Date.now();
 // SESSION TIMER STATE
 let _sessionActive = false;
 let _sessionWkStart = null;
+let _exTimerStart    = null;   // Date.now() when first set is added
+let _exTimerInterval = null;   // setInterval handle for live display
 let _sessionWkLogs = [];        // [{muscle,exercise,sets:[{reps,weight,unit}],volume,isPR}]
 let _sessionWkMuscles = new Set();
 let _sessionShareText = '';
@@ -2743,6 +2745,25 @@ function toggleHeader() {
   // v236: sound FX on toggle
   if (window.fx && typeof fx.sound === 'function') fx.sound('sndTap');
   else if (typeof sndTap === 'function') sndTap();
+}
+
+function _updateExTimerDisplay() {
+  if (!_exTimerStart) return;
+  const elapsed = Math.floor((Date.now() - _exTimerStart) / 1000);
+  const mm = Math.floor(elapsed / 60);
+  const ss = String(elapsed % 60).padStart(2, '0');
+  const el = document.getElementById('ex-timer-value');
+  if (el) el.textContent = mm + ':' + ss;
+}
+
+function _resetExTimer() {
+  clearInterval(_exTimerInterval);
+  _exTimerStart = null;
+  _exTimerInterval = null;
+  const disp = document.getElementById('ex-timer-display');
+  if (disp) disp.style.display = 'none';
+  const val = document.getElementById('ex-timer-value');
+  if (val) val.textContent = '0:00';
 }
 
 function startWorkoutSession() {
