@@ -333,7 +333,12 @@ async function _drawSessionShareCard(summaryOverride = null) {
     ctx.shadowBlur = 22;
   }
   ctx.fillStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.18)' : 'rgba(44,58,47,.85)';
-  _roundRect(ctx, rightX + 18, rightY + 288, rightW - 36, 112, 14);
+  ctx.fillStyle = 'rgba(239,247,241,.95)';
+  ctx.font = '600 23px "Barlow Condensed", sans-serif';
+  const prRawText = prItems.length ? prItems.join(' | ') : 'No PR this session';
+  const prWrapped = _wrapText(ctx, prRawText, rightW - 68);
+  const prBoxH = Math.max(112, 60 + prWrapped.length * 28);
+  _roundRect(ctx, rightX + 18, rightY + 288, rightW - 36, prBoxH, 14);
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.shadowColor = 'transparent';
@@ -346,10 +351,8 @@ async function _drawSessionShareCard(summaryOverride = null) {
 
   ctx.fillStyle = 'rgba(239,247,241,.95)';
   ctx.font = '600 23px "Barlow Condensed", sans-serif';
-  const prRawText = prItems.length ? prItems.join(' | ') : 'No PR this session';
-  const prWrapped = _wrapText(ctx, prRawText, rightW - 68);
   let prY = rightY + 352;
-  for (let pi = 0; pi < Math.min(prWrapped.length, 3); pi++) {
+  for (let pi = 0; pi < prWrapped.length; pi++) {
     ctx.fillText(prWrapped[pi], rightX + 34, prY);
     prY += 26;
   }
