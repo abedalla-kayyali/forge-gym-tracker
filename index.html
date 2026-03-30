@@ -2898,7 +2898,7 @@ function _showSessionSummary(duration) {
     const _ssNow = new Date();
     const _ssHH = String(_ssNow.getHours()).padStart(2, '0');
     const _ssMM = String(_ssNow.getMinutes()).padStart(2, '0');
-    const _ssDateKey = _ssNow.toISOString().slice(0, 10);
+    const _ssDateKey = `${_ssNow.getFullYear()}-${String(_ssNow.getMonth()+1).padStart(2,'0')}-${String(_ssNow.getDate()).padStart(2,'0')}`;
     const _ssStoreKey = 'forge_session_' + _ssDateKey + '_' + _ssHH + '-' + _ssMM;
     localStorage.setItem(_ssStoreKey, JSON.stringify(_lastSessionSummary));
     // Prune: keep only 60 most recent session summaries
@@ -2911,7 +2911,7 @@ function _showSessionSummary(duration) {
       _ssAllKeys.sort();
       _ssAllKeys.slice(0, _ssAllKeys.length - 60).forEach(_k => localStorage.removeItem(_k));
     }
-  } catch (e) {}
+  } catch (e) { console.warn('[FORGE] session persist failed', e); }
   document.getElementById('wend-sub').textContent = dateStr + '  ?  ' + timeStr;
   document.getElementById('wend-stats').innerHTML = [
     {val: durStr,                                                      lbl: 'DURATION', accent: true},
