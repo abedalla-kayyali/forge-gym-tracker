@@ -516,3 +516,72 @@ function downloadShareCard() {
     _downloadBlob(blob, 'my-forge-' + new Date().toISOString().slice(0, 10) + '.png');
   }, 'image/png');
 }
+
+function _getSessionSummaryForDate(isoDate) {
+  // 1. Check localStorage for a stored summary (most recent match wins)
+  const prefix = 'forge_session_' + isoDate + '_';
+  const matchingKeys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(prefix)) matchingKeys.push(k);
+  }
+  if (matchingKeys.length) {
+    matchingKeys.sort().reverse(); // descending → most recent first
+    try { return JSON.parse(localStorage.getItem(matchingKeys[0])); } catch (e) {}
+  }
+
+  // 2. Reconstruct from workouts array (fallback for old sessions)
+  const allW = typeof workouts !== 'undefined' ? workouts : [];
+  const dayW = allW.filter(w => {
+    const d = new Date(w.date || w.id);
+    return !isNaN(d) && d.toISOString().slice(0, 10) === isoDate;
+  });
+  if (!dayW.length) return null;
+
+  const muscles = [...new Set(dayW.map(w => w.muscle).filter(Boolean))];
+  const logs = dayW.map(w => ({
+    exercise: w.exercise || '',
+    muscle: w.muscle || '',
+    mode: 'weighted',
+    sets: Array.isArray(w.sets) ? w.sets : [],
+    volume: w.totalVolume || 0,
+    isPR: !!(w.isPR || w.pr)
+  }));
+  const totalSets = dayW.reduce((a, w) => a + (Array.isArray(w.sets) ? w.sets.length : 0), 0);
+  const totalVol  = dayW.reduce((a, w) => a + (w.totalVolume || 0), 0);
+  const prCount   = dayW.filter(w => w.isPR || w.pr).length;
+  const d = new Date(isoDate + 'T12:00:00');
+  return {
+    dateStr: d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+    timeStr: '--:--',
+    durStr:  '--:--',
+    muscles,
+    logs,
+    totalSets,
+    totalVol,
+    totalBwReps:      0,
+    totalCardioMins:  0,
+    prCount
+  };
+}
+
+async function shareSessionFromHistory(isoDate) {
+  const summary = _getSessionSummaryForDate(isoDate);
+  if (!summary) {
+    if (typeof showToast === 'function') showToast('No session data for this date', 'var(--warn)');
+    return;
+  }
+  const canvas = await _drawSessionShareCard(summary);
+  if (!canvas) return;
+  const blob = await _canvasToBlob(canvas);
+  if (!blob) return;
+  const fname = 'forge-session-' + isoDate + '.png';
+  const file = new File([blob], fname, { type: 'image/png' });
+  const canShareFile = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+  if (navigator.share && canShareFile) {
+    try { await navigator.share({ title: 'FORGE Session', text: 'Session complete. Built with FORGE.', files: [file] }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  _downloadBlob(blob, fname);
+  if (typeof showToast === 'function') showToast('Session poster ready', 'var(--accent)');
+}
