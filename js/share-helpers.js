@@ -214,12 +214,21 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.stroke();
   ctx.restore();
 
-  // Top accent bar — neon gradient across full width
+  // Pre-compute tier early (only needs s.totalVol + s.prCount)
+  const _tier = Number(s.totalVol) >= 10000 || (s.prCount || 0) >= 6
+    ? { label: 'BEAST MODE', color: '#ff6b6b', mid: '#ff4444', rgba: (a) => `rgba(255,107,107,${a})` }
+    : Number(s.totalVol) >= 5000 || (s.prCount || 0) >= 3
+    ? { label: 'ELITE',      color: '#ffd666', mid: '#ffaa00', rgba: (a) => `rgba(255,214,102,${a})` }
+    : Number(s.totalVol) >= 2000 || (s.prCount || 0) >= 1
+    ? { label: 'WARRIOR',    color: '#54ffab', mid: '#00c9b1', rgba: (a) => `rgba(84,255,171,${a})`  }
+    : { label: 'GRINDER',    color: '#9dc9b0', mid: '#6ba88a', rgba: (a) => `rgba(157,201,176,${a})` };
+
+  // Top accent bar — tier-colored gradient
   const _accentGrad = ctx.createLinearGradient(0, 0, W, 0);
-  _accentGrad.addColorStop(0,   'rgba(84,255,171,0)');
-  _accentGrad.addColorStop(0.2, '#54ffab');
-  _accentGrad.addColorStop(0.7, '#00c9b1');
-  _accentGrad.addColorStop(1,   'rgba(84,255,171,0)');
+  _accentGrad.addColorStop(0,   _tier.rgba(0));
+  _accentGrad.addColorStop(0.2, _tier.color);
+  _accentGrad.addColorStop(0.7, _tier.mid);
+  _accentGrad.addColorStop(1,   _tier.rgba(0));
   ctx.fillStyle = _accentGrad;
   ctx.fillRect(0, 0, W, 4);
 
@@ -238,25 +247,18 @@ async function _drawSessionShareCard(summaryOverride = null) {
   const athleteName = _sessionShareUserName().toUpperCase();
   const streakVal = typeof calcStreak === 'function' ? calcStreak() : 0;
 
-  // Session score (0–100 composite) + achievement tier
+  // Session score (0–100 composite)
   const _sessionScore = Math.min(100,
     Math.min(40, Math.round((Number(s.totalVol) || 0) / 500)) +
     Math.min(30, (s.prCount || 0) * 6) +
     Math.min(20, streakVal * 2) +
     Math.min(10, Math.round(Math.min((s.totalSets || 0), 50) / 50 * 10))
   );
-  const _tier = Number(s.totalVol) >= 10000 || (s.prCount || 0) >= 6
-    ? { label: 'BEAST MODE', color: '#ff6b6b', glow: 'rgba(255,107,107,0.5)' }
-    : Number(s.totalVol) >= 5000 || (s.prCount || 0) >= 3
-    ? { label: 'ELITE',      color: '#ffd666', glow: 'rgba(255,214,102,0.5)' }
-    : Number(s.totalVol) >= 2000 || (s.prCount || 0) >= 1
-    ? { label: 'WARRIOR',    color: '#54ffab', glow: 'rgba(84,255,171,0.4)'  }
-    : { label: 'GRINDER',    color: 'rgba(190,214,196,.75)', glow: 'rgba(84,255,171,0.2)' };
 
   // Score + tier panel (top-right)
   const _spX = 700, _spY = 52, _spW = 310, _spH = 124;
   ctx.save();
-  ctx.shadowColor = _tier.glow;
+  ctx.shadowColor = _tier.rgba(0.5);
   ctx.shadowBlur = 32;
   ctx.fillStyle = 'rgba(7,16,11,.9)';
   _roundRect(ctx, _spX, _spY, _spW, _spH, 14);
@@ -274,7 +276,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.fillText('ATHLETE: ' + athleteName, _spX + 16, _spY + 114);
   // Tier label with glow
   ctx.save();
-  ctx.shadowColor = _tier.glow;
+  ctx.shadowColor = _tier.rgba(0.5);
   ctx.shadowBlur = 18;
   ctx.fillStyle = _tier.color;
   ctx.font = '700 34px "Bebas Neue", sans-serif';
@@ -282,7 +284,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.restore();
   // Score number (large, right-aligned inside panel)
   ctx.save();
-  ctx.shadowColor = _tier.glow;
+  ctx.shadowColor = _tier.rgba(0.5);
   ctx.shadowBlur = 22;
   ctx.fillStyle = _tier.color;
   ctx.font = '700 72px "Bebas Neue", sans-serif';
@@ -292,7 +294,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.restore();
   const volumeVal = Number(s.totalVol) > 0 ? (_fmtNum(s.totalVol) + 'kg') : '-';
   const cards = [
-    { label: 'DURATION', value: s.durStr || '00:00', accent: true },
+    { label: 'DURATION', value: (!s.durStr || s.durStr === '--:--') ? 'N/A' : s.durStr, accent: true },
     { label: 'SETS', value: s.totalSets || 0, accent: false },
     { label: 'VOLUME', value: volumeVal, accent: true },
     { label: 'PRS', value: s.prCount || 0, accent: (s.prCount || 0) > 0 },
@@ -331,9 +333,74 @@ async function _drawSessionShareCard(summaryOverride = null) {
     ctx.fillRect(leftX, leftY, leftW, leftH);
   });
 
+  // FORGE watermark — subtle diagonal brand text in body map background
+  ctx.save();
+  ctx.globalAlpha = 0.025;
+  ctx.fillStyle = '#54ffab';
+  ctx.font = '700 200px "Bebas Neue", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.translate(leftX + leftW / 2, leftY + leftH / 2 - 50);
+  ctx.rotate(-Math.PI / 8);
+  ctx.fillText('FORGE', 0, 0);
+  ctx.restore();
+
+  // Side callouts — stats in the dead space left/right of body figures
+  const _mgCount = Array.isArray(s.muscles) ? s.muscles.length : 0;
+  const _sideVol = (() => { const v = Number(s.totalVol)||0; return v>=10000?(v/1000).toFixed(0)+'k':v>=1000?(v/1000).toFixed(1)+'k':v>0?String(v):'-'; })();
+  const _sCL = leftX + Math.floor(svgPadX / 2);
+  const _sCR = leftX + svgPadX + svgW * 2 + svgGap + Math.floor(svgPadX / 2);
+  const _sY1 = leftY + 210, _sY2 = leftY + 410;
+  ctx.textAlign = 'center';
+  // Left — muscle groups
+  ctx.save(); ctx.shadowColor = _tier.rgba(0.4); ctx.shadowBlur = 12;
+  ctx.fillStyle = _tier.color; ctx.font = '700 52px "Bebas Neue", sans-serif';
+  ctx.fillText(String(_mgCount), _sCL, _sY1); ctx.restore();
+  ctx.fillStyle = _tier.rgba(0.6); ctx.font = '500 11px "DM Mono", monospace';
+  ctx.fillText('MUSCLE', _sCL, _sY1 + 16); ctx.fillText('GROUPS', _sCL, _sY1 + 30);
+  ctx.fillStyle = _tier.rgba(0.2); ctx.fillRect(_sCL - 22, _sY1 + 42, 44, 1);
+  // Left — total sets
+  ctx.fillStyle = '#54ffab'; ctx.font = '700 52px "Bebas Neue", sans-serif';
+  ctx.fillText(String(s.totalSets || 0), _sCL, _sY2);
+  ctx.fillStyle = 'rgba(190,214,196,.5)'; ctx.font = '500 11px "DM Mono", monospace';
+  ctx.fillText('TOTAL', _sCL, _sY2 + 16); ctx.fillText('SETS', _sCL, _sY2 + 30);
+  // Right — volume
+  ctx.fillStyle = '#54ffab'; ctx.font = '700 44px "Bebas Neue", sans-serif';
+  ctx.fillText(_sideVol, _sCR, _sY1);
+  ctx.fillStyle = 'rgba(190,214,196,.5)'; ctx.font = '500 11px "DM Mono", monospace';
+  ctx.fillText('TOTAL', _sCR, _sY1 + 16); ctx.fillText('VOLUME', _sCR, _sY1 + 30);
+  ctx.fillStyle = 'rgba(84,255,171,.2)'; ctx.fillRect(_sCR - 22, _sY1 + 42, 44, 1);
+  // Right — PRs
+  ctx.save(); ctx.shadowColor = _tier.rgba(0.4); ctx.shadowBlur = 12;
+  ctx.fillStyle = (s.prCount||0) > 0 ? _tier.color : 'rgba(190,214,196,.35)';
+  ctx.font = '700 52px "Bebas Neue", sans-serif';
+  ctx.fillText(String(s.prCount || 0), _sCR, _sY2); ctx.restore();
+  ctx.fillStyle = 'rgba(190,214,196,.5)'; ctx.font = '500 11px "DM Mono", monospace';
+  ctx.fillText('PERSONAL', _sCR, _sY2 + 16); ctx.fillText('RECORDS', _sCR, _sY2 + 30);
+  ctx.textAlign = 'left';
+
+  // Vertical divider between front and back figures
+  const _divX = leftX + svgPadX + svgW + Math.floor(svgGap / 2);
+  const _divG = ctx.createLinearGradient(_divX, leftY + 64, _divX, leftY + 64 + svgH);
+  _divG.addColorStop(0,   _tier.rgba(0));
+  _divG.addColorStop(0.2, _tier.rgba(0.2));
+  _divG.addColorStop(0.8, _tier.rgba(0.2));
+  _divG.addColorStop(1,   _tier.rgba(0));
+  ctx.strokeStyle = _divG; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(_divX, leftY + 64); ctx.lineTo(_divX, leftY + 64 + svgH); ctx.stroke();
+
   ctx.fillStyle = '#54ffab';
   ctx.font = '600 20px "DM Mono", monospace';
   ctx.fillText('BODY MAP', leftX + 18, leftY + 34);
+  // Muscle group count badge (top-right corner of panel header)
+  if (_mgCount > 0) {
+    const _bt = _mgCount + ' ACTIVATED';
+    ctx.font = '600 13px "DM Mono", monospace';
+    const _bw = ctx.measureText(_bt).width + 22;
+    const _bx = leftX + leftW - _bw - 16, _by = leftY + 16;
+    ctx.fillStyle = 'rgba(10,22,16,.95)'; _roundRect(ctx, _bx, _by, _bw, 26, 6); ctx.fill();
+    ctx.strokeStyle = _tier.rgba(0.55); ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = _tier.color; ctx.fillText(_bt, _bx + 11, _by + 17);
+  }
 
   if (typeof _buildSessionBodyMapSVG === 'function') {
     const muscles = new Set(Array.isArray(s.muscles) ? s.muscles : []);
@@ -566,9 +633,11 @@ async function _drawSessionShareCard(summaryOverride = null) {
     });
   }
 
-  // Separator rule
-  ctx.strokeStyle = 'rgba(84,255,171,.3)';
-  ctx.lineWidth = 1;
+  // Separator rule — tier-colored gradient
+  const _footSep = ctx.createLinearGradient(70, 0, W - 70, 0);
+  _footSep.addColorStop(0, _tier.rgba(0)); _footSep.addColorStop(0.3, _tier.rgba(0.35));
+  _footSep.addColorStop(0.7, _tier.rgba(0.35)); _footSep.addColorStop(1, _tier.rgba(0));
+  ctx.strokeStyle = _footSep; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(70, H - 52); ctx.lineTo(W - 70, H - 52); ctx.stroke();
   // Footer text with diamond
   ctx.fillStyle = 'rgba(211,228,216,.58)';
