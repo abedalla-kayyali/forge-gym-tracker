@@ -9,3 +9,9 @@ main.png
 numpad.png
 numpad2.png
 skip.png
+
+# Claude/agent internal dirs
+.agents/
+.claude/worktrees/
+.claude/skills/
+OpenViking/
