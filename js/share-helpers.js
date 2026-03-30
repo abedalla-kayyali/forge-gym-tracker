@@ -567,6 +567,46 @@ function _getSessionSummaryForDate(isoDate) {
   };
 }
 
+async function previewSessionFromHistory(isoDate) {
+  const summary = _getSessionSummaryForDate(isoDate);
+  if (!summary) {
+    if (typeof showToast === 'function') showToast('No session data for this date', 'var(--warn)');
+    return;
+  }
+  const canvas = await _drawSessionShareCard(summary);
+  if (!canvas) return;
+  const dataUrl = canvas.toDataURL('image/png');
+  const existing = document.getElementById('forge-poster-preview-modal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'forge-poster-preview-modal';
+  modal.innerHTML = `
+    <div class="fpp-backdrop" onclick="document.getElementById('forge-poster-preview-modal').remove()"></div>
+    <div class="fpp-sheet">
+      <div class="fpp-toolbar">
+        <span class="fpp-title">Session Poster</span>
+        <button class="fpp-close" onclick="document.getElementById('forge-poster-preview-modal').remove()">&#x2715;</button>
+      </div>
+      <div class="fpp-img-wrap">
+        <img class="fpp-img" src="${dataUrl}" alt="Session poster">
+      </div>
+      <div class="fpp-actions">
+        <button class="fpp-download-btn" onclick="_forgePosterDownload('${isoDate}',document.querySelector('#forge-poster-preview-modal .fpp-img').src)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Poster
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function _forgePosterDownload(isoDate, dataUrl) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'forge-session-' + isoDate + '.png';
+  a.click();
+}
+
 async function shareSessionFromHistory(isoDate) {
   const summary = _getSessionSummaryForDate(isoDate);
   if (!summary) {
