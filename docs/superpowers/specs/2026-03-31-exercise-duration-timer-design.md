@@ -145,21 +145,30 @@ if (!_exTimerStart) {
 }
 ```
 
-### `index.html` — form clear / exercise change
-Wherever the set form is reset (changing muscle, starting new exercise after save), call `_resetExTimer()`.
-
 ### `js/workout-save.js` — `_saveWeightedWorkout()`
-Before pushing to `workouts` and `_sessionWkLogs`, compute duration:
+`_saveWeightedWorkout` wraps its save logic inside a `setTimeout` callback. All changes must go **inside that callback**:
+
 ```js
+// Inside the existing setTimeout callback, before pushing to workouts / _sessionWkLogs:
 const durationSecs = _exTimerStart
   ? Math.round((Date.now() - _exTimerStart) / 1000)
   : 0;
 ```
+
 Add `durationSecs` to `_wkEntry` and to the `_sessionWkLogs` push object.
-Call `_resetExTimer()` after successful save.
+Call `_resetExTimer()` at the end of the `setTimeout` callback, after the successful save.
+
+> **Note:** `_sessionWkLogs.push` is gated on the `_sessionActive` flag. `durationSecs` is only written to `_sessionWkLogs` when a session is active — this is correct and expected behaviour.
 
 ### `js/workout-save.js` — `saveBwWorkout()`
-Same pattern — compute `durationSecs`, add to entry, call `_resetExTimer()`.
+`saveBwWorkout` is **synchronous** (no `setTimeout` wrapper). Compute `durationSecs` and call `_resetExTimer()` directly — same pattern as above but inline, not deferred.
+
+### `index.html` — form clear / exercise change
+Wherever the set form is reset, call `_resetExTimer()`. The three call sites are:
+
+1. Inside the `setTimeout` callback in `_saveWeightedWorkout` (after save — handled above).
+2. Inside `saveBwWorkout` (after save — handled above).
+3. Inside `selectMuscle` in `index.html` — when the user picks a new muscle group, clearing any in-progress exercise.
 
 ---
 
