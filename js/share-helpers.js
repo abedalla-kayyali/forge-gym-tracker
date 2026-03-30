@@ -118,16 +118,21 @@ function _fmtExerciseMeta(log) {
     const sets = Array.isArray(log.sets) ? log.sets : [];
     const work = sets.filter(s => s && s.type !== 'warmup');
     const use = work.length ? work : sets;
-    const top = use.slice(0, 3).map(s => {
-      const reps = Number(s.reps) || 0;
-      const weight = Number(s.weight) || 0;
+    // Group consecutive identical sets (e.g. 3× 9kg × 15)
+    const grouped = [];
+    use.forEach(s => {
+      const w = Number(s.weight) || 0, r = Number(s.reps) || 0;
       const unit = s.unit || 'kg';
-      return weight > 0 && reps > 0 ? (weight + unit + ' x ' + reps) : (reps > 0 ? (reps + ' reps') : (weight + unit));
-    }).filter(Boolean).join(' | ');
+      const label = w > 0 && r > 0 ? (w + unit + ' × ' + r) : (r > 0 ? (r + ' reps') : (w + unit));
+      if (grouped.length && grouped[grouped.length - 1].label === label) {
+        grouped[grouped.length - 1].count++;
+      } else {
+        grouped.push({ label, count: 1 });
+      }
+    });
     const setCount = use.length || sets.length;
-    const volume = Number(log.volume) || 0;
-    const volText = volume > 0 ? ('Vol ' + _fmtNum(volume)) : '';
-    return [setCount + ' sets', top, volText].filter(Boolean).join(' | ');
+    const setsStr = grouped.map(g => g.count > 1 ? (g.count + '× ' + g.label) : g.label).join(' | ');
+    return [setCount + ' sets', setsStr].filter(Boolean).join(' | ');
   }
 
   if (log.mode === 'bodyweight') {
@@ -176,7 +181,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
   const groupedLogs = _groupSessionLogs(s.logs);
   const totalRows = groupedLogs.reduce((sum, group) => sum + group.rows.length, 0);
   const sectionCount = groupedLogs.length || 1;
-  const listBaseH = 120 + (sectionCount * 44) + (totalRows * 72);
+  const listBaseH = 120 + (sectionCount * 44) + (totalRows * 92);
   const H = Math.max(2000, 1380 + listBaseH + 70);
   canvas.width = W;
   canvas.height = H;
@@ -590,13 +595,15 @@ async function _drawSessionShareCard(summaryOverride = null) {
       ctx.fillText(group.label + ' | ' + group.rows.length, listX + 30, ry - 3);
       ry += 50;
       group.rows.forEach((l, rowIndex) => {
-        const rowH = 61;
+        const title = (l.exercise || l.activity || 'Entry');
+        ctx.font = '500 17px "Barlow", sans-serif'; // set before measuring
+        const meta = _fmtExerciseMeta(l);
+        const metaLines = _wrapText(ctx, meta, listW - 160);
+        const rowH = 44 + Math.min(metaLines.length, 2) * 20;
+
         ctx.fillStyle = rowIndex % 2 ? 'rgba(18,30,23,.78)' : 'rgba(15,26,20,.78)';
         _roundRect(ctx, listX + 16, ry - 34, listW - 32, rowH, 10);
         ctx.fill();
-
-        const modeTag = l.mode === 'weighted' ? 'W' : (l.mode === 'bodyweight' ? 'BW' : 'CARDIO');
-        const title = (l.exercise || l.activity || 'Entry') + (l.muscle ? (' | ' + l.muscle) : '');
 
         ctx.fillStyle = '#f1faf3';
         ctx.font = '700 25px "Barlow Condensed", sans-serif';
@@ -604,29 +611,45 @@ async function _drawSessionShareCard(summaryOverride = null) {
 
         ctx.fillStyle = 'rgba(191,217,198,.9)';
         ctx.font = '500 17px "Barlow", sans-serif';
-        const meta = _fmtExerciseMeta(l);
-        const metaLines = _wrapText(ctx, meta, listW - 270);
-        if (metaLines[0]) ctx.fillText(metaLines[0], listX + 30, ry + 14);
-
-        ctx.fillStyle = 'rgba(84,255,171,.25)';
-        _roundRect(ctx, listX + listW - 190, ry - 27, 75, 34, 9);
-        ctx.fill();
-        ctx.fillStyle = '#9df8c8';
-        ctx.font = '700 16px "DM Mono", monospace';
-        ctx.fillText(modeTag, listX + listW - 166, ry - 4);
-
-        if (l.isPR) {
-          ctx.fillStyle = 'rgba(255,214,102,.22)';
-          _roundRect(ctx, listX + listW - 106, ry - 27, 82, 34, 9);
-          ctx.fill();
-          const _prGrad = ctx.createLinearGradient(listX + listW - 106, 0, listX + listW - 24, 0);
-          _prGrad.addColorStop(0, '#ffd666');
-          _prGrad.addColorStop(1, '#ffaa00');
-          ctx.fillStyle = _prGrad;
-          ctx.fillText('PR', listX + listW - 78, ry - 4);
+        for (let _mi = 0; _mi < Math.min(metaLines.length, 2); _mi++) {
+          ctx.fillText(metaLines[_mi], listX + 30, ry + 14 + _mi * 20);
         }
 
-        ry += 70;
+        // Mode badge — W is implied by section header, only show BW/CARDIO
+        if (l.mode !== 'weighted') {
+          const modeTag = l.mode === 'bodyweight' ? 'BW' : 'CARDIO';
+          ctx.fillStyle = 'rgba(84,255,171,.25)';
+          _roundRect(ctx, listX + listW - 110, ry - 27, 82, 34, 9);
+          ctx.fill();
+          ctx.fillStyle = '#9df8c8';
+          ctx.font = '700 16px "DM Mono", monospace';
+          ctx.fillText(modeTag, listX + listW - 90, ry - 4);
+        }
+
+        // PR badge with peak weight context
+        if (l.isPR) {
+          const _sets = Array.isArray(l.sets) ? l.sets : [];
+          const peakW = _sets.reduce((mx, st) => Math.max(mx, Number(st.weight) || 0), 0);
+          ctx.fillStyle = 'rgba(255,214,102,.18)';
+          _roundRect(ctx, listX + listW - 120, ry - 30, 96, 54, 10);
+          ctx.fill();
+          ctx.save();
+          ctx.shadowColor = 'rgba(255,180,0,0.4)'; ctx.shadowBlur = 10;
+          const _prG = ctx.createLinearGradient(listX + listW - 120, 0, listX + listW - 24, 0);
+          _prG.addColorStop(0, '#ffd666'); _prG.addColorStop(1, '#ffaa00');
+          ctx.fillStyle = _prG;
+          ctx.font = '700 18px "DM Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('NEW PR', listX + listW - 72, ry - 9);
+          ctx.restore();
+          ctx.fillStyle = 'rgba(255,214,102,.8)';
+          ctx.font = '500 13px "DM Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(peakW > 0 ? 'MAX ' + peakW + 'kg' : 'ACHIEVED', listX + listW - 72, ry + 10);
+          ctx.textAlign = 'left';
+        }
+
+        ry += rowH + 12;
         index += 1;
       });
       ry += 8;
