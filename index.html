@@ -2848,12 +2848,40 @@ function _buildSessionBodyMapSVG(muscles, side) {
     ['Calves',     'M58 290 Q54 320 57 350 Q62 370 77 372 Q90 370 92 348 Q92 318 92 290 Z M142 290 Q146 320 143 350 Q138 370 123 372 Q110 370 108 348 Q108 318 108 290 Z']
   ];
   const zones = side === 'back' ? BACK_ZONES : FRONT_ZONES;
+
+  // Build unique gradient defs per muscle per side (avoid ID collisions in DOM)
+  const gradId = (name) => 'bm-rg-' + side + '-' + name.replace(/ /g, '-').toLowerCase();
+  const activeMuscles = zones.filter(([name]) => muscles.has(name));
+
+  const defs = activeMuscles.length ? `<defs>${activeMuscles.map(([name]) => {
+    const id = gradId(name);
+    return `<radialGradient id="${id}" cx="50%" cy="40%" r="60%" fx="50%" fy="35%">` +
+      `<stop offset="0%" stop-color="#39ff8f" stop-opacity="1"/>` +
+      `<stop offset="60%" stop-color="#1adb6e" stop-opacity="0.85"/>` +
+      `<stop offset="100%" stop-color="#0d4a2a" stop-opacity="0.7"/>` +
+      `</radialGradient>`;
+  }).join('')}</defs>` : '';
+
   const paths = zones.map(([name, d]) => {
     const active = muscles.has(name);
-    return `<path d="${d}" fill="${active?'#39ff8f':'#1a2e1a'}" stroke="${active?'#39ff8f':'#223322'}" stroke-width=".8" opacity="${active?'.85':'.5'}"/>`;
+    if (!active) {
+      return `<path d="${d}" fill="#162a1c" stroke="#1e3a24" stroke-width=".8" opacity=".55"/>`;
+    }
+    const id = gradId(name);
+    // Layer 1: outer glow
+    const glow = `<path d="${d}" fill="none" stroke="rgba(57,255,143,0.45)" stroke-width="4" opacity=".6"/>`;
+    // Layer 2: gradient fill
+    const fill = `<path d="${d}" fill="url(#${id})" stroke="rgba(57,255,143,0.7)" stroke-width="1" opacity=".92"/>`;
+    // Layer 3: inner highlight
+    const highlight = `<path d="${d}" fill="none" stroke="rgba(200,255,220,0.35)" stroke-width=".6" opacity=".8"/>`;
+    return glow + fill + highlight;
   }).join('');
-  const sil = `<ellipse cx="100" cy="32" rx="18" ry="22" fill="#1a2e1a" stroke="#223322" stroke-width=".8" opacity=".5"/><rect x="88" y="52" width="24" height="16" rx="4" fill="#1a2e1a" stroke="#223322" stroke-width=".8" opacity=".5"/>`;
-  return `<svg viewBox="0 0 200 410" width="90" height="185" xmlns="http://www.w3.org/2000/svg">${sil}${paths}</svg>`;
+
+  // Premium head + neck silhouette
+  const sil = `<ellipse cx="100" cy="30" rx="19" ry="23" fill="#162a1c" stroke="#223d28" stroke-width=".8" opacity=".6"/>` +
+    `<rect x="91" y="50" width="18" height="14" rx="4" fill="#162a1c" stroke="#223d28" stroke-width=".8" opacity=".6"/>`;
+
+  return `<svg viewBox="0 0 200 410" width="90" height="185" xmlns="http://www.w3.org/2000/svg">${defs}${sil}${paths}</svg>`;
 }
 
 function _showSessionSummary(duration) {
