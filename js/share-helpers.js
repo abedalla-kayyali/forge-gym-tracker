@@ -85,7 +85,9 @@ function _drawPill(ctx, x, y, w, h, label, value, accent) {
 
   ctx.fillStyle = accent ? '#54ffab' : '#f0faf2';
   ctx.font = '700 40px "Barlow Condensed", sans-serif';
+  if (accent) { ctx.shadowColor = '#39ff8f'; ctx.shadowBlur = 14; }
   ctx.fillText(String(value), x + 16, y + 92);
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
 }
 
 function _wrapText(ctx, text, maxWidth) {
@@ -200,6 +202,15 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.fillStyle = glowB;
   ctx.fillRect(0, 0, W, H);
 
+  // Diagonal grid texture
+  ctx.save();
+  ctx.strokeStyle = 'rgba(84,255,171,0.02)';
+  ctx.lineWidth = 1;
+  for (let gx = -H; gx < W + H; gx += 12) {
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx + H, H); ctx.stroke();
+  }
+  ctx.restore();
+
   ctx.fillStyle = '#54ffab';
   ctx.font = '700 60px "Bebas Neue", sans-serif';
   ctx.fillText('FORGE SESSION', 70, 96);
@@ -237,7 +248,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
 
   const leftX = 70;
   const leftY = 372;
-  const leftW = 320;
+  const leftW = 360;
   const leftH = 420;
   ctx.fillStyle = 'rgba(13,24,18,.92)';
   _roundRect(ctx, leftX, leftY, leftW, leftH, 18);
@@ -256,16 +267,21 @@ async function _drawSessionShareCard(summaryOverride = null) {
     const backSvg = _buildSessionBodyMapSVG(muscles, 'back') || '';
     const frontImg = await _svgMarkupToImage(frontSvg);
     const backImg = await _svgMarkupToImage(backSvg);
-    if (frontImg) ctx.drawImage(frontImg, leftX + 18, leftY + 56, 130, 300);
-    if (backImg) ctx.drawImage(backImg, leftX + 170, leftY + 56, 130, 300);
+    if (frontImg) ctx.drawImage(frontImg, leftX + 18, leftY + 46, 160, 320);
+    if (backImg)  ctx.drawImage(backImg,  leftX + 192, leftY + 46, 160, 320);
+
+    ctx.strokeStyle = 'rgba(84,255,171,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(leftX + 18, leftY + 378); ctx.lineTo(leftX + 58, leftY + 378); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(leftX + 192, leftY + 378); ctx.lineTo(leftX + 232, leftY + 378); ctx.stroke();
 
     ctx.fillStyle = 'rgba(190,214,196,.85)';
     ctx.font = '600 16px "DM Mono", monospace';
-    ctx.fillText('FRONT', leftX + 44, leftY + 382);
-    ctx.fillText('BACK', leftX + 202, leftY + 382);
+    ctx.fillText('FRONT', leftX + 28, leftY + 393);
+    ctx.fillText('BACK', leftX + 202, leftY + 393);
   }
 
-  const rightX = 410;
+  const rightX = 450;
   const rightY = 372;
   const rightW = 600;
   const rightH = 420;
@@ -309,9 +325,15 @@ async function _drawSessionShareCard(summaryOverride = null) {
   }
 
   const prItems = (s.logs || []).filter(l => l && l.isPR).map(l => l.exercise || l.activity || 'PR');
+  if ((s.prCount || 0) > 0) {
+    ctx.shadowColor = 'rgba(255,180,0,0.5)';
+    ctx.shadowBlur = 22;
+  }
   ctx.fillStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.18)' : 'rgba(44,58,47,.85)';
   _roundRect(ctx, rightX + 18, rightY + 288, rightW - 36, 112, 14);
   ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'transparent';
   ctx.strokeStyle = (s.prCount || 0) > 0 ? 'rgba(255,214,102,.45)' : 'rgba(90,110,96,.28)';
   ctx.stroke();
 
@@ -321,7 +343,7 @@ async function _drawSessionShareCard(summaryOverride = null) {
 
   ctx.fillStyle = 'rgba(239,247,241,.95)';
   ctx.font = '600 23px "Barlow Condensed", sans-serif';
-  const prText = prItems.length ? prItems.slice(0, 3).join(' | ') : 'No PR this session';
+  const prText = prItems.length ? prItems.join(' | ') : 'No PR this session';
   ctx.fillText(prText, rightX + 34, rightY + 362);
 
   const listX = 70;
@@ -384,7 +406,10 @@ async function _drawSessionShareCard(summaryOverride = null) {
           ctx.fillStyle = 'rgba(255,214,102,.22)';
           _roundRect(ctx, listX + listW - 106, ry - 27, 82, 34, 9);
           ctx.fill();
-          ctx.fillStyle = '#ffd666';
+          const _prGrad = ctx.createLinearGradient(listX + listW - 106, 0, listX + listW - 24, 0);
+          _prGrad.addColorStop(0, '#ffd666');
+          _prGrad.addColorStop(1, '#ffaa00');
+          ctx.fillStyle = _prGrad;
           ctx.fillText('PR', listX + listW - 78, ry - 4);
         }
 
@@ -395,10 +420,15 @@ async function _drawSessionShareCard(summaryOverride = null) {
     });
   }
 
+  // Separator rule
+  ctx.strokeStyle = 'rgba(84,255,171,.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(70, H - 52); ctx.lineTo(W - 70, H - 52); ctx.stroke();
+  // Footer text with diamond
   ctx.fillStyle = 'rgba(211,228,216,.58)';
   ctx.font = '500 18px "DM Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText('Built with FORGE | #ForgeSession | ' + new Date().toISOString().slice(0, 10), W - 70, H - 28);
+  ctx.fillText('\u25C6 Built with FORGE | #ForgeSession | ' + new Date().toISOString().slice(0, 10), W - 70, H - 28);
   ctx.textAlign = 'left';
 
   return canvas;
