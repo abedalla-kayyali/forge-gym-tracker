@@ -161,7 +161,7 @@ Call `_resetExTimer()` at the end of the `setTimeout` callback, after the succes
 > **Note:** `_sessionWkLogs.push` is gated on the `_sessionActive` flag. `durationSecs` is only written to `_sessionWkLogs` when a session is active — this is correct and expected behaviour.
 
 ### `js/workout-save.js` — `saveBwWorkout()`
-`saveBwWorkout` is **synchronous** (no `setTimeout` wrapper). Compute `durationSecs` and call `_resetExTimer()` directly — same pattern as above but inline, not deferred.
+`saveBwWorkout` also wraps its save logic inside a `setTimeout` callback (same pattern as `_saveWeightedWorkout`). Compute `durationSecs` and call `_resetExTimer()` **inside that callback** — not after it.
 
 ### `index.html` — form clear / exercise change
 Wherever the set form is reset, call `_resetExTimer()`. The three call sites are:
