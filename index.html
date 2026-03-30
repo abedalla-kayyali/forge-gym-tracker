@@ -809,6 +809,10 @@
             <button class="effort-btn" data-effort="failure" data-i18n="form.fail" onclick="selectEffort(this)">FAIL</button>
           </div>
         </div>
+        <div id="ex-timer-display" class="ex-timer" style="display:none">
+          <span class="ex-timer__label">EXERCISE TIME</span>
+          <span id="ex-timer-value" class="ex-timer__value">0:00</span>
+        </div>
         <div class="save-sticky" id="save-sticky"><button class="btn btn-primary" id="save-btn" onclick="saveWorkout()"><svg class="btn-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span data-i18n="form.save">Log Workout</span></button></div>
         <!-- MUSCLE TARGET LABEL -->
         <div id="muscle-target-label" style="display:none;margin-top:12px;padding:8px 14px;background:var(--green-dim);border:1px solid var(--green3);border-radius:8px;display:flex;align-items:center;gap:8px;">
@@ -9816,6 +9820,32 @@ function _updateSaveBtnState() {
       bwContainer.addEventListener('input', _updateSaveBtnState);
     }
     _updateSaveBtnState();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _attach);
+  } else {
+    _attach();
+  }
+})();
+
+// Wire exercise timer: start on first set added to #sets-container
+(function _wireExTimer() {
+  function _attach() {
+    const container = document.getElementById('sets-container');
+    if (!container) { setTimeout(_attach, 1000); return; }
+    const obs = new MutationObserver(mutations => {
+      // Only fire on node additions (not on innerHTML clear / removals)
+      const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
+      if (!hasNewNodes) return;
+      // Only start the timer once; subsequent sets are no-ops
+      if (!_exTimerStart) {
+        _exTimerStart = Date.now();
+        _exTimerInterval = setInterval(_updateExTimerDisplay, 1000);
+        const disp = document.getElementById('ex-timer-display');
+        if (disp) disp.style.display = 'flex';
+      }
+    });
+    obs.observe(container, { childList: true });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _attach);
