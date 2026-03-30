@@ -9832,7 +9832,8 @@ function _updateSaveBtnState() {
 (function _wireExTimer() {
   function _attach() {
     const container = document.getElementById('sets-container');
-    if (!container) { setTimeout(_attach, 1000); return; }
+    const bwContainer = document.getElementById('bw-sets-container');
+    if (!container || !bwContainer) { setTimeout(_attach, 1000); return; }
     const obs = new MutationObserver(mutations => {
       // Only fire on node additions (not on innerHTML clear / removals)
       const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
@@ -9846,6 +9847,7 @@ function _updateSaveBtnState() {
       }
     });
     obs.observe(container, { childList: true });
+    obs.observe(bwContainer, { childList: true });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', _attach);
