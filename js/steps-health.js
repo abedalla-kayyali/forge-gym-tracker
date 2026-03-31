@@ -212,7 +212,7 @@ function renderStepsPanel() {
         </div>
       </div>
 
-      <div class="sp-ring-wrap">
+      <div class="sp-ring-wrap" style="display:none;">
         <svg class="sp-ring-svg" viewBox="0 0 120 120" fill="none">
           <circle class="sp-ring-bg" cx="60" cy="60" r="50"/>
           <circle class="sp-ring-fill${pct >= 100 ? ' sp-ring-done' : ''}" cx="60" cy="60" r="50"
