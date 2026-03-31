@@ -615,10 +615,55 @@ async function _drawSessionShareCard(summaryOverride = null) {
         ctx.font = '700 25px "Barlow Condensed", sans-serif';
         ctx.fillText(index + '. ' + title, listX + 30, ry - 8);
 
-        ctx.fillStyle = 'rgba(191,217,198,.9)';
+        // Duration tag — right of title, shifted left if PR badge present
+        if (l.durationSecs > 0) {
+          const _dTag = '\u23F1 ' + Math.floor(l.durationSecs / 60) + ':' + String(l.durationSecs % 60).padStart(2, '0');
+          ctx.save();
+          ctx.font = '600 15px "DM Mono", monospace';
+          ctx.shadowColor = 'rgba(84,255,171,0.7)'; ctx.shadowBlur = 10;
+          ctx.fillStyle = '#54ffab';
+          ctx.textAlign = 'right';
+          ctx.fillText(_dTag, listX + listW - (l.isPR ? 136 : 24), ry - 8);
+          ctx.textAlign = 'left';
+          ctx.restore();
+        }
+
+        // Meta lines — highlight max-weight set in glowing orange
+        const _maxW = (Array.isArray(l.sets) ? l.sets : []).reduce((mx, st) => Math.max(mx, Number(st.weight) || 0), 0);
+        const _maxWStr = _maxW > 0 ? _maxW + 'kg' : null;
+        const _mSep = ' | ';
         ctx.font = '500 17px "Barlow", sans-serif';
+        const _mSepW = ctx.measureText(_mSep).width;
         for (let _mi = 0; _mi < Math.min(metaLines.length, 2); _mi++) {
-          ctx.fillText(metaLines[_mi], listX + 30, ry + 14 + _mi * 20);
+          const _line = metaLines[_mi];
+          if (_maxWStr && _line.includes(_maxWStr)) {
+            const _parts = _line.split(' | ');
+            let _cx = listX + 30;
+            _parts.forEach((_p, _pi) => {
+              ctx.font = '500 17px "Barlow", sans-serif';
+              if (_p.includes(_maxWStr)) {
+                ctx.save();
+                ctx.font = '700 17px "Barlow", sans-serif';
+                ctx.shadowColor = 'rgba(255,140,0,0.85)'; ctx.shadowBlur = 14;
+                ctx.fillStyle = '#ffb347';
+                ctx.fillText(_p, _cx, ry + 14 + _mi * 20);
+                ctx.restore();
+                ctx.font = '500 17px "Barlow", sans-serif';
+              } else {
+                ctx.fillStyle = 'rgba(191,217,198,.9)';
+                ctx.fillText(_p, _cx, ry + 14 + _mi * 20);
+              }
+              _cx += ctx.measureText(_p).width;
+              if (_pi < _parts.length - 1) {
+                ctx.fillStyle = 'rgba(191,217,198,.4)';
+                ctx.fillText(_mSep, _cx, ry + 14 + _mi * 20);
+                _cx += _mSepW;
+              }
+            });
+          } else {
+            ctx.fillStyle = 'rgba(191,217,198,.9)';
+            ctx.fillText(_line, listX + 30, ry + 14 + _mi * 20);
+          }
         }
 
         // Mode badge — W is implied by section header, only show BW/CARDIO
