@@ -132,7 +132,10 @@ function _fmtExerciseMeta(log) {
     });
     const setCount = use.length || sets.length;
     const setsStr = grouped.map(g => g.count > 1 ? (g.count + '× ' + g.label) : g.label).join(' | ');
-    return [setCount + ' sets', setsStr].filter(Boolean).join(' | ');
+    const durStr = log.durationSecs > 0
+      ? Math.floor(log.durationSecs / 60) + ':' + String(log.durationSecs % 60).padStart(2, '0')
+      : null;
+    return [setCount + ' sets', setsStr, durStr].filter(Boolean).join(' | ');
   }
 
   if (log.mode === 'bodyweight') {
@@ -144,7 +147,10 @@ function _fmtExerciseMeta(log) {
     }).filter(Boolean).join(' | ');
     const reps = Number(log.totalReps) || 0;
     const repText = reps > 0 ? (reps + ' reps total') : '';
-    return [sets.length + ' sets', top, repText].filter(Boolean).join(' | ');
+    const durStr = log.durationSecs > 0
+      ? Math.floor(log.durationSecs / 60) + ':' + String(log.durationSecs % 60).padStart(2, '0')
+      : null;
+    return [sets.length + ' sets', top, repText, durStr].filter(Boolean).join(' | ');
   }
 
   const mins = Number(log.durationMins) || 0;
