@@ -3125,6 +3125,9 @@ function renderHistory() {
 
   // Build exercise card HTML (reused inside each session)
   function _buildExCard(w) {
+    const durStat = (w.durationSecs > 0)
+      ? `<div><div class="hist-stat-val">${Math.floor(w.durationSecs / 60)}:${String(w.durationSecs % 60).padStart(2, '0')}</div><div class="hist-stat-lbl">Time</div></div>`
+      : '';
     const isBW = w.type === 'bodyweight';
     const dStr = new Date(w.date).toLocaleDateString(dateLoc, { weekday: 'short', month: 'short', day: 'numeric' });
     if (isBW) {
@@ -3142,6 +3145,7 @@ function renderHistory() {
           <div><div class="hist-stat-val">${(w.sets || []).length}</div><div class="hist-stat-lbl">${tFn('history.sets')}</div></div>
           <div><div class="hist-stat-val">${totalReps}</div><div class="hist-stat-lbl">${tFn('history.reps')}</div></div>
           <div style="font-size:14px;">${effortIcons}</div>
+          ${durStat}
         </div>
       </div>`;
     }
@@ -3166,6 +3170,7 @@ function renderHistory() {
         <div><div class="hist-stat-val">${maxW}</div><div class="hist-stat-lbl">Max ${tFn('lbl.kg')}</div></div>
         ${trendArrow ? `<div class="trend-arrow ${trendClass}">${trendArrow}</div>` : ''}
         ${_qBadge}
+        ${durStat}
       </div>
     </div>`;
   }
