@@ -24142,3 +24142,5 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   pointer-events:none;
 }
 @keyframes mode-ripple { to { transform:scale(4); opacity:0; } }
+
+#section-steps { display: none !important; }
