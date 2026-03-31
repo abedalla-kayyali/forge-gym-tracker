@@ -251,9 +251,29 @@ async function _drawSessionShareCard(summaryOverride = null) {
   ctx.font = '700 48px "Barlow Condensed", sans-serif';
   ctx.fillText('PERFORMANCE POSTER', 70, 144);
 
+  // Subtitle: show real time if available, otherwise show total duration
+  const _hasRealTime = s.timeStr && s.timeStr !== '--:--';
+  const _hasDur = s.durStr && s.durStr !== '--:--';
+  const _subtitleRight = _hasRealTime
+    ? s.timeStr + (_hasDur ? '  \u23F1 ' + s.durStr : '')
+    : (_hasDur ? '\u23F1 ' + s.durStr : '');
   ctx.fillStyle = 'rgba(179,207,187,.88)';
   ctx.font = '500 22px "DM Mono", monospace';
-  ctx.fillText((s.dateStr || '') + ' | ' + (s.timeStr || ''), 70, 179);
+  ctx.fillText((s.dateStr || '') + (_subtitleRight ? '  |  ' + _subtitleRight : ''), 70, 179);
+
+  // Tier motivational tagline
+  const _taglines = {
+    'BEAST MODE': 'NOTHING CAN STOP YOU',
+    'ELITE':      'ELITE PERFORMANCE UNLOCKED',
+    'WARRIOR':    'WARRIOR MODE ACTIVATED',
+    'GRINDER':    'CONSISTENCY BUILDS CHAMPIONS'
+  };
+  ctx.save();
+  ctx.shadowColor = _tier.rgba(0.5); ctx.shadowBlur = 10;
+  ctx.fillStyle = _tier.rgba(0.75);
+  ctx.font = '600 17px "DM Mono", monospace';
+  ctx.fillText(_taglines[_tier.label] || '', 70, 202);
+  ctx.restore();
 
   const athleteName = _sessionShareUserName().toUpperCase();
   const streakVal = typeof calcStreak === 'function' ? calcStreak() : 0;
