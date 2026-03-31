@@ -24098,3 +24098,11 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   color: #54ffab;
   letter-spacing: 0.04em;
 }
+
+.mh-session-dur {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(84,255,171,0.75);
+  letter-spacing: 0.04em;
+}
