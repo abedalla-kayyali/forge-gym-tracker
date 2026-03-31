@@ -24106,3 +24106,39 @@ svg.bw-ring   { width: 80px; height: 80px; transform: rotate(-90deg); }
   color: rgba(84,255,171,0.75);
   letter-spacing: 0.04em;
 }
+
+/* ── Workout type buttons — glowing CTA style ────────────────── */
+@keyframes mode-btn-pulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(57,255,143,0); border-color:rgba(57,255,143,0.22); }
+  50%      { box-shadow:0 0 14px 3px rgba(57,255,143,0.18); border-color:rgba(57,255,143,0.5); }
+}
+.mode-toggle-row {
+  gap:8px; overflow:visible; background:transparent; border:none;
+}
+.mode-toggle-btn {
+  border-radius:10px !important;
+  border:1.5px solid rgba(57,255,143,0.22) !important;
+  background:rgba(57,255,143,0.05) !important;
+  color:var(--text2) !important;
+  padding:13px 8px !important;
+  animation:mode-btn-pulse 2.6s ease-in-out infinite;
+  position:relative; overflow:hidden;
+}
+.mode-toggle-btn:first-child { border-right:1.5px solid rgba(57,255,143,0.22) !important; }
+.mode-toggle-btn.active {
+  background:var(--green-dim) !important; color:var(--accent) !important;
+  border-color:var(--accent) !important;
+  box-shadow:0 0 20px rgba(57,255,143,0.3),inset 0 0 14px rgba(57,255,143,0.08) !important;
+  animation:none !important;
+}
+.mode-toggle-btn:not(.active):hover {
+  background:rgba(57,255,143,0.1) !important; color:var(--accent) !important;
+}
+.mode-btn-ripple {
+  position:absolute; border-radius:50%;
+  background:rgba(57,255,143,0.4);
+  transform:scale(0);
+  animation:mode-ripple 0.55s linear forwards;
+  pointer-events:none;
+}
+@keyframes mode-ripple { to { transform:scale(4); opacity:0; } }
