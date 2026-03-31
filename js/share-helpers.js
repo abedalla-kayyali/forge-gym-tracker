@@ -787,11 +787,15 @@ function _getSessionSummaryForDate(isoDate) {
   const totalSets = dayW.reduce((a, w) => a + (Array.isArray(w.sets) ? w.sets.length : 0), 0);
   const totalVol  = dayW.reduce((a, w) => a + (w.totalVolume || 0), 0);
   const prCount   = dayW.filter(w => w.isPR || w.pr).length;
+  const totalDurSecs = dayW.reduce((a, w) => a + (w.durationSecs || 0), 0);
+  const durStr = totalDurSecs > 0
+    ? Math.floor(totalDurSecs / 60) + ':' + String(totalDurSecs % 60).padStart(2, '0')
+    : '--:--';
   const d = new Date(isoDate + 'T12:00:00');
   return {
     dateStr: d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
     timeStr: '--:--',
-    durStr:  '--:--',
+    durStr,
     muscles,
     logs,
     totalSets,
