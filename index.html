@@ -165,7 +165,7 @@
   <!-- ????????????????????????????????????
        LOG VIEW
   ???????????????????????????????????? -->
-  <div id="view-log" class="view active mode-unselected">
+  <div id="view-log" class="view view-pad active mode-unselected">
 
     <!-- EDIT MODE BAR -->
     <div class="edit-mode-bar" id="edit-mode-bar">
@@ -551,7 +551,8 @@
         <!-- BODYWEIGHT MODE: quick exercise picker -->
         <div id="bw-exercise-picker" style="display:none;">
           <!-- BW guided-flow step indicator -->
-          <div class="bw-step-strip" id="bw-step-strip">
+          <button id="log-steps-toggle" onclick="(function(btn){var v=localStorage.getItem('forge_logsteps_visible')==='1';localStorage.setItem('forge_logsteps_visible',v?'0':'1');document.getElementById('bw-step-strip').style.display=v?'none':'';btn.textContent=v?'GUIDE \u25bc':'GUIDE \u25b2';})(this)" style="font-size:10px;background:none;border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:rgba(255,255,255,0.5);padding:2px 8px;cursor:pointer;margin:4px 0 0 14px;display:block;">GUIDE &#x25bc;</button>
+          <div class="bw-step-strip" id="bw-step-strip" style="display:none;">
             <div class="bw-step active" id="bw-step-1">
               <span class="bw-step-num">1</span>
               <span class="bw-step-lbl">MUSCLE</span>
@@ -567,6 +568,7 @@
               <span class="bw-step-lbl">LOG SETS</span>
             </div>
           </div>
+          <script>(function(){var strip=document.getElementById('bw-step-strip');var btn=document.getElementById('log-steps-toggle');if(strip&&localStorage.getItem('forge_logsteps_visible')==='1'){strip.style.display='';if(btn)btn.textContent='GUIDE \u25b2';}})()</script>
           <!-- Muscle filter chips -->
           <div class="bw-muscle-filter" id="bw-muscle-filter">
             <button class="bw-filter-chip active" data-muscle="" onclick="setBwFilter(this,'')">All</button>

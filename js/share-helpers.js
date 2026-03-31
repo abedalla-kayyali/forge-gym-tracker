@@ -781,7 +781,8 @@ function _getSessionSummaryForDate(isoDate) {
     mode: 'weighted',
     sets: Array.isArray(w.sets) ? w.sets : [],
     volume: w.totalVolume || 0,
-    isPR: !!(w.isPR || w.pr)
+    isPR: !!(w.isPR || w.pr),
+    durationSecs: w.durationSecs || 0
   }));
   const totalSets = dayW.reduce((a, w) => a + (Array.isArray(w.sets) ? w.sets.length : 0), 0);
   const totalVol  = dayW.reduce((a, w) => a + (w.totalVolume || 0), 0);

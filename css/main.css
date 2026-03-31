@@ -7088,7 +7088,7 @@ body.progress-compact-active .rest-fab-panel{
 
 .hist-meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px;}
 
-.hist-stats{display:flex;gap:12px;align-items:center;}
+.hist-stats{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
 
 .hist-stat-val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green);line-height:1;}
 

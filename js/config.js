@@ -8,6 +8,6 @@ window.FORGE_CONFIG = {
   SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucWV0bnpkZ3RiZXlzcW5tYmt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzMzMzgsImV4cCI6MjA4ODcwOTMzOH0.yqgdzeFUyqU3Lkg6cyCt0Kl3l525kD60oTi_p93AuXw'
 };
 
-window.FORGE_VERSION = 'v250';
-window.FORGE_BUILD   = '2026-03-31 (feat: duration display in history and poster)';
+window.FORGE_VERSION = 'v251';
+window.FORGE_BUILD   = '2026-03-31 (fix: duration display, footer visibility, collapsible log steps)';
 
