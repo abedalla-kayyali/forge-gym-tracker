@@ -1,10 +1,29 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+
+// Rewrites React Router paths to app.html BEFORE Vite serves index.html
+function spaFallback(): Plugin {
+  const REACT_ROUTES = ['/log', '/stats', '/history', '/social', '/coach', '/nutrition', '/more'];
+  return {
+    name: 'spa-fallback-to-app-html',
+    configureServer(server) {
+      // No return — runs BEFORE Vite's built-in middleware
+      server.middlewares.use((req, _res, next) => {
+        const url = req.url?.split('?')[0] ?? '';
+        if (REACT_ROUTES.some((r) => url === r || url.startsWith(r + '/'))) {
+          req.url = '/app.html';
+        }
+        next();
+      });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
+    spaFallback(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
