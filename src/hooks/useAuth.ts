@@ -17,7 +17,7 @@ interface AuthState {
 export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const isGuest = readStorage<string>(STORAGE_KEYS.GUEST, '0') === '1';
+  const [isGuest, setIsGuest] = useState(() => readStorage<string>(STORAGE_KEYS.GUEST, '0') === '1');
   const updateProfile = useProfileStore((s) => s.updateProfile);
 
   useEffect(() => {
@@ -52,6 +52,7 @@ export function useAuth(): AuthState {
 
   const continueAsGuest = useCallback(() => {
     localStorage.setItem(STORAGE_KEYS.GUEST, '1');
+    setIsGuest(true);
     setLoading(false);
   }, []);
 
