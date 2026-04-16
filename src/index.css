@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-forge-green: #2ecc71;
+  --color-forge-bg: #080c09;
+  --color-forge-surface: #0f1a12;
+  --color-forge-border: #1a2e1f;
+  --color-forge-text: #e0e0e0;
+  --color-forge-muted: #8a8a8a;
+
+  --font-family-display: 'Bebas Neue', sans-serif;
+  --font-family-mono: 'DM Mono', monospace;
+  --font-family-condensed: 'Barlow Condensed', sans-serif;
+  --font-family-body: 'Barlow', sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-forge-bg);
+    color: var(--color-forge-text);
+    font-family: var(--font-family-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
