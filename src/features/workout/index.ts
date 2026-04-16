@@ -1,2 +1,4 @@
 export { WorkoutTypeSelector, type WorkoutType } from './components/WorkoutTypeSelector';
 export { MuscleGroupPicker } from './components/MuscleGroupPicker';
+export { ExerciseAutocomplete } from './components/ExerciseAutocomplete';
+export { useGhostSets } from './hooks/useGhostSets';
