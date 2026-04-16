@@ -8,9 +8,7 @@ import { BottomNav } from './components/layout/BottomNav';
 const LogPage = lazy(() => import('./pages/LogPage').then((m) => ({ default: m.LogPage })));
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
 const HistoryPage = lazy(() => import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })));
-const SocialPage = lazy(() => import('./pages/SocialPage').then((m) => ({ default: m.SocialPage })));
 const CoachPage = lazy(() => import('./pages/CoachPage').then((m) => ({ default: m.CoachPage })));
-const NutritionPage = lazy(() => import('./pages/NutritionPage').then((m) => ({ default: m.NutritionPage })));
 const MorePage = lazy(() => import('./pages/MorePage').then((m) => ({ default: m.MorePage })));
 
 function PageLoader() {
@@ -69,9 +67,7 @@ export default function App() {
               <Route path="/log" element={<LogPage />} />
               <Route path="/stats" element={<StatsPage />} />
               <Route path="/history" element={<HistoryPage />} />
-              <Route path="/social" element={<SocialPage />} />
               <Route path="/coach" element={<CoachPage />} />
-              <Route path="/nutrition" element={<NutritionPage />} />
               <Route path="/more" element={<MorePage />} />
               <Route path="*" element={<Navigate to="/log" replace />} />
             </Routes>

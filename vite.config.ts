@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // Rewrites React Router paths to app.html BEFORE Vite serves index.html
 function spaFallback(): Plugin {
-  const REACT_ROUTES = ['/log', '/stats', '/history', '/social', '/coach', '/nutrition', '/more'];
+  const REACT_ROUTES = ['/log', '/stats', '/history', '/coach', '/more'];
   return {
     name: 'spa-fallback-to-app-html',
     configureServer(server) {

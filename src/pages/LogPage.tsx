@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Dumbbell, Scaling, HeartPulse } from 'lucide-react';
+import { Dumbbell, Scaling, HeartPulse, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { WorkoutTypeSelector, type WorkoutType } from '../features/workout';
 import { MuscleGroupPicker } from '../features/workout';
 import { ExerciseAutocomplete } from '../features/workout';
@@ -10,6 +10,68 @@ import { useSessionStore } from '../stores/useSessionStore';
 import { useToast } from '../components/ui/Toast';
 import { useFX } from '../hooks/useFX';
 import type { WorkoutSet, WorkoutExercise, MuscleGroup } from '../types/workout';
+
+function CircleRing({ size = 200 }: { size?: number }) {
+  const r = (size - 8) / 2;
+  const circumference = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} className="absolute inset-0 m-auto opacity-20 pointer-events-none" aria-hidden>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#ringGrad)" strokeWidth="1.5" strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`} strokeLinecap="round" transform={`rotate(135 ${size / 2} ${size / 2})`} />
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2ecc71" stopOpacity="1" />
+          <stop offset="100%" stopColor="#27ae60" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number }) {
+  const [open, setOpen] = useState(false);
+  const totalVol = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
+
+  return (
+    <div className="card-elevated rounded-2xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3.5 cursor-pointer"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg bg-forge-green/10 flex items-center justify-center">
+            <span className="text-forge-green text-xs font-display">{index + 1}</span>
+          </div>
+          <div className="text-left">
+            <div className="text-forge-text text-sm font-body font-medium">{ex.name}</div>
+            <div className="text-forge-muted text-[11px] font-mono">
+              {ex.sets.length} sets · {totalVol.toLocaleString()} kg vol
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-forge-green/60 text-[10px] font-condensed uppercase">{ex.muscle}</span>
+          {open ? <ChevronUp size={14} className="text-forge-dim" /> : <ChevronDown size={14} className="text-forge-dim" />}
+        </div>
+      </button>
+      {open && (
+        <div className="border-t border-forge-border-light">
+          <div className="grid grid-cols-4 px-4 py-2 text-[10px] font-condensed text-forge-dim uppercase tracking-wider">
+            <span>Set</span><span className="text-center">Reps</span><span className="text-center">Weight</span><span className="text-right">Vol</span>
+          </div>
+          {ex.sets.map((s, si) => (
+            <div key={si} className={`grid grid-cols-4 px-4 py-2 text-xs font-mono ${si % 2 === 0 ? 'bg-[rgba(255,255,255,0.015)]' : ''}`}>
+              <span className="text-forge-muted">{si + 1}</span>
+              <span className="text-center text-forge-text">{s.reps}</span>
+              <span className="text-center text-forge-text">{s.weight}kg</span>
+              <span className="text-right text-forge-green/70">{(s.reps * s.weight).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function LogPage() {
   const [workoutType, setWorkoutType] = useState<WorkoutType>('weighted');
@@ -78,28 +140,59 @@ export function LogPage() {
     session.setExercise('');
   }, [session, currentSets, play, toast]);
 
-  // Not started yet — show start button
+  // Not started yet — Whoop-style start screen
   if (!session.active) {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
     return (
-      <div className="page-enter flex flex-col items-center justify-center min-h-[60vh] gap-6 p-4">
-        <Dumbbell size={48} className="text-forge-green" />
-        <h2 className="text-forge-green font-display text-3xl">Ready to train?</h2>
-        <p className="text-forge-muted text-center text-sm max-w-xs">
-          Start a session to log your exercises, sets, and track your progress.
+      <div className="page-enter flex flex-col items-center justify-center min-h-[80vh] gap-0 px-6 relative overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-forge-green/5 blur-3xl pointer-events-none" />
+
+        {/* Circular ring motif */}
+        <div className="relative w-52 h-52 flex items-center justify-center mb-2">
+          <CircleRing size={208} />
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-16 h-16 rounded-2xl bg-forge-green/10 border border-forge-green/20 flex items-center justify-center shadow-[0_0_24px_rgba(46,204,113,0.15)]">
+              <Dumbbell size={30} className="text-forge-green" />
+            </div>
+            <span className="text-forge-green/60 text-[10px] font-condensed tracking-widest uppercase mt-1">Ready</span>
+          </div>
+        </div>
+
+        {/* Headline */}
+        <h2 className="text-forge-green font-display text-4xl tracking-tight mb-1">FORGE</h2>
+        <p className="text-forge-muted text-sm text-center max-w-[220px] mb-6 leading-relaxed">
+          Start a session to log exercises, track sets and hit PRs.
         </p>
+
+        {/* Quick stat pills */}
+        <div className="flex gap-2 mb-8">
+          <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
+            <Zap size={11} className="text-forge-green" />
+            <span className="text-forge-dim text-[11px] font-condensed">{today}</span>
+          </div>
+          <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
+            <span className="text-forge-muted text-[11px] font-condensed">{session.exercises.length > 0 ? `${session.exercises.length} pending` : 'No active session'}</span>
+          </div>
+        </div>
+
+        {/* CTA */}
         <button
           onClick={handleStartSession}
-          className="bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-10 py-3.5 rounded-xl font-condensed font-bold text-lg cursor-pointer press-scale min-h-[44px] shadow-[0_4px_20px_rgba(46,204,113,0.3)] transition-all duration-200"
+          className="relative bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-14 py-4 rounded-2xl font-condensed font-bold text-xl cursor-pointer press-scale min-h-[56px] shadow-[0_8px_32px_rgba(46,204,113,0.35)] tracking-wider transition-all duration-200 hover:shadow-[0_8px_40px_rgba(46,204,113,0.5)]"
         >
-          Start Workout
+          START SESSION
         </button>
+
+        <p className="text-forge-dim text-[11px] mt-4 font-condensed">Tap to begin tracking</p>
       </div>
     );
   }
 
   // Active session
   return (
-    <div className="page-enter p-4 space-y-4 pb-24">
+    <div className="page-enter p-4 space-y-4 pb-32">
       {/* Workout type */}
       <WorkoutTypeSelector value={workoutType} onChange={setWorkoutType} />
 
@@ -107,7 +200,7 @@ export function LogPage() {
         <>
           {/* Muscle group */}
           <div>
-            <label className="text-forge-muted text-xs font-condensed block mb-2">MUSCLE GROUP</label>
+            <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block mb-2.5">Muscle Group</label>
             <MuscleGroupPicker
               selected={session.selectedMuscle}
               onSelect={handleMuscleSelect}
@@ -116,7 +209,7 @@ export function LogPage() {
 
           {/* Exercise */}
           <div>
-            <label className="text-forge-muted text-xs font-condensed block mb-2">EXERCISE</label>
+            <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block mb-2.5">Exercise</label>
             <ExerciseAutocomplete
               muscle={session.selectedMuscle}
               value={session.selectedExercise ?? ''}
@@ -126,9 +219,9 @@ export function LogPage() {
 
           {/* Set Logger — only when exercise is selected */}
           {session.selectedExercise && (
-            <div>
-              <label className="text-forge-muted text-xs font-condensed block mb-2">
-                SETS — {session.selectedExercise}
+            <div className="space-y-3">
+              <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block">
+                Sets — <span className="text-forge-green/80">{session.selectedExercise}</span>
               </label>
               <SetLogger
                 exerciseName={session.selectedExercise}
@@ -139,9 +232,9 @@ export function LogPage() {
               {currentSets.length > 0 && (
                 <button
                   onClick={handleLogExercise}
-                  className="w-full mt-3 bg-forge-green/20 text-forge-green border border-forge-green/30 py-2.5 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] hover:bg-forge-green/30 transition-all duration-200"
+                  className="w-full mt-1 bg-gradient-to-br from-forge-green/20 to-forge-green/10 text-forge-green border border-forge-green/30 py-3 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] hover:bg-forge-green/25 hover:border-forge-green/50 transition-all duration-200 shadow-[0_2px_12px_rgba(46,204,113,0.1)]"
                 >
-                  Log Exercise ({currentSets.length} sets)
+                  Log Exercise · {currentSets.length} {currentSets.length === 1 ? 'set' : 'sets'}
                 </button>
               )}
             </div>
@@ -153,23 +246,11 @@ export function LogPage() {
           {/* Logged exercises summary */}
           {session.exercises.length > 0 && (
             <div className="space-y-2">
-              <label className="text-forge-muted text-xs font-condensed block">
-                LOGGED ({session.exercises.length} exercises)
+              <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block">
+                Logged · <span className="text-forge-green/80">{session.exercises.length} exercise{session.exercises.length !== 1 ? 's' : ''}</span>
               </label>
               {session.exercises.map((ex, i) => (
-                <div
-                  key={i}
-                  className="card-elevated rounded-xl px-3.5 py-3 flex items-center justify-between"
-                >
-                  <div>
-                    <div className="text-forge-text text-sm font-body">{ex.name}</div>
-                    <div className="text-forge-muted text-xs font-mono">
-                      {ex.sets.length} sets —{' '}
-                      {ex.sets.reduce((a, s) => a + s.reps * s.weight, 0).toLocaleString()} kg volume
-                    </div>
-                  </div>
-                  <span className="text-forge-green/50 text-xs font-condensed">{ex.muscle}</span>
-                </div>
+                <LoggedExerciseCard key={i} ex={ex} index={i} />
               ))}
             </div>
           )}
@@ -177,25 +258,31 @@ export function LogPage() {
       )}
 
       {workoutType === 'bodyweight' && (
-        <div className="flex flex-col items-center justify-center py-12 text-forge-muted">
-          <Scaling size={36} className="text-forge-dim mb-3" />
-          <p className="font-condensed">Bodyweight mode — Phase 7</p>
+        <div className="flex flex-col items-center justify-center py-16 text-forge-muted gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-forge-border-light flex items-center justify-center">
+            <Scaling size={28} className="text-forge-dim" />
+          </div>
+          <p className="font-condensed text-sm">Bodyweight mode — coming soon</p>
         </div>
       )}
 
       {workoutType === 'cardio' && (
-        <div className="flex flex-col items-center justify-center py-12 text-forge-muted">
-          <HeartPulse size={36} className="text-forge-dim mb-3" />
-          <p className="font-condensed">Cardio mode — Phase 7</p>
+        <div className="flex flex-col items-center justify-center py-16 text-forge-muted gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-forge-border-light flex items-center justify-center">
+            <HeartPulse size={28} className="text-forge-dim" />
+          </div>
+          <p className="font-condensed text-sm">Cardio mode — coming soon</p>
         </div>
       )}
 
-      {/* End Workout button */}
+      {/* End Workout — floating action button */}
       {session.exercises.length > 0 && (
         <button
           onClick={() => setShowSaveModal(true)}
-          className="w-full bg-gradient-to-br from-red-600/30 to-red-800/20 text-red-400 border border-red-600/30 py-3 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] hover:border-red-500/50 transition-all duration-200"
+          className="fixed bottom-20 right-4 z-30 bg-gradient-to-br from-red-500 to-red-700 text-white px-6 py-3.5 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] shadow-[0_4px_24px_rgba(239,68,68,0.4)] hover:shadow-[0_4px_32px_rgba(239,68,68,0.55)] transition-all duration-200 flex items-center gap-2"
+          aria-label="End workout"
         >
+          <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
           End Workout
         </button>
       )}
