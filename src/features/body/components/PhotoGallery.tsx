@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { Camera } from 'lucide-react';
 import { readStorage, writeStorage } from '../../../lib/storage';
 import { useToast } from '../../../components/ui/Toast';
 import type { BodyPhoto } from '../../../types/body';
@@ -55,10 +56,8 @@ export function PhotoGallery() {
   return (
     <div className="space-y-3">
       {/* Upload button */}
-      <label className="flex items-center justify-center gap-2 bg-forge-surface border border-dashed border-forge-border rounded-xl py-4 cursor-pointer hover:border-forge-green/50 transition-colors">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-forge-muted">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
-        </svg>
+      <label className="flex items-center justify-center gap-2 bg-forge-surface border border-dashed border-forge-border rounded-xl py-4 cursor-pointer hover:border-forge-green/50 transition-colors min-h-[56px]">
+        <Camera size={20} className="text-forge-dim" />
         <span className="text-forge-muted text-sm font-condensed">Add Progress Photo</span>
         <input type="file" accept="image/*" capture="environment" onChange={handleUpload} className="hidden" />
       </label>
@@ -76,7 +75,7 @@ export function PhotoGallery() {
               </div>
               <button
                 onClick={() => handleDelete(p.id)}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 cursor-pointer press-scale"
                 aria-label="Delete photo"
               >
                 &times;

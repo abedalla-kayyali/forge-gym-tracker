@@ -1,3 +1,4 @@
+import { User } from 'lucide-react';
 import { useSettingsStore } from '../../../stores/useSettingsStore';
 import { useProfileStore } from '../../../stores/useProfileStore';
 import { useAuth } from '../../../hooks/useAuth';
@@ -14,12 +15,12 @@ export function SettingsForm() {
       <Card className="space-y-3">
         <h3 className="text-forge-muted text-xs font-condensed uppercase">Profile</h3>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-forge-green/20 flex items-center justify-center text-forge-green font-display text-lg">
-            {(profile.name || 'G')[0]?.toUpperCase()}
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forge-green/20 to-forge-green/5 flex items-center justify-center border border-forge-green/10">
+            <User size={18} className="text-forge-green" />
           </div>
           <div>
             <div className="text-forge-text text-sm">{profile.name || 'Guest'}</div>
-            <div className="text-forge-muted text-xs">{user?.email ?? 'Guest mode'}</div>
+            <div className="text-forge-dim text-xs">{user?.email ?? 'Guest mode'}</div>
           </div>
         </div>
         <input
@@ -27,7 +28,7 @@ export function SettingsForm() {
           placeholder="Display name"
           value={profile.name}
           onChange={(e) => updateProfile({ name: e.target.value })}
-          className="w-full bg-forge-bg border border-forge-border rounded-lg px-3 py-2 text-forge-text text-sm focus:outline-none focus:border-forge-green"
+          className="w-full bg-forge-surface border border-forge-border rounded-lg px-3 py-2 text-forge-text text-sm focus:outline-none focus:border-forge-green focus:shadow-[0_0_0_2px_rgba(46,204,113,0.15)] transition-all"
         />
       </Card>
 
@@ -41,8 +42,10 @@ export function SettingsForm() {
               <button
                 key={t}
                 onClick={() => setTheme(t)}
-                className={`px-3 py-1 rounded text-xs font-condensed ${
-                  settings.theme === t ? 'bg-forge-green text-forge-bg' : 'bg-forge-bg text-forge-muted border border-forge-border'
+                className={`px-3 min-h-[36px] rounded text-xs font-condensed cursor-pointer press-scale transition-all ${
+                  settings.theme === t
+                    ? 'bg-forge-green text-forge-bg shadow-[0_0_8px_rgba(46,204,113,0.3)]'
+                    : 'bg-forge-bg text-forge-muted border border-forge-border hover:border-forge-green/40'
                 }`}
               >
                 {t}
@@ -57,8 +60,10 @@ export function SettingsForm() {
               <button
                 key={l}
                 onClick={() => setLanguage(l)}
-                className={`px-3 py-1 rounded text-xs font-condensed ${
-                  settings.language === l ? 'bg-forge-green text-forge-bg' : 'bg-forge-bg text-forge-muted border border-forge-border'
+                className={`px-3 min-h-[36px] rounded text-xs font-condensed cursor-pointer press-scale transition-all ${
+                  settings.language === l
+                    ? 'bg-forge-green text-forge-bg shadow-[0_0_8px_rgba(46,204,113,0.3)]'
+                    : 'bg-forge-bg text-forge-muted border border-forge-border hover:border-forge-green/40'
                 }`}
               >
                 {l === 'en' ? 'English' : 'العربية'}
@@ -79,7 +84,7 @@ export function SettingsForm() {
       {user && (
         <button
           onClick={signOut}
-          className="w-full bg-red-600/20 text-red-400 border border-red-600/30 py-2.5 rounded-lg font-condensed text-sm"
+          className="w-full bg-red-600/20 text-red-400 border border-red-600/30 min-h-[44px] rounded-lg font-condensed text-sm cursor-pointer press-scale"
         >
           Sign Out
         </button>
@@ -94,11 +99,19 @@ function ToggleRow({ label, checked, onToggle }: { label: string; checked: boole
       <span className="text-forge-text text-sm">{label}</span>
       <button
         onClick={onToggle}
-        className={`w-10 h-5 rounded-full transition-colors relative ${checked ? 'bg-forge-green' : 'bg-forge-border'}`}
+        className={`w-11 h-6 rounded-full transition-all relative cursor-pointer ${
+          checked
+            ? 'bg-forge-green shadow-[0_0_8px_rgba(46,204,113,0.4)]'
+            : 'bg-forge-border'
+        }`}
         role="switch"
         aria-checked={checked}
       >
-        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+        <div
+          className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
+            checked ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
       </button>
     </div>
   );

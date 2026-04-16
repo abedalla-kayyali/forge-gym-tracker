@@ -1,21 +1,22 @@
 import { useState } from 'react';
+import { Scale, Ruler, ScanLine, Camera } from 'lucide-react';
 import { WeightLogger, MeasurementsForm, InBodyLog, PhotoGallery } from '../features/body';
 import { WeightChart } from '../features/dashboard';
 
 type BodyTab = 'weight' | 'measurements' | 'inbody' | 'photos';
 
-const TABS: { key: BodyTab; label: string; icon: string }[] = [
-  { key: 'weight', label: 'Weight', icon: '⚖️' },
-  { key: 'measurements', label: 'Measure', icon: '📏' },
-  { key: 'inbody', label: 'InBody', icon: '🔬' },
-  { key: 'photos', label: 'Photos', icon: '📸' },
+const TABS: { key: BodyTab; label: string; Icon: React.ElementType }[] = [
+  { key: 'weight', label: 'Weight', Icon: Scale },
+  { key: 'measurements', label: 'Measure', Icon: Ruler },
+  { key: 'inbody', label: 'InBody', Icon: ScanLine },
+  { key: 'photos', label: 'Photos', Icon: Camera },
 ];
 
 export function BodyPage() {
   const [tab, setTab] = useState<BodyTab>('weight');
 
   return (
-    <div className="p-4 space-y-4 pb-20">
+    <div className="page-enter p-4 space-y-4 pb-20">
       <h2 className="text-forge-green font-display text-2xl">Body</h2>
 
       {/* Sub-tabs */}
@@ -24,13 +25,13 @@ export function BodyPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-condensed font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 min-h-[44px] py-2 rounded-lg text-xs font-condensed font-semibold transition-all cursor-pointer press-scale ${
               tab === t.key
-                ? 'bg-forge-green text-forge-bg'
+                ? 'bg-forge-green text-forge-bg shadow-[0_0_12px_rgba(46,204,113,0.3)]'
                 : 'text-forge-muted hover:text-forge-text'
             }`}
           >
-            <span>{t.icon}</span>
+            <t.Icon size={13} />
             <span>{t.label}</span>
           </button>
         ))}

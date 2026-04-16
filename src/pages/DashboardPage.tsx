@@ -9,7 +9,7 @@ import {
 
 export function DashboardPage() {
   return (
-    <div className="p-4 space-y-5 pb-20">
+    <div className="page-enter p-4 space-y-5 pb-20">
       <h2 className="text-forge-green font-display text-2xl">Dashboard</h2>
 
       <DashboardSection title="Recent Workouts">

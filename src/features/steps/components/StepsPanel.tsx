@@ -1,6 +1,6 @@
+import { Footprints } from 'lucide-react';
 import { useStepsStore } from '../../../stores/useStepsStore';
 import { useToast } from '../../../components/ui/Toast';
-import { Card } from '../../../components/ui/Card';
 
 const QUICK_ADD = [1000, 2500, 5000, 10000];
 
@@ -17,29 +17,46 @@ export function StepsPanel() {
   };
 
   return (
-    <Card className="space-y-3">
+    <div className="card-elevated space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-forge-muted text-xs font-condensed uppercase">Today's Steps</span>
-        <span className="text-forge-muted text-xs font-mono">{goal.toLocaleString()} goal</span>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-forge-green to-forge-green-dark flex items-center justify-center shadow-[0_2px_8px_rgba(46,204,113,0.3)]">
+            <Footprints size={14} className="text-forge-bg" />
+          </div>
+          <span className="text-forge-muted text-xs font-condensed uppercase">Today's Steps</span>
+        </div>
+        <span className="text-forge-dim text-xs font-mono">{goal.toLocaleString()} goal</span>
       </div>
       <div className="text-center">
-        <div className="text-forge-green text-3xl font-display">{steps.toLocaleString()}</div>
-        <div className="h-2 bg-forge-border rounded-full overflow-hidden mt-2">
-          <div className="h-full bg-forge-green rounded-full transition-all" style={{ width: `${progress}%` }} />
+        <div
+          className="text-forge-green text-3xl font-display"
+          style={{ textShadow: '0 0 20px rgba(46,204,113,0.5)' }}
+        >
+          {steps.toLocaleString()}
         </div>
-        <span className="text-forge-muted text-xs font-mono mt-1 inline-block">{progress}%</span>
+        <div className="h-2 bg-forge-border rounded-full overflow-hidden mt-2">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: `${Math.min(progress, 100)}%`,
+              background: 'linear-gradient(90deg, #2ecc71, #27ae60)',
+              boxShadow: progress > 0 ? '0 0 8px rgba(46,204,113,0.6)' : 'none',
+            }}
+          />
+        </div>
+        <span className="text-forge-dim text-xs font-mono mt-1 inline-block">{progress}%</span>
       </div>
       <div className="flex gap-2">
         {QUICK_ADD.map((n) => (
           <button
             key={n}
             onClick={() => handleAdd(n)}
-            className="flex-1 bg-forge-bg border border-forge-border rounded-lg py-2 text-forge-text text-xs font-mono hover:border-forge-green/50"
+            className="card-elevated flex-1 min-h-[44px] flex items-center justify-center border border-forge-border rounded-lg text-forge-text text-xs font-mono hover:border-forge-green/50 cursor-pointer press-scale transition-colors"
           >
             +{n >= 1000 ? `${n / 1000}k` : n}
           </button>
         ))}
       </div>
-    </Card>
+    </div>
   );
 }

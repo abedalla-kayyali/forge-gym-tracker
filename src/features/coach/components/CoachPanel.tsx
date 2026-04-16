@@ -1,6 +1,6 @@
+import { Dumbbell } from 'lucide-react';
 import { useCoachState } from '../hooks/useCoachState';
 import { useCoachTriggers } from '../hooks/useCoachTriggers';
-import { Card } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
 
 export function CoachPanel() {
@@ -23,8 +23,10 @@ export function CoachPanel() {
     <div className="space-y-4">
       {/* Mascot message */}
       <div className="flex items-start gap-3">
-        <span className="text-3xl">💪</span>
-        <Card className="flex-1">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forge-green/20 to-forge-green/5 flex items-center justify-center border border-forge-green/10 flex-shrink-0">
+          <Dumbbell size={20} className="text-forge-green" />
+        </div>
+        <div className="card-elevated flex-1 rounded-xl px-3 py-2">
           <div className="text-forge-green font-condensed font-semibold text-xs">FORGE BUDDY</div>
           <div className="text-forge-text text-sm mt-1">
             {state.totalWorkouts7d === 0
@@ -33,23 +35,38 @@ export function CoachPanel() {
                 ? `${state.streak}-day streak! You're on fire!`
                 : `${state.totalWorkouts7d} workouts this week. Keep pushing!`}
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2">
-        <Card className="text-center py-3">
-          <div className="text-forge-green text-xl font-display">{state.totalWorkouts7d}</div>
-          <div className="text-forge-muted text-[10px] font-condensed">This Week</div>
-        </Card>
-        <Card className="text-center py-3">
-          <div className="text-forge-green text-xl font-display">{state.totalWorkouts30d}</div>
-          <div className="text-forge-muted text-[10px] font-condensed">This Month</div>
-        </Card>
-        <Card className="text-center py-3">
-          <div className="text-forge-green text-xl font-display">{state.streak}</div>
-          <div className="text-forge-muted text-[10px] font-condensed">Day Streak</div>
-        </Card>
+        <div className="card-elevated text-center py-3 rounded-xl">
+          <div
+            className="text-forge-green text-xl font-display"
+            style={{ textShadow: '0 0 12px rgba(46,204,113,0.4)' }}
+          >
+            {state.totalWorkouts7d}
+          </div>
+          <div className="text-forge-dim text-[10px] font-condensed">This Week</div>
+        </div>
+        <div className="card-elevated text-center py-3 rounded-xl">
+          <div
+            className="text-forge-green text-xl font-display"
+            style={{ textShadow: '0 0 12px rgba(46,204,113,0.4)' }}
+          >
+            {state.totalWorkouts30d}
+          </div>
+          <div className="text-forge-dim text-[10px] font-condensed">This Month</div>
+        </div>
+        <div className="card-elevated text-center py-3 rounded-xl">
+          <div
+            className="text-forge-green text-xl font-display"
+            style={{ textShadow: '0 0 12px rgba(46,204,113,0.4)' }}
+          >
+            {state.streak}
+          </div>
+          <div className="text-forge-dim text-[10px] font-condensed">Day Streak</div>
+        </div>
       </div>
 
       {/* Triggers/Alerts */}
@@ -82,17 +99,17 @@ export function CoachPanel() {
             }[m.status];
 
             return (
-              <Card key={m.muscle} className="py-2 px-3">
+              <div key={m.muscle} className="card-elevated py-2 px-3 rounded-xl">
                 <div className="flex items-center justify-between">
                   <span className="text-forge-text text-sm font-body capitalize">{m.muscle}</span>
                   <span className={`text-[10px] font-condensed font-semibold uppercase ${statusColor}`}>
                     {m.status}
                   </span>
                 </div>
-                <div className="text-forge-muted text-[10px] mt-0.5">
+                <div className="text-forge-dim text-[10px] mt-0.5">
                   {m.daysSince < 999 ? `${m.daysSince}d ago · ${m.totalSets7d} sets/wk` : 'Not trained yet'}
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>

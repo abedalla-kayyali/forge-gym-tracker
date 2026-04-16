@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useBodyStore } from '../../../stores/useBodyStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
-import { Card } from '../../../components/ui/Card';
 
 const INBODY_FIELDS: { key: string; label: string; unit: string }[] = [
   { key: 'muscle_mass', label: 'Muscle Mass', unit: 'kg' },
@@ -55,7 +54,7 @@ export function InBodyLog() {
         {INBODY_FIELDS.map((f) => (
           <div key={f.key} className="flex flex-col gap-1">
             <label className="text-forge-muted text-[10px] font-condensed uppercase">
-              {f.label} {f.unit && <span className="text-forge-muted/50">({f.unit})</span>}
+              {f.label} {f.unit && <span className="text-forge-dim">({f.unit})</span>}
             </label>
             <input
               type="number"
@@ -64,14 +63,14 @@ export function InBodyLog() {
               placeholder="—"
               value={values[f.key] ?? ''}
               onChange={(e) => handleChange(f.key, e.target.value)}
-              className="bg-forge-bg border border-forge-border rounded-lg px-2.5 py-2 text-forge-text text-sm font-mono placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green"
+              className="bg-forge-surface border border-forge-border rounded-lg px-2.5 py-2 text-forge-text text-sm font-mono placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green focus:shadow-[0_0_0_2px_rgba(46,204,113,0.15)] transition-all"
             />
           </div>
         ))}
       </div>
       <button
         onClick={handleSave}
-        className="w-full bg-forge-green text-forge-bg py-2.5 rounded-lg font-condensed font-semibold text-sm"
+        className="w-full bg-forge-green text-forge-bg min-h-[44px] rounded-lg font-condensed font-semibold text-sm cursor-pointer press-scale"
       >
         Save InBody Data
       </button>
@@ -81,8 +80,8 @@ export function InBodyLog() {
         <div className="space-y-2">
           <h4 className="text-forge-muted text-xs font-condensed uppercase">Recent Scans</h4>
           {recent.map((e, i) => (
-            <Card key={i} className="space-y-1 py-2 px-3">
-              <div className="text-forge-muted text-xs">
+            <div key={i} className="card-elevated space-y-1 py-2 px-3 rounded-xl">
+              <div className="text-forge-dim text-xs">
                 {new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
               <div className="flex flex-wrap gap-3 text-xs">
@@ -91,7 +90,7 @@ export function InBodyLog() {
                 {e.water != null && <span className="text-forge-text"><span className="text-forge-muted">Water:</span> {e.water}L</span>}
                 {e.bmi != null && <span className="text-forge-text"><span className="text-forge-muted">BMI:</span> {e.bmi}</span>}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

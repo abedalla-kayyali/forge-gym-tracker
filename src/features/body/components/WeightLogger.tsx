@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { useBodyStore } from '../../../stores/useBodyStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
-import { Card } from '../../../components/ui/Card';
 
 export function WeightLogger() {
   const { bodyWeight, addWeightEntry } = useBodyStore();
@@ -40,12 +39,12 @@ export function WeightLogger() {
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-          className="flex-1 bg-forge-bg border border-forge-border rounded-lg px-3 py-2.5 text-forge-text text-sm font-mono placeholder:text-forge-muted/50 focus:outline-none focus:border-forge-green"
+          className="flex-1 bg-forge-surface border border-forge-border rounded-lg px-3 py-2.5 text-forge-text text-sm font-mono placeholder:text-forge-muted/50 focus:outline-none focus:border-forge-green focus:shadow-[0_0_0_2px_rgba(46,204,113,0.15)] transition-all"
         />
         <button
           onClick={handleSave}
           disabled={!weight}
-          className="bg-forge-green text-forge-bg px-5 py-2.5 rounded-lg font-condensed font-semibold text-sm disabled:opacity-40"
+          className="bg-forge-green text-forge-bg px-5 min-h-[44px] rounded-lg font-condensed font-semibold text-sm disabled:opacity-40 cursor-pointer press-scale"
         >
           Log
         </button>
@@ -55,12 +54,12 @@ export function WeightLogger() {
       {recent.length > 0 && (
         <div className="space-y-1">
           {recent.map((e, i) => (
-            <Card key={i} className="flex items-center justify-between py-2 px-3" padding={false}>
-              <span className="text-forge-muted text-xs">
+            <div key={i} className="card-elevated flex items-center justify-between py-2 px-3 rounded-xl">
+              <span className="text-forge-dim text-xs">
                 {new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
               <span className="text-forge-green font-mono text-sm font-bold">{e.weight_kg} kg</span>
-            </Card>
+            </div>
           ))}
         </div>
       )}

@@ -64,14 +64,14 @@ export function MeasurementsForm() {
               placeholder={latest?.[f.key] != null ? String(latest[f.key]) : 'cm'}
               value={values[f.key] ?? ''}
               onChange={(e) => handleChange(f.key, e.target.value)}
-              className="bg-forge-bg border border-forge-border rounded-lg px-2.5 py-2 text-forge-text text-sm font-mono placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green"
+              className="bg-forge-surface border border-forge-border rounded-lg px-2.5 py-2 text-forge-text text-sm font-mono placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green focus:shadow-[0_0_0_2px_rgba(46,204,113,0.15)] transition-all"
             />
           </div>
         ))}
       </div>
       <button
         onClick={handleSave}
-        className="w-full bg-forge-green text-forge-bg py-2.5 rounded-lg font-condensed font-semibold text-sm"
+        className="w-full bg-forge-green text-forge-bg min-h-[44px] rounded-lg font-condensed font-semibold text-sm cursor-pointer press-scale"
       >
         Save Measurements
       </button>
