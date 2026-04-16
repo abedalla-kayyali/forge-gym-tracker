@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Plus, Copy, X } from 'lucide-react';
 import { useGhostSets } from '../hooks/useGhostSets';
 import type { WorkoutSet } from '../../../types/workout';
 
@@ -29,26 +30,20 @@ export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) 
       onAddSet({ reps: lastSet.reps, weight: lastSet.weight, rpe: lastSet.rpe });
     } else if (ghostSets.length > 0) {
       const ghost = ghostSets[0];
-      if (ghost) {
-        onAddSet({ reps: ghost.reps, weight: ghost.weight, rpe: ghost.rpe });
-      }
+      if (ghost) onAddSet({ reps: ghost.reps, weight: ghost.weight, rpe: ghost.rpe });
     }
   }, [sets, ghostSets, onAddSet]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleAdd();
-  };
 
   return (
     <div className="space-y-3">
       {/* Ghost sets hint */}
       {sets.length === 0 && ghostSets.length > 0 && (
-        <div className="bg-forge-green/5 border border-forge-green/20 rounded-lg px-3 py-2">
-          <div className="text-forge-muted text-xs font-condensed mb-1">Last time:</div>
+        <div className="card-elevated rounded-xl px-3.5 py-2.5 border border-forge-green/10">
+          <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-1">Last time</div>
           <div className="flex flex-wrap gap-2">
             {ghostSets.map((g, i) => (
-              <span key={i} className="text-forge-green/70 text-xs font-mono">
-                {g.reps}x{g.weight}kg
+              <span key={i} className="text-forge-green/70 text-xs font-mono bg-forge-green/5 px-2 py-0.5 rounded-lg">
+                {g.reps} x {g.weight}kg
               </span>
             ))}
           </div>
@@ -57,27 +52,17 @@ export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) 
 
       {/* Logged sets */}
       {sets.length > 0 && (
-        <div className="space-y-1">
-          <div className="grid grid-cols-[2rem_1fr_1fr_2rem] gap-2 text-forge-muted text-xs font-condensed px-1">
-            <span>#</span>
-            <span>Reps</span>
-            <span>Weight (kg)</span>
-            <span></span>
+        <div className="space-y-1.5">
+          <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 text-forge-dim text-[10px] font-condensed uppercase tracking-wider px-1">
+            <span>#</span><span>Reps</span><span>Weight</span><span></span>
           </div>
           {sets.map((s, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-[2rem_1fr_1fr_2rem] gap-2 items-center bg-forge-surface rounded-lg px-2 py-2 text-sm"
-            >
-              <span className="text-forge-muted font-mono text-xs">{i + 1}</span>
+            <div key={i} className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 items-center card-elevated rounded-xl px-3 py-2.5 text-sm">
+              <span className="text-forge-dim font-mono text-xs">{i + 1}</span>
               <span className="text-forge-text font-mono">{s.reps}</span>
               <span className="text-forge-text font-mono">{s.weight}</span>
-              <button
-                onClick={() => onRemoveSet(i)}
-                className="text-forge-muted hover:text-red-400 text-xs"
-                aria-label="Remove set"
-              >
-                &times;
+              <button onClick={() => onRemoveSet(i)} className="text-forge-dim hover:text-red-400 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150" aria-label="Remove set">
+                <X size={14} />
               </button>
             </div>
           ))}
@@ -86,41 +71,21 @@ export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) 
 
       {/* Input row */}
       <div className="flex gap-2">
-        <input
-          type="number"
-          inputMode="numeric"
-          placeholder="Reps"
-          value={reps}
-          onChange={(e) => setReps(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 bg-forge-bg border border-forge-border rounded-lg px-3 py-2.5 text-forge-text text-sm font-mono placeholder:text-forge-muted/50 focus:outline-none focus:border-forge-green"
-        />
-        <input
-          type="number"
-          inputMode="decimal"
-          placeholder="Weight"
-          value={weight}
-          onChange={(e) => setWeight(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 bg-forge-bg border border-forge-border rounded-lg px-3 py-2.5 text-forge-text text-sm font-mono placeholder:text-forge-muted/50 focus:outline-none focus:border-forge-green"
-        />
+        <input type="number" inputMode="numeric" placeholder="Reps" value={reps} onChange={(e) => setReps(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          className="flex-1 bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-3.5 py-3 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 focus:shadow-[0_0_0_3px_rgba(46,204,113,0.12)] transition-all duration-200" />
+        <input type="number" inputMode="decimal" placeholder="Weight" value={weight} onChange={(e) => setWeight(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          className="flex-1 bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-3.5 py-3 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 focus:shadow-[0_0_0_3px_rgba(46,204,113,0.12)] transition-all duration-200" />
       </div>
 
       {/* Action buttons */}
       <div className="flex gap-2">
-        <button
-          onClick={handleAdd}
-          disabled={!reps || !weight}
-          className="flex-1 bg-forge-green text-forge-bg py-2.5 rounded-lg font-condensed font-semibold text-sm disabled:opacity-40 disabled:pointer-events-none"
-        >
-          + Add Set
+        <button onClick={handleAdd} disabled={!reps || !weight}
+          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg py-3 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] shadow-[0_4px_16px_rgba(46,204,113,0.25)] disabled:opacity-40 disabled:pointer-events-none transition-all duration-200">
+          <Plus size={16} /><span>Add Set</span>
         </button>
-        <button
-          onClick={handleDitto}
-          disabled={sets.length === 0 && ghostSets.length === 0}
-          className="bg-forge-surface text-forge-muted border border-forge-border px-4 py-2.5 rounded-lg font-condensed text-sm hover:text-forge-text disabled:opacity-40 disabled:pointer-events-none"
-        >
-          Ditto
+        <button onClick={handleDitto} disabled={sets.length === 0 && ghostSets.length === 0}
+          className="flex items-center justify-center gap-2 card-elevated text-forge-muted px-5 py-3 rounded-xl font-condensed text-sm cursor-pointer press-scale min-h-[44px] hover:text-forge-text disabled:opacity-40 disabled:pointer-events-none transition-all duration-200">
+          <Copy size={14} /><span>Ditto</span>
         </button>
       </div>
     </div>

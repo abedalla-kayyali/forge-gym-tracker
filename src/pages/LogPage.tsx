@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Dumbbell, Scaling, HeartPulse } from 'lucide-react';
 import { WorkoutTypeSelector, type WorkoutType } from '../features/workout';
 import { MuscleGroupPicker } from '../features/workout';
 import { ExerciseAutocomplete } from '../features/workout';
@@ -80,15 +81,15 @@ export function LogPage() {
   // Not started yet — show start button
   if (!session.active) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-4">
-        <div className="text-6xl">🏋️</div>
+      <div className="page-enter flex flex-col items-center justify-center min-h-[60vh] gap-6 p-4">
+        <Dumbbell size={48} className="text-forge-green" />
         <h2 className="text-forge-green font-display text-3xl">Ready to train?</h2>
         <p className="text-forge-muted text-center text-sm max-w-xs">
           Start a session to log your exercises, sets, and track your progress.
         </p>
         <button
           onClick={handleStartSession}
-          className="bg-forge-green text-forge-bg px-10 py-3.5 rounded-xl font-condensed font-bold text-lg"
+          className="bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-10 py-3.5 rounded-xl font-condensed font-bold text-lg cursor-pointer press-scale min-h-[44px] shadow-[0_4px_20px_rgba(46,204,113,0.3)] transition-all duration-200"
         >
           Start Workout
         </button>
@@ -98,7 +99,7 @@ export function LogPage() {
 
   // Active session
   return (
-    <div className="p-4 space-y-4 pb-24">
+    <div className="page-enter p-4 space-y-4 pb-24">
       {/* Workout type */}
       <WorkoutTypeSelector value={workoutType} onChange={setWorkoutType} />
 
@@ -138,7 +139,7 @@ export function LogPage() {
               {currentSets.length > 0 && (
                 <button
                   onClick={handleLogExercise}
-                  className="w-full mt-3 bg-forge-green/20 text-forge-green border border-forge-green/30 py-2.5 rounded-lg font-condensed font-semibold text-sm"
+                  className="w-full mt-3 bg-forge-green/20 text-forge-green border border-forge-green/30 py-2.5 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] hover:bg-forge-green/30 transition-all duration-200"
                 >
                   Log Exercise ({currentSets.length} sets)
                 </button>
@@ -158,7 +159,7 @@ export function LogPage() {
               {session.exercises.map((ex, i) => (
                 <div
                   key={i}
-                  className="bg-forge-surface border border-forge-border rounded-lg px-3 py-2 flex items-center justify-between"
+                  className="card-elevated rounded-xl px-3.5 py-3 flex items-center justify-between"
                 >
                   <div>
                     <div className="text-forge-text text-sm font-body">{ex.name}</div>
@@ -177,14 +178,14 @@ export function LogPage() {
 
       {workoutType === 'bodyweight' && (
         <div className="flex flex-col items-center justify-center py-12 text-forge-muted">
-          <span className="text-4xl mb-3">💪</span>
+          <Scaling size={36} className="text-forge-dim mb-3" />
           <p className="font-condensed">Bodyweight mode — Phase 7</p>
         </div>
       )}
 
       {workoutType === 'cardio' && (
         <div className="flex flex-col items-center justify-center py-12 text-forge-muted">
-          <span className="text-4xl mb-3">🏃</span>
+          <HeartPulse size={36} className="text-forge-dim mb-3" />
           <p className="font-condensed">Cardio mode — Phase 7</p>
         </div>
       )}
@@ -193,7 +194,7 @@ export function LogPage() {
       {session.exercises.length > 0 && (
         <button
           onClick={() => setShowSaveModal(true)}
-          className="w-full bg-red-600/20 text-red-400 border border-red-600/30 py-3 rounded-xl font-condensed font-semibold text-sm"
+          className="w-full bg-gradient-to-br from-red-600/30 to-red-800/20 text-red-400 border border-red-600/30 py-3 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] hover:border-red-500/50 transition-all duration-200"
         >
           End Workout
         </button>

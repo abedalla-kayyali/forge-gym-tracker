@@ -5,17 +5,17 @@ interface Props {
   onSelect: (muscle: MuscleGroup) => void;
 }
 
-const MUSCLE_GROUPS: { key: MuscleGroup; label: string; icon: string }[] = [
-  { key: 'chest', label: 'Chest', icon: '🫁' },
-  { key: 'back', label: 'Back', icon: '🔙' },
-  { key: 'shoulders', label: 'Shoulders', icon: '🪨' },
-  { key: 'biceps', label: 'Biceps', icon: '💪' },
-  { key: 'triceps', label: 'Triceps', icon: '🦾' },
-  { key: 'forearms', label: 'Forearms', icon: '✊' },
-  { key: 'core', label: 'Core', icon: '🎯' },
-  { key: 'legs', label: 'Legs', icon: '🦵' },
-  { key: 'glutes', label: 'Glutes', icon: '🍑' },
-  { key: 'calves', label: 'Calves', icon: '🦿' },
+const MUSCLE_GROUPS: { key: MuscleGroup; label: string }[] = [
+  { key: 'chest', label: 'Chest' },
+  { key: 'back', label: 'Back' },
+  { key: 'shoulders', label: 'Shoulders' },
+  { key: 'biceps', label: 'Biceps' },
+  { key: 'triceps', label: 'Triceps' },
+  { key: 'forearms', label: 'Forearms' },
+  { key: 'core', label: 'Core' },
+  { key: 'legs', label: 'Legs' },
+  { key: 'glutes', label: 'Glutes' },
+  { key: 'calves', label: 'Calves' },
 ];
 
 export function MuscleGroupPicker({ selected, onSelect }: Props) {
@@ -25,14 +25,13 @@ export function MuscleGroupPicker({ selected, onSelect }: Props) {
         <button
           key={m.key}
           onClick={() => onSelect(m.key)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-condensed transition-all ${
+          className={`px-3.5 py-2 rounded-xl text-sm font-condensed cursor-pointer press-scale transition-all duration-200 min-h-[40px] ${
             selected === m.key
-              ? 'bg-forge-green text-forge-bg font-semibold'
-              : 'bg-forge-surface text-forge-muted border border-forge-border hover:text-forge-text hover:border-forge-green/50'
+              ? 'bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg font-semibold shadow-[0_2px_12px_rgba(46,204,113,0.25)]'
+              : 'card-elevated text-forge-muted hover:text-forge-text'
           }`}
         >
-          <span className="text-xs">{m.icon}</span>
-          <span>{m.label}</span>
+          {m.label}
         </button>
       ))}
     </div>
