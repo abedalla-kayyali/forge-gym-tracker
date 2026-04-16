@@ -1,4 +1,12 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { useAuth } from './hooks/useAuth';
+import { Header } from './components/layout/Header';
+import { BottomNav } from './components/layout/BottomNav';
+import { LogPage } from './pages/LogPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { CoachPage } from './pages/CoachPage';
+import { BodyPage } from './pages/BodyPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export default function App() {
   const { user, loading, isGuest, signInWithGoogle, continueAsGuest } = useAuth();
@@ -33,11 +41,21 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-forge-bg">
-      <p className="text-forge-green text-center pt-10 font-display text-3xl">
-        FORGE — Logged in as {user?.email ?? 'Guest'}
-      </p>
-      <p className="text-forge-muted text-center mt-2">Shell + navigation coming in Phase 2</p>
-    </div>
+    <BrowserRouter>
+      <div className="min-h-screen bg-forge-bg flex flex-col">
+        <Header />
+        <main className="flex-1 overflow-y-auto pb-16">
+          <Routes>
+            <Route path="/log" element={<LogPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/coach" element={<CoachPage />} />
+            <Route path="/body" element={<BodyPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/log" replace />} />
+          </Routes>
+        </main>
+        <BottomNav />
+      </div>
+    </BrowserRouter>
   );
 }
