@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -44,11 +45,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const typeStyles: Record<ToastType, string> = {
-  success: 'border-forge-green/50 text-forge-green',
-  error: 'border-red-500/50 text-red-400',
-  info: 'border-forge-border text-forge-text',
-  warning: 'border-yellow-500/50 text-yellow-400',
+const typeConfig: Record<ToastType, { style: string; Icon: typeof CheckCircle }> = {
+  success: { style: 'border-forge-green/30 text-forge-green', Icon: CheckCircle },
+  error: { style: 'border-red-500/30 text-red-400', Icon: XCircle },
+  info: { style: 'border-forge-border text-forge-text', Icon: Info },
+  warning: { style: 'border-yellow-500/30 text-yellow-400', Icon: AlertTriangle },
 };
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
@@ -57,9 +58,12 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
     return () => clearTimeout(timer);
   }, [toast.id, onDismiss]);
 
+  const { style, Icon } = typeConfig[toast.type];
+
   return (
-    <div className={`pointer-events-auto bg-forge-surface border rounded-lg px-4 py-3 text-sm font-body shadow-lg animate-slide-up ${typeStyles[toast.type]}`}>
-      {toast.message}
+    <div className={`pointer-events-auto card-elevated border rounded-xl px-4 py-3 text-sm font-body animate-slide-up flex items-center gap-3 ${style}`}>
+      <Icon size={18} className="shrink-0" />
+      <span>{toast.message}</span>
     </div>
   );
 }

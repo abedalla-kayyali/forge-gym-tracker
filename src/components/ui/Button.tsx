@@ -9,22 +9,22 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-forge-green text-forge-bg font-semibold hover:brightness-110 active:brightness-90',
-  secondary: 'bg-forge-surface text-forge-text border border-forge-border hover:bg-forge-border',
-  ghost: 'bg-transparent text-forge-muted hover:text-forge-text hover:bg-forge-surface',
-  danger: 'bg-red-600 text-white font-semibold hover:bg-red-700',
+  primary: 'bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg font-semibold shadow-[0_4px_16px_rgba(46,204,113,0.25)] hover:shadow-[0_6px_24px_rgba(46,204,113,0.35)]',
+  secondary: 'card-elevated text-forge-text hover:bg-forge-surface-hover',
+  ghost: 'bg-transparent text-forge-muted hover:text-forge-text hover:bg-forge-surface/50',
+  danger: 'bg-gradient-to-br from-red-600 to-red-700 text-white font-semibold shadow-[0_4px_16px_rgba(220,38,38,0.2)]',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-md',
-  md: 'px-5 py-2.5 text-base rounded-lg',
-  lg: 'px-8 py-3 text-lg rounded-lg',
+  sm: 'px-3 py-2 text-sm rounded-lg min-h-[36px]',
+  md: 'px-5 py-2.5 text-base rounded-xl min-h-[44px]',
+  lg: 'px-8 py-3.5 text-lg rounded-xl min-h-[48px]',
 };
 
 export function Button({ variant = 'primary', size = 'md', className = '', children, ...props }: ButtonProps) {
   return (
     <button
-      className={`font-condensed transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`font-condensed cursor-pointer transition-all duration-200 press-scale disabled:opacity-40 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       {...props}
     >
       {children}
