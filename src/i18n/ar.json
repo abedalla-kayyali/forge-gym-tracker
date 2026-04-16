@@ -10,10 +10,12 @@
   },
   "nav": {
     "log": "سجل",
-    "dashboard": "لوحة",
+    "stats": "إحصائيات",
+    "history": "التاريخ",
+    "social": "اجتماعي",
     "coach": "المدرب",
-    "body": "الجسم",
-    "settings": "إعدادات"
+    "nutrition": "التغذية",
+    "more": "المزيد"
   },
   "common": {
     "save": "حفظ",

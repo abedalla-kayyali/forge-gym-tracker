@@ -6,10 +6,12 @@ import { BottomNav } from './components/layout/BottomNav';
 
 // Lazy-loaded pages
 const LogPage = lazy(() => import('./pages/LogPage').then((m) => ({ default: m.LogPage })));
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
+const HistoryPage = lazy(() => import('./pages/HistoryPage').then((m) => ({ default: m.HistoryPage })));
+const SocialPage = lazy(() => import('./pages/SocialPage').then((m) => ({ default: m.SocialPage })));
 const CoachPage = lazy(() => import('./pages/CoachPage').then((m) => ({ default: m.CoachPage })));
-const BodyPage = lazy(() => import('./pages/BodyPage').then((m) => ({ default: m.BodyPage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const NutritionPage = lazy(() => import('./pages/NutritionPage').then((m) => ({ default: m.NutritionPage })));
+const MorePage = lazy(() => import('./pages/MorePage').then((m) => ({ default: m.MorePage })));
 
 function PageLoader() {
   return (
@@ -65,10 +67,12 @@ export default function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/log" element={<LogPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/stats" element={<StatsPage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/social" element={<SocialPage />} />
               <Route path="/coach" element={<CoachPage />} />
-              <Route path="/body" element={<BodyPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/nutrition" element={<NutritionPage />} />
+              <Route path="/more" element={<MorePage />} />
               <Route path="*" element={<Navigate to="/log" replace />} />
             </Routes>
           </Suspense>

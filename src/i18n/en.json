@@ -10,10 +10,12 @@
   },
   "nav": {
     "log": "Log",
-    "dashboard": "Dashboard",
+    "stats": "Stats",
+    "history": "History",
+    "social": "Social",
     "coach": "Coach",
-    "body": "Body",
-    "settings": "Settings"
+    "nutrition": "Nutrition",
+    "more": "More"
   },
   "common": {
     "save": "Save",

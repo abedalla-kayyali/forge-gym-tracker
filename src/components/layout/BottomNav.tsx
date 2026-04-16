@@ -1,23 +1,26 @@
 import { NavLink } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { PenLine, LayoutGrid, Brain, Activity, Settings } from 'lucide-react';
+import { PenLine, BarChart3, Clock, Users, Brain, UtensilsCrossed, MoreHorizontal } from 'lucide-react';
 
 interface NavItem {
   path: string;
   labelKey: string;
+  label: string;
   Icon: typeof PenLine;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/log', labelKey: 'nav.log', Icon: PenLine },
-  { path: '/dashboard', labelKey: 'nav.dashboard', Icon: LayoutGrid },
-  { path: '/coach', labelKey: 'nav.coach', Icon: Brain },
-  { path: '/body', labelKey: 'nav.body', Icon: Activity },
-  { path: '/settings', labelKey: 'nav.settings', Icon: Settings },
+  { path: '/log', labelKey: 'nav.log', label: 'Log', Icon: PenLine },
+  { path: '/stats', labelKey: 'nav.stats', label: 'Stats', Icon: BarChart3 },
+  { path: '/history', labelKey: 'nav.history', label: 'History', Icon: Clock },
+  { path: '/social', labelKey: 'nav.social', label: 'Social', Icon: Users },
+  { path: '/coach', labelKey: 'nav.coach', label: 'Coach', Icon: Brain },
+  { path: '/nutrition', labelKey: 'nav.nutrition', label: 'Nutrition', Icon: UtensilsCrossed },
+  { path: '/more', labelKey: 'nav.more', label: 'More', Icon: MoreHorizontal },
 ];
 
 export function BottomNav() {
-  const { t } = useTranslation();
+  useTranslation();
 
   return (
     <nav
@@ -30,16 +33,16 @@ export function BottomNav() {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 px-3 py-1.5 min-w-[44px] min-h-[44px] justify-center cursor-pointer transition-all duration-200 ${
+              `flex flex-col items-center gap-0.5 px-1.5 py-1 min-w-[40px] min-h-[44px] justify-center cursor-pointer transition-all duration-200 ${
                 isActive ? 'text-forge-green' : 'text-forge-dim hover:text-forge-muted'
               }`
             }
-            aria-label={t(item.labelKey)}
+            aria-label={item.label}
           >
             {({ isActive }) => (
               <>
-                <item.Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-                <span className="text-[10px] font-condensed font-semibold">{t(item.labelKey)}</span>
+                <item.Icon size={18} strokeWidth={isActive ? 2.5 : 1.5} />
+                <span className="text-[9px] font-condensed font-semibold">{item.label}</span>
                 {isActive && (
                   <div className="w-1 h-1 rounded-full bg-forge-green glow-dot" />
                 )}
