@@ -1,0 +1,26 @@
+{
+  "app": {
+    "name": "FORGE",
+    "tagline": "Your personal gym operating system"
+  },
+  "auth": {
+    "signIn": "Sign in with Google",
+    "guest": "Continue as guest",
+    "signOut": "Sign out"
+  },
+  "nav": {
+    "log": "Log",
+    "dashboard": "Dashboard",
+    "coach": "Coach",
+    "body": "Body",
+    "settings": "Settings"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading..."
+  }
+}
