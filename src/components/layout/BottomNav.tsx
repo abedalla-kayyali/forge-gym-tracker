@@ -59,12 +59,13 @@ export function BottomNav() {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-forge-bg border-t border-forge-border safe-area-bottom">
+    <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-40 bg-forge-bg border-t border-forge-border safe-area-bottom">
       <div className="flex items-center justify-around h-14">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
+            aria-label={t(item.labelKey)}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-3 py-1 transition-colors ${
                 isActive ? 'text-forge-green' : 'text-forge-muted hover:text-forge-text'

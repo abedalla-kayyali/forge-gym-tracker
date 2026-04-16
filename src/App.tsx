@@ -1,12 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { useAuth } from './hooks/useAuth';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
-import { LogPage } from './pages/LogPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { CoachPage } from './pages/CoachPage';
-import { BodyPage } from './pages/BodyPage';
-import { SettingsPage } from './pages/SettingsPage';
+
+// Lazy-loaded pages
+const LogPage = lazy(() => import('./pages/LogPage').then((m) => ({ default: m.LogPage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const CoachPage = lazy(() => import('./pages/CoachPage').then((m) => ({ default: m.CoachPage })));
+const BodyPage = lazy(() => import('./pages/BodyPage').then((m) => ({ default: m.BodyPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-forge-green font-display text-xl animate-pulse">Loading...</div>
+    </div>
+  );
+}
 
 export default function App() {
   const { user, loading, isGuest, signInWithGoogle, continueAsGuest } = useAuth();
@@ -43,16 +54,24 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-forge-bg flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-forge-green focus:text-forge-bg focus:px-4 focus:py-2 focus:rounded focus:z-50"
+        >
+          Skip to content
+        </a>
         <Header />
-        <main className="flex-1 overflow-y-auto pb-16">
-          <Routes>
-            <Route path="/log" element={<LogPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/coach" element={<CoachPage />} />
-            <Route path="/body" element={<BodyPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<Navigate to="/log" replace />} />
-          </Routes>
+        <main id="main-content" className="flex-1 overflow-y-auto pb-16" role="main">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/log" element={<LogPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/coach" element={<CoachPage />} />
+              <Route path="/body" element={<BodyPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="*" element={<Navigate to="/log" replace />} />
+            </Routes>
+          </Suspense>
         </main>
         <BottomNav />
       </div>

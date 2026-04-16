@@ -37,6 +37,13 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: { app: 'app.html' },
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router'],
+          'vendor-charts': ['recharts'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+        },
+      },
     },
   },
 });
