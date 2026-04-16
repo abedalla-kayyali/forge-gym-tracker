@@ -1,8 +1,13 @@
+import { SettingsForm, DataTransfer } from '../features/settings';
+import { XPBar } from '../features/gamification';
+
 export function SettingsPage() {
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-4 pb-20">
       <h2 className="text-forge-green font-display text-2xl">Settings</h2>
-      <p className="text-forge-muted mt-2">Settings coming in Phase 9</p>
+      <XPBar />
+      <SettingsForm />
+      <DataTransfer />
     </div>
   );
 }
