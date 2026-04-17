@@ -366,6 +366,7 @@ function MuscleVolumeByGroup() {
       muscle,
       pct: (vol / max) * 100,
       label: vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : String(Math.round(vol)),
+      unit: vol >= 1000 ? '' : ' kg',
     }));
   }, [workouts, bwWorkouts]);
 
@@ -385,7 +386,7 @@ function MuscleVolumeByGroup() {
             />
           </div>
           <span className="text-forge-muted text-[10px] font-mono w-12 text-right flex-shrink-0">
-            {r.label} kg
+            {r.label}{r.unit}
           </span>
         </div>
       ))}
