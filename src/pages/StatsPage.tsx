@@ -211,7 +211,7 @@ function ActivityRingsHero() {
 }
 
 function KpiBigCell({
-  label, value, unit, icon, sub, accent = 'green',
+  label, value, unit, icon, sub, accent = 'green', delta,
 }: {
   label: string;
   value: string | number;
@@ -219,6 +219,7 @@ function KpiBigCell({
   icon?: React.ReactNode;
   sub?: string;
   accent?: 'green' | 'gold' | 'ember' | 'muted';
+  delta?: { value: number; unit?: string } | null;
 }) {
   const colorMap = {
     green: 'text-forge-green',
@@ -226,6 +227,7 @@ function KpiBigCell({
     ember: 'text-forge-ember',
     muted: 'text-forge-text-soft',
   } as const;
+  const hasDelta = delta != null && delta.value !== 0;
   return (
     <div className="card-elevated rounded-2xl p-3.5 relative overflow-hidden">
       <div className="flex items-center gap-1.5 text-forge-muted mb-1.5">
@@ -236,7 +238,20 @@ function KpiBigCell({
         <span className={`kpi-lg ${colorMap[accent]} leading-none`}>{value}</span>
         {unit && <span className="text-[10px] font-condensed text-forge-muted">{unit}</span>}
       </div>
-      {sub && <div className="text-[10px] text-forge-dim font-condensed mt-1 uppercase tracking-wider">{sub}</div>}
+      {hasDelta && (
+        <div
+          className="inline-flex items-center text-[9px] font-mono font-semibold mt-1 px-1.5 py-0.5 rounded-full"
+          style={{
+            color:      delta!.value > 0 ? '#2ecc71' : '#EF4444',
+            background: delta!.value > 0 ? 'rgba(46,204,113,0.1)' : 'rgba(239,68,68,0.1)',
+          }}
+        >
+          {delta!.value > 0 ? '↑' : '↓'} {Math.abs(delta!.value).toLocaleString()}{delta!.unit ?? ''}
+        </div>
+      )}
+      {sub && !hasDelta && (
+        <div className="text-[10px] text-forge-dim font-condensed mt-1 uppercase tracking-wider">{sub}</div>
+      )}
     </div>
   );
 }
@@ -633,36 +648,54 @@ function CaliDashboard() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function PeriodSummary({ period }: { period: PeriodKey }) {
-  const workouts = useWorkoutStore((s) => s.workouts);
+  const workouts   = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
-  const cardio = useCardioStore((s) => s.entries);
+  const cardio     = useCardioStore((s) => s.entries);
 
-  const summary = useMemo(() => {
-    const cutoff =
-      period === '7D' ? Date.now() - 7 * 86400000 :
-      period === '1M' ? Date.now() - 30 * 86400000 :
-      period === '3M' ? Date.now() - 90 * 86400000 :
-      period === '6M' ? Date.now() - 180 * 86400000 : 0;
+  const { current, prev } = useMemo(() => {
+    const durMs =
+      period === '7D'  ?  7 * 86400000 :
+      period === '1M'  ? 30 * 86400000 :
+      period === '3M'  ? 90 * 86400000 :
+      period === '6M'  ? 180 * 86400000 : null;
 
-    const inRange = (iso: string) => new Date(iso).getTime() >= cutoff;
-    const w = workouts.filter((x) => inRange(x.date));
-    const bw = bwWorkouts.filter((x) => inRange(x.date));
-    const c = cardio.filter((x) => inRange(x.date));
+    const now        = Date.now();
+    const cutoff     = durMs ? now - durMs : 0;
+    const prevCutoff = durMs ? cutoff - durMs : 0;
 
-    const sessions = w.length + bw.length + c.length;
-    const volume = w.reduce((a, x) => a + x.exercises.reduce((b, ex) => b + ex.sets.reduce((c, s) => c + s.reps * s.weight, 0), 0), 0);
-    const prs = w.reduce((a, x) => a + x.exercises.reduce((b, ex) => b + ex.sets.filter((s) => s.isPR).length, 0), 0);
-    const minutes = c.reduce((a, x) => a + x.duration, 0);
+    const calc = (from: number, to: number) => {
+      const w  = workouts.filter((x)   => { const t = new Date(x.date).getTime(); return t >= from && t < to; });
+      const bw = bwWorkouts.filter((x) => { const t = new Date(x.date).getTime(); return t >= from && t < to; });
+      const c  = cardio.filter((x)     => { const t = new Date(x.date).getTime(); return t >= from && t < to; });
+      const sessions = w.length + bw.length + c.length;
+      const volume   = Math.round(w.reduce((a, x) => a + x.exercises.reduce((b, ex) => b + ex.sets.reduce((c2, s) => c2 + s.reps * s.weight, 0), 0), 0));
+      const prs      = w.reduce((a, x) => a + x.exercises.reduce((b, ex) => b + ex.sets.filter((s) => s.isPR).length, 0), 0);
+      const minutes  = c.reduce((a, x) => a + x.duration, 0);
+      return { sessions, volume, prs, minutes };
+    };
 
-    return { sessions, volume, prs, minutes };
+    const current = calc(cutoff, Infinity);
+    const prev    = durMs ? calc(prevCutoff, cutoff) : null;
+    return { current, prev };
   }, [period, workouts, bwWorkouts, cardio]);
+
+  const mkDelta = (cur: number, p: number | undefined, unit?: string) =>
+    p != null ? { value: cur - p, unit } : null;
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      <KpiBigCell label={`Sessions (${period})`} value={summary.sessions} icon={<Dumbbell size={13} />} accent="green" />
-      <KpiBigCell label="Volume" value={Math.round(summary.volume).toLocaleString()} unit="KG" icon={<Weight size={13} />} accent="green" />
-      <KpiBigCell label="PRs" value={summary.prs} icon={<Trophy size={13} />} accent={summary.prs > 0 ? 'gold' : 'muted'} />
-      <KpiBigCell label="Cardio" value={summary.minutes} unit="MIN" icon={<HeartPulse size={13} />} accent="green" />
+      <KpiBigCell label={`Sessions (${period})`} value={current.sessions}
+        icon={<Dumbbell size={13} />} accent="green"
+        delta={prev ? mkDelta(current.sessions, prev.sessions) : null} />
+      <KpiBigCell label="Volume" value={current.volume.toLocaleString()} unit="KG"
+        icon={<Weight size={13} />} accent="green"
+        delta={prev ? mkDelta(current.volume, prev.volume, ' kg') : null} />
+      <KpiBigCell label="PRs" value={current.prs}
+        icon={<Trophy size={13} />} accent={current.prs > 0 ? 'gold' : 'muted'}
+        delta={prev ? mkDelta(current.prs, prev.prs) : null} />
+      <KpiBigCell label="Cardio" value={current.minutes} unit="MIN"
+        icon={<HeartPulse size={13} />} accent="green"
+        delta={prev ? mkDelta(current.minutes, prev.minutes, ' min') : null} />
     </div>
   );
 }
