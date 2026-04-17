@@ -700,6 +700,161 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
   );
 }
 
+function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
+  const workouts = useWorkoutStore((s) => s.workouts);
+
+  const weeks = useMemo(() => {
+    const durMs =
+      period === '7D'  ?  7 * 86400000 :
+      period === '1M'  ? 30 * 86400000 :
+      period === '3M'  ? 90 * 86400000 :
+      period === '6M'  ? 180 * 86400000 : null;
+
+    const now    = Date.now();
+    const cutoff = durMs ? now - durMs : 0;
+
+    const byWeek: Record<string, number> = {};
+    for (const w of workouts) {
+      if (new Date(w.date).getTime() < cutoff) continue;
+      const d   = new Date(w.date);
+      const dof = d.getDay() === 0 ? 6 : d.getDay() - 1; // 0=Mon
+      const mon = new Date(d);
+      mon.setDate(d.getDate() - dof);
+      const key = mon.toISOString().slice(0, 10);
+      const vol = w.exercises.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + s.reps * s.weight, 0), 0);
+      byWeek[key] = (byWeek[key] ?? 0) + vol;
+    }
+
+    const entries = Object.entries(byWeek).sort(([a], [b]) => a.localeCompare(b));
+    const max = Math.max(...entries.map(([, v]) => v), 1);
+    return entries.map(([key, vol], i) => ({
+      label: new Date(key).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      vol,
+      pct: (vol / max) * 100,
+      opacity: 0.45 + (i / Math.max(entries.length - 1, 1)) * 0.55,
+    }));
+  }, [period, workouts]);
+
+  if (weeks.length === 0) return null;
+
+  return (
+    <div className="card-elevated rounded-2xl p-4">
+      <div className="label-cap text-forge-muted mb-3">Weekly Volume</div>
+      <div className="flex items-end gap-1.5 h-16">
+        {weeks.map((w, i) => (
+          <div key={i} className="flex-1 flex flex-col justify-end">
+            <div
+              className="w-full rounded-t-sm"
+              style={{
+                height: `${Math.max(w.pct, 2)}%`,
+                background: '#2ecc71',
+                opacity: w.opacity,
+                minHeight: 2,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-1.5 mt-1.5">
+        {weeks.map((w, i) => (
+          <div key={i} className="flex-1 text-center overflow-hidden">
+            <span className="text-[7px] text-forge-dim whitespace-nowrap">{w.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProgressiveOverload({ period }: { period: PeriodKey }) {
+  const workouts = useWorkoutStore((s) => s.workouts);
+
+  const rows = useMemo(() => {
+    const durMs =
+      period === '7D'  ?  7 * 86400000 :
+      period === '1M'  ? 30 * 86400000 :
+      period === '3M'  ? 90 * 86400000 :
+      period === '6M'  ? 180 * 86400000 : null;
+
+    if (!durMs) return [];
+
+    const now        = Date.now();
+    const cutoff     = now - durMs;
+    const prevCutoff = cutoff - durMs;
+
+    const maxWeight = (name: string, from: number, to: number) => {
+      let max = 0;
+      for (const w of workouts) {
+        const t = new Date(w.date).getTime();
+        if (t < from || t >= to) continue;
+        for (const ex of w.exercises) {
+          if (ex.name !== name) continue;
+          for (const s of ex.sets) { if (s.weight > max) max = s.weight; }
+        }
+      }
+      return max;
+    };
+
+    // Rank exercises in current period by volume
+    const vol: Record<string, number> = {};
+    for (const w of workouts) {
+      if (new Date(w.date).getTime() < cutoff) continue;
+      for (const ex of w.exercises) {
+        const v = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
+        vol[ex.name] = (vol[ex.name] ?? 0) + v;
+      }
+    }
+
+    const top5 = Object.entries(vol)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([name]) => name);
+
+    return top5.map((name) => {
+      const cur   = maxWeight(name, cutoff, now);
+      const prev  = maxWeight(name, prevCutoff, cutoff);
+      const delta = prev > 0 ? cur - prev : 0;
+      return { name, cur, delta, pct: cur > 0 ? Math.min(100, (cur / Math.max(cur, prev, 1)) * 100) : 0 };
+    }).filter((r) => r.cur > 0);
+  }, [period, workouts]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="card-elevated rounded-2xl p-4 space-y-3">
+      <div className="label-cap text-forge-muted">Progressive Overload</div>
+      {rows.map((r) => {
+        const isGain = r.delta > 0;
+        const isLoss = r.delta < 0;
+        return (
+          <div key={r.name} className="flex items-center gap-3">
+            <span className="text-forge-text-soft text-[11px] font-condensed font-semibold w-[72px] truncate flex-shrink-0 capitalize">
+              {r.name}
+            </span>
+            <div className="flex-1 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${r.pct}%`,
+                  background: isLoss ? '#EF4444' : '#2ecc71',
+                }}
+              />
+            </div>
+            <span
+              className="text-[11px] font-mono font-semibold w-14 text-right flex-shrink-0"
+              style={{ color: isGain ? '#2ecc71' : isLoss ? '#EF4444' : '#4B5563' }}
+            >
+              {r.delta !== 0
+                ? `${r.delta > 0 ? '+' : ''}${r.delta}kg`
+                : `${r.cur}kg`}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // PAGE
 // ═════════════════════════════════════════════════════════════════════════════
@@ -745,11 +900,13 @@ export function StatsPage() {
           <TabPills
             tabs={PERIODS.map((p) => ({ id: p, label: p }))}
             value={period}
-            onChange={(p) => { play('tap'); setPeriod(p); }}
+            onChange={(p) => { play('tap'); setPeriod(p as PeriodKey); }}
             size="sm"
             ariaLabel="Progress period filter"
           />
           <PeriodSummary period={period} />
+          <WeeklyVolumeBars period={period} />
+          <ProgressiveOverload period={period} />
           <DashboardSection title={`Volume by Muscle (${period})`}>
             <VolumeChart />
           </DashboardSection>
