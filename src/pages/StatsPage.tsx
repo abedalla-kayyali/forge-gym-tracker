@@ -674,12 +674,12 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
       return { sessions, volume, prs, minutes };
     };
 
-    const current = calc(cutoff, Infinity);
+    const current = calc(cutoff, now);
     const prev    = durMs ? calc(prevCutoff, cutoff) : null;
     return { current, prev };
   }, [period, workouts, bwWorkouts, cardio]);
 
-  const mkDelta = (cur: number, p: number | undefined, unit?: string) =>
+  const mkDelta = (cur: number, p: number, unit?: string) =>
     p != null ? { value: cur - p, unit } : null;
 
   return (
