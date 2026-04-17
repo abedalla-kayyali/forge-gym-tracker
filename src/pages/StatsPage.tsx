@@ -565,14 +565,13 @@ function MeasurementsGrid() {
   );
 }
 
-function InBodyCard() {
+function CompositionDonut() {
   const inbody = useBodyStore((s) => s.inbody);
-  const sorted = useMemo(
-    () => [...inbody].sort((a, b) => b.date.localeCompare(a.date)),
-    [inbody],
-  );
-  const latest = sorted[0];
-  const previous = sorted[1];
+
+  const { latest, previous } = useMemo(() => {
+    const sorted = [...inbody].sort((a, b) => b.date.localeCompare(a.date));
+    return { latest: sorted[0] ?? null, previous: sorted[1] ?? null };
+  }, [inbody]);
 
   if (!latest) return (
     <div className="card-elevated rounded-2xl p-8 text-center">
@@ -582,45 +581,77 @@ function InBodyCard() {
     </div>
   );
 
-  const metrics: Array<{ key: keyof typeof latest; label: string; unit: string }> = [
-    { key: 'muscle_mass',  label: 'Muscle',   unit: 'kg' },
-    { key: 'body_fat',     label: 'Fat Mass', unit: 'kg' },
-    { key: 'body_fat_pct', label: 'Fat %',    unit: '%'  },
-    { key: 'water',        label: 'Water',    unit: 'L'  },
-    { key: 'bmi',          label: 'BMI',      unit: ''   },
-  ];
-  const defined = metrics.filter((m) => latest[m.key] !== undefined && latest[m.key] !== null);
+  const muscle = latest.muscle_mass ?? 0;
+  const fat    = latest.body_fat    ?? 0;
+  const water  = latest.water       ?? 0;
+  const total  = muscle + fat + water || 1;
+
+  const R    = 28;
+  const CIRC = 2 * Math.PI * R;
+  const mArc = (muscle / total) * CIRC;
+  const fArc = (fat    / total) * CIRC;
+  const wArc = (water  / total) * CIRC;
+
+  const d = (key: keyof typeof latest, lowerBetter = false) => {
+    if (!previous) return null;
+    const cur  = (latest[key]   as number | undefined) ?? 0;
+    const prev = (previous[key] as number | undefined) ?? 0;
+    const diff = +(cur - prev).toFixed(1);
+    if (diff === 0) return null;
+    const good = lowerBetter ? diff < 0 : diff > 0;
+    return { diff, color: good ? '#2ecc71' : '#EF4444' };
+  };
+
+  const metrics: Array<{
+    label: string; color: string; value: number | undefined; unit: string;
+    delta: ReturnType<typeof d>;
+  }> = [
+    { label: 'Muscle',   color: '#2ecc71', value: latest.muscle_mass,  unit: 'kg', delta: d('muscle_mass') },
+    { label: 'Fat Mass', color: '#EF4444', value: latest.body_fat,      unit: 'kg', delta: d('body_fat', true) },
+    { label: 'Fat %',    color: '#EF4444', value: latest.body_fat_pct,  unit: '%',  delta: d('body_fat_pct', true) },
+    { label: 'Water',    color: '#6366f1', value: latest.water,         unit: 'L',  delta: null },
+    { label: 'BMI',      color: '#4B5563', value: latest.bmi,           unit: '',   delta: d('bmi', true) },
+  ].filter((m) => m.value != null);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="label-cap">Latest scan — {new Date(latest.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-        {previous && <Badge variant="default">vs prior</Badge>}
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {defined.map(({ key, label, unit }) => {
-          const val = latest[key] as number;
-          const prev = previous ? (previous[key] as number | undefined) : undefined;
-          const delta = prev != null ? val - prev : null;
-          // For body-fat, lower is better — colors flip
-          const isLowerBetter = key === 'body_fat' || key === 'body_fat_pct' || key === 'bmi';
-          const deltaColor = delta == null || delta === 0 ? '#4B5563'
-            : (delta > 0 === !isLowerBetter) ? '#2ecc71' : '#EF4444';
-          return (
-            <div key={String(key)} className="card-elevated rounded-xl p-2.5 text-center">
-              <div className="label-cap text-[9px]">{label}</div>
-              <div className="kpi-lg text-forge-green leading-none mt-0.5">{val}</div>
-              <div className="flex items-center justify-center gap-1 mt-0.5">
-                {unit && <span className="text-forge-dim text-[9px]">{unit}</span>}
-                {delta != null && delta !== 0 && (
-                  <span className="text-[9px] font-mono font-semibold" style={{ color: deltaColor }}>
-                    {delta > 0 ? '+' : ''}{delta.toFixed(1)}
+    <div className="card-elevated rounded-2xl p-4">
+      <div className="label-cap text-forge-muted mb-3">Body Composition (InBody)</div>
+      <div className="flex items-center gap-5">
+        {/* Donut */}
+        <div className="relative flex-shrink-0">
+          <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+            <circle cx="40" cy="40" r={R} fill="none" stroke="#1a1a1a" strokeWidth="10" />
+            <circle cx="40" cy="40" r={R} fill="none" stroke="#2ecc71" strokeWidth="10"
+              strokeDasharray={`${mArc} ${CIRC}`} strokeLinecap="butt" />
+            <circle cx="40" cy="40" r={R} fill="none" stroke="#EF4444" strokeWidth="10"
+              strokeDasharray={`${fArc} ${CIRC}`} strokeDashoffset={-mArc} strokeLinecap="butt" />
+            <circle cx="40" cy="40" r={R} fill="none" stroke="#6366f1" strokeWidth="10"
+              strokeDasharray={`${wArc} ${CIRC}`} strokeDashoffset={-(mArc + fArc)} strokeLinecap="butt" />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-forge-green font-bold text-[13px] leading-none">
+              {latest.body_fat_pct != null ? `${latest.body_fat_pct}%` : '—'}
+            </span>
+            <span className="text-forge-dim text-[8px] uppercase tracking-wide">Fat</span>
+          </div>
+        </div>
+        {/* Legend */}
+        <div className="flex-1 space-y-1.5">
+          {metrics.map((m) => (
+            <div key={m.label} className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
+              <span className="text-forge-muted text-[10px] flex-1">{m.label}</span>
+              <span className="text-forge-text text-[11px] font-mono font-semibold">
+                {m.value}{m.unit}
+                {m.delta && (
+                  <span className="text-[9px] ml-1" style={{ color: m.delta.color }}>
+                    {m.delta.diff > 0 ? '+' : ''}{m.delta.diff}
                   </span>
                 )}
-              </div>
+              </span>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1045,14 +1076,15 @@ export function StatsPage() {
       {/* ── BODY ─────────────────────────────────────────────────────── */}
       {tab === 'body' && (
         <div className="space-y-4">
+          <WeightHeroCard />
           <DashboardSection title="Weight Trend">
             <WeightChart />
           </DashboardSection>
+          <DashboardSection title="InBody Analysis">
+            <CompositionDonut />
+          </DashboardSection>
           <DashboardSection title="Measurements">
             <MeasurementsGrid />
-          </DashboardSection>
-          <DashboardSection title="InBody Analysis">
-            <InBodyCard />
           </DashboardSection>
         </div>
       )}
