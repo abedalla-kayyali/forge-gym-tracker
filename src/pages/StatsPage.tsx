@@ -447,6 +447,58 @@ function MuscleFreshnessList() {
 // BODY TAB — with deltas
 // ═════════════════════════════════════════════════════════════════════════════
 
+function WeightHeroCard() {
+  const bodyWeight = useBodyStore((s) => s.bodyWeight);
+
+  const { latest, delta } = useMemo(() => {
+    const sorted = [...bodyWeight].sort((a, b) => b.date.localeCompare(a.date));
+    const latest   = sorted[0] ?? null;
+    const previous = sorted[1] ?? null;
+    const delta = latest && previous ? +(latest.weight_kg - previous.weight_kg).toFixed(1) : null;
+    return { latest, delta };
+  }, [bodyWeight]);
+
+  if (!latest) return (
+    <div className="card-elevated rounded-2xl p-8 text-center">
+      <Weight size={28} className="text-forge-dim mx-auto mb-2" />
+      <p className="text-forge-text-soft font-condensed font-semibold">No weight entries yet</p>
+      <p className="text-forge-muted text-[12px] mt-1">Log your weight in the Body section</p>
+    </div>
+  );
+
+  const isDown = delta !== null && delta < 0;
+
+  return (
+    <div
+      className="card-elevated rounded-2xl p-4"
+      style={{ background: 'linear-gradient(135deg, #0d1f0d88, #0f0f0f)' }}
+    >
+      <div className="label-cap text-forge-muted mb-2">Current Weight</div>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-baseline gap-1.5">
+          <span className="kpi-lg text-forge-green leading-none">{latest.weight_kg}</span>
+          <span className="text-forge-muted text-[12px] font-condensed">KG</span>
+        </div>
+        {delta !== null && delta !== 0 && (
+          <span
+            className="inline-flex items-center text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
+            style={{
+              color:      isDown ? '#2ecc71' : '#EF4444',
+              background: isDown ? 'rgba(46,204,113,0.12)' : 'rgba(239,68,68,0.12)',
+              border:     `1px solid ${isDown ? 'rgba(46,204,113,0.3)' : 'rgba(239,68,68,0.3)'}`,
+            }}
+          >
+            {isDown ? '↓' : '↑'} {Math.abs(delta)} kg
+          </span>
+        )}
+      </div>
+      <div className="text-forge-muted text-[10px] font-mono mt-1">
+        {new Date(latest.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+      </div>
+    </div>
+  );
+}
+
 function MeasurementsGrid() {
   const measurements = useBodyStore((s) => s.measurements);
   const sorted = useMemo(
