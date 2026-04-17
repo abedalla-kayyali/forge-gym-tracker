@@ -340,6 +340,59 @@ function TopPRs() {
 // MUSCLES TAB
 // ═════════════════════════════════════════════════════════════════════════════
 
+function MuscleVolumeByGroup() {
+  const workouts   = useWorkoutStore((s) => s.workouts);
+  const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
+
+  const rows = useMemo(() => {
+    const cutoff = Date.now() - 30 * 86400000;
+    const byMuscle: Record<string, number> = {};
+
+    for (const w of workouts) {
+      if (new Date(w.date).getTime() < cutoff) continue;
+      for (const ex of w.exercises) {
+        const m   = ex.muscle.toLowerCase();
+        const vol = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
+        byMuscle[m] = (byMuscle[m] ?? 0) + vol;
+      }
+    }
+
+    const entries = Object.entries(byMuscle)
+      .filter(([, v]) => v > 0)
+      .sort(([, a], [, b]) => b - a);
+
+    const max = Math.max(...entries.map(([, v]) => v), 1);
+    return entries.map(([muscle, vol]) => ({
+      muscle,
+      pct: (vol / max) * 100,
+      label: vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : String(Math.round(vol)),
+    }));
+  }, [workouts, bwWorkouts]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      {rows.map((r) => (
+        <div key={r.muscle} className="flex items-center gap-3 min-h-[36px]">
+          <span className="text-forge-text-soft text-[11px] font-condensed font-semibold capitalize w-[72px] flex-shrink-0">
+            {r.muscle}
+          </span>
+          <div className="flex-1 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full bg-forge-green transition-all"
+              style={{ width: `${r.pct}%` }}
+            />
+          </div>
+          <span className="text-forge-muted text-[10px] font-mono w-12 text-right flex-shrink-0">
+            {r.label} kg
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function MuscleFreshnessList() {
   const workouts = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
@@ -922,14 +975,17 @@ export function StatsPage() {
       {/* ── MUSCLES ──────────────────────────────────────────────────── */}
       {tab === 'muscles' && (
         <div className="space-y-4">
-          <DashboardSection title="Muscle Balance">
-            <BalanceChart />
+          <DashboardSection title="Muscle Status">
+            <MuscleHeatmap />
+          </DashboardSection>
+          <DashboardSection title="Volume by Muscle (30d)">
+            <MuscleVolumeByGroup />
           </DashboardSection>
           <DashboardSection title="Freshness by Group">
             <MuscleFreshnessList />
           </DashboardSection>
-          <DashboardSection title="Volume by Muscle (30 days)">
-            <VolumeChart />
+          <DashboardSection title="Muscle Balance">
+            <BalanceChart />
           </DashboardSection>
         </div>
       )}
