@@ -116,7 +116,8 @@ function ActivityRingsHero() {
     }
     const currentMonthKey = volMonth(now);
     const volumeThisMonth = monthlyVol[currentMonthKey] ?? 0;
-    const bestMonth = Math.max(...Object.values(monthlyVol), volumeThisMonth, 1);
+    const volValues = Object.values(monthlyVol);
+    const bestMonth = volValues.length ? Math.max(...volValues, volumeThisMonth, 1) : Math.max(volumeThisMonth, 1);
     const volumePct = Math.min(100, (volumeThisMonth / bestMonth) * 100);
 
     // Latest PR (most recent workout with any isPR set)
@@ -173,7 +174,11 @@ function ActivityRingsHero() {
                 className="w-2.5 h-2.5 rounded-full"
                 style={{
                   background: data.weekDays[i] ? '#2ecc71' : 'transparent',
-                  border: data.weekDays[i] ? 'none' : '1.5px solid #333',
+                  border: data.weekDays[i]
+                    ? 'none'
+                    : i === data.todayDow
+                      ? '1.5px solid #2ecc71'
+                      : '1.5px solid #333',
                   boxShadow: i === data.todayDow && data.weekDays[i] ? '0 0 6px #2ecc71' : 'none',
                 }}
               />
