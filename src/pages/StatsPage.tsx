@@ -711,7 +711,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
       period === '6M'  ? 180 * 86400000 : null;
 
     const now    = Date.now();
-    const cutoff = durMs ? now - durMs : 0;
+    const cutoff = durMs ? now - durMs : now - 26 * 7 * 86400000;
 
     const byWeek: Record<string, number> = {};
     for (const w of workouts) {
@@ -811,7 +811,7 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
       .map(([name]) => name);
 
     return top5.map((name) => {
-      const cur   = maxWeight(name, cutoff, now);
+      const cur   = maxWeight(name, cutoff, Infinity);
       const prev  = maxWeight(name, prevCutoff, cutoff);
       const delta = prev > 0 ? cur - prev : 0;
       return { name, cur, delta, pct: cur > 0 ? Math.min(100, (cur / Math.max(cur, prev, 1)) * 100) : 0 };
