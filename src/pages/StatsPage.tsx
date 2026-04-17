@@ -342,8 +342,6 @@ function TopPRs() {
 
 function MuscleVolumeByGroup() {
   const workouts   = useWorkoutStore((s) => s.workouts);
-  const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
-
   const rows = useMemo(() => {
     const cutoff = Date.now() - 30 * 86400000;
     const byMuscle: Record<string, number> = {};
@@ -368,7 +366,7 @@ function MuscleVolumeByGroup() {
       label: vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : String(Math.round(vol)),
       unit: vol >= 1000 ? '' : ' kg',
     }));
-  }, [workouts, bwWorkouts]);
+  }, [workouts]);
 
   if (rows.length === 0) return null;
 
@@ -630,7 +628,7 @@ function CompositionDonut() {
               strokeDasharray={`${wArc} ${CIRC}`} strokeDashoffset={-(mArc + fArc)} strokeLinecap="butt" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-forge-green font-bold text-[13px] leading-none">
+            <span className="text-forge-text font-bold text-[13px] leading-none">
               {latest.body_fat_pct != null ? `${latest.body_fat_pct}%` : '—'}
             </span>
             <span className="text-forge-dim text-[8px] uppercase tracking-wide">Fat</span>
