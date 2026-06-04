@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import { syncQueueSize } from '../lib/syncQueue';
 
@@ -11,6 +12,7 @@ const TONE_STYLES: Record<Tone, { color: string; border: string }> = {
 };
 
 export function OfflineBanner() {
+  const { t } = useTranslation();
   const { offlineEmail } = useAuth();
   const [online, setOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [queueSize, setQueueSize] = useState(() => syncQueueSize());
@@ -54,16 +56,16 @@ export function OfflineBanner() {
   let tone: Tone = 'warn';
 
   if (!online) {
-    text = 'Offline — saving locally';
+    text = t('offline.offline');
     tone = 'warn';
   } else if (offlineEmail) {
-    text = 'Cached login — sync paused';
+    text = t('offline.cachedLogin');
     tone = 'warn';
   } else if (queueSize > 0) {
-    text = `Syncing ${queueSize} item${queueSize > 1 ? 's' : ''}…`;
+    text = t('offline.syncing', { count: queueSize });
     tone = 'info';
   } else if (flashSynced) {
-    text = '✓ Synced';
+    text = t('offline.synced');
     tone = 'ok';
   }
 

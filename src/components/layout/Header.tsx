@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGamificationStore } from '../../stores/useGamificationStore';
 import { useSessionStore } from '../../stores/useSessionStore';
 import { useProfileStore } from '../../stores/useProfileStore';
@@ -6,6 +7,7 @@ import { useFX } from '../../hooks/useFX';
 import { ChevronDown, Trophy, Flame, Sparkles } from 'lucide-react';
 
 export function Header() {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const profile = useProfileStore((s) => s.profile);
@@ -49,7 +51,7 @@ export function Header() {
           <button
             onClick={() => { play('tap'); setExpanded(!expanded); }}
             className="tap flex items-center justify-center rounded-full text-forge-muted hover:text-forge-text hover:bg-white/5 transition-all duration-200 cursor-pointer press-scale"
-            aria-label={expanded ? 'Collapse header' : 'Expand header'}
+            aria-label={expanded ? t('header.collapse') : t('header.expand')}
             aria-expanded={expanded}
           >
             <ChevronDown
@@ -77,7 +79,7 @@ export function Header() {
                   <span className="text-forge-text font-condensed font-semibold text-[15px] tracking-wide truncate">
                     {level.name}
                   </span>
-                  <span className="kpi-md text-forge-green shrink-0">{experience}<span className="text-[10px] text-forge-muted ml-0.5">XP</span></span>
+                  <span className="kpi-md text-forge-green shrink-0">{experience}<span className="text-[10px] text-forge-muted ml-0.5">{t('header.xp')}</span></span>
                 </div>
                 <div className="mt-1.5 track h-1.5">
                   <div
@@ -86,7 +88,7 @@ export function Header() {
                   />
                 </div>
                 <div className="flex justify-between mt-1">
-                  <span className="label-cap">Progress</span>
+                  <span className="label-cap">{t('header.progress')}</span>
                   <span className="text-[10px] font-mono text-forge-muted">{Math.round(level.progress)}%</span>
                 </div>
               </div>
@@ -99,9 +101,9 @@ export function Header() {
               <Sparkles size={16} className="text-forge-green" />
             </div>
             <div className="flex-1 card-elevated rounded-xl px-3.5 py-2.5">
-              <div className="label-cap text-forge-green/90">FORGE Coach</div>
+              <div className="label-cap text-forge-green/90">{t('header.coachTitle')}</div>
               <div className="text-forge-text-soft text-sm mt-0.5 leading-relaxed">
-                Every legend starts somewhere. Log one set to keep the fire alive.
+                {t('header.coachWhisper')}
               </div>
             </div>
           </div>

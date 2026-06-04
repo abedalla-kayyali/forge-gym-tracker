@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { readStorage, writeStorage } from '../lib/storage';
 import { STORAGE_KEYS } from '../lib/constants';
+import { applyLanguage } from '../lib/i18n';
 import type { AppSettings, DashboardLayout } from '../types/profile';
 
 interface SettingsState {
@@ -46,6 +47,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   updateSettings: (updates) => {
     const updated = { ...get().settings, ...updates };
     writeSettings(updates);
+    if (updates.language) applyLanguage(updates.language);
     set({ settings: updated });
   },
 
@@ -58,6 +60,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setLanguage: (lang) => {
     const updated = { ...get().settings, language: lang };
     writeStorage(STORAGE_KEYS.LANG, lang);
+    applyLanguage(lang);
     set({ settings: updated });
   },
 

@@ -1,17 +1,19 @@
 import { NavLink, useLocation } from 'react-router';
 import { PenLine, BarChart3, Clock, Users, Brain, MoreHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useFX } from '../../hooks/useFX';
 
 const NAV_ITEMS = [
-  { path: '/log',     label: 'Log',     Icon: PenLine },
-  { path: '/stats',   label: 'Stats',   Icon: BarChart3 },
-  { path: '/history', label: 'History', Icon: Clock },
-  { path: '/social',  label: 'Social',  Icon: Users },
-  { path: '/coach',   label: 'Coach',   Icon: Brain },
-  { path: '/more',    label: 'More',    Icon: MoreHorizontal },
+  { path: '/log',     key: 'nav.log',     Icon: PenLine },
+  { path: '/stats',   key: 'nav.stats',   Icon: BarChart3 },
+  { path: '/history', key: 'nav.history', Icon: Clock },
+  { path: '/social',  key: 'nav.social',  Icon: Users },
+  { path: '/coach',   key: 'nav.coach',   Icon: Brain },
+  { path: '/more',    key: 'nav.more',    Icon: MoreHorizontal },
 ];
 
 export function BottomNav() {
+  const { t } = useTranslation();
   const { play } = useFX();
   const location = useLocation();
   const handleTap = (path: string) => {
@@ -30,12 +32,14 @@ export function BottomNav() {
 
       <div className="relative mx-auto max-w-md px-3 pb-2.5 pt-2 safe-area-bottom pointer-events-none">
         <ul className="nav-pill pointer-events-auto flex items-center justify-between gap-0.5 rounded-full px-1.5 py-1.5">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((item) => {
+            const label = t(item.key);
+            return (
             <li key={item.path} className="flex-1">
               <NavLink
                 to={item.path}
-                aria-label={item.label}
-                title={item.label}
+                aria-label={label}
+                title={label}
                 onClick={() => handleTap(item.path)}
                 className={({ isActive }) =>
                   [
@@ -61,7 +65,8 @@ export function BottomNav() {
                 )}
               </NavLink>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
     </nav>

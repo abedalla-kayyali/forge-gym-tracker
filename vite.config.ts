@@ -46,6 +46,11 @@ export default defineConfig(({ command }) => ({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // SPA fallback: serve the precached app shell for client-side routes
+        // (e.g. /log) so an offline refresh on a deep route still boots the app.
+        // app.html is the build entry and the only precached HTML.
+        navigateFallback: 'app.html',
+        navigateFallbackDenylist: [/^\/api/, /\/[^/?]+\.[^/]+$/],
       },
     }),
   ],

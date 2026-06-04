@@ -17,4 +17,21 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+/**
+ * Switch the active language AND keep <html dir/lang> in sync. Call this
+ * anywhere the language changes (settings toggle, cloud rehydrate). Previously
+ * the toggle only set <html dir>, so Arabic just right-aligned English — this
+ * is what actually drives i18next so every translated string switches.
+ */
+export function applyLanguage(lng: string): void {
+  if (i18n.language !== lng) i18n.changeLanguage(lng);
+  if (typeof document !== 'undefined') {
+    document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lng;
+  }
+}
+
+// Apply the saved language's direction at boot.
+applyLanguage(savedLang);
+
 export default i18n;

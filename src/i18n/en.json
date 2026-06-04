@@ -12,6 +12,7 @@
     "log": "Log",
     "stats": "Stats",
     "history": "History",
+    "social": "Social",
     "coach": "Coach",
     "more": "More"
   },
@@ -21,6 +22,37 @@
     "delete": "Delete",
     "edit": "Edit",
     "close": "Close",
-    "loading": "Loading..."
+    "loading": "Loading…",
+    "add": "Add",
+    "remove": "Remove"
+  },
+  "header": {
+    "expand": "Expand header",
+    "collapse": "Collapse header",
+    "progress": "Progress",
+    "xp": "XP",
+    "coachTitle": "FORGE Coach",
+    "coachWhisper": "Every legend starts somewhere. Log one set to keep the fire alive."
+  },
+  "offline": {
+    "offline": "Offline — saving locally",
+    "cachedLogin": "Cached login — sync paused",
+    "syncing_one": "Syncing {{count}} item…",
+    "syncing_other": "Syncing {{count}} items…",
+    "synced": "✓ Synced"
+  },
+  "log": {
+    "reps": "Reps",
+    "weight": "Weight",
+    "addSet": "Add Set",
+    "ditto": "Ditto",
+    "lastTime": "Last time",
+    "removeSet": "Remove set",
+    "beatLast": "Beat last",
+    "decreaseReps": "Decrease reps",
+    "increaseReps": "Increase reps",
+    "decreaseWeight": "Decrease weight",
+    "increaseWeight": "Increase weight",
+    "kgUnit": "kg"
   }
 }
