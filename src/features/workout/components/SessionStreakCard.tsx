@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Flame, Trophy, Clock } from 'lucide-react';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../../../stores/useBwWorkoutStore';
@@ -53,20 +54,21 @@ function useStreak(): { days: number; last: string | null } {
   }, [sessions]);
 }
 
-function humanAgo(iso: string): string {
+function humanAgo(iso: string, t: (key: string, options?: Record<string, unknown>) => string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (diff < 2) return 'just now';
-  if (diff < 60) return `${diff} min ago`;
+  if (diff < 2) return t('sessionStreak.ago.justNow');
+  if (diff < 60) return t('sessionStreak.ago.minutes', { count: diff });
   const hours = Math.floor(diff / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t('sessionStreak.ago.hours', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)}w ago`;
-  return `${Math.floor(days / 30)}mo ago`;
+  if (days === 1) return t('sessionStreak.ago.yesterday');
+  if (days < 7) return t('sessionStreak.ago.days', { count: days });
+  if (days < 30) return t('sessionStreak.ago.weeks', { count: Math.floor(days / 7) });
+  return t('sessionStreak.ago.months', { count: Math.floor(days / 30) });
 }
 
 export function SessionStreakCard() {
+  const { t } = useTranslation();
   const { days, last } = useStreak();
   const sessions = useAllSessions();
   const lastSession = sessions[0];
@@ -98,24 +100,24 @@ export function SessionStreakCard() {
           <div className="flex items-baseline gap-2">
             <span className="kpi-lg text-forge-text leading-none">{days}</span>
             <span className="label-cap text-forge-ember">
-              {days === 1 ? 'Day Streak' : 'Day Streak'}
+              {t('sessionStreak.dayStreak', { count: days })}
             </span>
           </div>
           <div className="text-[11px] text-forge-muted font-condensed mt-0.5">
             {days === 0
-              ? 'Start a session today to ignite your streak'
+              ? t('sessionStreak.motivation.start')
               : days < 3
-                ? "Keep the fire alive — don't break it"
+                ? t('sessionStreak.motivation.keepAlive')
                 : days < 7
-                  ? `You're on a roll — ${7 - days} days to weekly flame`
-                  : 'Legendary consistency'}
+                  ? t('sessionStreak.motivation.onARoll', { count: 7 - days })
+                  : t('sessionStreak.motivation.legendary')}
           </div>
         </div>
 
         {sessions.length > 0 && (
           <div className="text-right shrink-0">
             <div className="kpi-md text-forge-green leading-none">{sessions.length}</div>
-            <div className="label-cap text-[9px] mt-0.5">Total</div>
+            <div className="label-cap text-[9px] mt-0.5">{t('sessionStreak.total')}</div>
           </div>
         )}
       </div>
@@ -124,10 +126,10 @@ export function SessionStreakCard() {
         <div className="flex items-center gap-2 bg-black/25 rounded-xl px-3 py-2">
           <Trophy size={12} className="text-forge-green shrink-0" />
           <span className="text-forge-text text-[12px] font-condensed truncate flex-1">
-            Last: <span className="text-forge-green capitalize">{lastSession.name}</span>
+            {t('sessionStreak.last')} <span className="text-forge-green capitalize">{lastSession.name}</span>
           </span>
           <span className="text-forge-muted text-[10px] font-mono inline-flex items-center gap-1 shrink-0">
-            <Clock size={10} /> {humanAgo(last)}
+            <Clock size={10} /> {humanAgo(last, t)}
           </span>
         </div>
       )}

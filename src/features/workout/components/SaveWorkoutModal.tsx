@@ -1,4 +1,5 @@
 import { useMemo, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
@@ -24,6 +25,7 @@ interface Props {
 const VALID_MUSCLES: MuscleGroup[] = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'forearms', 'core', 'legs', 'glutes', 'calves'];
 
 export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
+  const { t } = useTranslation();
   const session = useSessionStore();
   const addWorkout = useWorkoutStore((s) => s.addWorkout);
   const addBwWorkout = useBwWorkoutStore((s) => s.addWorkout);
@@ -62,7 +64,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
 
   const handleSave = () => {
     if (summary.exerciseCount === 0) {
-      toast('Log at least one entry first!', 'error');
+      toast(t('saveWorkout.errorNoEntries'), 'error');
       return;
     }
     // Freeze the summary before session.reset() wipes it
@@ -75,7 +77,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
       const workout: Workout = {
         id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         date: new Date().toISOString(),
-        name: summary.muscleNames.join(' + ') || 'Workout',
+        name: summary.muscleNames.join(' + ') || t('saveWorkout.defaultWorkoutName'),
         exercises: session.exercises,
         duration: summary.duration,
       };
@@ -89,7 +91,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
       const bw: BwWorkout = {
         id: `bw_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         date: new Date().toISOString(),
-        name: summary.muscleNames.join(' + ') || 'Calisthenics',
+        name: summary.muscleNames.join(' + ') || t('saveWorkout.defaultCalisthenicsName'),
         exercises: session.bwExercises,
         duration: summary.duration,
       };
@@ -137,7 +139,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     // PR-sound if any set was flagged as PR, otherwise regular success
     const hadPR = session.exercises.some((ex) => ex.sets.some((s) => s.isPR));
     play(hadPR ? 'pr' : 'success');
-    toast('Session saved!', 'success');
+    toast(t('saveWorkout.toastSaved'), 'success');
     session.reset();
     setSaved(true);
     setShowConfetti(true);
@@ -162,19 +164,19 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
       <Modal
         open={open}
         onClose={handleClose}
-        title={saved ? 'Session Complete' : 'End Session?'}
-        subtitle={saved ? 'Recap · Share · Save' : 'Review before finishing'}
+        title={saved ? t('saveWorkout.titleComplete') : t('saveWorkout.titleEnd')}
+        subtitle={saved ? t('saveWorkout.subtitleComplete') : t('saveWorkout.subtitleEnd')}
         size="md"
       >
         {!saved ? (
           /* ── PRE-SAVE CONFIRM ─────────────────────────────── */
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              <StatCell label="Minutes" value={summary.duration} icon={<Clock size={12} />} />
-              <StatCell label="Entries" value={summary.exerciseCount} icon={<Flame size={12} />} />
-              <StatCell label="Sets" value={summary.totalSets} icon={<Zap size={12} />} />
+              <StatCell label={t('saveWorkout.statMinutes')} value={summary.duration} icon={<Clock size={12} />} />
+              <StatCell label={t('saveWorkout.statEntries')} value={summary.exerciseCount} icon={<Flame size={12} />} />
+              <StatCell label={t('saveWorkout.statSets')} value={summary.totalSets} icon={<Zap size={12} />} />
               <StatCell
-                label={hasWeighted ? 'Volume (kg)' : 'Reps'}
+                label={hasWeighted ? t('saveWorkout.statVolumeKg') : t('log.reps')}
                 value={hasWeighted ? Math.round(summary.totalVolume).toLocaleString() : summary.totalReps}
                 icon={<Trophy size={12} />}
               />
@@ -183,17 +185,17 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
             {summary.muscleNames.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {summary.muscleNames.map((m) => (
-                  <Badge key={m} variant="success" dot>{m}</Badge>
+                  <Badge key={m} variant="success" dot>{t('muscles.' + String(m).toLowerCase())}</Badge>
                 ))}
               </div>
             )}
 
             <div className="flex gap-2 pt-1">
               <Button onClick={onClose} variant="secondary" size="md" fullWidth>
-                Keep Going
+                {t('saveWorkout.keepGoing')}
               </Button>
               <Button onClick={handleSave} variant="primary" size="md" fullWidth>
-                End & Save
+                {t('saveWorkout.endAndSave')}
               </Button>
             </div>
           </div>
@@ -213,7 +215,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
               <div className="relative">
                 <div className="flex items-center gap-2 mb-3">
                   <Flame size={14} className="text-forge-green animate-pulse" />
-                  <span className="label-cap text-forge-green">Muscles trained</span>
+                  <span className="label-cap text-forge-green">{t('saveWorkout.musclesTrained')}</span>
                 </div>
                 <BodyMap
                   selected={new Set(summary.muscleNames)}
@@ -224,13 +226,13 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
 
             {/* Big stats */}
             <div className="grid grid-cols-3 gap-2">
-              <HeroStat label="MIN"   value={summary.duration} />
+              <HeroStat label={t('saveWorkout.heroMin')}   value={summary.duration} />
               <HeroStat
-                label={hasCardioOnly ? 'MIN CARDIO' : 'SETS'}
+                label={hasCardioOnly ? t('saveWorkout.heroMinCardio') : t('saveWorkout.heroSets')}
                 value={hasCardioOnly ? summary.cardioMinutes : summary.totalSets}
               />
               <HeroStat
-                label={hasWeighted ? 'VOL (KG)' : 'REPS'}
+                label={hasWeighted ? t('saveWorkout.heroVolKg') : t('saveWorkout.heroReps')}
                 value={hasWeighted ? Math.round(summary.totalVolume).toLocaleString() : summary.totalReps}
                 accent="gold"
               />
@@ -239,7 +241,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
             {/* Exercise history list */}
             {savedWorkoutRef.current && savedWorkoutRef.current.exercises.length > 0 && (
               <div className="space-y-2">
-                <div className="label-cap-strong">Session Log</div>
+                <div className="label-cap-strong">{t('saveWorkout.sessionLog')}</div>
                 {savedWorkoutRef.current.exercises.map((ex, i) => {
                   const isOpen = expandedEx === i;
                   const volume = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
@@ -257,7 +259,8 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                           <div className="text-left min-w-0">
                             <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{ex.name}</div>
                             <div className="text-forge-muted text-[10px] font-mono">
-                              {ex.sets.length} sets{volume > 0 ? ` · ${volume.toLocaleString()} kg` : ''}
+                              {t('saveWorkout.setsCount', { count: ex.sets.length })}
+                              {volume > 0 ? ` · ${volume.toLocaleString()} ${t('log.kgUnit')}` : ''}
                             </div>
                           </div>
                         </div>
@@ -266,13 +269,13 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                       {isOpen && (
                         <div className="border-t border-forge-border-light">
                           <div className="grid grid-cols-4 px-3.5 py-1.5 text-[9px] label-cap">
-                            <span>Set</span><span className="text-center">Reps</span><span className="text-center">Wt</span><span className="text-right">Vol</span>
+                            <span>{t('saveWorkout.colSet')}</span><span className="text-center">{t('log.reps')}</span><span className="text-center">{t('saveWorkout.colWt')}</span><span className="text-right">{t('saveWorkout.colVol')}</span>
                           </div>
                           {ex.sets.map((s, si) => (
                             <div key={si} className="grid grid-cols-4 px-3.5 py-1.5 text-[12px] font-mono">
                               <span className="text-forge-muted">{si + 1}</span>
                               <span className="text-center text-forge-text">{s.reps}</span>
-                              <span className="text-center text-forge-text">{s.weight > 0 ? `${s.weight}kg` : '—'}</span>
+                              <span className="text-center text-forge-text">{s.weight > 0 ? `${s.weight}${t('log.kgUnit')}` : '—'}</span>
                               <span className="text-right text-forge-green/80">
                                 {s.weight > 0 ? (s.reps * s.weight).toLocaleString() : '—'}
                               </span>
@@ -295,14 +298,14 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                 fullWidth
                 disabled={!savedWorkoutRef.current}
               >
-                <Share2 size={15} /> Share Poster
+                <Share2 size={15} /> {t('saveWorkout.sharePoster')}
               </Button>
               <Button onClick={handleDone} variant="secondary" size="md">
-                Done
+                {t('saveWorkout.done')}
               </Button>
             </div>
             <p className="text-center text-[11px] text-forge-muted font-condensed">
-              +XP earned · view full history in <span className="text-forge-green">History</span>
+              {t('saveWorkout.xpFooterPrefix')} <span className="text-forge-green">{t('nav.history')}</span>
             </p>
           </div>
         )}

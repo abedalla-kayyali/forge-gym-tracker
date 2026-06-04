@@ -1,9 +1,11 @@
 import { Timer } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTimer } from '../../../hooks/useTimer';
 
 const PRESETS = [60, 90, 120, 180];
 
 export function RestTimer() {
+  const { t } = useTranslation();
   const { restRemaining, restTotal, restActive, startRest, cancelRest, setRestPreset } = useTimer();
 
   const formatTime = (seconds: number) => {
@@ -19,10 +21,10 @@ export function RestTimer() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Timer size={14} className="text-forge-dim" />
-          <span className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Rest Timer</span>
+          <span className="text-forge-dim text-xs font-condensed uppercase tracking-wider">{t('restTimer.title')}</span>
         </div>
         {restActive && (
-          <button onClick={cancelRest} className="text-forge-dim text-xs hover:text-red-400 cursor-pointer transition-colors duration-150">Cancel</button>
+          <button onClick={cancelRest} className="text-forge-dim text-xs hover:text-red-400 cursor-pointer transition-colors duration-150">{t('common.cancel')}</button>
         )}
       </div>
 

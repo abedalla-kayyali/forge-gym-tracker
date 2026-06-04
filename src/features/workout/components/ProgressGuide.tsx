@@ -1,6 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { useProgressInsights } from '../../../hooks/useProgressInsights';
 import { Target, Trophy, Zap, Flame, CheckCircle2, TrendingUp, AlertCircle } from 'lucide-react';
-import { MUSCLE_LABELS } from '../../../components/body/BodyMap';
 import { useFX } from '../../../hooks/useFX';
 import type { MuscleGroup } from '../../../types/workout';
 
@@ -49,11 +49,12 @@ function WeeklyGoalRing({
   data: ReturnType<typeof useProgressInsights>['weekGoal'];
   todayLogged: boolean;
 }) {
+  const { t } = useTranslation();
   const copy =
-    data.pace === 'hit'     ? 'Goal hit — legendary' :
-    data.pace === 'ahead'   ? "You're ahead of pace" :
-    data.pace === 'ontrack' ? 'On track' :
-                              `${data.remaining} to go`;
+    data.pace === 'hit'     ? t('progressGuide.weekGoal.hit') :
+    data.pace === 'ahead'   ? t('progressGuide.weekGoal.ahead') :
+    data.pace === 'ontrack' ? t('progressGuide.weekGoal.onTrack') :
+                              t('progressGuide.weekGoal.remaining', { count: data.remaining });
   const copyColor =
     data.pace === 'hit'     ? 'text-forge-gold' :
     data.pace === 'ahead'   ? 'text-forge-green' :
@@ -88,13 +89,13 @@ function WeeklyGoalRing({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
             <Target size={11} className="text-forge-green" />
-            <span className="label-cap">Week Goal</span>
+            <span className="label-cap">{t('progressGuide.weekGoal.label')}</span>
           </div>
           <div className={`font-condensed font-semibold text-[13px] truncate ${copyColor}`}>
             {copy}
           </div>
           <div className="text-forge-muted text-[10px] font-mono mt-0.5">
-            {data.daysLeftInWeek}d left · {todayLogged ? '✓ today' : '· today pending'}
+            {t('progressGuide.weekGoal.daysLeft', { count: data.daysLeftInWeek })} · {todayLogged ? t('progressGuide.weekGoal.todayDone') : t('progressGuide.weekGoal.todayPending')}
           </div>
         </div>
       </div>
@@ -107,6 +108,7 @@ function WeeklyGoalRing({
 // ═════════════════════════════════════════════════════════════════════════════
 
 function StreakSaver({ data }: { data: ReturnType<typeof useProgressInsights>['streak'] }) {
+  const { t } = useTranslation();
   const hot = data.days > 0 && !data.atRisk;
   const urgent = data.days > 0 && data.atRisk && data.hoursUntilMidnight <= 12;
 
@@ -142,23 +144,23 @@ function StreakSaver({ data }: { data: ReturnType<typeof useProgressInsights>['s
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
             <Zap size={11} className={data.days > 0 ? 'text-forge-ember' : 'text-forge-muted'} />
-            <span className="label-cap">Streak</span>
+            <span className="label-cap">{t('progressGuide.streak.label')}</span>
           </div>
           <div className="flex items-baseline gap-1">
             <span className="kpi-lg leading-none text-forge-text">{data.days}</span>
-            <span className="text-[10px] text-forge-muted font-condensed uppercase tracking-wider">days</span>
+            <span className="text-[10px] text-forge-muted font-condensed uppercase tracking-wider">{t('progressGuide.streak.daysUnit', { count: data.days })}</span>
           </div>
           <div className={[
             'text-[10px] font-condensed mt-0.5',
             urgent ? 'text-forge-ember' : data.days > 0 ? 'text-forge-green/80' : 'text-forge-muted',
           ].join(' ')}>
             {data.days === 0
-              ? 'Start your streak today'
+              ? t('progressGuide.streak.start')
               : urgent
-                ? `⚠ Log in ${data.hoursUntilMidnight}h to save it`
+                ? t('progressGuide.streak.urgent', { count: data.hoursUntilMidnight })
                 : data.atRisk
-                  ? "Don't break it — log today"
-                  : `Best: ${data.longest}d`}
+                  ? t('progressGuide.streak.atRisk')
+                  : t('progressGuide.streak.best', { count: data.longest })}
           </div>
         </div>
       </div>
@@ -171,6 +173,7 @@ function StreakSaver({ data }: { data: ReturnType<typeof useProgressInsights>['s
 // ═════════════════════════════════════════════════════════════════════════════
 
 function NextPRCard({ data }: { data: ReturnType<typeof useProgressInsights>['nextPR'] }) {
+  const { t } = useTranslation();
   if (!data) {
     return (
       <div className="card-elevated rounded-2xl p-3.5 flex items-start gap-3">
@@ -178,9 +181,9 @@ function NextPRCard({ data }: { data: ReturnType<typeof useProgressInsights>['ne
           <Trophy size={18} className="text-forge-muted" />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="label-cap">Next PR</span>
+          <span className="label-cap">{t('progressGuide.nextPR.label')}</span>
           <div className="text-forge-text-soft text-[12px] font-condensed mt-0.5 leading-tight">
-            Log a weighted lift to unlock PR targets
+            {t('progressGuide.nextPR.empty')}
           </div>
         </div>
       </div>
@@ -198,14 +201,14 @@ function NextPRCard({ data }: { data: ReturnType<typeof useProgressInsights>['ne
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
             <TrendingUp size={11} className="text-forge-gold" />
-            <span className="label-cap">Next PR Target</span>
+            <span className="label-cap">{t('progressGuide.nextPR.targetLabel')}</span>
           </div>
           <div className="text-forge-text text-[14px] font-condensed font-semibold truncate">
             {data.exerciseName}
           </div>
           <div className="text-forge-muted text-[11px] font-mono mt-0.5">
-            Current {data.currentWeight}kg × {data.currentReps}r → Target <span className="text-forge-gold">{data.targetWeight}kg</span>
-            <span className="text-forge-dim"> · +{steps}kg</span>
+            {t('progressGuide.nextPR.current', { weight: data.currentWeight, reps: data.currentReps })} {t('progressGuide.nextPR.target')} <span className="text-forge-gold">{data.targetWeight}{t('log.kgUnit')}</span>
+            <span className="text-forge-dim"> · +{steps}{t('log.kgUnit')}</span>
           </div>
           <div className="mt-2 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
             <div
@@ -218,7 +221,7 @@ function NextPRCard({ data }: { data: ReturnType<typeof useProgressInsights>['ne
             />
           </div>
           <div className="text-[10px] text-forge-gold font-condensed mt-1 uppercase tracking-wider">
-            {almostThere ? '🔥 attempt it next session' : `Tried ${data.sessionsToTry}× since last PR`}
+            {almostThere ? t('progressGuide.nextPR.almostThere') : t('progressGuide.nextPR.triedSince', { count: data.sessionsToTry })}
           </div>
         </div>
       </div>
@@ -237,6 +240,7 @@ function RecommendedMuscle({
   data: ReturnType<typeof useProgressInsights>['recommendedMuscle'];
   onPick: (m: MuscleGroup) => void;
 }) {
+  const { t } = useTranslation();
   if (!data) {
     return (
       <div className="card-elevated rounded-2xl p-3.5 col-span-2 flex items-center gap-3">
@@ -244,21 +248,23 @@ function RecommendedMuscle({
           <CheckCircle2 size={18} className="text-forge-muted" />
         </div>
         <div className="flex-1 min-w-0">
-          <span className="label-cap">Coach Pick</span>
+          <span className="label-cap">{t('progressGuide.coachPick.label')}</span>
           <div className="text-forge-text-soft text-[12px] font-condensed mt-0.5">
-            All muscles fresh — train anything
+            {t('progressGuide.coachPick.allFresh')}
           </div>
         </div>
       </div>
     );
   }
 
+  const muscleLabel = t('muscles.' + String(data.muscle).toLowerCase());
+
   return (
     <button
       type="button"
       onClick={() => onPick(data.muscle)}
       className="col-span-2 card-elevated card-luxury-border rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer press-scale hover:bg-white/[0.04] transition-all duration-200 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-green"
-      aria-label={`Recommended: train ${MUSCLE_LABELS[data.muscle]}`}
+      aria-label={t('progressGuide.coachPick.aria', { muscle: muscleLabel })}
     >
       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forge-green/25 to-forge-green/5 border border-forge-green/30 flex items-center justify-center shrink-0">
         <AlertCircle size={18} className="text-forge-green" />
@@ -266,17 +272,17 @@ function RecommendedMuscle({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <CheckCircle2 size={11} className="text-forge-green" />
-          <span className="label-cap">Train next</span>
+          <span className="label-cap">{t('progressGuide.coachPick.trainNext')}</span>
         </div>
         <div className="text-forge-text text-[15px] font-condensed font-semibold">
-          {MUSCLE_LABELS[data.muscle]}
+          {muscleLabel}
         </div>
         <div className="text-forge-muted text-[11px] font-condensed mt-0.5">
           {data.reason}
         </div>
       </div>
       <div className="text-forge-green text-[11px] font-condensed uppercase tracking-wider shrink-0">
-        Tap →
+        {t('progressGuide.coachPick.tap')}
       </div>
     </button>
   );

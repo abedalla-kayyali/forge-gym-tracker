@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Minus, Trash2, Timer } from 'lucide-react';
 import { useSessionStore } from '../../../stores/useSessionStore';
 import { useToast } from '../../../components/ui/Toast';
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function BwLogger({ onLogged }: Props) {
+  const { t } = useTranslation();
   const session = useSessionStore();
   const { toast } = useToast();
   const { play } = useFX();
@@ -61,7 +63,7 @@ export function BwLogger({ onLogged }: Props) {
 
   const handleLogExercise = () => {
     if (!session.selectedExercise || currentSets.length === 0) {
-      toast('Add at least one set!', 'error');
+      toast(t('bwLogger.addAtLeastOneSet'), 'error');
       return;
     }
     const exercise: BwWorkoutExercise = {
@@ -75,7 +77,12 @@ export function BwLogger({ onLogged }: Props) {
     onLogged?.(exercise);
     if (maxRep >= 20 && !isHold) play('pr');
     else play('save');
-    toast(`${session.selectedExercise} logged — ${currentSets.length} ${isHold ? 'holds' : 'sets'}`, 'success');
+    toast(
+      isHold
+        ? t('bwLogger.loggedHolds', { name: session.selectedExercise, count: currentSets.length })
+        : t('bwLogger.loggedSets', { name: session.selectedExercise, count: currentSets.length }),
+      'success',
+    );
     setCurrentSets([]);
     session.setExercise('');
   };
@@ -84,7 +91,7 @@ export function BwLogger({ onLogged }: Props) {
     <div className="space-y-4">
       {/* Muscle picker */}
       <div>
-        <label className="label-cap block mb-2">Target Muscle</label>
+        <label className="label-cap block mb-2">{t('bwLogger.targetMuscle')}</label>
         <MuscleGroupPicker
           selected={session.selectedMuscle}
           onSelect={(m) => {
@@ -98,7 +105,7 @@ export function BwLogger({ onLogged }: Props) {
       {/* Exercise suggestions */}
       {session.selectedMuscle && (
         <div>
-          <label className="label-cap block mb-2">Exercise</label>
+          <label className="label-cap block mb-2">{t('bwLogger.exercise')}</label>
           <div className="scroll-hint overflow-x-auto -mx-1 px-1">
             <div className="flex gap-2">
               {suggestions.map((name) => {
@@ -144,7 +151,7 @@ export function BwLogger({ onLogged }: Props) {
                       : 'bg-white/[0.04] text-forge-muted',
                   ].join(' ')}
                 >
-                  {v}
+                  {t('bwLogger.variation.' + v)}
                 </button>
               ))}
             </div>
@@ -155,12 +162,12 @@ export function BwLogger({ onLogged }: Props) {
               <button
                 onClick={() => setHoldSeconds((s) => Math.max(5, s - 5))}
                 className="w-11 h-11 rounded-xl card-elevated border border-forge-border-light flex items-center justify-center cursor-pointer press-scale"
-                aria-label="Decrease hold time"
+                aria-label={t('bwLogger.decreaseHoldTime')}
               >
                 <Minus size={16} className="text-forge-muted" />
               </button>
               <Input
-                label="Hold seconds"
+                label={t('bwLogger.holdSeconds')}
                 type="number"
                 inputMode="numeric"
                 value={holdSeconds}
@@ -170,7 +177,7 @@ export function BwLogger({ onLogged }: Props) {
               <button
                 onClick={() => setHoldSeconds((s) => s + 5)}
                 className="w-11 h-11 rounded-xl card-elevated border border-forge-border-light flex items-center justify-center cursor-pointer press-scale"
-                aria-label="Increase hold time"
+                aria-label={t('bwLogger.increaseHoldTime')}
               >
                 <Plus size={16} className="text-forge-muted" />
               </button>
@@ -180,12 +187,12 @@ export function BwLogger({ onLogged }: Props) {
               <button
                 onClick={() => setReps((r) => Math.max(1, r - 1))}
                 className="w-11 h-11 rounded-xl card-elevated border border-forge-border-light flex items-center justify-center cursor-pointer press-scale"
-                aria-label="Decrease reps"
+                aria-label={t('bwLogger.decreaseReps')}
               >
                 <Minus size={16} className="text-forge-muted" />
               </button>
               <Input
-                label="Reps"
+                label={t('log.reps')}
                 type="number"
                 inputMode="numeric"
                 value={reps}
@@ -194,7 +201,7 @@ export function BwLogger({ onLogged }: Props) {
               <button
                 onClick={() => setReps((r) => r + 1)}
                 className="w-11 h-11 rounded-xl card-elevated border border-forge-border-light flex items-center justify-center cursor-pointer press-scale"
-                aria-label="Increase reps"
+                aria-label={t('bwLogger.increaseReps')}
               >
                 <Plus size={16} className="text-forge-muted" />
               </button>
@@ -203,7 +210,7 @@ export function BwLogger({ onLogged }: Props) {
 
           {variation === 'weighted' && (
             <Input
-              label="Added weight (kg)"
+              label={t('bwLogger.addedWeight')}
               type="number"
               inputMode="decimal"
               value={addedWeight}
@@ -215,13 +222,13 @@ export function BwLogger({ onLogged }: Props) {
             onClick={handleAddSet}
             className="w-full py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-forge-green font-condensed uppercase tracking-wider text-[13px] cursor-pointer press-scale hover:bg-white/[0.08]"
           >
-            + Add {isHold ? 'Hold' : 'Set'}
+            {isHold ? t('bwLogger.addHold') : t('bwLogger.addSet')}
           </button>
 
           {/* Current working sets */}
           {currentSets.length > 0 && (
             <div className="space-y-1.5">
-              <div className="label-cap">Working sets</div>
+              <div className="label-cap">{t('bwLogger.workingSets')}</div>
               {currentSets.map((s, i) => (
                 <div
                   key={i}
@@ -229,16 +236,16 @@ export function BwLogger({ onLogged }: Props) {
                 >
                   <span className="text-forge-muted text-[12px] font-condensed">#{i + 1}</span>
                   <span className="text-forge-text text-[14px] font-mono">
-                    {isHold ? `${s.reps}s` : `${s.reps} reps`}
-                    {s.addedWeight ? <span className="text-forge-green ml-2 text-[12px]">+{s.addedWeight}kg</span> : null}
+                    {isHold ? t('bwLogger.seconds', { count: s.reps }) : t('bwLogger.repsCount', { count: s.reps })}
+                    {s.addedWeight ? <span className="text-forge-green ml-2 text-[12px]">+{s.addedWeight}{t('log.kgUnit')}</span> : null}
                     <span className="text-forge-muted ml-2 text-[11px]">
-                      · {s.variation ?? 'regular'}
+                      · {t('bwLogger.variation.' + (s.variation ?? 'regular'))}
                     </span>
                   </span>
                   <button
                     onClick={() => handleRemoveSet(i)}
                     className="text-forge-muted hover:text-red-400 cursor-pointer press-scale"
-                    aria-label="Remove set"
+                    aria-label={t('log.removeSet')}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -248,7 +255,9 @@ export function BwLogger({ onLogged }: Props) {
                 onClick={handleLogExercise}
                 className="w-full mt-1 bg-gradient-to-br from-forge-green/20 to-forge-green/10 text-forge-green border border-forge-green/30 py-3 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] hover:bg-forge-green/25 hover:border-forge-green/50 transition-all duration-200"
               >
-                Log Exercise · {currentSets.length} {isHold ? 'holds' : 'sets'}
+                {isHold
+                  ? t('bwLogger.logExerciseHolds', { count: currentSets.length })
+                  : t('bwLogger.logExerciseSets', { count: currentSets.length })}
               </button>
             </div>
           )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Minus, Route, Heart, Clock } from 'lucide-react';
 import { useSessionStore } from '../../../stores/useSessionStore';
 import { useToast } from '../../../components/ui/Toast';
@@ -23,6 +24,7 @@ const INTENSITIES = [
 ] as const;
 
 export function CardioLogger() {
+  const { t: translate } = useTranslation();
   const session = useSessionStore();
   const { toast } = useToast();
   const { play } = useFX();
@@ -36,7 +38,7 @@ export function CardioLogger() {
 
   const handleLog = () => {
     if (duration <= 0) {
-      toast('Duration must be > 0 min', 'error');
+      toast(translate('cardioLogger.durationError'), 'error');
       return;
     }
     session.addCardioEntry({
@@ -48,7 +50,7 @@ export function CardioLogger() {
       notes: notes || undefined,
     });
     play('success');
-    toast(`${type} · ${duration}min logged`, 'success');
+    toast(translate('cardioLogger.loggedToast', { type, count: duration }), 'success');
     setNotes('');
   };
 
@@ -59,7 +61,7 @@ export function CardioLogger() {
     <div className="space-y-4">
       {/* Type selector */}
       <div>
-        <label className="label-cap block mb-2">Activity</label>
+        <label className="label-cap block mb-2">{translate('cardioLogger.activity')}</label>
         <div className="scroll-hint overflow-x-auto -mx-1 px-1">
           <div className="flex gap-2">
             {CARDIO_TYPES.map((t) => {
@@ -78,7 +80,7 @@ export function CardioLogger() {
                   ].join(' ')}
                 >
                   <span>{t.emoji}</span>
-                  {t.label}
+                  {translate('cardioLogger.types.' + t.id)}
                 </button>
               );
             })}
@@ -92,12 +94,12 @@ export function CardioLogger() {
           <button
             onClick={() => setDuration((v) => Math.max(0, v - 5))}
             className="w-11 h-11 rounded-xl card-elevated border border-forge-border-light flex items-center justify-center cursor-pointer press-scale"
-            aria-label="Decrease duration"
+            aria-label={translate('cardioLogger.decreaseDuration')}
           >
             <Minus size={16} className="text-forge-muted" />
           </button>
           <Input
-            label="Duration (min)"
+            label={translate('cardioLogger.durationLabel')}
             type="number"
             inputMode="numeric"
             value={duration}
@@ -107,7 +109,7 @@ export function CardioLogger() {
           <button
             onClick={() => setDuration((v) => v + 5)}
             className="w-11 h-11 rounded-xl card-elevated border border-forge-border-light flex items-center justify-center cursor-pointer press-scale"
-            aria-label="Increase duration"
+            aria-label={translate('cardioLogger.increaseDuration')}
           >
             <Plus size={16} className="text-forge-muted" />
           </button>
@@ -115,7 +117,7 @@ export function CardioLogger() {
 
         <div className="grid grid-cols-2 gap-2">
           <Input
-            label="Distance (km)"
+            label={translate('cardioLogger.distanceLabel')}
             type="number"
             inputMode="decimal"
             step="0.1"
@@ -124,7 +126,7 @@ export function CardioLogger() {
             leftIcon={<Route size={14} />}
           />
           <Input
-            label="Heart rate (bpm)"
+            label={translate('cardioLogger.heartRateLabel')}
             type="number"
             inputMode="numeric"
             value={heartRate}
@@ -135,7 +137,7 @@ export function CardioLogger() {
 
         {/* Intensity */}
         <div>
-          <label className="label-cap block mb-1.5">Intensity</label>
+          <label className="label-cap block mb-1.5">{translate('cardioLogger.intensity')}</label>
           <div className="grid grid-cols-3 gap-2">
             {INTENSITIES.map((i) => {
               const sel = intensity === i.id;
@@ -155,7 +157,7 @@ export function CardioLogger() {
                     boxShadow: sel ? `0 0 12px ${i.color}33` : 'none',
                   }}
                 >
-                  {i.label}
+                  {translate('cardioLogger.intensityLevels.' + i.id)}
                 </button>
               );
             })}
@@ -163,8 +165,8 @@ export function CardioLogger() {
         </div>
 
         <Input
-          label="Notes"
-          placeholder="Terrain, RPE, weather…"
+          label={translate('cardioLogger.notesLabel')}
+          placeholder={translate('cardioLogger.notesPlaceholder')}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
@@ -173,14 +175,14 @@ export function CardioLogger() {
           onClick={handleLog}
           className="w-full mt-1 bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg-deep py-3 rounded-2xl font-condensed font-bold uppercase tracking-wider text-sm cursor-pointer press-scale min-h-[48px] shadow-[0_6px_20px_rgba(46,204,113,0.32)]"
         >
-          + Log Cardio
+          {translate('cardioLogger.logButton')}
         </button>
       </div>
 
       {/* Current session cardio entries */}
       {session.cardioEntries.length > 0 && (
         <div className="space-y-2">
-          <div className="label-cap">Logged this session</div>
+          <div className="label-cap">{translate('cardioLogger.loggedThisSession')}</div>
           {session.cardioEntries.map((c, i) => (
             <div
               key={i}
@@ -194,13 +196,17 @@ export function CardioLogger() {
                   {c.type}
                 </div>
                 <div className="text-forge-muted text-[11px] font-mono">
-                  {c.duration}min
-                  {c.distance !== undefined ? ` · ${c.distance}km` : ''}
-                  {c.heartRate !== undefined ? ` · ${c.heartRate}bpm` : ''}
+                  {translate('cardioLogger.minUnit', { count: c.duration })}
+                  {c.distance !== undefined
+                    ? ` · ${translate('cardioLogger.kmUnit', { count: c.distance })}`
+                    : ''}
+                  {c.heartRate !== undefined
+                    ? ` · ${translate('cardioLogger.bpmUnit', { count: c.heartRate })}`
+                    : ''}
                 </div>
               </div>
               <span className="text-[10px] font-condensed uppercase tracking-wider text-forge-green/80">
-                {c.intensity}
+                {translate('cardioLogger.intensityLevels.' + c.intensity)}
               </span>
             </div>
           ))}

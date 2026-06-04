@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LogIn, LogOut, Mail, Lock, User as UserIcon, Loader2, CheckCircle2, Cloud, CloudOff, Wifi, AlertCircle } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -14,6 +15,7 @@ import { mergeGuestIntoAccount } from '../../../lib/cloudSync';
 type Mode = 'signin' | 'signup';
 
 export function AccountCard() {
+  const { t } = useTranslation();
   const {
     user, isGuest,
     signInWithEmail, signUpWithEmail, resetPassword, signOut,
@@ -31,7 +33,7 @@ export function AccountCard() {
 
   // ── Logged-in view ───────────────────────────────────────────────────────
   if (user) {
-    const name = (user.user_metadata?.full_name as string | undefined) ?? user.email?.split('@')[0] ?? 'Athlete';
+    const name = (user.user_metadata?.full_name as string | undefined) ?? user.email?.split('@')[0] ?? t('account.defaultName');
     const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
     return (
       <Card variant="luxury" className="p-4 space-y-3">
@@ -46,7 +48,7 @@ export function AccountCard() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-forge-text font-condensed font-semibold text-[15px] truncate">{name}</span>
-              <Badge variant="success" dot>Signed in</Badge>
+              <Badge variant="success" dot>{t('account.signedIn')}</Badge>
             </div>
             <div className="text-forge-muted text-[12px] font-mono truncate">{user.email}</div>
           </div>
@@ -64,11 +66,11 @@ export function AccountCard() {
               await signOut();
               setBusy(false);
               play('tap');
-              toast('Signed out — data saved locally', 'info');
+              toast(t('account.signedOutToast'), 'info');
             }}
             loading={busy}
           >
-            <LogOut size={14} /> Sign out
+            <LogOut size={14} /> {t('auth.signOut')}
           </Button>
         </div>
       </Card>
@@ -78,7 +80,7 @@ export function AccountCard() {
   // ── Logged-out / Guest view ──────────────────────────────────────────────
   const handleEmailSubmit = async () => {
     if (!email.trim() || !password) {
-      toast('Enter email and password', 'error');
+      toast(t('account.enterEmailPassword'), 'error');
       return;
     }
     setBusy(true);
@@ -91,7 +93,7 @@ export function AccountCard() {
         return;
       }
       play('success');
-      toast('Signed in — syncing to cloud', 'success');
+      toast(t('account.signedInToast'), 'success');
       // Trigger guest-to-account data merge
       await mergeGuestIntoAccount();
     } else {
@@ -105,25 +107,25 @@ export function AccountCard() {
       if (res.needsConfirm) {
         setNeedsConfirm(true);
         play('success');
-        toast('Check your email to verify your account', 'success');
+        toast(t('account.verifyEmailToast'), 'success');
         return;
       }
       play('success');
-      toast('Welcome to FORGE — syncing your data', 'success');
+      toast(t('account.welcomeToast'), 'success');
       await mergeGuestIntoAccount();
     }
   };
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      toast('Enter your email first', 'error');
+      toast(t('account.enterEmailFirst'), 'error');
       return;
     }
     setBusy(true);
     const res = await resetPassword(email.trim());
     setBusy(false);
     if (res.error) { toast(res.error, 'error'); return; }
-    toast('Password reset email sent', 'success');
+    toast(t('account.resetEmailSent'), 'success');
   };
 
   if (needsConfirm) {
@@ -133,14 +135,13 @@ export function AccountCard() {
           <Mail size={22} className="text-forge-green" />
         </div>
         <div>
-          <div className="text-forge-text font-condensed font-semibold text-[16px]">Check your inbox</div>
+          <div className="text-forge-text font-condensed font-semibold text-[16px]">{t('account.checkInbox')}</div>
           <div className="text-forge-muted text-[12px] mt-1">
-            We sent a verification link to <span className="text-forge-green">{email}</span>. After confirming,
-            sign in here and your current workouts will auto-sync.
+            {t('account.verificationLinkSentPrefix')} <span className="text-forge-green">{email}</span>{t('account.verificationLinkSentSuffix')}
           </div>
         </div>
         <Button variant="secondary" onClick={() => { setNeedsConfirm(false); setMode('signin'); }} fullWidth>
-          Back to sign in
+          {t('account.backToSignIn')}
         </Button>
       </Card>
     );
@@ -154,13 +155,13 @@ export function AccountCard() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-forge-text font-condensed font-semibold text-[15px]">Your Account</span>
-            {isGuest && <Badge variant="warning" dot>Guest mode</Badge>}
+            <span className="text-forge-text font-condensed font-semibold text-[15px]">{t('account.title')}</span>
+            {isGuest && <Badge variant="warning" dot>{t('account.guestMode')}</Badge>}
           </div>
           <div className="text-forge-muted text-[12px] leading-snug">
             {isGuest
-              ? 'Sign in to back up your data to the cloud and sync across devices.'
-              : 'Sign in or create a FORGE account.'}
+              ? t('account.guestHelper')
+              : t('account.signInHelper')}
           </div>
         </div>
       </div>
@@ -168,20 +169,20 @@ export function AccountCard() {
       {/* Mode toggle */}
       <TabPills
         tabs={[
-          { id: 'signin', label: 'Sign In',  Icon: LogIn },
-          { id: 'signup', label: 'Sign Up',  Icon: UserIcon },
+          { id: 'signin', label: t('auth.signIn'),    Icon: LogIn },
+          { id: 'signup', label: t('account.signUp'),  Icon: UserIcon },
         ]}
         value={mode}
         onChange={(m) => setMode(m as Mode)}
         size="sm"
-        ariaLabel="Authentication mode"
+        ariaLabel={t('account.authModeAria')}
       />
 
       <div className="space-y-2.5">
         {mode === 'signup' && (
           <Input
-            label="Display Name (optional)"
-            placeholder="Ahmed"
+            label={t('account.displayNameLabel')}
+            placeholder={t('account.displayNamePlaceholder')}
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             leftIcon={<UserIcon size={14} />}
@@ -189,9 +190,9 @@ export function AccountCard() {
           />
         )}
         <Input
-          label="Email"
+          label={t('account.emailLabel')}
           type="email"
-          placeholder="you@example.com"
+          placeholder={t('account.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           leftIcon={<Mail size={14} />}
@@ -199,9 +200,9 @@ export function AccountCard() {
           inputMode="email"
         />
         <Input
-          label="Password"
+          label={t('account.passwordLabel')}
           type="password"
-          placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'}
+          placeholder={mode === 'signup' ? t('account.passwordHintSignup') : '••••••••'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           leftIcon={<Lock size={14} />}
@@ -218,7 +219,7 @@ export function AccountCard() {
           loading={busy}
         >
           {busy ? <Loader2 size={14} className="animate-spin" /> : (
-            mode === 'signin' ? <><LogIn size={14} /> Sign In</> : <><CheckCircle2 size={14} /> Create Account</>
+            mode === 'signin' ? <><LogIn size={14} /> {t('auth.signIn')}</> : <><CheckCircle2 size={14} /> {t('account.createAccount')}</>
           )}
         </Button>
       </div>
@@ -229,7 +230,7 @@ export function AccountCard() {
           className="block mx-auto text-[12px] font-condensed text-forge-muted hover:text-forge-green cursor-pointer transition-colors duration-150"
           disabled={busy}
         >
-          Forgot password?
+          {t('account.forgotPassword')}
         </button>
       )}
     </Card>
@@ -239,12 +240,13 @@ export function AccountCard() {
 // ─── Sync status pill ────────────────────────────────────────────────────────
 
 function SyncPill({ state }: { state: 'idle' | 'pulling' | 'pushing' | 'error' | 'unavailable' }) {
+  const { t } = useTranslation();
   const config: Record<typeof state, { Icon: typeof Cloud; label: string; color: string; bg: string; border: string }> = {
-    idle:        { Icon: Cloud,      label: 'Cloud synced',          color: '#58d68d', bg: 'rgba(46,204,113,0.1)',  border: 'rgba(46,204,113,0.25)' },
-    pulling:     { Icon: Wifi,       label: 'Downloading data…',     color: '#58d68d', bg: 'rgba(46,204,113,0.1)',  border: 'rgba(46,204,113,0.25)' },
-    pushing:     { Icon: Wifi,       label: 'Uploading changes…',    color: '#58d68d', bg: 'rgba(46,204,113,0.1)',  border: 'rgba(46,204,113,0.25)' },
-    error:       { Icon: AlertCircle,label: 'Sync error — saved locally',color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
-    unavailable: { Icon: CloudOff,   label: 'Local only — cloud DB not set up', color: '#7a8289', bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.06)' },
+    idle:        { Icon: Cloud,      label: t('account.syncIdle'),       color: '#58d68d', bg: 'rgba(46,204,113,0.1)',  border: 'rgba(46,204,113,0.25)' },
+    pulling:     { Icon: Wifi,       label: t('account.syncPulling'),    color: '#58d68d', bg: 'rgba(46,204,113,0.1)',  border: 'rgba(46,204,113,0.25)' },
+    pushing:     { Icon: Wifi,       label: t('account.syncPushing'),    color: '#58d68d', bg: 'rgba(46,204,113,0.1)',  border: 'rgba(46,204,113,0.25)' },
+    error:       { Icon: AlertCircle,label: t('account.syncError'),      color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)' },
+    unavailable: { Icon: CloudOff,   label: t('account.syncUnavailable'),color: '#7a8289', bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.06)' },
   };
   const c = config[state];
   return (

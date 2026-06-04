@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Plus, Sparkles, Bookmark } from 'lucide-react';
 import { searchExercises, getExercisesByMuscle, type Exercise } from '../../../lib/exercises-db';
 import { useCustomExercisesStore } from '../../../stores/useCustomExercisesStore';
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +99,9 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
               setOpen(false);
             }
           }}
-          placeholder={muscle ? `Search ${muscle} exercises…` : 'Select muscle group first'}
+          placeholder={muscle
+            ? t('exerciseAutocomplete.searchPlaceholder', { muscle: t('muscles.' + String(muscle).toLowerCase()) })
+            : t('exerciseAutocomplete.selectMuscleFirst')}
           className={[
             'w-full bg-[#070a0d] border rounded-xl pl-10 pr-12 py-3',
             'text-forge-text text-[15px] font-body min-h-[48px]',
@@ -107,7 +111,7 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
             muscle ? 'border-white/[0.06]' : 'border-white/[0.03] opacity-60',
           ].join(' ')}
           disabled={!muscle}
-          aria-label="Search or create exercise"
+          aria-label={t('exerciseAutocomplete.searchOrCreate')}
           aria-autocomplete="list"
           aria-expanded={open}
         />
@@ -116,9 +120,9 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
             type="button"
             onClick={handleAddCustom}
             className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 h-9 px-2.5 rounded-lg bg-forge-green/15 text-forge-green border border-forge-green/30 text-[11px] font-condensed uppercase tracking-wider cursor-pointer press-scale hover:bg-forge-green/25 transition-all duration-200"
-            aria-label="Add as custom exercise"
+            aria-label={t('exerciseAutocomplete.addAsCustom')}
           >
-            <Plus size={12} /> Add
+            <Plus size={12} /> {t('common.add')}
           </button>
         )}
       </div>
@@ -138,15 +142,17 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
             >
               <Sparkles size={14} className="text-forge-green shrink-0" />
               <span className="flex-1 text-forge-text text-[14px] font-condensed font-semibold truncate">
-                Add <span className="text-forge-green">"{trimmed}"</span> as custom
+                {t('exerciseAutocomplete.addCustomPrefix')}{' '}
+                <span className="text-forge-green">"{trimmed}"</span>{' '}
+                {t('exerciseAutocomplete.addCustomSuffix')}
               </span>
-              <span className="text-[10px] font-condensed uppercase tracking-wider text-forge-green/80">New</span>
+              <span className="text-[10px] font-condensed uppercase tracking-wider text-forge-green/80">{t('exerciseAutocomplete.new')}</span>
             </button>
           )}
 
           {customResults.length > 0 && (
             <div className="pt-1 pb-0.5">
-              <div className="px-4 py-1 label-cap text-forge-green/80">Your custom</div>
+              <div className="px-4 py-1 label-cap text-forge-green/80">{t('exerciseAutocomplete.yourCustom')}</div>
               {customResults.map((ex) => (
                 <button
                   key={`custom-${ex.name}`}
@@ -164,7 +170,7 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
 
           {dbResults.length > 0 && (
             <div className="pt-1 pb-0.5">
-              {customResults.length > 0 && <div className="px-4 py-1 label-cap">Library</div>}
+              {customResults.length > 0 && <div className="px-4 py-1 label-cap">{t('exerciseAutocomplete.library')}</div>}
               {dbResults.map((ex) => (
                 <button
                   key={ex.name}

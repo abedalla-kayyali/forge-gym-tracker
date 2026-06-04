@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { MuscleGroup } from '../../../types/workout';
-import { BodyMap, MUSCLE_LABELS, MUSCLE_ORDER } from '../../../components/body/BodyMap';
+import { BodyMap, MUSCLE_ORDER } from '../../../components/body/BodyMap';
 
 interface Props {
   selected: MuscleGroup | null;
@@ -13,6 +14,7 @@ interface Props {
  * by label. Single-select.
  */
 export function MuscleGroupPicker({ selected, onSelect }: Props) {
+  const { t } = useTranslation();
   const selectedSet = useMemo(
     () => new Set<MuscleGroup>(selected ? [selected] : []),
     [selected],
@@ -23,9 +25,9 @@ export function MuscleGroupPicker({ selected, onSelect }: Props) {
       {/* Body-map selector */}
       <div className="card-elevated rounded-2xl p-2 pt-3 card-luxury-border">
         <div className="flex items-center justify-between px-2 mb-1">
-          <span className="label-cap">Tap a muscle</span>
+          <span className="label-cap">{t('musclePicker.tapMuscle')}</span>
           <span className="label-cap text-forge-green/80">
-            {selected ? MUSCLE_LABELS[selected] : 'None selected'}
+            {selected ? t('muscles.' + String(selected).toLowerCase()) : t('musclePicker.noneSelected')}
           </span>
         </div>
         <BodyMap
@@ -56,7 +58,7 @@ export function MuscleGroupPicker({ selected, onSelect }: Props) {
                 ].join(' ')}
                 aria-pressed={isSel}
               >
-                {MUSCLE_LABELS[m]}
+                {t('muscles.' + String(m).toLowerCase())}
               </button>
             );
           })}

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../components/ui/Toast';
 import { STORAGE_KEYS } from '../../../lib/constants';
 import { writeStorage } from '../../../lib/storage';
@@ -24,6 +25,7 @@ const EXPORT_KEYS = [
 
 export function DataTransfer() {
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleExport = useCallback(() => {
     const data: Record<string, unknown> = {};
@@ -40,8 +42,8 @@ export function DataTransfer() {
     a.download = `forge-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('Data exported!', 'success');
-  }, [toast]);
+    toast(t('dataTransfer.exportSuccess'), 'success');
+  }, [toast, t]);
 
   const handleImport = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,29 +65,29 @@ export function DataTransfer() {
           }
           // Re-read stores from the imported localStorage so the data shows now.
           rehydrateAllStores();
-          toast(`Imported ${count} data keys.`, 'success');
+          toast(t('dataTransfer.importSuccess', { count }), 'success');
         } catch {
-          toast('Invalid backup file', 'error');
+          toast(t('dataTransfer.invalidFile'), 'error');
         }
       };
       reader.readAsText(file);
       e.target.value = '';
     },
-    [toast],
+    [toast, t],
   );
 
   return (
     <Card className="space-y-3">
-      <h3 className="text-forge-muted text-xs font-condensed uppercase">Data</h3>
+      <h3 className="text-forge-muted text-xs font-condensed uppercase">{t('dataTransfer.title')}</h3>
       <div className="flex gap-2">
         <button
           onClick={handleExport}
           className="flex-1 bg-forge-surface border border-forge-border py-2.5 rounded-lg text-forge-text text-sm font-condensed hover:border-forge-green/50"
         >
-          Export JSON
+          {t('dataTransfer.exportJson')}
         </button>
         <label className="flex-1 flex items-center justify-center bg-forge-surface border border-forge-border py-2.5 rounded-lg text-forge-text text-sm font-condensed cursor-pointer hover:border-forge-green/50">
-          Import JSON
+          {t('dataTransfer.importJson')}
           <input type="file" accept=".json" onChange={handleImport} className="hidden" />
         </label>
       </div>

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trophy, Repeat, Clock } from 'lucide-react';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../../../stores/useBwWorkoutStore';
@@ -24,16 +25,17 @@ interface ExerciseStat {
   bestReps: number;        // max reps in a single set
 }
 
-function daysAgo(iso: string): string {
+function daysAgo(iso: string, t: (key: string, options?: Record<string, unknown>) => string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-  if (diff < 1) return 'today';
-  if (diff === 1) return 'yesterday';
-  if (diff < 7) return `${diff}d ago`;
-  if (diff < 30) return `${Math.floor(diff / 7)}w ago`;
-  return `${Math.floor(diff / 30)}mo ago`;
+  if (diff < 1) return t('topExercises.today');
+  if (diff === 1) return t('topExercises.yesterday');
+  if (diff < 7) return t('topExercises.daysAgo', { count: diff });
+  if (diff < 30) return t('topExercises.weeksAgo', { count: Math.floor(diff / 7) });
+  return t('topExercises.monthsAgo', { count: Math.floor(diff / 30) });
 }
 
 export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: Props) {
+  const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
   const { play } = useFX();
@@ -96,11 +98,16 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
             <Trophy size={13} className="text-forge-gold" />
           </div>
           <span className="label-cap-strong text-forge-text">
-            Your Top <span className="text-forge-green">{muscle}</span> Lifts
+            {t('topExercises.titlePrefix')}{' '}
+            <span className="text-forge-green">{t('muscles.' + String(muscle).toLowerCase())}</span>{' '}
+            {t('topExercises.titleSuffix')}
           </span>
         </div>
         <span className="text-[10px] font-mono text-forge-muted">
-          {stats.length} of {stats.reduce((a, s) => a + s.count, 0)} sessions
+          {t('topExercises.sessionsCount', {
+            shown: stats.length,
+            count: stats.reduce((a, s) => a + s.count, 0),
+          })}
         </span>
       </div>
 
@@ -119,7 +126,20 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
                   'transition-all duration-200',
                   !disabled ? 'cursor-pointer hover:bg-forge-green/10 hover:border-forge-green/30 press-scale' : 'opacity-80 cursor-default',
                 ].join(' ')}
-                aria-label={`${s.name}, ${s.count} sessions, best ${s.bestReps} reps${s.bestWeight ? ` at ${s.bestWeight}kg` : ''}`}
+                aria-label={
+                  s.bestWeight
+                    ? t('topExercises.rowAriaWithWeight', {
+                        name: s.name,
+                        count: s.count,
+                        reps: s.bestReps,
+                        weight: s.bestWeight,
+                      })
+                    : t('topExercises.rowAria', {
+                        name: s.name,
+                        count: s.count,
+                        reps: s.bestReps,
+                      })
+                }
               >
                 <span
                   className={[
@@ -141,23 +161,23 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
                       <Repeat size={10} /> {s.count}×
                     </span>
                     <span className="text-forge-dim">·</span>
-                    <span>{s.totalSets} sets</span>
+                    <span>{t('topExercises.setsCount', { count: s.totalSets })}</span>
                     <span className="text-forge-dim">·</span>
                     <span className="inline-flex items-center gap-1">
-                      <Clock size={10} /> {daysAgo(s.lastDate)}
+                      <Clock size={10} /> {daysAgo(s.lastDate, t)}
                     </span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
                   {s.bestWeight > 0 ? (
                     <>
-                      <div className="kpi-md text-forge-green leading-none">{s.bestWeight}<span className="text-[9px] text-forge-muted ml-0.5">KG</span></div>
-                      <div className="text-[9px] text-forge-dim font-condensed uppercase tracking-wider mt-0.5">best</div>
+                      <div className="kpi-md text-forge-green leading-none">{s.bestWeight}<span className="text-[9px] text-forge-muted ml-0.5">{t('log.kgUnit')}</span></div>
+                      <div className="text-[9px] text-forge-dim font-condensed uppercase tracking-wider mt-0.5">{t('topExercises.best')}</div>
                     </>
                   ) : (
                     <>
                       <div className="kpi-md text-forge-green leading-none">{s.bestReps}</div>
-                      <div className="text-[9px] text-forge-dim font-condensed uppercase tracking-wider mt-0.5">best reps</div>
+                      <div className="text-[9px] text-forge-dim font-condensed uppercase tracking-wider mt-0.5">{t('topExercises.bestReps')}</div>
                     </>
                   )}
                 </div>
@@ -169,7 +189,7 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
 
       {onPick && (
         <p className="text-[10px] text-forge-muted text-center font-condensed pt-1">
-          Tap to load instantly
+          {t('topExercises.tapToLoad')}
         </p>
       )}
     </div>

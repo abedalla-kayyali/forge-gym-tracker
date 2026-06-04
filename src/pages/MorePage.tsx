@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UtensilsCrossed, Droplets, Target, Sparkles } from 'lucide-react';
 import { estimateMealMacros, computeWaterGoalCups } from '../lib/trainingScience';
 import { useProfileStore } from '../stores/useProfileStore';
@@ -15,6 +16,7 @@ import { TabPills } from '../components/ui/TabPills';
 type NutritionTab = 'meals' | 'water' | 'macros';
 
 function NutritionSection() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<NutritionTab>('meals');
   const { meals, water, macroTargets, addMeal, addWater, undoWater } = useNutritionStore();
   const profile = useProfileStore((s) => s.profile) as unknown as Record<string, unknown>;
@@ -39,9 +41,9 @@ function NutritionSection() {
   const todayFat = todayMeals.reduce((a, m) => a + m.fat, 0);
 
   const TABS: { key: NutritionTab; label: string; Icon: typeof UtensilsCrossed }[] = [
-    { key: 'meals', label: 'Meals', Icon: UtensilsCrossed },
-    { key: 'water', label: 'Water', Icon: Droplets },
-    { key: 'macros', label: 'Macros', Icon: Target },
+    { key: 'meals', label: t('more.tabMeals'), Icon: UtensilsCrossed },
+    { key: 'water', label: t('more.tabWater'), Icon: Droplets },
+    { key: 'macros', label: t('more.tabMacros'), Icon: Target },
   ];
 
   const [mealName, setMealName] = useState('');
@@ -54,7 +56,7 @@ function NutritionSection() {
   // Auto-fill macros from meal name (legacy _estimateMealMacros)
   const handleEstimate = () => {
     if (!mealName.trim()) {
-      toast('Enter a meal name first', 'error');
+      toast(t('more.toastEnterMealName'), 'error');
       return;
     }
     const q = Math.max(0.25, Number(mealQty) || 1);
@@ -64,11 +66,11 @@ function NutritionSection() {
     setMealCarb(String(est.carbs));
     setMealFat(String(est.fat));
     play('tap');
-    toast(est.matched ? `Estimated from "${mealName}"` : 'Used default portion — verify macros', 'info');
+    toast(est.matched ? t('more.toastEstimatedFrom', { name: mealName }) : t('more.toastUsedDefaultPortion'), 'info');
   };
 
   const handleAddMeal = () => {
-    if (!mealName || !mealCal) { toast('Enter meal name and calories', 'error'); return; }
+    if (!mealName || !mealCal) { toast(t('more.toastEnterMealAndCalories'), 'error'); return; }
     addMeal(today, {
       name: mealName,
       calories: Number(mealCal) || 0,
@@ -77,7 +79,7 @@ function NutritionSection() {
       fat: Number(mealFat) || 0,
     });
     play('save');
-    toast(`${mealName} logged`, 'success');
+    toast(t('more.toastMealLogged', { name: mealName }), 'success');
     setMealName(''); setMealCal(''); setMealPro(''); setMealCarb(''); setMealFat('');
   };
 
@@ -93,7 +95,7 @@ function NutritionSection() {
         tabs={TABS.map((t) => ({ id: t.key, label: t.label, Icon: t.Icon }))}
         value={tab}
         onChange={setTab}
-        ariaLabel="Nutrition sub-navigation"
+        ariaLabel={t('more.nutritionSubNavAria')}
       />
 
       {tab === 'meals' && (
@@ -101,14 +103,14 @@ function NutritionSection() {
           {/* Quick summary */}
           <div className="grid grid-cols-4 gap-2">
             {[
-              { label: 'Calories', value: todayCalories, target: macroTargets.calories },
-              { label: 'Protein', value: todayProtein, target: macroTargets.protein_g },
-              { label: 'Carbs', value: todayCarbs, target: macroTargets.carbs_g },
-              { label: 'Fat', value: todayFat, target: macroTargets.fat_g },
+              { label: 'Calories', displayLabel: t('more.calories'), value: todayCalories, target: macroTargets.calories },
+              { label: 'Protein', displayLabel: t('more.protein'), value: todayProtein, target: macroTargets.protein_g },
+              { label: 'Carbs', displayLabel: t('more.carbs'), value: todayCarbs, target: macroTargets.carbs_g },
+              { label: 'Fat', displayLabel: t('more.fat'), value: todayFat, target: macroTargets.fat_g },
             ].map((s) => (
               <Card key={s.label} className="text-center py-2 px-1">
                 <div className="text-forge-green text-lg font-display">{Math.round(s.value)}</div>
-                <div className="text-forge-dim text-[9px] font-condensed uppercase">{s.label}</div>
+                <div className="text-forge-dim text-[9px] font-condensed uppercase">{s.displayLabel}</div>
                 <div className="h-1 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden mt-1">
                   <div className="h-full bg-gradient-to-r from-forge-green to-forge-green-light rounded-full" style={{ width: `${Math.min(100, (s.value / s.target) * 100)}%` }} />
                 </div>
@@ -119,49 +121,49 @@ function NutritionSection() {
           {/* Add meal form */}
           <Card className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Add Meal</div>
+              <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">{t('more.addMeal')}</div>
               <button
                 onClick={handleEstimate}
                 disabled={!mealName.trim()}
                 className="inline-flex items-center gap-1 text-[11px] font-condensed uppercase tracking-wider text-forge-green bg-forge-green/10 border border-forge-green/25 rounded-full px-2.5 py-1 cursor-pointer press-scale hover:bg-forge-green/20 disabled:opacity-40 disabled:pointer-events-none transition-all duration-200"
               >
-                <Sparkles size={12} /> Estimate
+                <Sparkles size={12} /> {t('more.estimate')}
               </button>
             </div>
-            <input type="text" placeholder="Meal name (e.g. chicken + rice)" value={mealName} onChange={(e) => setMealName(e.target.value)}
+            <input type="text" placeholder={t('more.mealNamePlaceholder')} value={mealName} onChange={(e) => setMealName(e.target.value)}
               className="w-full bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-3.5 py-2.5 text-forge-text text-sm min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
             <div className="grid grid-cols-4 gap-2">
-              <input type="number" placeholder="Cal" value={mealCal} onChange={(e) => setMealCal(e.target.value)}
+              <input type="number" placeholder={t('more.calShort')} value={mealCal} onChange={(e) => setMealCal(e.target.value)}
                 className="bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2.5 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
-              <input type="number" placeholder="Pro" value={mealPro} onChange={(e) => setMealPro(e.target.value)}
+              <input type="number" placeholder={t('more.proShort')} value={mealPro} onChange={(e) => setMealPro(e.target.value)}
                 className="bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2.5 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
-              <input type="number" placeholder="Carb" value={mealCarb} onChange={(e) => setMealCarb(e.target.value)}
+              <input type="number" placeholder={t('more.carbShort')} value={mealCarb} onChange={(e) => setMealCarb(e.target.value)}
                 className="bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2.5 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
-              <input type="number" placeholder="Fat" value={mealFat} onChange={(e) => setMealFat(e.target.value)}
+              <input type="number" placeholder={t('more.fatShort')} value={mealFat} onChange={(e) => setMealFat(e.target.value)}
                 className="bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2.5 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-[10px] font-condensed uppercase tracking-wider text-forge-muted">Qty</label>
+              <label className="text-[10px] font-condensed uppercase tracking-wider text-forge-muted">{t('more.qty')}</label>
               <input type="number" step="0.25" min="0.25" value={mealQty} onChange={(e) => setMealQty(e.target.value)}
                 className="flex-1 bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2 text-forge-text text-sm font-mono min-h-[36px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
-              <span className="text-[10px] text-forge-dim font-condensed">servings</span>
+              <span className="text-[10px] text-forge-dim font-condensed">{t('more.servings')}</span>
             </div>
             <button onClick={handleAddMeal}
               className="w-full bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg py-2.5 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] shadow-[0_4px_16px_rgba(46,204,113,0.25)]">
-              Log Meal
+              {t('more.logMeal')}
             </button>
           </Card>
 
           {/* Today's meals */}
           {todayMeals.length > 0 && (
             <div className="space-y-1.5">
-              <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Today's Meals</div>
+              <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">{t('more.todaysMeals')}</div>
               {todayMeals.map((m, i) => (
                 <Card key={i} className="flex items-center justify-between py-2 px-3">
                   <span className="text-forge-text text-sm">{m.name}</span>
                   <div className="flex gap-3 text-xs font-mono">
-                    <span className="text-forge-green">{m.calories}cal</span>
-                    <span className="text-forge-dim">{m.protein}p</span>
+                    <span className="text-forge-green">{t('more.caloriesValue', { count: m.calories })}</span>
+                    <span className="text-forge-dim">{t('more.proteinValue', { count: m.protein })}</span>
                   </div>
                 </Card>
               ))}
@@ -179,10 +181,10 @@ function NutritionSection() {
                 {todayWater.cups_drunk}
               </div>
               <div className="text-forge-dim text-xs font-condensed">
-                of {todayWater.goal_cups} cups
+                {t('more.ofCups', { count: todayWater.goal_cups })}
                 {profileWeight && dynamicWaterGoal !== todayWater.goal_cups && (
                   <span className="block text-forge-green/80 text-[10px] mt-0.5">
-                    Suggested: {dynamicWaterGoal} cups (from your bodyweight)
+                    {t('more.suggestedCups', { count: dynamicWaterGoal })}
                   </span>
                 )}
               </div>
@@ -193,11 +195,11 @@ function NutritionSection() {
             <div className="flex gap-3 justify-center pt-2">
               <button onClick={handleAddWater}
                 className="bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-8 py-2.5 rounded-xl font-condensed font-semibold cursor-pointer press-scale min-h-[44px]">
-                + Add Cup
+                {t('more.addCup')}
               </button>
               <button onClick={() => undoWater(today)}
                 className="card-elevated text-forge-muted px-6 py-2.5 rounded-xl font-condensed cursor-pointer press-scale min-h-[44px]">
-                Undo
+                {t('more.undo')}
               </button>
             </div>
           </Card>
@@ -207,16 +209,16 @@ function NutritionSection() {
       {tab === 'macros' && (
         <div className="space-y-3">
           <Card className="space-y-3">
-            <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Daily Targets</div>
+            <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">{t('more.dailyTargets')}</div>
             {[
-              { label: 'Calories', value: macroTargets.calories, unit: 'kcal' },
-              { label: 'Protein', value: macroTargets.protein_g, unit: 'g' },
-              { label: 'Carbs', value: macroTargets.carbs_g, unit: 'g' },
-              { label: 'Fat', value: macroTargets.fat_g, unit: 'g' },
-            ].map((t) => (
-              <div key={t.label} className="flex items-center justify-between">
-                <span className="text-forge-text text-sm">{t.label}</span>
-                <span className="text-forge-green font-mono text-sm">{t.value} {t.unit}</span>
+              { label: 'Calories', displayLabel: t('more.calories'), value: macroTargets.calories, unit: t('more.unitKcal') },
+              { label: 'Protein', displayLabel: t('more.protein'), value: macroTargets.protein_g, unit: t('more.unitGram') },
+              { label: 'Carbs', displayLabel: t('more.carbs'), value: macroTargets.carbs_g, unit: t('more.unitGram') },
+              { label: 'Fat', displayLabel: t('more.fat'), value: macroTargets.fat_g, unit: t('more.unitGram') },
+            ].map((row) => (
+              <div key={row.label} className="flex items-center justify-between">
+                <span className="text-forge-text text-sm">{row.displayLabel}</span>
+                <span className="text-forge-green font-mono text-sm">{row.value} {row.unit}</span>
               </div>
             ))}
           </Card>
@@ -227,23 +229,24 @@ function NutritionSection() {
 }
 
 export function MorePage() {
+  const { t } = useTranslation();
   return (
     <div className="p-4 space-y-4 pb-28 page-enter">
-      <h2 className="text-forge-green font-display text-2xl tracking-wide">More</h2>
+      <h2 className="text-forge-green font-display text-2xl tracking-wide">{t('more.title')}</h2>
 
       {/* Account — sign in / sign up / sync status */}
       <AccountCard />
 
       <XPBar />
 
-      <DashboardSection title="Nutrition & Water">
+      <DashboardSection title={t('more.nutritionAndWater')}>
         <NutritionSection />
       </DashboardSection>
 
       <SettingsForm />
       <DataTransfer />
 
-      <DashboardSection title="Achievements">
+      <DashboardSection title={t('more.achievements')}>
         <AchievementsList />
       </DashboardSection>
     </div>

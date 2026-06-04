@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dumbbell, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { WorkoutTypeSelector, type WorkoutType } from '../features/workout';
 import { MuscleGroupPicker } from '../features/workout';
@@ -35,6 +36,7 @@ function CircleRing({ size = 200 }: { size?: number }) {
 }
 
 function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const totalVol = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
 
@@ -52,25 +54,25 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
           <div className="text-left">
             <div className="text-forge-text text-sm font-body font-medium">{ex.name}</div>
             <div className="text-forge-muted text-[11px] font-mono">
-              {ex.sets.length} sets · {totalVol.toLocaleString()} kg vol
+              {t('logPage.exerciseSummary', { count: ex.sets.length, vol: totalVol.toLocaleString() })}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-forge-green/60 text-[10px] font-condensed uppercase">{ex.muscle}</span>
+          <span className="text-forge-green/60 text-[10px] font-condensed uppercase">{ex.muscle ? t('muscles.' + String(ex.muscle).toLowerCase()) : ''}</span>
           {open ? <ChevronUp size={14} className="text-forge-dim" /> : <ChevronDown size={14} className="text-forge-dim" />}
         </div>
       </button>
       {open && (
         <div className="border-t border-forge-border-light">
           <div className="grid grid-cols-4 px-4 py-2 text-[10px] font-condensed text-forge-dim uppercase tracking-wider">
-            <span>Set</span><span className="text-center">Reps</span><span className="text-center">Weight</span><span className="text-right">Vol</span>
+            <span>{t('logPage.colSet')}</span><span className="text-center">{t('logPage.colReps')}</span><span className="text-center">{t('logPage.colWeight')}</span><span className="text-right">{t('logPage.colVol')}</span>
           </div>
           {ex.sets.map((s, si) => (
             <div key={si} className={`grid grid-cols-4 px-4 py-2 text-xs font-mono ${si % 2 === 0 ? 'bg-[rgba(255,255,255,0.015)]' : ''}`}>
               <span className="text-forge-muted">{si + 1}</span>
               <span className="text-center text-forge-text">{s.reps}</span>
-              <span className="text-center text-forge-text">{s.weight}kg</span>
+              <span className="text-center text-forge-text">{s.weight}{t('log.kgUnit')}</span>
               <span className="text-right text-forge-green/70">{(s.reps * s.weight).toLocaleString()}</span>
             </div>
           ))}
@@ -81,6 +83,7 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
 }
 
 export function LogPage() {
+  const { t } = useTranslation();
   const session = useSessionStore();
   // Initialise the mode from a restored session so resume keeps the right tab.
   const [workoutType, setWorkoutType] = useState<WorkoutType>(() => {
@@ -141,7 +144,7 @@ export function LogPage() {
   // Log the exercise (commit sets to session)
   const handleLogExercise = useCallback(() => {
     if (!session.selectedExercise || currentSets.length === 0) {
-      toast('Add at least one set!', 'error');
+      toast(t('logPage.addAtLeastOneSet'), 'error');
       return;
     }
 
@@ -164,10 +167,10 @@ export function LogPage() {
 
     session.addExercise(exercise);
     play('save');
-    toast(`${session.selectedExercise} logged — ${currentSets.length} sets`, 'success');
+    toast(t('logPage.exerciseLogged', { name: session.selectedExercise, count: currentSets.length }), 'success');
     session.clearCurrentSets();
     session.setExercise('');
-  }, [session, currentSets, play, toast, customStore]);
+  }, [session, currentSets, play, toast, customStore, t]);
 
   // Not started yet — Whoop-style start screen
   const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -184,14 +187,14 @@ export function LogPage() {
             <div className="w-16 h-16 rounded-2xl bg-forge-green/10 border border-forge-green/20 flex items-center justify-center shadow-[0_0_24px_rgba(46,204,113,0.15)]">
               <Dumbbell size={30} className="text-forge-green" />
             </div>
-            <span className="text-forge-green/60 text-[10px] font-condensed tracking-widest uppercase mt-1">Ready</span>
+            <span className="text-forge-green/60 text-[10px] font-condensed tracking-widest uppercase mt-1">{t('logPage.ready')}</span>
           </div>
         </div>
 
         {/* Headline */}
         <h2 className="text-forge-green font-display text-4xl tracking-tight mb-1">FORGE</h2>
         <p className="text-forge-muted text-sm text-center max-w-[220px] mb-6 leading-relaxed">
-          Start a session to log exercises, track sets and hit PRs.
+          {t('logPage.startTagline')}
         </p>
 
         {/* Quick stat pills */}
@@ -201,7 +204,7 @@ export function LogPage() {
             <span className="text-forge-dim text-[11px] font-condensed">{today}</span>
           </div>
           <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
-            <span className="text-forge-muted text-[11px] font-condensed">{session.exercises.length > 0 ? `${session.exercises.length} pending` : 'No active session'}</span>
+            <span className="text-forge-muted text-[11px] font-condensed">{session.exercises.length > 0 ? t('logPage.pending', { count: session.exercises.length }) : t('logPage.noActiveSession')}</span>
           </div>
         </div>
 
@@ -226,10 +229,10 @@ export function LogPage() {
           onClick={handleStartSession}
           className="relative bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-14 py-4 rounded-2xl font-condensed font-bold text-xl cursor-pointer press-scale min-h-[56px] shadow-[0_8px_32px_rgba(46,204,113,0.35)] tracking-wider transition-all duration-200 hover:shadow-[0_8px_40px_rgba(46,204,113,0.5)]"
         >
-          START SESSION
+          {t('logPage.startSession')}
         </button>
 
-        <p className="text-forge-dim text-[11px] mt-4 font-condensed">Tap to begin tracking</p>
+        <p className="text-forge-dim text-[11px] mt-4 font-condensed">{t('logPage.tapToBegin')}</p>
       </div>
   ) : (
     <div className="page-enter p-4 space-y-4 pb-32">
@@ -240,7 +243,7 @@ export function LogPage() {
         <>
           {/* Muscle group */}
           <div>
-            <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block mb-2.5">Muscle Group</label>
+            <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block mb-2.5">{t('logPage.muscleGroup')}</label>
             <MuscleGroupPicker
               selected={session.selectedMuscle}
               onSelect={handleMuscleSelect}
@@ -258,7 +261,7 @@ export function LogPage() {
 
           {/* Exercise */}
           <div>
-            <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block mb-2.5">Exercise</label>
+            <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block mb-2.5">{t('logPage.exercise')}</label>
             <ExerciseAutocomplete
               muscle={session.selectedMuscle}
               value={session.selectedExercise ?? ''}
@@ -270,7 +273,7 @@ export function LogPage() {
           {session.selectedExercise && (
             <div className="space-y-3">
               <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block">
-                Sets — <span className="text-forge-green/80">{session.selectedExercise}</span>
+                {t('logPage.setsLabel')} — <span className="text-forge-green/80">{session.selectedExercise}</span>
               </label>
               <SetLogger
                 exerciseName={session.selectedExercise}
@@ -283,7 +286,7 @@ export function LogPage() {
                   onClick={handleLogExercise}
                   className="w-full mt-1 bg-gradient-to-br from-forge-green/20 to-forge-green/10 text-forge-green border border-forge-green/30 py-3 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] hover:bg-forge-green/25 hover:border-forge-green/50 transition-all duration-200 shadow-[0_2px_12px_rgba(46,204,113,0.1)]"
                 >
-                  Log Exercise · {currentSets.length} {currentSets.length === 1 ? 'set' : 'sets'}
+                  {t('logPage.logExercise', { count: currentSets.length })}
                 </button>
               )}
             </div>
@@ -296,7 +299,7 @@ export function LogPage() {
           {session.exercises.length > 0 && (
             <div className="space-y-2">
               <label className="text-forge-muted text-[11px] font-condensed tracking-widest uppercase block">
-                Logged · <span className="text-forge-green/80">{session.exercises.length} exercise{session.exercises.length !== 1 ? 's' : ''}</span>
+                {t('logPage.loggedLabel')} · <span className="text-forge-green/80">{t('logPage.exerciseCount', { count: session.exercises.length })}</span>
               </label>
               {session.exercises.map((ex, i) => (
                 <LoggedExerciseCard key={i} ex={ex} index={i} />
@@ -312,8 +315,8 @@ export function LogPage() {
           {session.bwExercises.length > 0 && (
             <div className="space-y-2">
               <label className="label-cap">
-                Logged · <span className="text-forge-green/80">
-                  {session.bwExercises.length} exercise{session.bwExercises.length !== 1 ? 's' : ''}
+                {t('logPage.loggedLabel')} · <span className="text-forge-green/80">
+                  {t('logPage.exerciseCount', { count: session.bwExercises.length })}
                 </span>
               </label>
               {session.bwExercises.map((ex, i) => (
@@ -324,10 +327,10 @@ export function LogPage() {
                   <div className="flex-1 min-w-0">
                     <div className="text-forge-text text-[14px] font-condensed font-semibold truncate">{ex.name}</div>
                     <div className="text-forge-muted text-[11px] font-mono">
-                      {ex.sets.length} sets · {ex.sets.reduce((a, s) => a + s.reps, 0)} total
+                      {t('logPage.bwSummary', { count: ex.sets.length, total: ex.sets.reduce((a, s) => a + s.reps, 0) })}
                     </div>
                   </div>
-                  <span className="text-forge-green/60 text-[10px] font-condensed uppercase">{ex.muscle}</span>
+                  <span className="text-forge-green/60 text-[10px] font-condensed uppercase">{ex.muscle ? t('muscles.' + String(ex.muscle).toLowerCase()) : ''}</span>
                 </div>
               ))}
             </div>
@@ -342,10 +345,10 @@ export function LogPage() {
         <button
           onClick={() => setShowSaveModal(true)}
           className="fixed bottom-24 right-4 z-30 bg-gradient-to-br from-red-500 to-red-700 text-white px-6 py-3.5 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] shadow-[0_4px_24px_rgba(239,68,68,0.4)] hover:shadow-[0_4px_32px_rgba(239,68,68,0.55)] transition-all duration-200 flex items-center gap-2"
-          aria-label="End workout"
+          aria-label={t('logPage.endWorkout')}
         >
           <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
-          End Session
+          {t('logPage.endSession')}
         </button>
       )}
 
