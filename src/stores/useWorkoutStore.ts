@@ -1,7 +1,10 @@
 import { create } from 'zustand';
-import { readStorage, writeStorage } from '../lib/storage';
+import { readStorage, writeStorage, normalizeWorkoutList } from '../lib/storage';
 import { STORAGE_KEYS } from '../lib/constants';
 import type { Workout } from '../types/workout';
+
+const loadWorkouts = (): Workout[] =>
+  normalizeWorkoutList<Workout>(readStorage<Workout[]>(STORAGE_KEYS.WORKOUTS, []));
 
 interface WorkoutState {
   workouts: Workout[];
@@ -13,10 +16,10 @@ interface WorkoutState {
 }
 
 export const useWorkoutStore = create<WorkoutState>((set, get) => ({
-  workouts: readStorage<Workout[]>(STORAGE_KEYS.WORKOUTS, []),
+  workouts: loadWorkouts(),
 
   hydrate: () => {
-    set({ workouts: readStorage<Workout[]>(STORAGE_KEYS.WORKOUTS, []) });
+    set({ workouts: loadWorkouts() });
   },
 
   addWorkout: (w) => {

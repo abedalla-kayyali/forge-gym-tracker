@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { readStorage, writeStorage, removeStorage } from '../storage';
+import { readStorage, writeStorage, removeStorage, normalizeWorkoutList } from '../storage';
 
 describe('storage bridge', () => {
   beforeEach(() => {
@@ -71,5 +71,53 @@ describe('storage bridge', () => {
     const result = readStorage<typeof profile>('forge_profile', { name: '', age: 0, weight_kg: 0 });
     expect(result.name).toBe('John');
     expect(result.weight_kg).toBe(85);
+  });
+});
+
+describe('normalizeWorkoutList', () => {
+  it('returns [] for non-array input', () => {
+    expect(normalizeWorkoutList(null)).toEqual([]);
+    expect(normalizeWorkoutList(undefined)).toEqual([]);
+    expect(normalizeWorkoutList({})).toEqual([]);
+  });
+
+  it('guarantees an exercises array even when missing (the crash repro)', () => {
+    // Legacy/old-schema record with no `exercises` field — previously crashed
+    // consumers doing `for (const ex of w.exercises)`.
+    const out = normalizeWorkoutList<{ exercises: unknown[] }>([{ id: 'w1', date: '2026-01-01' }]);
+    expect(out[0]!.exercises).toEqual([]);
+    // Must be iterable
+    expect(() => [...out[0]!.exercises]).not.toThrow();
+  });
+
+  it('coerces a non-array exercises field to []', () => {
+    const out = normalizeWorkoutList<{ exercises: unknown[] }>([
+      { id: 'w1', date: '2026-01-01', exercises: 'oops' },
+    ]);
+    expect(out[0]!.exercises).toEqual([]);
+  });
+
+  it('guarantees each exercise has a sets array', () => {
+    const out = normalizeWorkoutList<{ exercises: { sets: unknown[] }[] }>([
+      { id: 'w1', date: '2026-01-01', exercises: [{ name: 'Bench', muscle: 'chest' }] },
+    ]);
+    expect(out[0]!.exercises[0]!.sets).toEqual([]);
+  });
+
+  it('coerces a missing/invalid date to an empty string', () => {
+    const out = normalizeWorkoutList<{ date: string }>([{ id: 'w1' }, { id: 'w2', date: 123 }]);
+    expect(out[0]!.date).toBe('');
+    expect(out[1]!.date).toBe('');
+  });
+
+  it('drops non-object entries but preserves valid records', () => {
+    const out = normalizeWorkoutList<{ id?: string; exercises: unknown[] }>([
+      null,
+      'bad',
+      { id: 'w1', date: '2026-01-01', exercises: [{ name: 'Squat', muscle: 'legs', sets: [{ reps: 5, weight: 100 }] }] },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0]!.id).toBe('w1');
+    expect(out[0]!.exercises[0]).toMatchObject({ name: 'Squat' });
   });
 });

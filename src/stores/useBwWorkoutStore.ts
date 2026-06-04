@@ -1,7 +1,10 @@
 import { create } from 'zustand';
-import { readStorage, writeStorage } from '../lib/storage';
+import { readStorage, writeStorage, normalizeWorkoutList } from '../lib/storage';
 import { STORAGE_KEYS } from '../lib/constants';
 import type { BwWorkout } from '../types/workout';
+
+const loadBwWorkouts = (): BwWorkout[] =>
+  normalizeWorkoutList<BwWorkout>(readStorage<BwWorkout[]>(STORAGE_KEYS.BW_WORKOUTS, []));
 
 interface BwWorkoutState {
   bwWorkouts: BwWorkout[];
@@ -13,10 +16,10 @@ interface BwWorkoutState {
 }
 
 export const useBwWorkoutStore = create<BwWorkoutState>((set, get) => ({
-  bwWorkouts: readStorage<BwWorkout[]>(STORAGE_KEYS.BW_WORKOUTS, []),
+  bwWorkouts: loadBwWorkouts(),
 
   hydrate: () => {
-    set({ bwWorkouts: readStorage<BwWorkout[]>(STORAGE_KEYS.BW_WORKOUTS, []) });
+    set({ bwWorkouts: loadBwWorkouts() });
   },
 
   addWorkout: (w) => {

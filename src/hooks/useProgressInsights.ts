@@ -97,8 +97,8 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
 
     // ── Streak (consecutive days with any session) ─────────────────────────
     const allDays = new Set<string>();
-    [...workouts, ...bwWorkouts].forEach((w) => allDays.add(w.date.slice(0, 10)));
-    cardio.forEach((c) => allDays.add(c.date.slice(0, 10)));
+    [...workouts, ...bwWorkouts].forEach((w) => { if (w.date) allDays.add(w.date.slice(0, 10)); });
+    cardio.forEach((c) => { if (typeof c.date === 'string' && c.date) allDays.add(c.date.slice(0, 10)); });
     let days = 0;
     const cursor = new Date(todayKey);
     const yesterdayKey = new Date(cursor.getTime() - 86400000).toISOString().slice(0, 10);
@@ -212,9 +212,9 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
         percentageToNext: Math.round(lvl.progress ?? 0),
       },
       today: {
-        sessions: workouts.filter((w) => w.date.startsWith(todayKey)).length
-          + bwWorkouts.filter((w) => w.date.startsWith(todayKey)).length
-          + cardio.filter((c) => c.date.startsWith(todayKey)).length,
+        sessions: workouts.filter((w) => w.date?.startsWith(todayKey)).length
+          + bwWorkouts.filter((w) => w.date?.startsWith(todayKey)).length
+          + cardio.filter((c) => typeof c.date === 'string' && c.date.startsWith(todayKey)).length,
         anyLoggedToday: todayLogged,
       },
     };

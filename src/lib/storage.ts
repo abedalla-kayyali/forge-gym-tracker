@@ -51,3 +51,28 @@ export function removeStorage(key: string): void {
     window.dispatchEvent(new CustomEvent('forge:mutated', { detail: { key, removed: true } }));
   } catch { /* noop */ }
 }
+
+/**
+ * Defensive normalizer for persisted workout-like records. Data written by the
+ * legacy app (or any older schema) may be missing array fields; this guarantees
+ * every record has an `exercises` array (each exercise with a `sets` array) and
+ * a string `date`, so consumers that iterate them can't crash on bad data.
+ * Non-object entries are dropped.
+ */
+export function normalizeWorkoutList<T>(raw: unknown): T[] {
+  if (!Array.isArray(raw)) return [];
+  const out: T[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const rec = item as Record<string, unknown>;
+    const exercises = (Array.isArray(rec.exercises) ? rec.exercises : [])
+      .filter((e): e is Record<string, unknown> => !!e && typeof e === 'object')
+      .map((e) => ({ ...e, sets: Array.isArray(e.sets) ? e.sets : [] }));
+    out.push({
+      ...rec,
+      date: typeof rec.date === 'string' ? rec.date : '',
+      exercises,
+    } as unknown as T);
+  }
+  return out;
+}
