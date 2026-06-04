@@ -2,22 +2,12 @@ import { useMemo, type ReactNode } from 'react';
 import type { MuscleGroup } from '../../types/workout';
 import { PATHS_BY_MUSCLE, DECORATIVE_PATHS, BODY_MAP_CENTROIDS, BODY_MAP_VIEWBOX } from './body-map-data';
 
-// Forearms: potrace captured 29 hand/finger detail paths — keep only the 7 main forearm body paths
-// Decorative: last 6 entries are traced Shutterstock watermark text characters — strip them
-const CLEAN_PATHS_BY_MUSCLE = {
-  ...PATHS_BY_MUSCLE,
-  forearms: PATHS_BY_MUSCLE.forearms.slice(0, 7),
-};
-const CLEAN_DECORATIVE_PATHS = DECORATIVE_PATHS.slice(0, -6);
-
 /**
- * FORGE anatomical body map — 100% SVG, every path vector-traced from the
- * reference asset `public/body-map.png`. No raster at runtime.
+ * FORGE anatomical body map — 100% SVG, hand-authored clean regions.
  *
- * Viewbox: PNG pixel space (475×460). Front silhouette on the left half,
- * back on the right half. Each MuscleGroup is rendered as a <g> containing
- * the union of its traced sub-paths, so clicking any part of (e.g.) the
- * chest lights up both pecs simultaneously.
+ * Viewbox 240×360: FRONT figure on the left, BACK figure on the right. Each
+ * MuscleGroup is a <g> of deliberately-placed, non-overlapping rounded regions
+ * (e.g. both pecs for chest), so tapping a muscle reliably selects that muscle.
  */
 
 export const MUSCLE_LABELS: Record<MuscleGroup, string> = {
@@ -107,7 +97,7 @@ export function BodyMap({
         {/* Decorative paths — head, neck, knees, hands, feet, artifacts.
             Drawn first (behind), not clickable. */}
         <g pointerEvents="none">
-          {CLEAN_DECORATIVE_PATHS.map((d, i) => (
+          {DECORATIVE_PATHS.map((d, i) => (
             <path
               key={i}
               d={d}
@@ -121,7 +111,7 @@ export function BodyMap({
 
         {/* Muscle groups — each rendered as a <g> with all its traced sub-paths */}
         {MUSCLE_ORDER.map((muscle) => {
-          const paths = CLEAN_PATHS_BY_MUSCLE[muscle];
+          const paths = PATHS_BY_MUSCLE[muscle];
           if (!paths || paths.length === 0) return null;
 
           const active = selectedSet.has(muscle);
@@ -196,9 +186,9 @@ export function BodyMap({
 
         {/* Front / Back labels */}
         <g pointerEvents="none">
-          <text x={120} y={456} textAnchor="middle" fontSize="10" fontFamily="Barlow Condensed, sans-serif"
+          <text x={70} y={352} textAnchor="middle" fontSize="11" fontFamily="Barlow Condensed, sans-serif"
                 fontWeight={600} letterSpacing={2.5} fill="rgba(255,255,255,0.45)">FRONT</text>
-          <text x={355} y={456} textAnchor="middle" fontSize="10" fontFamily="Barlow Condensed, sans-serif"
+          <text x={170} y={352} textAnchor="middle" fontSize="11" fontFamily="Barlow Condensed, sans-serif"
                 fontWeight={600} letterSpacing={2.5} fill="rgba(255,255,255,0.45)">BACK</text>
         </g>
       </svg>
