@@ -57,6 +57,9 @@ export const STORAGE_KEYS = {
   CARDIO_CUSTOM_TYPES: 'forge_cardio_custom_types',
   SAVED_ANSWERS: 'forge_saved_answers',
 
+  // Active session (device-local, transient — never synced to cloud)
+  ACTIVE_SESSION: 'forge_active_session',
+
   // Flags & meta
   GUEST: 'forge_guest',
   ONBOARDING_DONE: 'forge_onboarding_v238_done',

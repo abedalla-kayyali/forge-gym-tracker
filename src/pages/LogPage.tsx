@@ -81,10 +81,15 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
 }
 
 export function LogPage() {
-  const [workoutType, setWorkoutType] = useState<WorkoutType>('weighted');
-  const [currentSets, setCurrentSets] = useState<WorkoutSet[]>([]);
-  const [showSaveModal, setShowSaveModal] = useState(false);
   const session = useSessionStore();
+  // Initialise the mode from a restored session so resume keeps the right tab.
+  const [workoutType, setWorkoutType] = useState<WorkoutType>(() => {
+    const s = useSessionStore.getState();
+    return s.active ? (s.type as WorkoutType) : 'weighted';
+  });
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  // In-progress sets now live in the session store so they survive a reload.
+  const currentSets = session.currentSets;
   const customStore = useCustomExercisesStore();
   const { toast } = useToast();
   const { play } = useFX();
@@ -105,7 +110,7 @@ export function LogPage() {
     (muscle: MuscleGroup) => {
       session.setMuscle(muscle);
       session.setExercise('');
-      setCurrentSets([]);
+      session.clearCurrentSets();
     },
     [session],
   );
@@ -114,7 +119,7 @@ export function LogPage() {
   const handleExerciseSelect = useCallback(
     (name: string) => {
       session.setExercise(name);
-      setCurrentSets([]);
+      session.clearCurrentSets();
     },
     [session],
   );
@@ -122,16 +127,16 @@ export function LogPage() {
   // Add a set to current exercise
   const handleAddSet = useCallback(
     (set: WorkoutSet) => {
-      setCurrentSets((prev) => [...prev, set]);
+      session.addCurrentSet(set);
       play('tap');
     },
-    [play],
+    [session, play],
   );
 
   // Remove a set
   const handleRemoveSet = useCallback((index: number) => {
-    setCurrentSets((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+    session.removeCurrentSet(index);
+  }, [session]);
 
   // Log the exercise (commit sets to session)
   const handleLogExercise = useCallback(() => {
@@ -160,7 +165,7 @@ export function LogPage() {
     session.addExercise(exercise);
     play('save');
     toast(`${session.selectedExercise} logged — ${currentSets.length} sets`, 'success');
-    setCurrentSets([]);
+    session.clearCurrentSets();
     session.setExercise('');
   }, [session, currentSets, play, toast, customStore]);
 
