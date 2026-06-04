@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  TrendingUp, Target, Activity as MuscleIcon, Scaling, BarChart3,
+  TrendingUp, TrendingDown, Minus, Target, Activity as MuscleIcon, Scaling, BarChart3,
   Flame, Dumbbell, Trophy, HeartPulse, Award, ChevronRight,
-  Ruler, Weight, Gauge,
+  Ruler, Weight, Gauge, Plus, Minus as MinusIcon, Zap,
 } from 'lucide-react';
 import { TabPills } from '../components/ui/TabPills';
 import { Badge } from '../components/ui/Badge';
@@ -23,12 +24,29 @@ import { useWorkoutStore } from '../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../stores/useBwWorkoutStore';
 import { useCardioStore } from '../stores/useCardioStore';
 import { useBodyStore } from '../stores/useBodyStore';
+import { readStorage, writeStorage } from '../lib/storage';
+import { STORAGE_KEYS } from '../lib/constants';
+import { formatNumber } from '../lib/format';
 
 type StatsTab = 'overview' | 'progress' | 'muscles' | 'body' | 'cali';
 type PeriodKey = '7D' | '1M' | '3M' | '6M' | 'ALL';
 
 const SESSION_TARGET = 12;
 const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const WEEKLY_GOAL_MIN = 1;
+const WEEKLY_GOAL_MAX = 14;
+const WEEKLY_GOAL_DEFAULT = 4;
+
+/** Days to look back for a given progress period; null = all-time. */
+function daysForPeriod(period: PeriodKey): number | null {
+  switch (period) {
+    case '7D': return 7;
+    case '1M': return 30;
+    case '3M': return 90;
+    case '6M': return 180;
+    default:   return null;
+  }
+}
 
 const TABS: { key: StatsTab; label: string; Icon: typeof TrendingUp }[] = [
   { key: 'overview',  label: 'Overview', Icon: BarChart3 },
@@ -68,6 +86,169 @@ function RingCircle({
       </svg>
       <span className="label-cap text-[9px] text-forge-muted">{label}</span>
       <span className="font-condensed font-bold text-[13px] text-forge-text -mt-1">{value}</span>
+    </div>
+  );
+}
+
+// ─── Momentum headline (#30) ─────────────────────────────────────────────────
+
+function startOfWeek(d: Date): Date {
+  const x = new Date(d);
+  const dow = x.getDay() === 0 ? 6 : x.getDay() - 1; // 0 = Mon
+  x.setDate(x.getDate() - dow);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function DeltaPill({ pct }: { pct: number | null }) {
+  const dir = pct == null || pct === 0 ? 'flat' : pct > 0 ? 'up' : 'down';
+  const Icon = dir === 'up' ? TrendingUp : dir === 'down' ? TrendingDown : Minus;
+  const color = dir === 'up' ? '#2ecc71' : dir === 'down' ? '#EF4444' : '#8a8a8a';
+  const bg = dir === 'up' ? 'rgba(46,204,113,0.12)' : dir === 'down' ? 'rgba(239,68,68,0.12)' : 'rgba(138,138,138,0.1)';
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-full shrink-0"
+      style={{ color, background: bg }}
+    >
+      <Icon size={11} aria-hidden />
+      {pct != null && pct !== 0 ? `${pct > 0 ? '+' : ''}${formatNumber(pct)}%` : '—'}
+    </span>
+  );
+}
+
+function MomentumHeadline() {
+  const { t } = useTranslation();
+  const { play } = useFX();
+  const workouts   = useWorkoutStore((s) => s.workouts);
+  const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
+  const cardio     = useCardioStore((s) => s.entries);
+
+  const [goal, setGoal] = useState<number>(() => {
+    const v = Number(readStorage<number>(STORAGE_KEYS.WEEKLY_GOAL, WEEKLY_GOAL_DEFAULT));
+    return Number.isFinite(v) && v > 0 ? v : WEEKLY_GOAL_DEFAULT;
+  });
+
+  const setGoalClamped = (next: number) => {
+    const clamped = Math.max(WEEKLY_GOAL_MIN, Math.min(WEEKLY_GOAL_MAX, next));
+    setGoal(clamped);
+    writeStorage(STORAGE_KEYS.WEEKLY_GOAL, clamped);
+    play('tap');
+  };
+
+  const m = useMemo(() => {
+    const now = new Date();
+    const thisStart = startOfWeek(now).getTime();
+    const lastStart = thisStart - 7 * 86400000;
+
+    const volOf = (w: { exercises: { sets: { reps: number; weight: number }[] }[] }) =>
+      w.exercises.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + s.reps * (s.weight || 0), 0), 0);
+
+    let thisSessions = 0, lastSessions = 0, thisVol = 0, lastVol = 0;
+
+    const bump = (dateStr: string, vol: number) => {
+      const t0 = new Date(dateStr).getTime();
+      if (t0 >= thisStart) { thisSessions++; thisVol += vol; }
+      else if (t0 >= lastStart && t0 < thisStart) { lastSessions++; lastVol += vol; }
+    };
+
+    for (const w of workouts) bump(w.date, volOf(w));
+    for (const w of bwWorkouts) bump(w.date, 0);
+    for (const c of cardio) bump(c.date, 0);
+
+    const pct = (cur: number, prev: number): number | null =>
+      prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : null;
+
+    return {
+      thisSessions, lastSessions, thisVol: Math.round(thisVol), lastVol: Math.round(lastVol),
+      sessionsPct: pct(thisSessions, lastSessions),
+      volPct: pct(thisVol, lastVol),
+    };
+  }, [workouts, bwWorkouts, cardio]);
+
+  const goalPct = Math.min(100, Math.round((m.thisSessions / goal) * 100));
+  const goalMet = m.thisSessions >= goal;
+
+  return (
+    <div className="card-elevated card-luxury-border rounded-2xl p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-forge-green/15 border border-forge-green/25 flex items-center justify-center shrink-0">
+          <Zap size={13} className="text-forge-green" />
+        </div>
+        <span className="label-cap-strong text-forge-text flex-1">{t('stats.momentum.title')}</span>
+        <span className="text-[10px] font-mono text-forge-muted">{t('stats.momentum.thisVsLast')}</span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="label-cap text-[9px] text-forge-muted">{t('stats.momentum.sessions')}</span>
+            <DeltaPill pct={m.sessionsPct} />
+          </div>
+          <div className="kpi-md text-forge-green leading-none mt-1">{formatNumber(m.thisSessions)}</div>
+          <div className="text-[10px] text-forge-dim font-mono mt-0.5">
+            {t('stats.momentum.lastWeek', { count: m.lastSessions })}
+          </div>
+        </div>
+        <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="label-cap text-[9px] text-forge-muted">{t('stats.momentum.volume')}</span>
+            <DeltaPill pct={m.volPct} />
+          </div>
+          <div className="kpi-md text-forge-green leading-none mt-1">
+            {m.thisVol >= 1000 ? `${formatNumber(m.thisVol / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(m.thisVol)}
+            <span className="text-[10px] text-forge-muted ml-0.5">{t('log.kgUnit')}</span>
+          </div>
+          <div className="text-[10px] text-forge-dim font-mono mt-0.5">
+            {t('stats.momentum.lastWeekVol', {
+              vol: m.lastVol >= 1000 ? `${formatNumber(m.lastVol / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(m.lastVol),
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Weekly goal stepper + progress */}
+      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] px-3 py-2.5 space-y-2">
+        <div className="flex items-center gap-3">
+          <Target size={14} className={goalMet ? 'text-forge-green' : 'text-forge-muted'} aria-hidden />
+          <span className="text-[11px] font-condensed text-forge-text-soft flex-1">
+            {t('stats.momentum.weeklyGoal')}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setGoalClamped(goal - 1)}
+              disabled={goal <= WEEKLY_GOAL_MIN}
+              className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-forge-text-soft disabled:opacity-30 cursor-pointer press-scale transition-colors hover:bg-white/10"
+              aria-label={t('stats.momentum.decreaseGoal')}
+            >
+              <MinusIcon size={13} />
+            </button>
+            <span className="kpi-sm text-forge-green font-mono w-6 text-center tabular-nums" aria-live="polite">
+              {formatNumber(goal)}
+            </span>
+            <button
+              type="button"
+              onClick={() => setGoalClamped(goal + 1)}
+              disabled={goal >= WEEKLY_GOAL_MAX}
+              className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-forge-text-soft disabled:opacity-30 cursor-pointer press-scale transition-colors hover:bg-white/10"
+              aria-label={t('stats.momentum.increaseGoal')}
+            >
+              <Plus size={13} />
+            </button>
+          </div>
+        </div>
+        <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{ width: `${goalPct}%`, background: goalMet ? '#F5A623' : '#2ecc71' }}
+          />
+        </div>
+        <div className="text-[10px] font-mono text-forge-muted text-center">
+          {goalMet
+            ? t('stats.momentum.goalMet', { count: m.thisSessions })
+            : t('stats.momentum.goalProgress', { done: m.thisSessions, goal })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -995,6 +1176,7 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 export function StatsPage() {
+  const { t } = useTranslation();
   const [tab, setTab]       = useState<StatsTab>('overview');
   const [period, setPeriod] = useState<PeriodKey>('1M');
   const { play } = useFX();
@@ -1016,6 +1198,7 @@ export function StatsPage() {
       {/* ── OVERVIEW ─────────────────────────────────────────────────── */}
       {tab === 'overview' && (
         <div className="space-y-4">
+          <MomentumHeadline />
           <ActivityRingsHero />
           <XPBar />
           <TopPRs />
@@ -1042,13 +1225,13 @@ export function StatsPage() {
           <PeriodSummary period={period} />
           <WeeklyVolumeBars period={period} />
           <ProgressiveOverload period={period} />
-          <DashboardSection title={`Volume by Muscle (${period})`}>
-            <VolumeChart />
+          <DashboardSection title={t('stats.sections.volumeTrend', { period })}>
+            <VolumeChart days={daysForPeriod(period)} />
           </DashboardSection>
-          <DashboardSection title={`Exercise Frequency (${period})`}>
-            <FreqChart />
+          <DashboardSection title={t('stats.sections.frequency', { period })}>
+            <FreqChart days={daysForPeriod(period)} />
           </DashboardSection>
-          <DashboardSection title="PR Board">
+          <DashboardSection title={t('stats.sections.prBoard')}>
             <PRBoard />
           </DashboardSection>
         </div>

@@ -6,3 +6,4 @@ export { BalanceChart } from './components/BalanceChart';
 export { WeightChart } from './components/WeightChart';
 export { MuscleHeatmap } from './components/MuscleHeatmap';
 export { PRBoard } from './components/PRBoard';
+export { ExerciseProgressionCard } from './components/ExerciseProgressionCard';

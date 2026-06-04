@@ -68,6 +68,11 @@ const SYNC_KEYS = [
   'forge-custom-exercises-v1',
 ].filter(Boolean) as string[];
 
+/** Whether a localStorage key participates in cloud sync (used for per-key push). */
+export function isSyncKey(key: string): boolean {
+  return SYNC_KEYS.includes(key);
+}
+
 export type SyncState = 'idle' | 'pulling' | 'pushing' | 'error' | 'unavailable';
 
 let state: SyncState = 'idle';

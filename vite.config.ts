@@ -51,6 +51,42 @@ export default defineConfig(({ command }) => ({
         // app.html is the build entry and the only precached HTML.
         navigateFallback: 'app.html',
         navigateFallbackDenylist: [/^\/api/, /\/[^/?]+\.[^/]+$/],
+        // Runtime caching for metered/spotty MENA connections: keep the app
+        // usable on flaky networks by serving recent cached responses.
+        runtimeCaching: [
+          {
+            // Supabase REST/Auth/Realtime calls (any *.supabase.co origin).
+            // NetworkFirst with a short timeout so we fall back to cache fast
+            // on slow links instead of hanging.
+            urlPattern: ({ url }) => /^https:\/\/[^/]+\.supabase\.co$/.test(url.origin),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 48, maxAgeSeconds: 86400 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Google Fonts stylesheets — revalidate in the background.
+            urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // Google Fonts font files — immutable, cache for a year.
+            urlPattern: ({ url }) => url.origin === 'https://fonts.gstatic.com',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

@@ -5,6 +5,18 @@ import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../../../stores/useBwWorkoutStore';
 import { useCardioStore } from '../../../stores/useCardioStore';
 
+/**
+ * YYYY-MM-DD key from a Date's LOCAL components (not UTC).
+ * toISOString() would bucket a late-night session at e.g. UTC+3 onto the
+ * previous UTC day and silently break the streak. Always bucket days locally.
+ */
+function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 /** Collect all session ISO dates across stores, sorted most-recent first. */
 function useAllSessions() {
   const workouts = useWorkoutStore((s) => s.workouts);
@@ -29,13 +41,16 @@ function useStreak(): { days: number; last: string | null } {
     const first = sessions[0];
     if (!first) return { days: 0, last: null };
 
-    // Collect unique YYYY-MM-DD date strings
+    // Collect unique local YYYY-MM-DD date keys
     const days = new Set<string>();
-    for (const s of sessions) days.add(s.date.slice(0, 10));
+    for (const s of sessions) days.add(localDateKey(new Date(s.date)));
 
     const today = new Date();
-    const todayKey = today.toISOString().slice(0, 10);
-    const yesterdayKey = new Date(today.getTime() - 86400000).toISOString().slice(0, 10);
+    today.setHours(0, 0, 0, 0);
+    const todayKey = localDateKey(today);
+    const yesterdayDate = new Date(today);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = localDateKey(yesterdayDate);
 
     // Streak must end today OR yesterday (grace period)
     if (!days.has(todayKey) && !days.has(yesterdayKey)) {
@@ -45,10 +60,10 @@ function useStreak(): { days: number; last: string | null } {
     let streak = 0;
     const cursor = new Date(today);
     // If today has no session but yesterday does, start from yesterday
-    if (!days.has(todayKey)) cursor.setTime(cursor.getTime() - 86400000);
-    while (days.has(cursor.toISOString().slice(0, 10))) {
+    if (!days.has(todayKey)) cursor.setDate(cursor.getDate() - 1);
+    while (days.has(localDateKey(cursor))) {
       streak++;
-      cursor.setTime(cursor.getTime() - 86400000);
+      cursor.setDate(cursor.getDate() - 1);
     }
     return { days: streak, last: first.date };
   }, [sessions]);

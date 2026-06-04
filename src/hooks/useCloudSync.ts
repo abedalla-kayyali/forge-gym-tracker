@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './useAuth';
 import {
-  pullFromCloud, pushToCloud, reconcilePush, onSyncStateChange, getSyncState, type SyncState,
+  pullFromCloud, pushToCloud, pushKey, reconcilePush, isSyncKey, onSyncStateChange, getSyncState, type SyncState,
 } from '../lib/cloudSync';
 import { initSyncQueueListeners, drainSyncQueue } from '../lib/syncQueue';
 import { rehydrateAllStores } from '../stores/rehydrate';
@@ -21,6 +21,7 @@ export function useCloudSync() {
   const [state, setState] = useState<SyncState>(getSyncState());
   const didInitialSync = useRef(false);
   const pushTimer = useRef<number | null>(null);
+  const pendingKeys = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const unsub = onSyncStateChange(setState);
@@ -57,14 +58,33 @@ export function useCloudSync() {
   useEffect(() => {
     if (!user) return;
 
-    const debouncedPush = () => {
+    // Push only the keys that actually changed (coalesced over a debounce
+    // window) instead of re-uploading every key on each mutation — far lighter
+    // on metered connections.
+    const flush = () => {
+      const keys = [...pendingKeys.current];
+      pendingKeys.current.clear();
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (raw == null) continue;
+        let value: unknown;
+        try { value = JSON.parse(raw); } catch { continue; }
+        void pushKey(key, value);
+      }
+    };
+    const scheduleFlush = () => {
       if (pushTimer.current) window.clearTimeout(pushTimer.current);
-      pushTimer.current = window.setTimeout(() => {
-        pushToCloud();
-      }, 1500);
+      pushTimer.current = window.setTimeout(flush, 1500);
     };
 
-    const onMutated = () => debouncedPush();
+    const onMutated = (e: Event) => {
+      const key = (e as CustomEvent).detail?.key as string | undefined;
+      if (key && isSyncKey(key)) {
+        pendingKeys.current.add(key);
+        scheduleFlush();
+      }
+    };
+    // Full flush on background/unload as a safety net (catches anything missed).
     const onVisibility = () => { if (document.visibilityState === 'hidden') pushToCloud(); };
     const onPageHide = () => { pushToCloud(); };
 

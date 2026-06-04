@@ -33,10 +33,16 @@ export function readStorage<T>(key: string, fallback: T): T {
 }
 
 export function writeStorage<T>(key: string, value: T): void {
-  if (PLAIN_STRING_KEYS.has(key)) {
-    localStorage.setItem(key, String(value));
-  } else {
-    localStorage.setItem(key, JSON.stringify(value));
+  const serialized = PLAIN_STRING_KEYS.has(key) ? String(value) : JSON.stringify(value);
+  try {
+    localStorage.setItem(key, serialized);
+  } catch (e) {
+    // Storage full — surface it instead of silently losing the write (common
+    // on cheap/older devices). Don't stamp/mutate when the write failed.
+    if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22)) {
+      try { window.dispatchEvent(new CustomEvent('forge:storage-full', { detail: { key } })); } catch { /* noop */ }
+    }
+    return;
   }
   // Stamp local mutation timestamp for cloud-sync last-writer-wins
   try {

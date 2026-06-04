@@ -24,7 +24,8 @@
     "close": "إغلاق",
     "loading": "جارٍ التحميل…",
     "add": "إضافة",
-    "remove": "إزالة"
+    "remove": "إزالة",
+    "storageFull": "مساحة التخزين ممتلئة — تعذّر الحفظ. حرّر بعض المساحة على جهازك."
   },
   "header": {
     "expand": "توسيع الشريط العلوي",
@@ -361,6 +362,14 @@
       "aria": "موصى به: درّب {{muscle}}",
       "trainNext": "درّب التالي",
       "tap": "اضغط ←"
+    },
+    "plateau": {
+      "chip_zero": "متوقّف منذ {{weeks}} أسبوع — خفّف الحمل أو غيّر التمرين",
+      "chip_one": "متوقّف منذ أسبوع — خفّف الحمل أو غيّر التمرين",
+      "chip_two": "متوقّف منذ أسبوعين — خفّف الحمل أو غيّر التمرين",
+      "chip_few": "متوقّف منذ {{weeks}} أسابيع — خفّف الحمل أو غيّر التمرين",
+      "chip_many": "متوقّف منذ {{weeks}} أسبوعًا — خفّف الحمل أو غيّر التمرين",
+      "chip_other": "متوقّف منذ {{weeks}} أسبوع — خفّف الحمل أو غيّر التمرين"
     }
   },
   "restTimer": {
@@ -590,5 +599,73 @@
     "importSuccess_few": "تم استيراد {{count}} مفاتيح بيانات.",
     "importSuccess_many": "تم استيراد {{count}} مفتاح بيانات.",
     "importSuccess_other": "تم استيراد {{count}} مفتاح بيانات."
+  },
+  "stats": {
+    "momentum": {
+      "title": "الزخم",
+      "thisVsLast": "هذا الأسبوع مقابل السابق",
+      "sessions": "الجلسات",
+      "volume": "الحِمل",
+      "lastWeek_zero": "لا جلسات الأسبوع الماضي",
+      "lastWeek_one": "{{count}} الأسبوع الماضي",
+      "lastWeek_two": "{{count}} الأسبوع الماضي",
+      "lastWeek_few": "{{count}} الأسبوع الماضي",
+      "lastWeek_many": "{{count}} الأسبوع الماضي",
+      "lastWeek_other": "{{count}} الأسبوع الماضي",
+      "lastWeekVol": "{{vol}} الأسبوع الماضي",
+      "weeklyGoal": "هدف الجلسات الأسبوعي",
+      "increaseGoal": "زيادة الهدف الأسبوعي",
+      "decreaseGoal": "خفض الهدف الأسبوعي",
+      "goalProgress": "{{done}} من {{goal}} هذا الأسبوع",
+      "goalMet_zero": "تحقق الهدف",
+      "goalMet_one": "تحقق الهدف — جلسة واحدة",
+      "goalMet_two": "تحقق الهدف — جلستان",
+      "goalMet_few": "تحقق الهدف — {{count}} جلسات",
+      "goalMet_many": "تحقق الهدف — {{count}} جلسة",
+      "goalMet_other": "تحقق الهدف — {{count}} جلسة"
+    },
+    "sections": {
+      "volumeTrend": "اتجاه الحِمل ({{period}})",
+      "frequency": "تكرار التمارين ({{period}})",
+      "prBoard": "لوحة الأرقام القياسية"
+    },
+    "volumeTrend": {
+      "empty": "لا توجد بيانات حِمل بعد",
+      "volume": "الحِمل",
+      "vsPrior": "مقارنة بالفترة السابقة",
+      "up": "ارتفاع",
+      "down": "انخفاض",
+      "deltaAria": "الحِمل في {{direction}} بنسبة {{pct}}٪ مقارنة بالفترة السابقة"
+    },
+    "freqChart": {
+      "empty": "لا توجد بيانات تمارين بعد",
+      "frequency": "التكرار"
+    },
+    "prBoard": {
+      "empty": "لا أرقام قياسية بعد — ابدأ التمرين!",
+      "rowAria": "{{name}}، رقم قياسي {{weight}} كيلوغرام لـ {{reps}} تكرارًا. اضغط لعرض التقدّم.",
+      "reps_zero": "{{count}} تكرار",
+      "reps_one": "تكرار واحد",
+      "reps_two": "تكراران",
+      "reps_few": "{{count}} تكرارات",
+      "reps_many": "{{count}} تكرارًا",
+      "reps_other": "{{count}} تكرار"
+    },
+    "progression": {
+      "empty": "لا توجد بيانات كافية لرسم التقدّم بعد",
+      "topSet": "أثقل مجموعة",
+      "e1rm": "أقصى تكرار تقديري",
+      "up": "ارتفاع",
+      "down": "انخفاض",
+      "flat": "ثابت",
+      "trendAria": "أقصى تكرار تقديري في {{direction}} بنسبة {{pct}}٪ عبر الجلسات المسجّلة",
+      "tapToExpand": "اضغط على تمرين لعرض تقدّمه",
+      "sessions_zero": "لا جلسات مسجّلة",
+      "sessions_one": "جلسة واحدة مسجّلة",
+      "sessions_two": "جلستان مسجّلتان",
+      "sessions_few": "{{count}} جلسات مسجّلة",
+      "sessions_many": "{{count}} جلسة مسجّلة",
+      "sessions_other": "{{count}} جلسة مسجّلة"
+    }
   }
 }

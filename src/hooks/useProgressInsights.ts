@@ -10,6 +10,18 @@ const VALID_MUSCLES: MuscleGroup[] = [
   'forearms', 'core', 'legs', 'glutes', 'calves',
 ];
 
+/**
+ * YYYY-MM-DD key from a Date's LOCAL components (not UTC).
+ * Using toISOString() would bucket a late-night session at e.g. UTC+3 onto the
+ * previous UTC day, silently breaking streaks. Always bucket days locally.
+ */
+function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export interface ProgressInsights {
   /** Weekly goal ring data. */
   weekGoal: {
@@ -67,7 +79,7 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
 
   return useMemo(() => {
     const now = new Date();
-    const todayKey = now.toISOString().slice(0, 10);
+    const todayKey = localDateKey(now);
     const startOfWeek = new Date(now);
     startOfWeek.setHours(0, 0, 0, 0);
     const dayIdx = (startOfWeek.getDay() + 6) % 7; // 0 = Monday
@@ -82,9 +94,9 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
 
     // ── Weekly sessions (unique days count — two sessions same day = 1) ─────
     const weekDays = new Set<string>();
-    workouts.filter((w) => inThisWeek(w.date)).forEach((w) => weekDays.add(w.date.slice(0, 10)));
-    bwWorkouts.filter((w) => inThisWeek(w.date)).forEach((w) => weekDays.add(w.date.slice(0, 10)));
-    cardio.filter((c) => inThisWeek(c.date)).forEach((c) => weekDays.add(c.date.slice(0, 10)));
+    workouts.filter((w) => inThisWeek(w.date)).forEach((w) => weekDays.add(localDateKey(new Date(w.date))));
+    bwWorkouts.filter((w) => inThisWeek(w.date)).forEach((w) => weekDays.add(localDateKey(new Date(w.date))));
+    cardio.filter((c) => inThisWeek(c.date)).forEach((c) => weekDays.add(localDateKey(new Date(c.date))));
     const current = weekDays.size;
     const daysLeftInWeek = Math.max(0, 7 - (dayIdx + 1));
     const percentage = Math.min(100, Math.round((current / weeklyGoal) * 100));
@@ -97,30 +109,40 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
 
     // ── Streak (consecutive days with any session) ─────────────────────────
     const allDays = new Set<string>();
-    [...workouts, ...bwWorkouts].forEach((w) => { if (w.date) allDays.add(w.date.slice(0, 10)); });
-    cardio.forEach((c) => { if (typeof c.date === 'string' && c.date) allDays.add(c.date.slice(0, 10)); });
+    [...workouts, ...bwWorkouts].forEach((w) => { if (w.date) allDays.add(localDateKey(new Date(w.date))); });
+    cardio.forEach((c) => { if (typeof c.date === 'string' && c.date) allDays.add(localDateKey(new Date(c.date))); });
     let days = 0;
-    const cursor = new Date(todayKey);
-    const yesterdayKey = new Date(cursor.getTime() - 86400000).toISOString().slice(0, 10);
+    const cursor = new Date(now);
+    cursor.setHours(0, 0, 0, 0);
+    const yesterdayDate = new Date(cursor);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = localDateKey(yesterdayDate);
     const todayLogged = allDays.has(todayKey);
     const atRisk = !todayLogged;
     if (allDays.has(todayKey) || allDays.has(yesterdayKey)) {
-      if (!allDays.has(todayKey)) cursor.setTime(cursor.getTime() - 86400000);
-      while (allDays.has(cursor.toISOString().slice(0, 10))) {
+      if (!allDays.has(todayKey)) cursor.setDate(cursor.getDate() - 1);
+      while (allDays.has(localDateKey(cursor))) {
         days++;
-        cursor.setTime(cursor.getTime() - 86400000);
+        cursor.setDate(cursor.getDate() - 1);
       }
     }
-    // Longest ever
+    // Longest ever — walk sorted local day keys, comparing each to the day before.
     const sortedDays = [...allDays].sort();
     let longest = 0, run = 0, last: string | null = null;
     for (const d of sortedDays) {
-      if (last && new Date(d).getTime() - new Date(last).getTime() === 86400000) run++;
-      else run = 1;
+      let consecutive = false;
+      if (last) {
+        const prev = new Date(d + 'T00:00:00');
+        prev.setDate(prev.getDate() - 1);
+        consecutive = localDateKey(prev) === last;
+      }
+      run = consecutive ? run + 1 : 1;
       if (run > longest) longest = run;
       last = d;
     }
-    const hoursUntilMidnight = Math.floor((new Date(todayKey + 'T23:59:59').getTime() - Date.now()) / 3600000);
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+    const hoursUntilMidnight = Math.floor((endOfToday.getTime() - Date.now()) / 3600000);
 
     // ── Next PR target (closest-to-beat weighted lift) ─────────────────────
     const prMap = new Map<string, { weight: number; reps: number; date: string }>();
@@ -212,9 +234,9 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
         percentageToNext: Math.round(lvl.progress ?? 0),
       },
       today: {
-        sessions: workouts.filter((w) => w.date?.startsWith(todayKey)).length
-          + bwWorkouts.filter((w) => w.date?.startsWith(todayKey)).length
-          + cardio.filter((c) => typeof c.date === 'string' && c.date.startsWith(todayKey)).length,
+        sessions: workouts.filter((w) => w.date && localDateKey(new Date(w.date)) === todayKey).length
+          + bwWorkouts.filter((w) => w.date && localDateKey(new Date(w.date)) === todayKey).length
+          + cardio.filter((c) => typeof c.date === 'string' && c.date && localDateKey(new Date(c.date)) === todayKey).length,
         anyLoggedToday: todayLogged,
       },
     };

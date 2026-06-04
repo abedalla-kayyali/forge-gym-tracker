@@ -5,6 +5,7 @@ import { useCloudSync } from './hooks/useCloudSync';
 import { useSettingsStore } from './stores/useSettingsStore';
 import { applyLanguage } from './lib/i18n';
 import { unlockAudio } from './lib/fx';
+import { useTranslation } from 'react-i18next';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -317,6 +318,8 @@ export default function App() {
     signInWithEmail, signUpWithEmail, resetPassword, continueAsGuest,
   } = useAuth();
   useCloudSync();
+  const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Keep i18next + document direction/lang in sync with the language setting at
   // runtime (covers the settings toggle and cloud-rehydrated settings alike).
@@ -335,6 +338,13 @@ export default function App() {
       window.removeEventListener('keydown', unlock);
     };
   }, []);
+
+  // Surface a toast when a local write fails because storage is full.
+  useEffect(() => {
+    const onFull = () => toast(t('common.storageFull'), 'error');
+    window.addEventListener('forge:storage-full', onFull);
+    return () => window.removeEventListener('forge:storage-full', onFull);
+  }, [toast, t]);
 
   if (loading) return <SplashScreen />;
 

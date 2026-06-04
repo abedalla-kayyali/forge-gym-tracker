@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProgressInsights } from '../../../hooks/useProgressInsights';
-import { Target, Trophy, Zap, Flame, CheckCircle2, TrendingUp, AlertCircle } from 'lucide-react';
+import { Target, Trophy, Zap, Flame, CheckCircle2, TrendingUp, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useFX } from '../../../hooks/useFX';
+import { useWorkoutStore } from '../../../stores/useWorkoutStore';
+import { detectPlateaus, type PlateauEntry } from '../../../lib/trainingScience';
 import type { MuscleGroup } from '../../../types/workout';
 
 interface Props {
@@ -23,7 +26,32 @@ interface Props {
  */
 export function ProgressGuide({ onPickMuscle, weeklyGoal = 4 }: Props) {
   const insights = useProgressInsights(weeklyGoal);
+  const workouts = useWorkoutStore((s) => s.workouts);
   const { play } = useFX();
+
+  // Plateau / deload signal (#21): prefer a stuck lift that trains the
+  // recommended muscle, otherwise surface the most-stuck lift overall.
+  const recMuscle = insights.recommendedMuscle?.muscle ?? null;
+  const plateau = useMemo<PlateauEntry | null>(() => {
+    const plateaus = detectPlateaus(workouts);
+    if (plateaus.length === 0) return null;
+
+    if (recMuscle) {
+      // Exercise names that target the recommended muscle.
+      const namesForMuscle = new Set<string>();
+      for (const w of workouts) {
+        for (const ex of w.exercises) {
+          if (ex.muscle?.toLowerCase() === recMuscle) {
+            namesForMuscle.add(ex.name.trim().toLowerCase());
+          }
+        }
+      }
+      const matched = plateaus.find((p) => namesForMuscle.has(p.exerciseName.trim().toLowerCase()));
+      if (matched) return matched;
+    }
+    // Fallback: most-stuck lift (detectPlateaus is sorted desc by weeksStuck).
+    return plateaus[0] ?? null;
+  }, [workouts, recMuscle]);
 
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -32,6 +60,7 @@ export function ProgressGuide({ onPickMuscle, weeklyGoal = 4 }: Props) {
       <NextPRCard data={insights.nextPR} />
       <RecommendedMuscle
         data={insights.recommendedMuscle}
+        plateau={plateau}
         onPick={(m) => { play('tap'); onPickMuscle?.(m); }}
       />
     </div>
@@ -235,9 +264,11 @@ function NextPRCard({ data }: { data: ReturnType<typeof useProgressInsights>['ne
 
 function RecommendedMuscle({
   data,
+  plateau,
   onPick,
 }: {
   data: ReturnType<typeof useProgressInsights>['recommendedMuscle'];
+  plateau: PlateauEntry | null;
   onPick: (m: MuscleGroup) => void;
 }) {
   const { t } = useTranslation();
@@ -252,6 +283,7 @@ function RecommendedMuscle({
           <div className="text-forge-text-soft text-[12px] font-condensed mt-0.5">
             {t('progressGuide.coachPick.allFresh')}
           </div>
+          {plateau && <PlateauChip plateau={plateau} />}
         </div>
       </div>
     );
@@ -280,10 +312,30 @@ function RecommendedMuscle({
         <div className="text-forge-muted text-[11px] font-condensed mt-0.5">
           {data.reason}
         </div>
+        {plateau && <PlateauChip plateau={plateau} />}
       </div>
       <div className="text-forge-green text-[11px] font-condensed uppercase tracking-wider shrink-0">
         {t('progressGuide.coachPick.tap')}
       </div>
     </button>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Plateau / deload chip (#21) — subtle amber nudge to deload or switch
+// ═════════════════════════════════════════════════════════════════════════════
+
+function PlateauChip({ plateau }: { plateau: PlateauEntry }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="mt-1.5 inline-flex items-center gap-1 max-w-full rounded-lg bg-amber-500/10 border border-amber-500/25 px-2 py-1"
+      title={plateau.exerciseName}
+    >
+      <AlertTriangle size={10} className="text-amber-400 shrink-0" aria-hidden />
+      <span className="text-amber-300/90 text-[10px] font-condensed leading-tight truncate">
+        {t('progressGuide.plateau.chip', { weeks: plateau.weeksStuck, count: plateau.weeksStuck })}
+      </span>
+    </div>
   );
 }

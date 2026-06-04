@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Repeat, Clock } from 'lucide-react';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../../../stores/useBwWorkoutStore';
 import { useFX } from '../../../hooks/useFX';
+import { ExerciseProgressionCard } from '../../dashboard/components/ExerciseProgressionCard';
 import type { MuscleGroup } from '../../../types/workout';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
   scope?: 'weighted' | 'bodyweight' | 'any';
   /** Number of rows to show (default 3). */
   limit?: number;
+  /** When true (and no `onPick`), tapping a row expands a progression chart. */
+  enableProgression?: boolean;
 }
 
 interface ExerciseStat {
@@ -34,11 +37,13 @@ function daysAgo(iso: string, t: (key: string, options?: Record<string, unknown>
   return t('topExercises.monthsAgo', { count: Math.floor(diff / 30) });
 }
 
-export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: Props) {
+export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3, enableProgression = false }: Props) {
   const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
   const { play } = useFX();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const progressionMode = !onPick && enableProgression;
 
   const stats = useMemo<ExerciseStat[]>(() => {
     if (!muscle) return [];
@@ -113,18 +118,25 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
 
       <ul className="space-y-1.5" role="list">
         {stats.map((s, i) => {
-          const disabled = !onPick;
+          const interactive = !!onPick || progressionMode;
+          const isOpen = progressionMode && expanded === s.name;
+          const handleClick = () => {
+            play('tap');
+            if (onPick) { onPick(s.name); return; }
+            if (progressionMode) setExpanded(isOpen ? null : s.name);
+          };
           return (
             <li key={s.name}>
               <button
                 type="button"
-                disabled={disabled}
-                onClick={() => { play('tap'); onPick?.(s.name); }}
+                disabled={!interactive}
+                onClick={handleClick}
+                aria-expanded={progressionMode ? isOpen : undefined}
                 className={[
                   'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 min-h-[52px]',
                   'bg-white/[0.03] border border-white/[0.05]',
                   'transition-all duration-200',
-                  !disabled ? 'cursor-pointer hover:bg-forge-green/10 hover:border-forge-green/30 press-scale' : 'opacity-80 cursor-default',
+                  interactive ? 'cursor-pointer hover:bg-forge-green/10 hover:border-forge-green/30 press-scale' : 'opacity-80 cursor-default',
                 ].join(' ')}
                 aria-label={
                   s.bestWeight
@@ -182,6 +194,11 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
                   )}
                 </div>
               </button>
+              {isOpen && (
+                <div className="mt-1.5">
+                  <ExerciseProgressionCard exercise={s.name} workouts={workouts} />
+                </div>
+              )}
             </li>
           );
         })}
@@ -190,6 +207,11 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3 }: P
       {onPick && (
         <p className="text-[10px] text-forge-muted text-center font-condensed pt-1">
           {t('topExercises.tapToLoad')}
+        </p>
+      )}
+      {progressionMode && (
+        <p className="text-[10px] text-forge-muted text-center font-condensed pt-1">
+          {t('stats.progression.tapToExpand')}
         </p>
       )}
     </div>

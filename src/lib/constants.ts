@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   // Steps & health
   STEPS: 'forge_steps',
   STEP_GOAL: 'forge_step_goal',
+  WEEKLY_GOAL: 'forge_weekly_goal',
   READINESS: 'forge_readiness',
   READINESS_TODAY: 'forge_readiness_today',
   CHECKINS: 'forge_checkins',

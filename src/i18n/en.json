@@ -24,7 +24,8 @@
     "close": "Close",
     "loading": "Loading…",
     "add": "Add",
-    "remove": "Remove"
+    "remove": "Remove",
+    "storageFull": "Storage full — couldn't save. Free up space on your device."
   },
   "header": {
     "expand": "Expand header",
@@ -361,6 +362,14 @@
       "aria": "Recommended: train {{muscle}}",
       "trainNext": "Train next",
       "tap": "Tap →"
+    },
+    "plateau": {
+      "chip_zero": "Stuck {{weeks}} weeks — deload or switch",
+      "chip_one": "Stuck {{weeks}} week — deload or switch",
+      "chip_two": "Stuck {{weeks}} weeks — deload or switch",
+      "chip_few": "Stuck {{weeks}} weeks — deload or switch",
+      "chip_many": "Stuck {{weeks}} weeks — deload or switch",
+      "chip_other": "Stuck {{weeks}} weeks — deload or switch"
     }
   },
   "restTimer": {
@@ -590,5 +599,73 @@
     "importSuccess_few": "Imported {{count}} data keys.",
     "importSuccess_many": "Imported {{count}} data keys.",
     "importSuccess_other": "Imported {{count}} data keys."
+  },
+  "stats": {
+    "momentum": {
+      "title": "Momentum",
+      "thisVsLast": "This week vs last",
+      "sessions": "Sessions",
+      "volume": "Volume",
+      "lastWeek_zero": "No sessions last week",
+      "lastWeek_one": "{{count}} last week",
+      "lastWeek_two": "{{count}} last week",
+      "lastWeek_few": "{{count}} last week",
+      "lastWeek_many": "{{count}} last week",
+      "lastWeek_other": "{{count}} last week",
+      "lastWeekVol": "{{vol}} last week",
+      "weeklyGoal": "Weekly session goal",
+      "increaseGoal": "Increase weekly goal",
+      "decreaseGoal": "Decrease weekly goal",
+      "goalProgress": "{{done}} of {{goal}} this week",
+      "goalMet_zero": "Goal reached",
+      "goalMet_one": "Goal reached — {{count}} session",
+      "goalMet_two": "Goal reached — {{count}} sessions",
+      "goalMet_few": "Goal reached — {{count}} sessions",
+      "goalMet_many": "Goal reached — {{count}} sessions",
+      "goalMet_other": "Goal reached — {{count}} sessions"
+    },
+    "sections": {
+      "volumeTrend": "Volume Trend ({{period}})",
+      "frequency": "Exercise Frequency ({{period}})",
+      "prBoard": "PR Board"
+    },
+    "volumeTrend": {
+      "empty": "No volume data yet",
+      "volume": "Volume",
+      "vsPrior": "vs prior period",
+      "up": "up",
+      "down": "down",
+      "deltaAria": "Volume {{direction}} {{pct}}% versus the previous period"
+    },
+    "freqChart": {
+      "empty": "No exercise data yet",
+      "frequency": "Frequency"
+    },
+    "prBoard": {
+      "empty": "No PRs yet — start lifting!",
+      "rowAria": "{{name}}, personal record {{weight}} kilograms for {{reps}} reps. Tap to view progression.",
+      "reps_zero": "{{count}} reps",
+      "reps_one": "{{count}} rep",
+      "reps_two": "{{count}} reps",
+      "reps_few": "{{count}} reps",
+      "reps_many": "{{count}} reps",
+      "reps_other": "{{count}} reps"
+    },
+    "progression": {
+      "empty": "Not enough data to chart progression yet",
+      "topSet": "Top set",
+      "e1rm": "Est. 1RM",
+      "up": "up",
+      "down": "down",
+      "flat": "flat",
+      "trendAria": "Estimated 1RM trending {{direction}} {{pct}}% across logged sessions",
+      "tapToExpand": "Tap an exercise to see its progression",
+      "sessions_zero": "No sessions logged",
+      "sessions_one": "{{count}} session logged",
+      "sessions_two": "{{count}} sessions logged",
+      "sessions_few": "{{count}} sessions logged",
+      "sessions_many": "{{count}} sessions logged",
+      "sessions_other": "{{count}} sessions logged"
+    }
   }
 }
