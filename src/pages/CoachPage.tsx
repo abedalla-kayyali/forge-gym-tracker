@@ -1,22 +1,26 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import {
-  Dumbbell,
-  Zap,
-  Smile,
-  Activity,
-  Target,
-  Moon,
-  Droplets,
-  Scaling,
+  Dumbbell, Zap, Smile, Activity, Target, Moon, Droplets, Scaling,
+  Sun, Lightbulb, CalendarDays, Apple, AlertTriangle, Play, ChevronRight,
+  Utensils, Plus, Minus, ArrowRight, Trophy,
 } from 'lucide-react';
 import { useCoachState } from '../features/coach';
 import { useCoachTriggers } from '../features/coach';
 import { useNutritionStore } from '../stores/useNutritionStore';
 import { useProfileStore } from '../stores/useProfileStore';
 import { useWorkoutStore } from '../stores/useWorkoutStore';
+import { useBwWorkoutStore } from '../stores/useBwWorkoutStore';
+import { useSessionStore } from '../stores/useSessionStore';
 import { getExercisesByMuscle } from '../lib/exercises-db';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { TabPills } from '../components/ui/TabPills';
+import { BodyMap } from '../components/body/BodyMap';
+import { detectPlateaus, calcTrainingScore, suggestNextWeight } from '../lib/trainingScience';
+import { useFX } from '../hooks/useFX';
+import type { MuscleGroup } from '../types/workout';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,13 +36,13 @@ interface CheckInValues {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'today', label: 'Today' },
-  { id: 'insights', label: 'Insights' },
-  { id: 'train', label: 'Train' },
-  { id: 'plan', label: 'Plan' },
-  { id: 'nutrition', label: 'Nutrition' },
-  { id: 'cali', label: 'Cali' },
+const TABS: { id: TabId; label: string; Icon: typeof Sun }[] = [
+  { id: 'today',     label: 'Today',     Icon: Sun },
+  { id: 'insights',  label: 'Insights',  Icon: Lightbulb },
+  { id: 'train',     label: 'Train',     Icon: Dumbbell },
+  { id: 'plan',      label: 'Plan',      Icon: CalendarDays },
+  { id: 'nutrition', label: 'Nutrition', Icon: Apple },
+  { id: 'cali',      label: 'Cali',      Icon: Scaling },
 ];
 
 const CHECKIN_FIELDS: { key: keyof CheckInValues; label: string; Icon: React.ElementType }[] = [
@@ -49,18 +53,13 @@ const CHECKIN_FIELDS: { key: keyof CheckInValues; label: string; Icon: React.Ele
   { key: 'sleep', label: 'Sleep', Icon: Moon },
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  fresh: 'text-blue-400',
-  recovering: 'text-yellow-400',
-  ready: 'text-forge-green',
-  overdue: 'text-red-400',
-};
-
-const STATUS_BG: Record<string, string> = {
-  fresh: 'bg-blue-500/10 border-blue-500/20',
-  recovering: 'bg-yellow-500/10 border-yellow-500/20',
-  ready: 'bg-forge-green/10 border-forge-green/20',
-  overdue: 'bg-red-500/10 border-red-500/20',
+// Semantic color tiers for recovery / score / macros. Extracted to avoid
+// hex-string sprinkling and to keep everything on-brand.
+const RECOVERY_TIER: Record<string, { label: string; text: string; bg: string; border: string; dot: string }> = {
+  fresh:      { label: 'Fresh',      text: 'text-forge-green',  bg: 'bg-forge-green/10',    border: 'border-forge-green/25',  dot: '#2ecc71' },
+  recovering: { label: 'Recovering', text: 'text-[#8BC34A]',     bg: 'bg-[#8BC34A]/10',       border: 'border-[#8BC34A]/25',    dot: '#8BC34A' },
+  ready:      { label: 'Ready',      text: 'text-forge-warn',    bg: 'bg-forge-warn/10',      border: 'border-forge-warn/25',    dot: '#F59E0B' },
+  overdue:    { label: 'Overdue',    text: 'text-forge-danger',  bg: 'bg-forge-danger/10',    border: 'border-forge-danger/25',  dot: '#EF4444' },
 };
 
 const SEVERITY_BADGE: Record<string, 'success' | 'warning' | 'default' | 'danger'> = {
@@ -83,107 +82,125 @@ function getDayLabel(date: Date): string {
 
 function getGreeting(streak: number, totalWorkouts7d: number, name: string): string {
   const first = name ? `, ${name}` : '';
-  if (streak >= 14) return `On fire${first}! ${streak}-day streak — unstoppable!`;
+  if (streak >= 14) return `On fire${first}! ${streak}-day streak — unstoppable.`;
   if (streak >= 7) return `Crushing it${first}! ${streak} days strong.`;
   if (totalWorkouts7d >= 4) return `Great week${first}! ${totalWorkouts7d} sessions logged.`;
   if (totalWorkouts7d >= 1) return `Good work${first}! Keep the momentum going.`;
   return `Ready to train${first}? Let's get to work.`;
 }
 
-// ─── Sub-tabs ─────────────────────────────────────────────────────────────────
+function formatFullDate(): string {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric',
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TODAY TAB
+// ═════════════════════════════════════════════════════════════════════════════
 
 function TodayTab() {
   const { totalWorkouts7d, totalWorkouts30d, streak, muscleRecovery } = useCoachState();
   const profile = useProfileStore((s) => s.profile);
   const readinessToday = useProfileStore((s) => s.readinessToday);
   const setReadinessToday = useProfileStore((s) => s.setReadinessToday);
+  const session = useSessionStore();
+  const navigate = useNavigate();
+  const { play } = useFX();
 
   const [checkIn, setCheckIn] = useState<CheckInValues>({
-    energy: 3,
-    mood: 3,
-    soreness: 3,
-    motivation: 3,
-    sleep: 3,
+    energy: 3, mood: 3, soreness: 3, motivation: 3, sleep: 3,
   });
 
-  // Derive today's check-in from stored readiness
   const alreadyCheckedIn = readinessToday != null;
 
   const handleSave = () => {
     const score = Math.round((checkIn.energy + checkIn.mood + checkIn.motivation) / 3);
     setReadinessToday({
       score,
-      sleep_hours: checkIn.sleep * 1.4, // scale 1-5 → ~1.4–7h
+      sleep_hours: checkIn.sleep * 1.4,
       stress: checkIn.soreness,
-      notes: new Date().toISOString(),
+      notes: JSON.stringify(checkIn),   // persist per-dimension
     });
+    play('success');
   };
 
-  // Best muscle to train today (ready or overdue, longest rest)
+  // Parse per-dimension values from notes blob (fallback to score)
+  const storedValues = useMemo(() => {
+    if (!readinessToday) return null;
+    try {
+      return JSON.parse(readinessToday.notes ?? '{}') as Partial<CheckInValues>;
+    } catch { return null; }
+  }, [readinessToday]);
+
   const bestMuscle = muscleRecovery
     .filter((m) => m.status === 'ready' || m.status === 'overdue')
     .sort((a, b) => b.daysSince - a.daysSince)[0];
 
+  const handleStartWorkout = () => {
+    if (bestMuscle) {
+      session.start('weighted');
+      session.setMuscle(bestMuscle.muscle as MuscleGroup);
+    }
+    play('tap');
+    navigate('/log');
+  };
+
   return (
     <div className="space-y-5">
-      {/* Mascot greeting */}
-      <Card>
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)', boxShadow: '0 0 20px rgba(0,255,136,0.35)' }}>
-            <Dumbbell className="w-7 h-7 text-black" />
+      {/* Dynamic date hero */}
+      <Card variant="luxury">
+        <div className="flex items-center gap-4 p-1">
+          <div
+            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-forge-green to-forge-green-dark flex items-center justify-center flex-shrink-0 shadow-[0_6px_20px_rgba(46,204,113,0.35)]"
+          >
+            <Dumbbell size={26} className="text-forge-bg-deep" />
           </div>
-          <div>
-            <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-0.5">Today</p>
-            <p className="text-forge-text font-display text-base leading-snug">
+          <div className="flex-1 min-w-0">
+            <span className="label-cap">{formatFullDate()}</span>
+            <p className="text-forge-text font-condensed font-semibold text-[15px] leading-snug mt-0.5">
               {getGreeting(streak, totalWorkouts7d, profile.name)}
             </p>
           </div>
         </div>
       </Card>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* Stats row — premium KPI */}
+      <div className="grid grid-cols-3 gap-2">
         {[
-          { label: 'This Week', value: totalWorkouts7d },
+          { label: 'This Week',  value: totalWorkouts7d },
           { label: 'This Month', value: totalWorkouts30d },
           { label: 'Day Streak', value: streak },
         ].map(({ label, value }) => (
-          <Card key={label} className="text-center py-3">
-            <p className="text-forge-green text-2xl font-display"
-              style={{ textShadow: '0 0 12px rgba(0,255,136,0.5)' }}>
-              {value}
-            </p>
-            <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mt-1">
-              {label}
-            </p>
-          </Card>
+          <div key={label} className="card-elevated rounded-2xl p-3 text-center">
+            <div className="kpi-lg text-forge-green leading-none">{value}</div>
+            <div className="label-cap text-[9px] mt-1">{label}</div>
+          </div>
         ))}
       </div>
 
       {/* Daily Check-In */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Daily Check-In
-        </p>
+        <div className="label-cap mb-3">Daily Check-In</div>
         {alreadyCheckedIn ? (
           <Card>
-            <p className="text-forge-green text-sm font-condensed font-semibold mb-3">
-              Checked in today
-            </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-forge-green glow-dot" />
+              <span className="text-forge-green text-[12px] font-condensed font-semibold uppercase tracking-wider">Checked in today</span>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
               {CHECKIN_FIELDS.map(({ key, label, Icon }) => {
-                // Map stored values back to display
-                let val = 3;
-                if (key === 'energy') val = readinessToday?.score ?? 3;
-                else if (key === 'sleep') val = Math.round((readinessToday?.sleep_hours ?? 4.2) / 1.4);
-                else if (key === 'soreness') val = readinessToday?.stress ?? 3;
-                else val = readinessToday?.score ?? 3;
+                const val = storedValues?.[key] ?? (
+                  key === 'energy' ? readinessToday?.score ?? 3 :
+                  key === 'sleep' ? Math.round((readinessToday?.sleep_hours ?? 4.2) / 1.4) :
+                  key === 'soreness' ? readinessToday?.stress ?? 3 :
+                  readinessToday?.score ?? 3
+                );
                 return (
                   <div key={key} className="text-center">
-                    <Icon className="w-4 h-4 text-forge-dim mx-auto mb-1" />
-                    <p className="text-forge-green text-lg font-display">{val}</p>
-                    <p className="text-forge-dim text-xs font-condensed">{label}</p>
+                    <Icon size={12} className="text-forge-green mx-auto mb-1" />
+                    <div className="kpi-md text-forge-green">{val}</div>
+                    <div className="text-[9px] text-forge-muted font-condensed uppercase tracking-wider mt-0.5">{label}</div>
                   </div>
                 );
               })}
@@ -192,60 +209,67 @@ function TodayTab() {
         ) : (
           <Card>
             <div className="space-y-4">
-              {CHECKIN_FIELDS.map(({ key, label, Icon }) => (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-forge-dim" />
-                      <span className="text-forge-text text-sm font-condensed">{label}</span>
+              {CHECKIN_FIELDS.map(({ key, label, Icon }) => {
+                const val = checkIn[key];
+                // Color changes with value — 1-2 amber, 3 green, 4-5 bright green
+                const color = val <= 2 ? '#F59E0B' : val === 3 ? '#8BC34A' : '#2ecc71';
+                return (
+                  <div key={key}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <Icon size={14} className="text-forge-muted" />
+                        <span className="text-forge-text text-[13px] font-condensed">{label}</span>
+                      </div>
+                      <span className="kpi-md" style={{ color }}>{val}<span className="text-forge-muted text-[10px] ml-0.5">/5</span></span>
                     </div>
-                    <span className="text-forge-green text-sm font-display"
-                      style={{ textShadow: '0 0 8px rgba(0,255,136,0.4)' }}>
-                      {checkIn[key]}
-                    </span>
+                    <input
+                      type="range" min={1} max={5} value={val}
+                      onChange={(e) => {
+                        setCheckIn((prev) => ({ ...prev, [key]: Number(e.target.value) }));
+                        play('tap');
+                      }}
+                      className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, ${color} ${(val - 1) * 25}%, rgba(255,255,255,0.06) ${(val - 1) * 25}%)`,
+                      }}
+                      aria-label={label}
+                    />
                   </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={5}
-                    value={checkIn[key]}
-                    onChange={(e) =>
-                      setCheckIn((prev) => ({ ...prev, [key]: Number(e.target.value) }))
-                    }
-                    className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                    style={{ accentColor: '#00ff88' }}
-                  />
-                  <div className="flex justify-between text-forge-dim text-xs font-condensed mt-0.5">
-                    <span>1</span><span>5</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <button
-              onClick={handleSave}
-              className="mt-4 w-full min-h-[44px] rounded-xl font-condensed font-semibold text-sm text-black press-scale cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)', boxShadow: '0 0 16px rgba(0,255,136,0.3)' }}>
-              Save Check-In
-            </button>
+            <div className="mt-4">
+              <Button onClick={handleSave} variant="primary" size="md" fullWidth>
+                Save Check-In
+              </Button>
+            </div>
           </Card>
         )}
       </div>
 
-      {/* Today's Recommendation */}
+      {/* Today's Recommendation with CTA */}
       {bestMuscle && (
         <div>
-          <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-            Today's Recommendation
-          </p>
-          <Card>
-            <p className="text-forge-text font-condensed text-sm">
-              Train{' '}
-              <span className="text-forge-green font-semibold capitalize">{bestMuscle.muscle}</span>
-              {' '}today —{' '}
-              {bestMuscle.daysSince === 999
-                ? 'never trained'
-                : `last trained ${bestMuscle.daysSince} day${bestMuscle.daysSince !== 1 ? 's' : ''} ago`}
-            </p>
+          <div className="label-cap mb-3">Today's Recommendation</div>
+          <Card variant="luxury" className="card-gold-border">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forge-gold/25 to-forge-gold/5 border border-forge-gold/30 flex items-center justify-center shrink-0">
+                <Target size={18} className="text-forge-gold" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-forge-text font-condensed font-semibold text-[14px]">
+                  Train <span className="text-forge-gold capitalize">{bestMuscle.muscle}</span> today
+                </div>
+                <div className="text-forge-muted text-[11px] font-condensed mt-0.5">
+                  {bestMuscle.daysSince === 999
+                    ? 'Never trained — lock it in'
+                    : `Last trained ${bestMuscle.daysSince} day${bestMuscle.daysSince !== 1 ? 's' : ''} ago`}
+                </div>
+              </div>
+            </div>
+            <Button onClick={handleStartWorkout} variant="luxury" size="md" fullWidth>
+              <Play size={14} /> Start Workout
+            </Button>
           </Card>
         </div>
       )}
@@ -253,29 +277,132 @@ function TodayTab() {
   );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// INSIGHTS TAB
+// ═════════════════════════════════════════════════════════════════════════════
+
 function InsightsTab() {
   const triggers = useCoachTriggers();
   const { muscleRecovery } = useCoachState();
+  const workouts = useWorkoutStore((s) => s.workouts);
+  const plateaus = detectPlateaus(workouts);
+  const score = calcTrainingScore(workouts);
+
+  const scoreTier =
+    score.score >= 80 ? { label: 'Dialed in',      color: '#58d68d' } :
+    score.score >= 60 ? { label: 'On track',        color: '#8BC34A' } :
+    score.score >= 40 ? { label: 'Needs work',      color: '#F59E0B' } :
+                        { label: 'Getting started', color: '#7a8289' };
+
+  // Freshness map for mini-body-map
+  const freshnessTints = useMemo(() => {
+    const tints: Partial<Record<MuscleGroup, string>> = {};
+    muscleRecovery.forEach((m) => {
+      const tier = RECOVERY_TIER[m.status];
+      if (tier) tints[m.muscle as MuscleGroup] = tier.dot;
+    });
+    return tints;
+  }, [muscleRecovery]);
 
   return (
     <div className="space-y-5">
+      {/* Training Score */}
+      <div>
+        <div className="label-cap mb-3">Training Score</div>
+        <Card variant="luxury">
+          <div className="flex items-center gap-4 p-1">
+            <div className="relative w-16 h-16 shrink-0">
+              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+                <circle
+                  cx="18" cy="18" r="15" fill="none"
+                  stroke="url(#score-grad)" strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray={`${(score.score / 100) * 94.25} 94.25`}
+                  style={{ transition: 'stroke-dasharray 0.6s ease-out' }}
+                />
+                <defs>
+                  <linearGradient id="score-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#58d68d" />
+                    <stop offset="100%" stopColor="#1e9e55" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="kpi-lg text-forge-green leading-none">{score.score}</span>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-condensed font-semibold text-[14px]" style={{ color: scoreTier.color }}>
+                {scoreTier.label}
+              </div>
+              <div className="flex items-center gap-3 text-[11px] font-condensed mt-0.5">
+                <span className="text-forge-muted">Trend <span className="text-forge-green ml-0.5">{score.volumeTrend}</span></span>
+                <span className="text-forge-muted">Consistency <span className="text-forge-green ml-0.5">{score.consistency}</span></span>
+              </div>
+              <div className="text-forge-dim text-[10px] font-mono mt-1">
+                {score.sessionsLast30Days} sessions last 30 days
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Body-map freshness preview */}
+      <div>
+        <div className="label-cap mb-3">Recovery Map</div>
+        <Card>
+          <BodyMap tints={freshnessTints} maxWidth={320} />
+        </Card>
+      </div>
+
+      {/* Plateau detection */}
+      {plateaus.length > 0 && (
+        <div>
+          <div className="label-cap mb-3 flex items-center gap-1.5">
+            <AlertTriangle size={12} className="text-forge-warn" />
+            Plateaus detected
+          </div>
+          <div className="space-y-2">
+            {plateaus.slice(0, 3).map((p) => (
+              <Card key={p.exerciseName}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{p.exerciseName}</div>
+                    <div className="text-forge-muted text-[11px] font-mono mt-0.5">
+                      Stuck {p.weeksStuck}w at {p.lastWeight > 0 ? `${p.lastWeight}kg · ` : ''}{p.lastReps} reps over {p.sessions} sessions
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-condensed text-forge-green/80">
+                      <Lightbulb size={10} />
+                      Try: drop-sets, pause-reps, or swap variation
+                    </div>
+                  </div>
+                  <Badge variant="warning" dot>Stall</Badge>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Coach Triggers */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Coach Alerts
-        </p>
+        <div className="label-cap mb-3">Coach Alerts</div>
         {triggers.length === 0 ? (
-          <Card>
-            <p className="text-forge-dim text-sm font-condensed text-center py-2">
-              No alerts — training looks balanced.
-            </p>
+          <Card className="text-center">
+            <div className="flex flex-col items-center gap-2 py-2">
+              <div className="w-10 h-10 rounded-full bg-forge-green/10 border border-forge-green/25 flex items-center justify-center">
+                <Activity size={16} className="text-forge-green" />
+              </div>
+              <span className="text-forge-text text-[13px] font-condensed">All systems green</span>
+              <span className="text-forge-muted text-[11px] font-condensed">Training looks balanced.</span>
+            </div>
           </Card>
         ) : (
           <div className="space-y-2">
             {triggers.map((t, i) => (
               <Card key={i}>
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-forge-text text-sm font-condensed flex-1">{t.message}</p>
+                  <p className="text-forge-text text-[13px] font-condensed flex-1">{t.message}</p>
                   <Badge variant={SEVERITY_BADGE[t.severity] ?? 'default'}>
                     {t.type}
                   </Badge>
@@ -288,79 +415,148 @@ function InsightsTab() {
 
       {/* Muscle Recovery Grid */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Muscle Recovery
-        </p>
+        <div className="label-cap mb-3">Muscle Recovery</div>
         <div className="grid grid-cols-2 gap-2">
-          {muscleRecovery.map((m) => (
-            <div
-              key={m.muscle}
-              className={`card-elevated rounded-2xl p-3 border ${STATUS_BG[m.status]}`}>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-forge-text text-sm font-condensed capitalize font-semibold">
-                  {m.muscle}
+          {muscleRecovery.map((m) => {
+            const tier = RECOVERY_TIER[m.status] ?? RECOVERY_TIER.overdue!;
+            return (
+              <div
+                key={m.muscle}
+                className={`card-elevated rounded-2xl p-3 border ${tier.bg} ${tier.border}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-forge-text text-[13px] font-condensed capitalize font-semibold">
+                    {m.muscle}
+                  </p>
+                  <span className={`text-[10px] font-condensed font-bold uppercase tracking-wider ${tier.text}`}>
+                    {tier.label}
+                  </span>
+                </div>
+                <p className="text-forge-muted text-[11px] font-mono">
+                  {m.daysSince === 999 ? 'Never trained' : `${m.daysSince}d ago · ${m.totalSets7d} sets / wk`}
                 </p>
-                <span className={`text-xs font-condensed font-bold uppercase ${STATUS_COLORS[m.status]}`}>
-                  {m.status}
-                </span>
               </div>
-              <p className="text-forge-dim text-xs font-condensed">
-                {m.daysSince === 999 ? 'Never trained' : `${m.daysSince}d ago`}
-              </p>
-              <p className="text-forge-dim text-xs font-condensed">
-                {m.totalSets7d} sets this week
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
   );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// TRAIN TAB — hero + prescription + Start CTA
+// ═════════════════════════════════════════════════════════════════════════════
+
 function TrainTab() {
   const { neglectedMuscles, muscleRecovery } = useCoachState();
+  const workouts = useWorkoutStore((s) => s.workouts);
+  const session = useSessionStore();
+  const navigate = useNavigate();
+  const { play } = useFX();
 
-  // Pick the most overdue muscle
-  const targetMuscle =
+  const targetMuscle = (
     neglectedMuscles[0] ??
     muscleRecovery.sort((a, b) => b.daysSince - a.daysSince)[0]?.muscle ??
-    'chest';
+    'chest'
+  ) as MuscleGroup;
 
-  const exercises = getExercisesByMuscle(targetMuscle).slice(0, 4);
+  const exercises = getExercisesByMuscle(targetMuscle).slice(0, 5);
+  const muscleMeta = muscleRecovery.find((m) => m.muscle === targetMuscle);
+
+  // Progressive overload hints — find user's last session for this muscle
+  const lastSession = useMemo(() => {
+    return workouts
+      .filter((w) => w.exercises.some((e) => e.muscle.toLowerCase() === targetMuscle))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  }, [workouts, targetMuscle]);
+
+  const overloadHints = useMemo(() => {
+    const hints: Record<string, { weight: number; reps: number; hint: string }> = {};
+    exercises.forEach((ex) => {
+      const lastForEx = lastSession?.exercises.find((e) => e.name === ex.name);
+      if (!lastForEx) return;
+      hints[ex.name] = suggestNextWeight(ex.name, lastForEx.sets);
+    });
+    return hints;
+  }, [exercises, lastSession]);
+
+  const handleStart = () => {
+    session.start('weighted');
+    session.setMuscle(targetMuscle);
+    play('tap');
+    navigate('/log');
+  };
 
   return (
     <div className="space-y-5">
+      {/* Hero */}
+      <Card variant="luxury">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forge-green/25 to-forge-green/5 border border-forge-green/20 flex items-center justify-center shrink-0">
+            <Dumbbell size={18} className="text-forge-green" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="label-cap">Today's Focus</div>
+            <div className="text-forge-text font-display text-[22px] tracking-wide capitalize mt-0.5">{targetMuscle}</div>
+            <div className="text-forge-muted text-[11px] font-mono mt-0.5">
+              {muscleMeta ? (
+                muscleMeta.daysSince === 999
+                  ? 'Never trained'
+                  : `${muscleMeta.daysSince}d rest · ${muscleMeta.totalSets7d} sets / wk`
+              ) : '—'}
+            </div>
+          </div>
+          {neglectedMuscles.includes(targetMuscle) && <Badge variant="warning" dot>Neglected</Badge>}
+        </div>
+        <Button onClick={handleStart} variant="primary" size="md" fullWidth>
+          <Play size={14} /> Start Workout
+        </Button>
+      </Card>
+
+      {/* Exercise prescription */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Suggested Workout
-        </p>
-        <Card className="mb-3">
-          <p className="text-forge-text text-sm font-condensed">
-            Focus:{' '}
-            <span className="text-forge-green font-semibold capitalize">{targetMuscle}</span>
-            {neglectedMuscles.length > 0 && (
-              <span className="text-forge-dim"> — neglected muscle group</span>
-            )}
-          </p>
-        </Card>
+        <div className="label-cap mb-3 flex items-center justify-between">
+          <span>Suggested Exercises</span>
+          <span className="text-[10px] font-mono text-forge-muted">{exercises.length}</span>
+        </div>
         {exercises.length === 0 ? (
-          <Card>
-            <p className="text-forge-dim text-sm font-condensed text-center py-2">
-              No exercises found for this muscle group.
+          <Card className="text-center">
+            <p className="text-forge-muted text-[13px] font-condensed py-3">
+              No exercises found. Try a different muscle group.
             </p>
           </Card>
         ) : (
           <div className="space-y-2">
-            {exercises.map((ex) => (
-              <Card key={ex.name}>
-                <div className="flex items-start justify-between gap-3 mb-1">
-                  <p className="text-forge-text font-condensed font-semibold text-sm">{ex.name}</p>
-                  <Badge>{ex.equipment}</Badge>
-                </div>
-                <p className="text-forge-dim text-xs font-condensed leading-relaxed">{ex.tip}</p>
-              </Card>
-            ))}
+            {exercises.map((ex, i) => {
+              const hint = overloadHints[ex.name];
+              return (
+                <Card key={ex.name}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                      <span className="w-6 h-6 rounded-lg bg-forge-green/10 border border-forge-green/15 flex items-center justify-center text-[10px] font-display text-forge-green shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-forge-text font-condensed font-semibold text-[13px] truncate">{ex.name}</p>
+                        <p className="text-forge-muted text-[11px] font-condensed mt-0.5 leading-relaxed line-clamp-2">{ex.tip}</p>
+                        {hint && (
+                          <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-forge-gold/10 border border-forge-gold/20 px-2 py-1">
+                            <Trophy size={10} className="text-forge-gold" />
+                            <span className="text-forge-gold text-[10px] font-mono font-semibold">
+                              Next: {hint.weight}kg × {hint.reps}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant={ex.equipment === 'bodyweight' ? 'gold' : 'default'} className="shrink-0">
+                      {ex.equipment}
+                    </Badge>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -368,71 +564,127 @@ function TrainTab() {
   );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// PLAN TAB — weekly calendar with muscle chips
+// ═════════════════════════════════════════════════════════════════════════════
+
 function PlanTab() {
   const workouts = useWorkoutStore((s) => s.workouts);
+  const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
+  const navigate = useNavigate();
+  const { play } = useFX();
 
-  // Build last 7 days (Mon-Sun relative to today)
-  const days: { date: string; label: string; trained: boolean }[] = [];
-  const now = new Date();
+  // Build last 7 days (Mon-Sun)
+  const days = useMemo(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - daysFromMon);
+    monday.setHours(0, 0, 0, 0);
 
-  // Find the most recent Monday
-  const dayOfWeek = now.getDay(); // 0=Sun
-  const daysFromMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - daysFromMon);
-  monday.setHours(0, 0, 0, 0);
+    const out: {
+      date: string;
+      label: string;
+      isToday: boolean;
+      muscles: string[];
+      volume: number;
+    }[] = [];
 
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const dateStr = d.toISOString().slice(0, 10);
-    const trained = workouts.some((w) => w.date.startsWith(dateStr));
-    const isToday = dateStr === todayKey();
-    days.push({ date: dateStr, label: getDayLabel(d) + (isToday ? '*' : ''), trained });
-  }
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const isToday = dateStr === todayKey();
+      const daySessions = [...workouts, ...bwWorkouts].filter((w) => w.date.startsWith(dateStr));
+      const muscles = [...new Set(daySessions.flatMap((s) => s.exercises.map((e) => e.muscle)))];
+      const volume = workouts.filter((w) => w.date.startsWith(dateStr))
+        .reduce((a, w) => a + w.exercises.reduce((b, ex) => b + ex.sets.reduce((c, s) => c + s.reps * s.weight, 0), 0), 0);
+      out.push({ date: dateStr, label: getDayLabel(d), isToday, muscles, volume });
+    }
+    return out;
+  }, [workouts, bwWorkouts]);
+
+  const totalSessions = days.filter((d) => d.muscles.length > 0).length;
 
   return (
     <div className="space-y-5">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="card-elevated rounded-2xl p-3 text-center">
+          <div className="kpi-lg text-forge-green leading-none">{totalSessions}</div>
+          <div className="label-cap text-[9px] mt-1">Sessions</div>
+        </div>
+        <div className="card-elevated rounded-2xl p-3 text-center">
+          <div className="kpi-lg text-forge-green leading-none">{7 - totalSessions}</div>
+          <div className="label-cap text-[9px] mt-1">Rest Days</div>
+        </div>
+        <div className="card-elevated rounded-2xl p-3 text-center">
+          <div className="kpi-lg text-forge-gold leading-none">{Math.round(days.reduce((a, d) => a + d.volume, 0) / 1000)}<span className="text-forge-muted text-[10px] ml-0.5">K</span></div>
+          <div className="label-cap text-[9px] mt-1">KG Volume</div>
+        </div>
+      </div>
+
+      {/* Weekly calendar */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Weekly Overview
-        </p>
-        <Card>
-          <div className="grid grid-cols-7 gap-1">
-            {days.map(({ date, label, trained }) => (
-              <div key={date} className="flex flex-col items-center gap-1.5">
-                <p className="text-forge-dim text-xs font-condensed">{label}</p>
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-condensed font-bold transition-all ${
-                    trained
-                      ? 'text-black'
-                      : 'text-forge-dim'
-                  }`}
-                  style={
-                    trained
-                      ? { background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)', boxShadow: '0 0 10px rgba(0,255,136,0.4)' }
-                      : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }
-                  }>
-                  {trained ? '✓' : '—'}
-                </div>
+        <div className="label-cap mb-3">This Week</div>
+        <div className="space-y-1.5">
+          {days.map((d) => (
+            <button
+              key={d.date}
+              type="button"
+              onClick={() => { if (d.muscles.length > 0) { play('tap'); navigate('/history'); } }}
+              disabled={d.muscles.length === 0}
+              className={[
+                'w-full card-elevated rounded-2xl p-3 flex items-center gap-3 text-left transition-all duration-200',
+                d.isToday ? 'card-luxury-border' : '',
+                d.muscles.length > 0 ? 'cursor-pointer press-scale hover:bg-white/[0.04]' : 'opacity-60 cursor-default',
+              ].join(' ')}
+            >
+              <div className={[
+                'w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0',
+                d.isToday ? 'bg-forge-green/20 border-2 border-forge-green/60 shadow-[0_0_12px_rgba(46,204,113,0.4)]' : 'bg-white/[0.04] border border-white/[0.08]',
+              ].join(' ')}>
+                <span className={`text-[9px] font-condensed uppercase tracking-wider ${d.isToday ? 'text-forge-green' : 'text-forge-muted'}`}>
+                  {d.label}
+                </span>
+                <span className={`text-[13px] font-display ${d.isToday ? 'text-forge-green' : 'text-forge-text-soft'}`}>
+                  {new Date(d.date).getDate()}
+                </span>
               </div>
-            ))}
-          </div>
-          <div className="flex items-center gap-4 mt-4 pt-3 border-t border-forge-border">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm" style={{ background: '#00ff88' }} />
-              <span className="text-forge-dim text-xs font-condensed">Trained</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-sm bg-white/5 border border-white/10" />
-              <span className="text-forge-dim text-xs font-condensed">Rest</span>
-            </div>
-          </div>
-        </Card>
+              <div className="flex-1 min-w-0">
+                {d.muscles.length === 0 ? (
+                  <span className="text-forge-muted text-[12px] font-condensed">{d.isToday ? 'No session yet today' : 'Rest day'}</span>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {d.muscles.slice(0, 4).map((m) => (
+                      <span
+                        key={m}
+                        className="text-forge-green/85 text-[10px] font-condensed uppercase tracking-wider bg-forge-green/10 px-1.5 py-0.5 rounded border border-forge-green/15 capitalize"
+                      >
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {d.volume > 0 && (
+                  <div className="text-[10px] text-forge-muted font-mono mt-1">
+                    {Math.round(d.volume).toLocaleString()} kg
+                  </div>
+                )}
+              </div>
+              {d.muscles.length > 0 && <ChevronRight size={14} className="text-forge-dim shrink-0" />}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// NUTRITION TAB — with quick-add water + surplus/deficit
+// ═════════════════════════════════════════════════════════════════════════════
 
 function NutritionTab() {
   const meals = useNutritionStore((s) => s.meals);
@@ -440,12 +692,13 @@ function NutritionTab() {
   const macroTargets = useNutritionStore((s) => s.macroTargets);
   const addWater = useNutritionStore((s) => s.addWater);
   const undoWater = useNutritionStore((s) => s.undoWater);
+  const navigate = useNavigate();
+  const { play } = useFX();
 
   const today = todayKey();
   const todayWater = water[today] ?? { cups_drunk: 0, goal_cups: 8 };
   const todayMeals = meals[today]?.meals ?? [];
 
-  // Sum macros
   const totals = todayMeals.reduce(
     (acc, m) => ({
       calories: acc.calories + (m.calories ?? 0),
@@ -453,172 +706,276 @@ function NutritionTab() {
       carbs: acc.carbs + (m.carbs ?? 0),
       fat: acc.fat + (m.fat ?? 0),
     }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
   );
 
-  const macros: { label: string; totKey: keyof typeof totals; targetKey: 'calories' | 'protein_g' | 'carbs_g' | 'fat_g'; unit: string }[] = [
-    { label: 'Calories', totKey: 'calories', targetKey: 'calories', unit: 'kcal' },
+  const calDeficit = macroTargets.calories - totals.calories;
+  const calPct = Math.round((totals.calories / (macroTargets.calories || 1)) * 100);
+  const calTier = calPct < 70 ? 'under' : calPct <= 105 ? 'onpoint' : 'over';
+
+  const macros: {
+    label: string; totKey: keyof typeof totals; targetKey: 'calories' | 'protein_g' | 'carbs_g' | 'fat_g'; unit: string;
+  }[] = [
     { label: 'Protein', totKey: 'protein', targetKey: 'protein_g', unit: 'g' },
-    { label: 'Carbs', totKey: 'carbs', targetKey: 'carbs_g', unit: 'g' },
-    { label: 'Fat', totKey: 'fat', targetKey: 'fat_g', unit: 'g' },
+    { label: 'Carbs',   totKey: 'carbs',   targetKey: 'carbs_g',   unit: 'g' },
+    { label: 'Fat',     totKey: 'fat',     targetKey: 'fat_g',     unit: 'g' },
   ];
+
+  const handleWater = (n: number) => {
+    for (let i = 0; i < n; i++) addWater(today);
+    play('tap');
+  };
 
   return (
     <div className="space-y-5">
-      {/* Water tracking */}
+      {/* Calorie balance hero */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Water Intake
-        </p>
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Droplets className="w-5 h-5 text-blue-400" />
-              <span className="text-forge-text font-condensed font-semibold">
-                {todayWater.cups_drunk} / {todayWater.goal_cups} cups
-              </span>
+        <div className="label-cap mb-3">Today's Calorie Balance</div>
+        <Card variant="luxury" className={calTier === 'onpoint' ? 'card-gold-border' : ''}>
+          <div className="flex items-baseline justify-between mb-2">
+            <div>
+              <div className="kpi-xl text-forge-green leading-none">
+                {Math.round(totals.calories)}
+              </div>
+              <div className="text-forge-muted text-[11px] font-condensed mt-1">
+                of {macroTargets.calories} kcal target
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => undoWater(today)}
-                disabled={todayWater.cups_drunk === 0}
-                className="min-h-[44px] px-3 rounded-xl text-forge-dim text-sm font-condensed press-scale cursor-pointer disabled:opacity-30 card-elevated">
-                Undo
-              </button>
-              <button
-                onClick={() => addWater(today)}
-                className="min-h-[44px] px-4 rounded-xl text-black text-sm font-condensed font-semibold press-scale cursor-pointer"
-                style={{ background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)' }}>
-                + Cup
-              </button>
+            <div className="text-right">
+              <div
+                className="kpi-lg leading-none"
+                style={{ color: calTier === 'under' ? '#F59E0B' : calTier === 'over' ? '#EF4444' : '#d4af37' }}
+              >
+                {calDeficit > 0 ? `-${calDeficit}` : `+${Math.abs(calDeficit)}`}
+              </div>
+              <div className="label-cap text-[9px] mt-1">
+                {calDeficit > 0 ? 'remaining' : 'surplus'}
+              </div>
             </div>
           </div>
-          {/* Progress bar */}
-          <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
-                width: `${Math.min(100, (todayWater.cups_drunk / todayWater.goal_cups) * 100)}%`,
-                background: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
-                boxShadow: '0 0 8px rgba(96,165,250,0.5)',
+                width: `${Math.min(100, calPct)}%`,
+                background: calTier === 'over' ? 'linear-gradient(90deg, #F59E0B, #EF4444)'
+                  : calTier === 'onpoint' ? 'linear-gradient(90deg, #f0cc55, #d4af37)'
+                  : 'linear-gradient(90deg, #58d68d, #1e9e55)',
+                boxShadow: calTier === 'onpoint' ? '0 0 10px rgba(212,175,55,0.45)' : '0 0 10px rgba(46,204,113,0.35)',
               }}
             />
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Button
+              onClick={() => { play('tap'); navigate('/more'); }}
+              variant="primary" size="sm" fullWidth
+            >
+              <Utensils size={13} /> Log meal
+            </Button>
           </div>
         </Card>
       </div>
 
-      {/* Macro summary */}
+      {/* Macros */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Macro Summary
-        </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="label-cap mb-3">Macros</div>
+        <div className="grid grid-cols-3 gap-2">
           {macros.map(({ label, totKey, targetKey, unit }) => {
             const val = totals[totKey];
-            const rawTarget = macroTargets[targetKey];
-            const target = typeof rawTarget === 'number' ? rawTarget : 1;
+            const target = typeof macroTargets[targetKey] === 'number' ? (macroTargets[targetKey] as number) : 1;
             const pct = Math.min(100, Math.round((val / target) * 100));
+            const tier = pct < 70 ? 'under' : pct <= 105 ? 'onpoint' : 'over';
+            const color = tier === 'over' ? '#EF4444' : tier === 'onpoint' ? '#d4af37' : '#2ecc71';
             return (
-              <Card key={label} className="py-3">
-                <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-1">
-                  {label}
-                </p>
-                <p className="text-forge-green text-xl font-display"
-                  style={{ textShadow: '0 0 10px rgba(0,255,136,0.4)' }}>
+              <div key={label} className="card-elevated rounded-2xl p-2.5">
+                <div className="label-cap text-[9px]">{label}</div>
+                <div className="kpi-lg leading-none mt-0.5" style={{ color }}>
                   {(val as number).toFixed(0)}
-                  <span className="text-forge-dim text-xs font-condensed ml-1">{unit}</span>
-                </p>
-                <p className="text-forge-dim text-xs font-condensed mt-0.5">
-                  / {target} {unit}
-                </p>
-                <div className="w-full h-1 bg-white/5 rounded-full mt-2 overflow-hidden">
+                </div>
+                <div className="text-forge-muted text-[10px] font-mono mt-0.5">
+                  / {target}{unit}
+                </div>
+                <div className="mt-1.5 h-1 bg-white/[0.04] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${pct}%`,
-                      background: pct >= 100 ? '#f59e0b' : 'linear-gradient(90deg, #00ff88, #00cc6a)',
-                    }}
+                    style={{ width: `${pct}%`, background: color, boxShadow: `0 0 6px ${color}66` }}
                   />
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
       </div>
 
+      {/* Water */}
+      <div>
+        <div className="label-cap mb-3">Water Intake</div>
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Droplets size={18} className="text-forge-sapphire" />
+              <div>
+                <div className="kpi-lg text-forge-text leading-none">
+                  {todayWater.cups_drunk}<span className="text-forge-muted text-[11px] ml-1">/ {todayWater.goal_cups} cups</span>
+                </div>
+                <div className="label-cap text-[9px] mt-1">{(todayWater.cups_drunk * 250).toLocaleString()}ml</div>
+              </div>
+            </div>
+            <Button
+              onClick={() => { undoWater(today); play('tap'); }}
+              variant="secondary"
+              size="sm"
+              disabled={todayWater.cups_drunk === 0}
+              aria-label="Remove a cup"
+            >
+              <Minus size={13} />
+            </Button>
+          </div>
+          <div className="h-2 bg-white/[0.04] rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(100, (todayWater.cups_drunk / todayWater.goal_cups) * 100)}%`,
+                background: 'linear-gradient(90deg, #60a5fa, #3b82f6)',
+                boxShadow: '0 0 8px rgba(96,165,250,0.45)',
+              }}
+            />
+          </div>
+          {/* Quick-add pill row */}
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {[
+              { label: '+250ml', cups: 1 },
+              { label: '+500ml', cups: 2 },
+              { label: '+750ml', cups: 3 },
+            ].map((opt) => (
+              <button
+                key={opt.label}
+                onClick={() => handleWater(opt.cups)}
+                className="rounded-xl py-2.5 cursor-pointer press-scale transition-all duration-200 font-condensed font-semibold uppercase tracking-wider text-[12px] bg-gradient-to-br from-forge-sapphire/20 to-forge-sapphire/5 border border-forge-sapphire/25 text-forge-sapphire hover:bg-forge-sapphire/15"
+              >
+                <Plus size={12} className="inline -mt-0.5 mr-0.5" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
+
       {/* Coaching tip */}
       <div>
-        <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider mb-3">
-          Coaching Tip
-        </p>
+        <div className="label-cap mb-3">Coaching Tip</div>
         <Card>
-          <p className="text-forge-text text-sm font-condensed leading-relaxed">
-            Aim to hit your protein target first. Once protein is covered, distribute remaining
-            calories between carbs and fats based on your energy needs and training schedule.
-          </p>
+          <div className="flex items-start gap-2">
+            <Lightbulb size={14} className="text-forge-gold mt-0.5 shrink-0" />
+            <p className="text-forge-text text-[13px] font-condensed leading-relaxed">
+              {totals.protein < macroTargets.protein_g * 0.7
+                ? `You're ${Math.round(macroTargets.protein_g - totals.protein)}g short on protein. Add lean chicken, eggs, or a whey shake.`
+                : calTier === 'over'
+                  ? `Over by ${Math.round(totals.calories - macroTargets.calories)} kcal. Lighter dinner tonight — keep protein high.`
+                  : 'Protein first, then distribute remaining calories between carbs & fats based on today\'s training.'}
+            </p>
+          </div>
         </Card>
       </div>
     </div>
   );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// CALI TAB — no longer a dead placeholder
+// ═════════════════════════════════════════════════════════════════════════════
+
 function CaliTab() {
+  const navigate = useNavigate();
+  const session = useSessionStore();
+  const { play } = useFX();
+
+  const progressions = [
+    { name: 'Push-up',  path: 'Incline → Regular → Diamond → Archer → One-Arm', muscle: 'chest' },
+    { name: 'Pull-up',  path: 'Assisted → Negatives → Regular → Archer → Muscle-up', muscle: 'back' },
+    { name: 'Dip',      path: 'Bench → Parallel → Ring → Weighted → Russian', muscle: 'triceps' },
+    { name: 'Squat',    path: 'BW → Bulgarian → Pistol → Shrimp → Weighted Pistol', muscle: 'legs' },
+    { name: 'L-Sit',    path: 'Tucked → One-leg → Full → V-sit → Manna', muscle: 'core' },
+  ] as const;
+
+  const handlePick = (muscle: string) => {
+    session.start('bodyweight');
+    session.setMuscle(muscle as MuscleGroup);
+    play('tap');
+    navigate('/log');
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-4">
-      <div
-        className="w-16 h-16 rounded-2xl flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)', boxShadow: '0 0 24px rgba(0,255,136,0.3)' }}>
-        <Scaling className="w-8 h-8 text-black" />
+    <div className="space-y-5">
+      {/* Hero */}
+      <Card variant="luxury" className="card-gold-border">
+        <div className="flex items-start gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forge-gold/25 to-forge-gold/5 border border-forge-gold/30 flex items-center justify-center shrink-0">
+            <Scaling size={18} className="text-forge-gold" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-forge-text font-condensed font-semibold text-[15px]">Calisthenics Progressions</div>
+            <div className="text-forge-muted text-[11px] font-condensed mt-0.5 leading-relaxed">
+              Master each tier before progressing. Tap a movement to start a bodyweight session.
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Progression list */}
+      <div className="space-y-2">
+        {progressions.map((p) => (
+          <button
+            key={p.name}
+            type="button"
+            onClick={() => handlePick(p.muscle)}
+            className="w-full card-elevated rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer press-scale hover:bg-white/[0.04] transition-all duration-200 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-green"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forge-green/20 to-forge-green/5 border border-forge-green/15 flex items-center justify-center shrink-0">
+              <Scaling size={16} className="text-forge-green" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-forge-text font-condensed font-semibold text-[13px]">{p.name}</span>
+                <Badge variant="success" className="text-[9px] capitalize">{p.muscle}</Badge>
+              </div>
+              <div className="text-forge-muted text-[10px] font-mono mt-0.5 truncate">
+                {p.path}
+              </div>
+            </div>
+            <ArrowRight size={14} className="text-forge-dim shrink-0" />
+          </button>
+        ))}
       </div>
-      <p className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Coming Soon</p>
-      <p className="text-forge-text font-display text-lg text-center">
-        Calisthenics Coach
-      </p>
-      <p className="text-forge-dim text-sm font-condensed text-center max-w-[240px] leading-relaxed">
-        Personalized bodyweight progressions and skill coaching arriving soon.
+
+      <p className="text-center text-[11px] text-forge-muted font-condensed">
+        5 progressions · more tiers coming
       </p>
     </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// PAGE
+// ═════════════════════════════════════════════════════════════════════════════
 
 export function CoachPage() {
   const [activeTab, setActiveTab] = useState<TabId>('today');
 
   return (
-    <div className="page-enter pb-20">
-      {/* Header */}
-      <div className="px-4 pt-4 pb-2">
-        <h2 className="text-forge-green font-display text-2xl"
-          style={{ textShadow: '0 0 12px rgba(0,255,136,0.4)' }}>
-          Coach
-        </h2>
+    <div className="page-enter pb-28">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <h2 className="text-forge-green font-display text-2xl tracking-wide">Coach</h2>
       </div>
 
-      {/* Sub-tab pills */}
-      <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-none">
-        {TABS.map(({ id, label }) => {
-          const isActive = activeTab === id;
-          return (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`flex-shrink-0 min-h-[44px] px-4 rounded-xl font-condensed font-semibold text-sm press-scale cursor-pointer transition-all duration-200 ${
-                isActive ? 'text-black' : 'text-forge-dim card-elevated'
-              }`}
-              style={
-                isActive
-                  ? {
-                      background: 'linear-gradient(135deg, #00ff88 0%, #00cc6a 100%)',
-                      boxShadow: '0 0 16px rgba(0,255,136,0.4)',
-                    }
-                  : undefined
-              }>
-              {label}
-            </button>
-          );
-        })}
+      {/* Sub-tab pills (unified premium) */}
+      <div className="px-4 pb-3">
+        <TabPills
+          tabs={TABS}
+          value={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Coach sub-navigation"
+        />
       </div>
 
       {/* Tab content */}

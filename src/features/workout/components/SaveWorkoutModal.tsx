@@ -1,12 +1,19 @@
 import { useMemo, useState, useRef } from 'react';
 import { Modal } from '../../../components/ui/Modal';
+import { Button } from '../../../components/ui/Button';
+import { Badge } from '../../../components/ui/Badge';
+import { Confetti } from '../../../components/ui/Confetti';
 import { SessionPoster } from '../../poster/components/SessionPoster';
+import { BodyMap } from '../../../components/body/BodyMap';
 import { useSessionStore } from '../../../stores/useSessionStore';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
+import { useBwWorkoutStore } from '../../../stores/useBwWorkoutStore';
+import { useCardioStore } from '../../../stores/useCardioStore';
 import { useGamificationStore } from '../../../stores/useGamificationStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
-import type { Workout } from '../../../types/workout';
+import type { Workout, BwWorkout, CardioEntry, MuscleGroup } from '../../../types/workout';
+import { Share2, Flame, Trophy, Zap, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -14,141 +21,289 @@ interface Props {
   onSaved: () => void;
 }
 
+const VALID_MUSCLES: MuscleGroup[] = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'forearms', 'core', 'legs', 'glutes', 'calves'];
+
 export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
   const session = useSessionStore();
   const addWorkout = useWorkoutStore((s) => s.addWorkout);
+  const addBwWorkout = useBwWorkoutStore((s) => s.addWorkout);
+  const addCardioEntry = useCardioStore((s) => s.addEntry);
   const addXP = useGamificationStore((s) => s.addXP);
   const { toast } = useToast();
   const { play } = useFX();
+
   const [saved, setSaved] = useState(false);
   const [showPoster, setShowPoster] = useState(false);
+  const [expandedEx, setExpandedEx] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const savedWorkoutRef = useRef<Workout | null>(null);
+  // Frozen snapshot of summary taken BEFORE session.reset() so post-save stats render correctly
+  const savedSummaryRef = useRef<ReturnType<typeof buildSummary> | null>(null);
 
-  const summary = useMemo(() => {
-    const totalSets = session.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
-    const totalVolume = session.exercises.reduce(
-      (acc, ex) => acc + ex.sets.reduce((setAcc, s) => setAcc + s.reps * s.weight, 0),
-      0,
-    );
-    const duration = session.startTime ? Math.floor((Date.now() - session.startTime) / 60000) : 0;
-    const muscles = [...new Set(session.exercises.map((e) => e.muscle))];
-    return { totalSets, totalVolume, duration, muscles, exerciseCount: session.exercises.length };
-  }, [session.exercises, session.startTime]);
+  const liveSummary = useMemo(
+    () =>
+      buildSummary(
+        session.startTime,
+        session.exercises,
+        session.bwExercises,
+        session.cardioEntries,
+      ),
+    [session.exercises, session.bwExercises, session.cardioEntries, session.startTime],
+  );
+
+  // When showing post-save screen, prefer the frozen summary; else the live one
+  const summary = saved && savedSummaryRef.current ? savedSummaryRef.current : liveSummary;
+  const hasWeighted = saved
+    ? (savedSummaryRef.current?.hasWeighted ?? false)
+    : session.exercises.length > 0;
+  const hasCardioOnly = saved
+    ? (savedSummaryRef.current?.hasCardioOnly ?? false)
+    : session.cardioEntries.length > 0 && session.exercises.length === 0;
 
   const handleSave = () => {
-    if (session.exercises.length === 0) {
-      toast('Add at least one exercise!', 'error');
+    if (summary.exerciseCount === 0) {
+      toast('Log at least one entry first!', 'error');
       return;
     }
+    // Freeze the summary before session.reset() wipes it
+    savedSummaryRef.current = liveSummary;
 
-    const workout: Workout = {
-      id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      date: new Date().toISOString(),
-      name: summary.muscles.join(' + ') || 'Workout',
-      exercises: session.exercises,
-      duration: summary.duration,
-    };
+    let xpGained = 0;
 
-    addWorkout(workout);
-    savedWorkoutRef.current = workout;
-    addXP(summary.totalSets * 5 + summary.exerciseCount * 10);
-    play('success');
-    toast('Workout saved!', 'success');
+    // Save weighted workout
+    if (session.exercises.length > 0) {
+      const workout: Workout = {
+        id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        date: new Date().toISOString(),
+        name: summary.muscleNames.join(' + ') || 'Workout',
+        exercises: session.exercises,
+        duration: summary.duration,
+      };
+      addWorkout(workout);
+      savedWorkoutRef.current = workout;
+      xpGained += session.exercises.reduce((a, ex) => a + ex.sets.length * 5 + 10, 0);
+    }
+
+    // Save bodyweight workout
+    if (session.bwExercises.length > 0) {
+      const bw: BwWorkout = {
+        id: `bw_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        date: new Date().toISOString(),
+        name: summary.muscleNames.join(' + ') || 'Calisthenics',
+        exercises: session.bwExercises,
+        duration: summary.duration,
+      };
+      addBwWorkout(bw);
+      // If no weighted workout for poster, fall back to a synthesized one
+      if (!savedWorkoutRef.current) {
+        savedWorkoutRef.current = {
+          id: bw.id,
+          date: bw.date,
+          name: bw.name,
+          duration: bw.duration,
+          exercises: bw.exercises.map((e) => ({
+            name: e.name,
+            muscle: e.muscle,
+            sets: e.sets.map((s) => ({ reps: s.reps, weight: s.addedWeight ?? 0 })),
+          })),
+        };
+      }
+      xpGained += session.bwExercises.reduce((a, ex) => a + ex.sets.length * 4 + 8, 0);
+    }
+
+    // Save cardio entries
+    if (session.cardioEntries.length > 0) {
+      session.cardioEntries.forEach((c) => {
+        const entry: CardioEntry = {
+          id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          date: new Date().toISOString(),
+          ...c,
+        };
+        addCardioEntry(entry);
+      });
+      if (!savedWorkoutRef.current) {
+        savedWorkoutRef.current = {
+          id: `c_${Date.now()}`,
+          date: new Date().toISOString(),
+          name: session.cardioEntries.map((c) => c.type).join(' + '),
+          duration: summary.duration,
+          exercises: [],
+        };
+      }
+      xpGained += summary.cardioMinutes;
+    }
+
+    addXP(xpGained);
+    // PR-sound if any set was flagged as PR, otherwise regular success
+    const hadPR = session.exercises.some((ex) => ex.sets.some((s) => s.isPR));
+    play(hadPR ? 'pr' : 'success');
+    toast('Session saved!', 'success');
     session.reset();
     setSaved(true);
+    setShowConfetti(true);
   };
 
   const handleDone = () => {
     setSaved(false);
     savedWorkoutRef.current = null;
+    savedSummaryRef.current = null;
+    setExpandedEx(null);
     onSaved();
     onClose();
   };
 
-  // Reset state when modal closes
   const handleClose = () => {
-    if (saved) {
-      handleDone();
-    } else {
-      onClose();
-    }
+    if (saved) handleDone();
+    else onClose();
   };
 
   return (
     <>
-      <Modal open={open} onClose={handleClose} title={saved ? 'Workout Saved!' : 'End Workout'}>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        title={saved ? 'Session Complete' : 'End Session?'}
+        subtitle={saved ? 'Recap · Share · Save' : 'Review before finishing'}
+        size="md"
+      >
         {!saved ? (
+          /* ── PRE-SAVE CONFIRM ─────────────────────────────── */
           <div className="space-y-4">
-            {/* Summary stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-forge-bg rounded-lg p-3 text-center">
-                <div className="text-forge-green text-2xl font-display">{summary.duration}</div>
-                <div className="text-forge-muted text-xs font-condensed">Minutes</div>
-              </div>
-              <div className="bg-forge-bg rounded-lg p-3 text-center">
-                <div className="text-forge-green text-2xl font-display">{summary.exerciseCount}</div>
-                <div className="text-forge-muted text-xs font-condensed">Exercises</div>
-              </div>
-              <div className="bg-forge-bg rounded-lg p-3 text-center">
-                <div className="text-forge-green text-2xl font-display">{summary.totalSets}</div>
-                <div className="text-forge-muted text-xs font-condensed">Sets</div>
-              </div>
-              <div className="bg-forge-bg rounded-lg p-3 text-center">
-                <div className="text-forge-green text-2xl font-display">
-                  {Math.round(summary.totalVolume).toLocaleString()}
-                </div>
-                <div className="text-forge-muted text-xs font-condensed">Volume (kg)</div>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <StatCell label="Minutes" value={summary.duration} icon={<Clock size={12} />} />
+              <StatCell label="Entries" value={summary.exerciseCount} icon={<Flame size={12} />} />
+              <StatCell label="Sets" value={summary.totalSets} icon={<Zap size={12} />} />
+              <StatCell
+                label={hasWeighted ? 'Volume (kg)' : 'Reps'}
+                value={hasWeighted ? Math.round(summary.totalVolume).toLocaleString() : summary.totalReps}
+                icon={<Trophy size={12} />}
+              />
             </div>
 
-            {/* Muscles worked */}
-            {summary.muscles.length > 0 && (
+            {summary.muscleNames.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                {summary.muscles.map((m) => (
-                  <span
-                    key={m}
-                    className="bg-forge-green/10 text-forge-green text-xs px-2 py-0.5 rounded-full font-condensed"
-                  >
-                    {m}
-                  </span>
+                {summary.muscleNames.map((m) => (
+                  <Badge key={m} variant="success" dot>{m}</Badge>
                 ))}
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={onClose}
-                className="flex-1 bg-forge-surface text-forge-muted border border-forge-border py-2.5 rounded-lg font-condensed"
-              >
+            <div className="flex gap-2 pt-1">
+              <Button onClick={onClose} variant="secondary" size="md" fullWidth>
                 Keep Going
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex-1 bg-forge-green text-forge-bg py-2.5 rounded-lg font-condensed font-semibold"
-              >
-                Save Workout
-              </button>
+              </Button>
+              <Button onClick={handleSave} variant="primary" size="md" fullWidth>
+                End & Save
+              </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4 text-center">
-            <div className="text-4xl">🎉</div>
-            <p className="text-forge-text font-condensed">Great session!</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowPoster(true)}
-                className="flex-1 bg-forge-surface text-forge-green border border-forge-green/30 py-2.5 rounded-lg font-condensed font-semibold text-sm"
-              >
-                View Poster
-              </button>
-              <button
-                onClick={handleDone}
-                className="flex-1 bg-forge-green text-forge-bg py-2.5 rounded-lg font-condensed font-semibold text-sm"
-              >
-                Done
-              </button>
+          /* ── POST-SAVE CELEBRATION + HISTORY + POSTER ─────── */
+          <div className="space-y-4">
+            {/* Hero card with body-map + stats */}
+            <div className="card-elevated card-luxury-border rounded-2xl p-4 relative overflow-hidden">
+              <div
+                aria-hidden
+                className="absolute -top-24 -right-24 w-48 h-48 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(46,204,113,0.22) 0%, transparent 70%)',
+                  filter: 'blur(30px)',
+                }}
+              />
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-3">
+                  <Flame size={14} className="text-forge-green animate-pulse" />
+                  <span className="label-cap text-forge-green">Muscles trained</span>
+                </div>
+                <BodyMap
+                  selected={new Set(summary.muscleNames)}
+                  maxWidth={300}
+                />
+              </div>
             </div>
+
+            {/* Big stats */}
+            <div className="grid grid-cols-3 gap-2">
+              <HeroStat label="MIN"   value={summary.duration} />
+              <HeroStat
+                label={hasCardioOnly ? 'MIN CARDIO' : 'SETS'}
+                value={hasCardioOnly ? summary.cardioMinutes : summary.totalSets}
+              />
+              <HeroStat
+                label={hasWeighted ? 'VOL (KG)' : 'REPS'}
+                value={hasWeighted ? Math.round(summary.totalVolume).toLocaleString() : summary.totalReps}
+                accent="gold"
+              />
+            </div>
+
+            {/* Exercise history list */}
+            {savedWorkoutRef.current && savedWorkoutRef.current.exercises.length > 0 && (
+              <div className="space-y-2">
+                <div className="label-cap-strong">Session Log</div>
+                {savedWorkoutRef.current.exercises.map((ex, i) => {
+                  const isOpen = expandedEx === i;
+                  const volume = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
+                  return (
+                    <div key={i} className="card-elevated rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setExpandedEx(isOpen ? null : i)}
+                        className="w-full flex items-center justify-between px-3.5 py-2.5 cursor-pointer"
+                        aria-expanded={isOpen}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-6 h-6 rounded-lg bg-forge-green/10 flex items-center justify-center shrink-0">
+                            <span className="text-forge-green text-[11px] font-display">{i + 1}</span>
+                          </div>
+                          <div className="text-left min-w-0">
+                            <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{ex.name}</div>
+                            <div className="text-forge-muted text-[10px] font-mono">
+                              {ex.sets.length} sets{volume > 0 ? ` · ${volume.toLocaleString()} kg` : ''}
+                            </div>
+                          </div>
+                        </div>
+                        {isOpen ? <ChevronUp size={13} className="text-forge-dim" /> : <ChevronDown size={13} className="text-forge-dim" />}
+                      </button>
+                      {isOpen && (
+                        <div className="border-t border-forge-border-light">
+                          <div className="grid grid-cols-4 px-3.5 py-1.5 text-[9px] label-cap">
+                            <span>Set</span><span className="text-center">Reps</span><span className="text-center">Wt</span><span className="text-right">Vol</span>
+                          </div>
+                          {ex.sets.map((s, si) => (
+                            <div key={si} className="grid grid-cols-4 px-3.5 py-1.5 text-[12px] font-mono">
+                              <span className="text-forge-muted">{si + 1}</span>
+                              <span className="text-center text-forge-text">{s.reps}</span>
+                              <span className="text-center text-forge-text">{s.weight > 0 ? `${s.weight}kg` : '—'}</span>
+                              <span className="text-right text-forge-green/80">
+                                {s.weight > 0 ? (s.reps * s.weight).toLocaleString() : '—'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Action row */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                onClick={() => setShowPoster(true)}
+                variant="primary"
+                size="md"
+                fullWidth
+                disabled={!savedWorkoutRef.current}
+              >
+                <Share2 size={15} /> Share Poster
+              </Button>
+              <Button onClick={handleDone} variant="secondary" size="md">
+                Done
+              </Button>
+            </div>
+            <p className="text-center text-[11px] text-forge-muted font-condensed">
+              +XP earned · view full history in <span className="text-forge-green">History</span>
+            </p>
           </div>
         )}
       </Modal>
@@ -158,6 +313,66 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
         open={showPoster}
         onClose={() => setShowPoster(false)}
       />
+
+      <Confetti active={showConfetti} onDone={() => setShowConfetti(false)} />
     </>
+  );
+}
+
+function buildSummary(
+  startTime: number | null,
+  exercises: Workout['exercises'],
+  bwExercises: BwWorkout['exercises'],
+  cardioEntries: Omit<CardioEntry, 'id' | 'date'>[],
+) {
+  const duration = startTime ? Math.floor((Date.now() - startTime) / 60000) : 0;
+  const totalSets =
+    exercises.reduce((a, ex) => a + ex.sets.length, 0) +
+    bwExercises.reduce((a, ex) => a + ex.sets.length, 0);
+  const totalVolume = exercises.reduce(
+    (a, ex) => a + ex.sets.reduce((s, set) => s + set.reps * set.weight, 0),
+    0,
+  );
+  const totalReps =
+    exercises.reduce((a, ex) => a + ex.sets.reduce((s, set) => s + set.reps, 0), 0) +
+    bwExercises.reduce((a, ex) => a + ex.sets.reduce((s, set) => s + set.reps, 0), 0);
+  const prs = exercises.reduce((a, ex) => a + ex.sets.filter((s) => s.isPR).length, 0);
+  const cardioMinutes = cardioEntries.reduce((a, e) => a + e.duration, 0);
+
+  const muscleNames: MuscleGroup[] = [];
+  [...exercises, ...bwExercises].forEach((ex) => {
+    const m = ex.muscle.toLowerCase() as MuscleGroup;
+    if (VALID_MUSCLES.includes(m) && !muscleNames.includes(m)) muscleNames.push(m);
+  });
+
+  const exerciseCount = exercises.length + bwExercises.length + cardioEntries.length;
+  const hasWeighted = exercises.length > 0;
+  const hasCardioOnly = cardioEntries.length > 0 && exercises.length === 0 && bwExercises.length === 0;
+
+  return {
+    duration, totalSets, totalVolume, totalReps, prs, cardioMinutes,
+    muscleNames, exerciseCount, hasWeighted, hasCardioOnly,
+  };
+}
+
+function StatCell({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) {
+  return (
+    <div className="bg-black/25 rounded-xl p-3">
+      <div className="flex items-center gap-1.5 mb-0.5 text-forge-muted">
+        {icon}
+        <span className="label-cap text-[9px]">{label}</span>
+      </div>
+      <div className="kpi-lg text-forge-green">{value}</div>
+    </div>
+  );
+}
+
+function HeroStat({ label, value, accent = 'green' }: { label: string; value: string | number; accent?: 'green' | 'gold' }) {
+  const color = accent === 'gold' ? 'text-forge-gold' : 'text-forge-green';
+  return (
+    <div className="card-elevated rounded-xl p-3 text-center">
+      <div className={`kpi-lg ${color}`}>{value}</div>
+      <div className="label-cap text-[9px] mt-0.5">{label}</div>
+    </div>
   );
 }

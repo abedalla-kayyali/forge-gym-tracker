@@ -1,14 +1,21 @@
-import { useState, useCallback } from 'react';
-import { Dumbbell, Scaling, HeartPulse, ChevronDown, ChevronUp, Zap } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Dumbbell, ChevronDown, ChevronUp, Zap } from 'lucide-react';
 import { WorkoutTypeSelector, type WorkoutType } from '../features/workout';
 import { MuscleGroupPicker } from '../features/workout';
 import { ExerciseAutocomplete } from '../features/workout';
 import { SetLogger } from '../features/workout';
 import { RestTimer } from '../features/workout';
+import { BwLogger } from '../features/workout';
+import { CardioLogger } from '../features/workout';
 import { SaveWorkoutModal } from '../features/workout/components/SaveWorkoutModal';
+import { TopExercisesCard } from '../features/workout/components/TopExercisesCard';
+import { SessionStreakCard } from '../features/workout/components/SessionStreakCard';
+import { ProgressGuide } from '../features/workout/components/ProgressGuide';
 import { useSessionStore } from '../stores/useSessionStore';
+import { useCustomExercisesStore } from '../stores/useCustomExercisesStore';
 import { useToast } from '../components/ui/Toast';
 import { useFX } from '../hooks/useFX';
+import { searchExercises } from '../lib/exercises-db';
 import type { WorkoutSet, WorkoutExercise, MuscleGroup } from '../types/workout';
 
 function CircleRing({ size = 200 }: { size?: number }) {
@@ -78,14 +85,20 @@ export function LogPage() {
   const [currentSets, setCurrentSets] = useState<WorkoutSet[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const session = useSessionStore();
+  const customStore = useCustomExercisesStore();
   const { toast } = useToast();
   const { play } = useFX();
 
+  // Sync local workoutType ↔ session.type so store knows the mode
+  useEffect(() => {
+    if (session.active && session.type !== workoutType) session.setType(workoutType);
+  }, [workoutType, session]);
+
   // Start session if not active
   const handleStartSession = useCallback(() => {
-    session.start();
+    session.start(workoutType);
     play('tap');
-  }, [session, play]);
+  }, [session, workoutType, play]);
 
   // Select muscle group
   const handleMuscleSelect = useCallback(
@@ -133,18 +146,28 @@ export function LogPage() {
       sets: currentSets,
     };
 
+    // If the exercise isn't in the curated DB, save it as a custom one so future
+    // sessions suggest it automatically.
+    const muscleKey = session.selectedMuscle ?? '';
+    if (muscleKey) {
+      const name = session.selectedExercise;
+      const inDb = searchExercises(name, muscleKey).some(
+        (e) => e.name.toLowerCase() === name.toLowerCase(),
+      );
+      if (!inDb) customStore.addCustom(muscleKey, name);
+    }
+
     session.addExercise(exercise);
     play('save');
     toast(`${session.selectedExercise} logged — ${currentSets.length} sets`, 'success');
     setCurrentSets([]);
     session.setExercise('');
-  }, [session, currentSets, play, toast]);
+  }, [session, currentSets, play, toast, customStore]);
 
   // Not started yet — Whoop-style start screen
-  if (!session.active) {
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    return (
+  const content = !session.active ? (
       <div className="page-enter flex flex-col items-center justify-center min-h-[80vh] gap-0 px-6 relative overflow-hidden">
         {/* Background glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-forge-green/5 blur-3xl pointer-events-none" />
@@ -167,7 +190,7 @@ export function LogPage() {
         </p>
 
         {/* Quick stat pills */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-2 mb-6">
           <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
             <Zap size={11} className="text-forge-green" />
             <span className="text-forge-dim text-[11px] font-condensed">{today}</span>
@@ -175,6 +198,22 @@ export function LogPage() {
           <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
             <span className="text-forge-muted text-[11px] font-condensed">{session.exercises.length > 0 ? `${session.exercises.length} pending` : 'No active session'}</span>
           </div>
+        </div>
+
+        {/* Streak + last session */}
+        <div className="w-full px-2 mb-3">
+          <SessionStreakCard />
+        </div>
+
+        {/* Progress KPI guide — weekly goal · streak · next PR · recommended muscle */}
+        <div className="w-full px-2 mb-5 max-w-md mx-auto">
+          <ProgressGuide
+            onPickMuscle={(m) => {
+              // Start session + pre-pick the muscle for instant flow
+              handleStartSession();
+              setTimeout(() => session.setMuscle(m), 50);
+            }}
+          />
         </div>
 
         {/* CTA */}
@@ -187,11 +226,7 @@ export function LogPage() {
 
         <p className="text-forge-dim text-[11px] mt-4 font-condensed">Tap to begin tracking</p>
       </div>
-    );
-  }
-
-  // Active session
-  return (
+  ) : (
     <div className="page-enter p-4 space-y-4 pb-32">
       {/* Workout type */}
       <WorkoutTypeSelector value={workoutType} onChange={setWorkoutType} />
@@ -206,6 +241,15 @@ export function LogPage() {
               onSelect={handleMuscleSelect}
             />
           </div>
+
+          {/* Top exercises for this muscle — shortcut to your favorites */}
+          {session.selectedMuscle && (
+            <TopExercisesCard
+              muscle={session.selectedMuscle}
+              onPick={handleExerciseSelect}
+              scope="weighted"
+            />
+          )}
 
           {/* Exercise */}
           <div>
@@ -258,41 +302,60 @@ export function LogPage() {
       )}
 
       {workoutType === 'bodyweight' && (
-        <div className="flex flex-col items-center justify-center py-16 text-forge-muted gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-forge-border-light flex items-center justify-center">
-            <Scaling size={28} className="text-forge-dim" />
-          </div>
-          <p className="font-condensed text-sm">Bodyweight mode — coming soon</p>
-        </div>
+        <>
+          <BwLogger />
+          {session.bwExercises.length > 0 && (
+            <div className="space-y-2">
+              <label className="label-cap">
+                Logged · <span className="text-forge-green/80">
+                  {session.bwExercises.length} exercise{session.bwExercises.length !== 1 ? 's' : ''}
+                </span>
+              </label>
+              {session.bwExercises.map((ex, i) => (
+                <div key={i} className="card-elevated rounded-xl px-4 py-3 flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-forge-green/10 flex items-center justify-center">
+                    <span className="text-forge-green text-xs font-display">{i + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-forge-text text-[14px] font-condensed font-semibold truncate">{ex.name}</div>
+                    <div className="text-forge-muted text-[11px] font-mono">
+                      {ex.sets.length} sets · {ex.sets.reduce((a, s) => a + s.reps, 0)} total
+                    </div>
+                  </div>
+                  <span className="text-forge-green/60 text-[10px] font-condensed uppercase">{ex.muscle}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {workoutType === 'cardio' && (
-        <div className="flex flex-col items-center justify-center py-16 text-forge-muted gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-forge-border-light flex items-center justify-center">
-            <HeartPulse size={28} className="text-forge-dim" />
-          </div>
-          <p className="font-condensed text-sm">Cardio mode — coming soon</p>
-        </div>
-      )}
+      {workoutType === 'cardio' && <CardioLogger />}
 
-      {/* End Workout — floating action button */}
-      {session.exercises.length > 0 && (
+      {/* End Workout — floating action button (enabled when any entries logged) */}
+      {(session.exercises.length > 0 || session.bwExercises.length > 0 || session.cardioEntries.length > 0) && (
         <button
           onClick={() => setShowSaveModal(true)}
-          className="fixed bottom-20 right-4 z-30 bg-gradient-to-br from-red-500 to-red-700 text-white px-6 py-3.5 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] shadow-[0_4px_24px_rgba(239,68,68,0.4)] hover:shadow-[0_4px_32px_rgba(239,68,68,0.55)] transition-all duration-200 flex items-center gap-2"
+          className="fixed bottom-24 right-4 z-30 bg-gradient-to-br from-red-500 to-red-700 text-white px-6 py-3.5 rounded-2xl font-condensed font-bold text-sm cursor-pointer press-scale min-h-[48px] shadow-[0_4px_24px_rgba(239,68,68,0.4)] hover:shadow-[0_4px_32px_rgba(239,68,68,0.55)] transition-all duration-200 flex items-center gap-2"
           aria-label="End workout"
         >
           <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse" />
-          End Workout
+          End Session
         </button>
       )}
 
-      {/* Save Modal */}
+    </div>
+  );
+
+  return (
+    <>
+      {content}
+      {/* Single SaveWorkoutModal — survives session.active flips so the post-save celebration remains visible */}
       <SaveWorkoutModal
         open={showSaveModal}
         onClose={() => setShowSaveModal(false)}
         onSaved={() => setWorkoutType('weighted')}
       />
-    </div>
+    </>
   );
 }

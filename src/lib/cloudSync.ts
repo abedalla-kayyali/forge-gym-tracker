@@ -23,19 +23,47 @@ const TABLE = 'user_data';
 
 // Keys that should be mirrored to the cloud.
 // Uses actual STORAGE_KEYS values from constants.ts.
+// NOTE: this must cover every key that holds user-generated DATA or CONTENT so
+// it roams across devices. Device-local display prefs (theme/accent/sound/
+// haptic/layout/custom-bg) and ephemeral UI flags are intentionally excluded.
 const SYNC_KEYS = [
+  // Workout data & content
   STORAGE_KEYS.WORKOUTS,
   STORAGE_KEYS.BW_WORKOUTS,
   STORAGE_KEYS.CARDIO,
   STORAGE_KEYS.CARDIO_CUSTOM_TYPES,
+  STORAGE_KEYS.TEMPLATES,
+  STORAGE_KEYS.BW_CUSTOM_EXERCISES,
+  // Profile
   STORAGE_KEYS.PROFILE,
+  // Nutrition
   STORAGE_KEYS.MEALS,
+  STORAGE_KEYS.MEAL_LIBRARY,
+  STORAGE_KEYS.MACRO_TARGETS,
   STORAGE_KEYS.WATER,
+  // Body & measurements
   STORAGE_KEYS.BODY_WEIGHT,
+  STORAGE_KEYS.MEASUREMENTS,
   STORAGE_KEYS.INBODY,
+  // Steps & health
   STORAGE_KEYS.STEPS,
+  STORAGE_KEYS.STEP_GOAL,
+  STORAGE_KEYS.READINESS,
+  STORAGE_KEYS.CHECKINS,
+  // Coach & programs
+  STORAGE_KEYS.ACTIVE_PROGRAM,
+  STORAGE_KEYS.AI_PROGRAM,
+  STORAGE_KEYS.SPLIT,
+  STORAGE_KEYS.MESOCYCLE,
+  STORAGE_KEYS.MRV_CONFIG,
+  STORAGE_KEYS.DELOAD_DATA,
+  STORAGE_KEYS.SAVED_ANSWERS,
+  // Social
+  STORAGE_KEYS.DUEL_STATE,
+  // Gamification & goals
   STORAGE_KEYS.ACHIEVEMENTS,
   STORAGE_KEYS.EXPERIENCE,
+  STORAGE_KEYS.GOAL,
   // literal keys stored outside STORAGE_KEYS
   'forge-custom-exercises-v1',
 ].filter(Boolean) as string[];
@@ -93,6 +121,13 @@ export async function pullFromCloud(): Promise<{ synced: number; skipped: number
         skipped++;
       }
     }
+    // Notify the app so in-memory zustand stores re-read the freshly-pulled
+    // localStorage data without requiring a full page reload.
+    if (synced > 0) {
+      try {
+        window.dispatchEvent(new CustomEvent('forge:pulled', { detail: { count: synced } }));
+      } catch { /* SSR / restricted env */ }
+    }
     setState('idle');
     return { synced, skipped };
   } catch (e) {
@@ -101,22 +136,10 @@ export async function pullFromCloud(): Promise<{ synced: number; skipped: number
   }
 }
 
-/**
- * Push all local keys to the cloud (upsert with now() timestamp).
- * Silently no-ops if user_data table doesn't exist.
- */
-export async function pushToCloud(): Promise<{ pushed: number; error?: string }> {
-  const uid = await getUserId();
-  if (!uid) return { pushed: 0, error: 'not signed in' };
-  setState('pushing');
-  const now = new Date().toISOString();
-  const rows = SYNC_KEYS.flatMap((key) => {
-    const raw = localStorage.getItem(key);
-    if (raw == null) return [];
-    let value: unknown;
-    try { value = JSON.parse(raw); } catch { return []; }
-    return [{ user_id: uid, key, value, updated_at: now }];
-  });
+type SyncRow = { user_id: string; key: string; value: unknown; updated_at: string };
+
+/** Shared upsert with the offline-queue + state-machine handling. */
+async function upsertRows(rows: SyncRow[]): Promise<{ pushed: number; error?: string }> {
   if (rows.length === 0) { setState('idle'); return { pushed: 0 }; }
   try {
     const { error } = await supabase.from(TABLE).upsert(rows, { onConflict: 'user_id,key' });
@@ -137,7 +160,7 @@ export async function pushToCloud(): Promise<{ pushed: number; error?: string }>
       return { pushed: 0, error: error.message };
     }
     // Mark local timestamps so pulls don't overwrite
-    rows.forEach((r) => localStorage.setItem(`forge:sync:updated:${r.key}`, String(new Date(now).getTime())));
+    rows.forEach((r) => localStorage.setItem(`forge:sync:updated:${r.key}`, String(new Date(r.updated_at).getTime())));
     setState('idle');
     return { pushed: rows.length };
   } catch (e) {
@@ -153,6 +176,67 @@ export async function pushToCloud(): Promise<{ pushed: number; error?: string }>
     }
     return { pushed: 0, error: (e as Error).message };
   }
+}
+
+/**
+ * Push all local keys to the cloud (upsert with now() timestamp).
+ * Silently no-ops if user_data table doesn't exist.
+ *
+ * Use this for the "I just mutated locally, save my changes" path (debounced
+ * writes, visibility/pagehide). For login/guest-merge reconciliation use
+ * {@link reconcilePush}, which avoids clobbering newer cloud data.
+ */
+export async function pushToCloud(): Promise<{ pushed: number; error?: string }> {
+  const uid = await getUserId();
+  if (!uid) return { pushed: 0, error: 'not signed in' };
+  setState('pushing');
+  const now = new Date().toISOString();
+  const rows = SYNC_KEYS.flatMap((key): SyncRow[] => {
+    const raw = localStorage.getItem(key);
+    if (raw == null) return [];
+    let value: unknown;
+    try { value = JSON.parse(raw); } catch { return []; }
+    return [{ user_id: uid, key, value, updated_at: now }];
+  });
+  return upsertRows(rows);
+}
+
+/**
+ * Last-writer-wins push: upload only local keys that are newer than (or absent
+ * from) the cloud. Used during login / guest-merge reconciliation so we never
+ * overwrite data that another device synced more recently.
+ */
+export async function reconcilePush(): Promise<{ pushed: number; error?: string }> {
+  const uid = await getUserId();
+  if (!uid) return { pushed: 0, error: 'not signed in' };
+  setState('pushing');
+  // Fetch remote timestamps to compare per key.
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('key, updated_at')
+    .eq('user_id', uid);
+  if (error) {
+    const notExist = /relation .* does not exist|schema.*user_data/i.test(error.message);
+    setState(notExist || isLikelyNetworkError(error) ? 'unavailable' : 'error');
+    return { pushed: 0, error: error.message };
+  }
+  const remoteTs = new Map<string, number>();
+  for (const row of data ?? []) {
+    remoteTs.set(row.key as string, new Date(row.updated_at as string).getTime());
+  }
+  const now = new Date().toISOString();
+  const rows = SYNC_KEYS.flatMap((key): SyncRow[] => {
+    const raw = localStorage.getItem(key);
+    if (raw == null) return [];
+    const localTs = Number(localStorage.getItem(`forge:sync:updated:${key}`) ?? '0');
+    const rTs = remoteTs.get(key);
+    // Cloud copy is newer-or-equal → it wins, don't push.
+    if (rTs !== undefined && rTs >= localTs) return [];
+    let value: unknown;
+    try { value = JSON.parse(raw); } catch { return []; }
+    return [{ user_id: uid, key, value, updated_at: now }];
+  });
+  return upsertRows(rows);
 }
 
 /** Push a single key — called by stores on write (debounced from the hook). */
@@ -188,7 +272,13 @@ export async function pushKey(key: string, value: unknown): Promise<void> {
   }
 }
 
-/** Triggered on first login after being a guest: uploads all local data. */
+/**
+ * Triggered on first login after being a guest. Reconciles local + cloud:
+ * pulls remote data first (newer cloud rows win), then pushes only the local
+ * keys that are newer or have no cloud row — so guest data is preserved without
+ * clobbering more-recent data already synced from another device.
+ */
 export async function mergeGuestIntoAccount(): Promise<void> {
-  await pushToCloud();
+  await pullFromCloud();
+  await reconcilePush();
 }

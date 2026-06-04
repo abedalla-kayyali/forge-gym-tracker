@@ -1,7 +1,8 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { useAuth } from './hooks/useAuth';
 import { useCloudSync } from './hooks/useCloudSync';
+import { useSettingsStore } from './stores/useSettingsStore';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -310,6 +311,14 @@ export default function App() {
     signInWithEmail, signUpWithEmail, resetPassword, continueAsGuest,
   } = useAuth();
   useCloudSync();
+
+  // Keep document direction/lang in sync with the language setting at runtime
+  // (initial value is set in main.tsx before React mounts to avoid a flash).
+  const language = useSettingsStore((s) => s.settings.language);
+  useEffect(() => {
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
 
   if (loading) return <SplashScreen />;
 

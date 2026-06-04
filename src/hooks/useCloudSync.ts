@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './useAuth';
 import {
-  pullFromCloud, pushToCloud, onSyncStateChange, getSyncState, type SyncState,
+  pullFromCloud, pushToCloud, reconcilePush, onSyncStateChange, getSyncState, type SyncState,
 } from '../lib/cloudSync';
 import { initSyncQueueListeners, drainSyncQueue } from '../lib/syncQueue';
+import { rehydrateAllStores } from '../stores/rehydrate';
 
 /**
  * Mount-once hook: auto-sync when the user logs in.
@@ -23,7 +24,15 @@ export function useCloudSync() {
 
   useEffect(() => {
     const unsub = onSyncStateChange(setState);
-    return () => { unsub; };
+    return () => { unsub(); };
+  }, []);
+
+  // Re-read stores from localStorage whenever a cloud pull updates it,
+  // so newly-synced data appears without a page reload.
+  useEffect(() => {
+    const onPulled = () => rehydrateAllStores();
+    window.addEventListener('forge:pulled', onPulled);
+    return () => window.removeEventListener('forge:pulled', onPulled);
   }, []);
 
   // One-time: start the sync-queue background drainers (online / visibility / interval)
@@ -39,8 +48,9 @@ export function useCloudSync() {
       // Drain anything queued from prior offline sessions before pulling
       await drainSyncQueue();
       await pullFromCloud();
-      // Also push local data in case guest had unsynced stuff
-      await pushToCloud();
+      // Reconcile local→cloud: push only keys newer than (or absent from) the
+      // cloud so we never clobber data synced more recently from another device.
+      await reconcilePush();
     })();
   }, [user]);
 

@@ -29,6 +29,8 @@ export interface BwExerciseSet {
   reps: number;
   variation?: string;
   assisted?: boolean;
+  /** Extra load (kg) for the "weighted" variation (e.g. weighted pull-ups/dips). */
+  addedWeight?: number;
 }
 
 export interface BwWorkoutExercise {

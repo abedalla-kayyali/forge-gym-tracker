@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { UtensilsCrossed, Droplets, Target } from 'lucide-react';
-import { SettingsForm, DataTransfer } from '../features/settings';
+import { UtensilsCrossed, Droplets, Target, Sparkles } from 'lucide-react';
+import { estimateMealMacros, computeWaterGoalCups } from '../lib/trainingScience';
+import { useProfileStore } from '../stores/useProfileStore';
+import { SettingsForm, DataTransfer, AccountCard } from '../features/settings';
 import { XPBar } from '../features/gamification';
 import { AchievementsList } from '../features/gamification';
 import { DashboardSection } from '../features/dashboard';
@@ -8,15 +10,26 @@ import { useNutritionStore } from '../stores/useNutritionStore';
 import { useToast } from '../components/ui/Toast';
 import { useFX } from '../hooks/useFX';
 import { Card } from '../components/ui/Card';
+import { TabPills } from '../components/ui/TabPills';
 
 type NutritionTab = 'meals' | 'water' | 'macros';
 
 function NutritionSection() {
   const [tab, setTab] = useState<NutritionTab>('meals');
   const { meals, water, macroTargets, addMeal, addWater, undoWater } = useNutritionStore();
+  const profile = useProfileStore((s) => s.profile) as unknown as Record<string, unknown>;
   const { toast } = useToast();
   const { play } = useFX();
   const today = new Date().toISOString().slice(0, 10);
+
+  // Dynamic water goal from profile bodyweight (legacy _computeWaterGoalCups)
+  const profileWeight = typeof profile.weight === 'number' ? profile.weight : undefined;
+  const profileWeightUnit = typeof profile.weight_unit === 'string' ? profile.weight_unit : 'kg';
+  const dynamicWaterGoal = computeWaterGoalCups(
+    profileWeight != null && profileWeightUnit === 'lbs'
+      ? profileWeight * 0.453592
+      : profileWeight,
+  );
 
   const todayMeals = meals[today]?.meals ?? [];
   const todayWater = water[today] ?? { cups_drunk: 0, goal_cups: 8 };
@@ -36,6 +49,23 @@ function NutritionSection() {
   const [mealPro, setMealPro] = useState('');
   const [mealCarb, setMealCarb] = useState('');
   const [mealFat, setMealFat] = useState('');
+  const [mealQty, setMealQty] = useState('1');
+
+  // Auto-fill macros from meal name (legacy _estimateMealMacros)
+  const handleEstimate = () => {
+    if (!mealName.trim()) {
+      toast('Enter a meal name first', 'error');
+      return;
+    }
+    const q = Math.max(0.25, Number(mealQty) || 1);
+    const est = estimateMealMacros(mealName, q);
+    setMealCal(String(est.kcal));
+    setMealPro(String(est.protein));
+    setMealCarb(String(est.carbs));
+    setMealFat(String(est.fat));
+    play('tap');
+    toast(est.matched ? `Estimated from "${mealName}"` : 'Used default portion — verify macros', 'info');
+  };
 
   const handleAddMeal = () => {
     if (!mealName || !mealCal) { toast('Enter meal name and calories', 'error'); return; }
@@ -58,23 +88,13 @@ function NutritionSection() {
 
   return (
     <div className="space-y-3">
-      {/* Sub-tabs */}
-      <div className="flex gap-1 card-elevated rounded-xl p-1">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-condensed font-semibold cursor-pointer press-scale transition-all duration-200 ${
-              tab === t.key
-                ? 'bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg shadow-[0_2px_12px_rgba(46,204,113,0.25)]'
-                : 'text-forge-muted hover:text-forge-text'
-            }`}
-          >
-            <t.Icon size={14} />
-            <span>{t.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* Sub-tabs (premium unified) */}
+      <TabPills
+        tabs={TABS.map((t) => ({ id: t.key, label: t.label, Icon: t.Icon }))}
+        value={tab}
+        onChange={setTab}
+        ariaLabel="Nutrition sub-navigation"
+      />
 
       {tab === 'meals' && (
         <div className="space-y-3">
@@ -98,8 +118,17 @@ function NutritionSection() {
 
           {/* Add meal form */}
           <Card className="space-y-2">
-            <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Add Meal</div>
-            <input type="text" placeholder="Meal name" value={mealName} onChange={(e) => setMealName(e.target.value)}
+            <div className="flex items-center justify-between">
+              <div className="text-forge-dim text-xs font-condensed uppercase tracking-wider">Add Meal</div>
+              <button
+                onClick={handleEstimate}
+                disabled={!mealName.trim()}
+                className="inline-flex items-center gap-1 text-[11px] font-condensed uppercase tracking-wider text-forge-green bg-forge-green/10 border border-forge-green/25 rounded-full px-2.5 py-1 cursor-pointer press-scale hover:bg-forge-green/20 disabled:opacity-40 disabled:pointer-events-none transition-all duration-200"
+              >
+                <Sparkles size={12} /> Estimate
+              </button>
+            </div>
+            <input type="text" placeholder="Meal name (e.g. chicken + rice)" value={mealName} onChange={(e) => setMealName(e.target.value)}
               className="w-full bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-3.5 py-2.5 text-forge-text text-sm min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
             <div className="grid grid-cols-4 gap-2">
               <input type="number" placeholder="Cal" value={mealCal} onChange={(e) => setMealCal(e.target.value)}
@@ -110,6 +139,12 @@ function NutritionSection() {
                 className="bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2.5 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
               <input type="number" placeholder="Fat" value={mealFat} onChange={(e) => setMealFat(e.target.value)}
                 className="bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2.5 text-forge-text text-sm font-mono min-h-[44px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-condensed uppercase tracking-wider text-forge-muted">Qty</label>
+              <input type="number" step="0.25" min="0.25" value={mealQty} onChange={(e) => setMealQty(e.target.value)}
+                className="flex-1 bg-[#0a0d0b] border border-[rgba(255,255,255,0.06)] rounded-xl px-2.5 py-2 text-forge-text text-sm font-mono min-h-[36px] placeholder:text-forge-muted/40 focus:outline-none focus:border-forge-green/40 transition-all duration-200" />
+              <span className="text-[10px] text-forge-dim font-condensed">servings</span>
             </div>
             <button onClick={handleAddMeal}
               className="w-full bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg py-2.5 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] shadow-[0_4px_16px_rgba(46,204,113,0.25)]">
@@ -143,7 +178,14 @@ function NutritionSection() {
               <div className="text-forge-green text-4xl font-display" style={{ textShadow: '0 0 20px rgba(46,204,113,0.3)' }}>
                 {todayWater.cups_drunk}
               </div>
-              <div className="text-forge-dim text-xs font-condensed">of {todayWater.goal_cups} cups</div>
+              <div className="text-forge-dim text-xs font-condensed">
+                of {todayWater.goal_cups} cups
+                {profileWeight && dynamicWaterGoal !== todayWater.goal_cups && (
+                  <span className="block text-forge-green/80 text-[10px] mt-0.5">
+                    Suggested: {dynamicWaterGoal} cups (from your bodyweight)
+                  </span>
+                )}
+              </div>
             </div>
             <div className="h-2 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden mx-8">
               <div className="h-full bg-gradient-to-r from-forge-green to-forge-green-light rounded-full transition-all" style={{ width: `${Math.min(100, (todayWater.cups_drunk / todayWater.goal_cups) * 100)}%` }} />
@@ -186,8 +228,12 @@ function NutritionSection() {
 
 export function MorePage() {
   return (
-    <div className="p-4 space-y-4 pb-20 page-enter">
-      <h2 className="text-forge-green font-display text-2xl">More</h2>
+    <div className="p-4 space-y-4 pb-28 page-enter">
+      <h2 className="text-forge-green font-display text-2xl tracking-wide">More</h2>
+
+      {/* Account — sign in / sign up / sync status */}
+      <AccountCard />
+
       <XPBar />
 
       <DashboardSection title="Nutrition & Water">

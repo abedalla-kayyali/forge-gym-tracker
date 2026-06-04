@@ -2,73 +2,107 @@ import { useState, useEffect } from 'react';
 import { useGamificationStore } from '../../stores/useGamificationStore';
 import { useSessionStore } from '../../stores/useSessionStore';
 import { useProfileStore } from '../../stores/useProfileStore';
-import { ChevronDown, Trophy, Dumbbell } from 'lucide-react';
+import { useFX } from '../../hooks/useFX';
+import { ChevronDown, Trophy, Flame, Sparkles } from 'lucide-react';
 
 export function Header() {
   const [expanded, setExpanded] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const profile = useProfileStore((s) => s.profile);
   const session = useSessionStore();
   const { getLevel, experience } = useGamificationStore();
+  const { play } = useFX();
   const level = getLevel();
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="bg-gradient-to-b from-[#0d100e] to-forge-bg border-b border-forge-border-light sticky top-0 z-40">
-      {/* SLIM STRIP */}
-      <div className="flex items-center justify-between px-4 h-14">
-        <div className="flex items-center gap-2.5">
-          <span className="text-forge-green font-display text-2xl tracking-wide">FORGE</span>
-          <span className="text-forge-dim text-xs font-mono">
-            {profile.name ? `// ${profile.name}` : '// Gym OS'}
-          </span>
+    <header
+      className={[
+        'sticky top-0 z-40 safe-area-top transition-all duration-300',
+        scrolled
+          ? 'bg-forge-bg-deep/85 backdrop-blur-xl backdrop-saturate-150 border-b border-forge-border-light'
+          : 'bg-transparent border-b border-transparent',
+      ].join(' ')}
+    >
+      {/* Top strip — logo, streak, session, expand */}
+      <div className="flex items-center justify-between px-4 h-14 max-w-md mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <span className="brand-mark text-[1.65rem] leading-none tracking-[0.2em]">FORGE</span>
+          </div>
+          {profile.name && (
+            <span className="text-forge-dim text-[11px] font-mono uppercase tracking-[0.18em]">
+              · {profile.name.split(' ')[0]}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {session.active && session.startTime !== null && (
             <SessionPill startTime={session.startTime} />
           )}
           <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-forge-muted hover:text-forge-text transition-colors duration-150 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+            onClick={() => { play('tap'); setExpanded(!expanded); }}
+            className="tap flex items-center justify-center rounded-full text-forge-muted hover:text-forge-text hover:bg-white/5 transition-all duration-200 cursor-pointer press-scale"
             aria-label={expanded ? 'Collapse header' : 'Expand header'}
+            aria-expanded={expanded}
           >
             <ChevronDown
               size={18}
-              className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+              className={`transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
             />
           </button>
         </div>
       </div>
 
-      {/* COLLAPSIBLE ZONE */}
+      {/* Expanded zone — level, XP, coach whisper */}
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-forge-border-light pt-3 animate-fade-in">
-          {/* XP BAR */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-forge-green to-forge-green-dark flex items-center justify-center shadow-[0_2px_8px_rgba(46,204,113,0.3)]">
-                  <Trophy size={14} className="text-forge-bg" />
+        <div className="max-w-md mx-auto px-4 pb-4 pt-2 space-y-3 border-t border-forge-border-light animate-fade-in">
+          {/* Level + XP progress */}
+          <div className="card-elevated card-luxury-border rounded-2xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-forge-green to-forge-green-dark flex items-center justify-center shadow-[0_6px_16px_rgba(46,204,113,0.35)]">
+                <Trophy size={18} className="text-forge-bg-deep" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-forge-gold text-forge-bg-deep text-[9px] font-bold flex items-center justify-center shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                  {Math.min(99, Math.floor(experience / 100))}
                 </div>
-                <span className="text-forge-green font-condensed font-semibold text-sm">{level.name}</span>
               </div>
-              <span className="text-forge-dim text-xs font-mono">{experience} XP</span>
-            </div>
-            <div className="h-1.5 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-forge-green to-forge-green-light rounded-full transition-all duration-500"
-                style={{ width: `${level.progress}%`, boxShadow: '0 0 12px rgba(46,204,113,0.4)' }}
-              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-forge-text font-condensed font-semibold text-[15px] tracking-wide truncate">
+                    {level.name}
+                  </span>
+                  <span className="kpi-md text-forge-green shrink-0">{experience}<span className="text-[10px] text-forge-muted ml-0.5">XP</span></span>
+                </div>
+                <div className="mt-1.5 track h-1.5">
+                  <div
+                    className="track-fill"
+                    style={{ width: `${level.progress}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="label-cap">Progress</span>
+                  <span className="text-[10px] font-mono text-forge-muted">{Math.round(level.progress)}%</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* MASCOT STRIP */}
+          {/* Daily whisper */}
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forge-green/20 to-forge-green/5 flex items-center justify-center border border-forge-green/10">
-              <Dumbbell size={20} className="text-forge-green" />
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-forge-green/25 to-forge-green/5 flex items-center justify-center border border-forge-green/15 shrink-0">
+              <Sparkles size={16} className="text-forge-green" />
             </div>
             <div className="flex-1 card-elevated rounded-xl px-3.5 py-2.5">
-              <div className="text-forge-green font-condensed font-semibold text-xs tracking-wider">FORGE BUDDY</div>
-              <div className="text-forge-text text-sm mt-0.5 leading-relaxed">Every legend starts somewhere.</div>
+              <div className="label-cap text-forge-green/90">FORGE Coach</div>
+              <div className="text-forge-text-soft text-sm mt-0.5 leading-relaxed">
+                Every legend starts somewhere. Log one set to keep the fire alive.
+              </div>
             </div>
           </div>
         </div>
@@ -91,9 +125,9 @@ function SessionPill({ startTime }: { startTime: number }) {
   }, [startTime]);
 
   return (
-    <div className="flex items-center gap-1.5 bg-forge-green/8 border border-forge-green/20 rounded-full px-3 py-1.5">
-      <div className="w-2 h-2 rounded-full bg-forge-green glow-dot animate-pulse" />
-      <span className="text-forge-green text-xs font-mono font-medium">{elapsed}</span>
+    <div className="flex items-center gap-1.5 bg-forge-green/12 border border-forge-green/25 rounded-full px-3 py-1.5 shadow-[0_0_12px_rgba(46,204,113,0.2)]">
+      <Flame size={12} className="text-forge-green animate-pulse" />
+      <span className="text-forge-green text-[11px] font-mono font-semibold tracking-wider">{elapsed}</span>
     </div>
   );
 }

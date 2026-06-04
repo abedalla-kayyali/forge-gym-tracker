@@ -2,6 +2,14 @@ import { useMemo, type ReactNode } from 'react';
 import type { MuscleGroup } from '../../types/workout';
 import { PATHS_BY_MUSCLE, DECORATIVE_PATHS, BODY_MAP_CENTROIDS, BODY_MAP_VIEWBOX } from './body-map-data';
 
+// Forearms: potrace captured 29 hand/finger detail paths — keep only the 7 main forearm body paths
+// Decorative: last 6 entries are traced Shutterstock watermark text characters — strip them
+const CLEAN_PATHS_BY_MUSCLE = {
+  ...PATHS_BY_MUSCLE,
+  forearms: PATHS_BY_MUSCLE.forearms.slice(0, 7),
+};
+const CLEAN_DECORATIVE_PATHS = DECORATIVE_PATHS.slice(0, -6);
+
 /**
  * FORGE anatomical body map — 100% SVG, every path vector-traced from the
  * reference asset `public/body-map.png`. No raster at runtime.
@@ -99,7 +107,7 @@ export function BodyMap({
         {/* Decorative paths — head, neck, knees, hands, feet, artifacts.
             Drawn first (behind), not clickable. */}
         <g pointerEvents="none">
-          {DECORATIVE_PATHS.map((d, i) => (
+          {CLEAN_DECORATIVE_PATHS.map((d, i) => (
             <path
               key={i}
               d={d}
@@ -113,7 +121,7 @@ export function BodyMap({
 
         {/* Muscle groups — each rendered as a <g> with all its traced sub-paths */}
         {MUSCLE_ORDER.map((muscle) => {
-          const paths = PATHS_BY_MUSCLE[muscle];
+          const paths = CLEAN_PATHS_BY_MUSCLE[muscle];
           if (!paths || paths.length === 0) return null;
 
           const active = selectedSet.has(muscle);

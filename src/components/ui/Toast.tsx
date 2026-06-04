@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, createContext, useContext, type ReactNode } from 'react';
-import { CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Info, XCircle } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -36,7 +36,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
-      <div className="fixed bottom-20 left-4 right-4 z-[60] flex flex-col gap-2 pointer-events-none">
+      <div
+        className="fixed bottom-24 left-0 right-0 z-[60] flex flex-col items-center gap-2 px-4 pointer-events-none"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={removeToast} />
         ))}
@@ -45,11 +49,27 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-const typeConfig: Record<ToastType, { style: string; Icon: typeof CheckCircle }> = {
-  success: { style: 'border-forge-green/30 text-forge-green', Icon: CheckCircle },
-  error: { style: 'border-red-500/30 text-red-400', Icon: XCircle },
-  info: { style: 'border-forge-border text-forge-text', Icon: Info },
-  warning: { style: 'border-yellow-500/30 text-yellow-400', Icon: AlertTriangle },
+const typeConfig: Record<ToastType, { style: string; Icon: typeof CheckCircle2; iconClass: string }> = {
+  success: {
+    style: 'border-forge-green/30 bg-forge-green/[0.08]',
+    Icon: CheckCircle2,
+    iconClass: 'text-forge-green',
+  },
+  error: {
+    style: 'border-red-500/40 bg-red-500/[0.08]',
+    Icon: XCircle,
+    iconClass: 'text-red-400',
+  },
+  info: {
+    style: 'border-white/10',
+    Icon: Info,
+    iconClass: 'text-forge-text-soft',
+  },
+  warning: {
+    style: 'border-yellow-500/30 bg-yellow-500/[0.08]',
+    Icon: AlertTriangle,
+    iconClass: 'text-yellow-400',
+  },
 };
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
@@ -58,12 +78,22 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
     return () => clearTimeout(timer);
   }, [toast.id, onDismiss]);
 
-  const { style, Icon } = typeConfig[toast.type];
+  const { style, Icon, iconClass } = typeConfig[toast.type];
 
   return (
-    <div className={`pointer-events-auto card-elevated border rounded-xl px-4 py-3 text-sm font-body animate-slide-up flex items-center gap-3 ${style}`}>
-      <Icon size={18} className="shrink-0" />
-      <span>{toast.message}</span>
+    <div
+      role="status"
+      className={[
+        'pointer-events-auto max-w-md w-full',
+        'card-glass border rounded-2xl px-4 py-3',
+        'text-sm font-body text-forge-text',
+        'animate-slide-up flex items-center gap-3',
+        'shadow-[0_12px_40px_rgba(0,0,0,0.5)]',
+        style,
+      ].join(' ')}
+    >
+      <Icon size={18} className={`shrink-0 ${iconClass}`} />
+      <span className="flex-1 leading-snug">{toast.message}</span>
     </div>
   );
 }

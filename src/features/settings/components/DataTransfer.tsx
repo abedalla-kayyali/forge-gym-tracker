@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { useToast } from '../../../components/ui/Toast';
 import { STORAGE_KEYS } from '../../../lib/constants';
+import { writeStorage } from '../../../lib/storage';
+import { rehydrateAllStores } from '../../../stores/rehydrate';
 import { Card } from '../../../components/ui/Card';
 
 const EXPORT_KEYS = [
@@ -51,12 +53,17 @@ export function DataTransfer() {
           const data = JSON.parse(reader.result as string);
           let count = 0;
           for (const [key, value] of Object.entries(data)) {
-            if (key.startsWith('forge_')) {
-              localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            if (key.startsWith('forge_') || key.startsWith('forge-')) {
+              // Route through writeStorage so the local sync timestamp is stamped
+              // (otherwise the next cloud pull silently overwrites the import)
+              // and `forge:mutated` fires so the import is pushed to the cloud.
+              writeStorage(key, value);
               count++;
             }
           }
-          toast(`Imported ${count} data keys. Reload to apply.`, 'success');
+          // Re-read stores from the imported localStorage so the data shows now.
+          rehydrateAllStores();
+          toast(`Imported ${count} data keys.`, 'success');
         } catch {
           toast('Invalid backup file', 'error');
         }
