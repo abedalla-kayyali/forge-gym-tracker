@@ -57,7 +57,8 @@
     "increaseReps": "زيادة التكرارات",
     "decreaseWeight": "تقليل الوزن",
     "increaseWeight": "زيادة الوزن",
-    "kgUnit": "كجم"
+    "kgUnit": "كجم",
+    "prBadge": "قياسي"
   },
   "muscles": {
     "chest": "الصدر",

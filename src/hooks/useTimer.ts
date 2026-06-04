@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSessionStore } from '../stores/useSessionStore';
 import { useFX } from './useFX';
 
@@ -48,6 +48,19 @@ export function useTimer(): TimerState {
       session.clearRestTimer();
     }
   }, [restRemaining, session.restTimerStart, play, session]);
+
+  // 3-2-1 countdown tick (deduped per second value)
+  const lastTick = useRef(-1);
+  useEffect(() => {
+    if (restActive && restRemaining > 0 && restRemaining <= 3) {
+      if (lastTick.current !== restRemaining) {
+        play('tick');
+        lastTick.current = restRemaining;
+      }
+    } else if (!restActive) {
+      lastTick.current = -1;
+    }
+  }, [restRemaining, restActive, play]);
 
   const startRest = useCallback(() => {
     session.startRestTimer();

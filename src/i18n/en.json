@@ -57,7 +57,8 @@
     "increaseReps": "Increase reps",
     "decreaseWeight": "Decrease weight",
     "increaseWeight": "Increase weight",
-    "kgUnit": "kg"
+    "kgUnit": "kg",
+    "prBadge": "PR"
   },
   "muscles": {
     "chest": "Chest",

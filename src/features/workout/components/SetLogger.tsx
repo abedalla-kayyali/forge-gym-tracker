@@ -1,7 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Plus, Minus, Copy, X, TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useGhostSets } from '../hooks/useGhostSets';
+import { useWorkoutStore } from '../../../stores/useWorkoutStore';
+import { useFX } from '../../../hooks/useFX';
 import type { WorkoutSet } from '../../../types/workout';
 
 interface Props {
@@ -13,9 +15,35 @@ interface Props {
 
 export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) {
   const { t } = useTranslation();
+  const { play } = useFX();
   const ghostSets = useGhostSets(exerciseName);
+  const workouts = useWorkoutStore((s) => s.workouts);
   const [reps, setReps] = useState('');
   const [weight, setWeight] = useState('');
+  const [prFlash, setPrFlash] = useState(false);
+
+  // All-time best weight logged for this exercise (for real-time PR detection).
+  const histBest = useMemo(() => {
+    let m = 0;
+    const key = exerciseName.toLowerCase();
+    for (const w of workouts) {
+      for (const ex of w.exercises) {
+        if (ex.name.toLowerCase() === key) {
+          for (const s of ex.sets) if ((s.weight ?? 0) > m) m = s.weight ?? 0;
+        }
+      }
+    }
+    return m;
+  }, [workouts, exerciseName]);
+
+  // Which of the in-progress sets are new records (running max from the all-time best).
+  const prFlags = useMemo(() => {
+    let running = histBest;
+    return sets.map((s) => {
+      if (s.weight > 0 && s.weight > running) { running = s.weight; return true; }
+      return false;
+    });
+  }, [sets, histBest]);
 
   // Prefill from "last time" whenever the exercise changes and we're starting
   // fresh — so the user can tap Add immediately. Gets easier the more history
@@ -43,9 +71,17 @@ export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) 
     const r = parseInt(reps, 10);
     const w = parseFloat(weight);
     if (isNaN(r) || r <= 0 || isNaN(w) || w < 0) return;
+    // Real-time PR: this set beats the best weight seen so far for this exercise.
+    const priorBest = Math.max(histBest, 0, ...sets.map((s) => s.weight));
+    const willPR = w > 0 && w > priorBest;
     onAddSet({ reps: r, weight: w });
+    if (willPR) {
+      play('pr');
+      setPrFlash(true);
+      window.setTimeout(() => setPrFlash(false), 1300);
+    }
     // Keep the values so tapping Add again logs another identical set fast.
-  }, [reps, weight, onAddSet]);
+  }, [reps, weight, onAddSet, histBest, sets, play]);
 
   const adjustReps = (d: number) =>
     setReps((v) => String(Math.max(0, (parseInt(v, 10) || 0) + d)));
@@ -70,7 +106,10 @@ export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) 
   };
 
   return (
-    <div className="space-y-3">
+    <div
+      className="space-y-3 rounded-2xl transition-shadow duration-300"
+      style={prFlash ? { boxShadow: '0 0 0 2px rgba(212,175,55,0.6), 0 0 28px rgba(212,175,55,0.35)' } : undefined}
+    >
       {/* Ghost sets hint */}
       {sets.length === 0 && ghostSets.length > 0 && (
         <div className="card-elevated rounded-xl px-3.5 py-2.5 border border-forge-green/10">
@@ -95,7 +134,12 @@ export function SetLogger({ exerciseName, sets, onAddSet, onRemoveSet }: Props) 
             <div key={i} className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 items-center card-elevated rounded-xl px-3 py-2.5 text-sm">
               <span className="text-forge-dim font-mono text-xs">{i + 1}</span>
               <span className="text-forge-text font-mono">{s.reps}</span>
-              <span className="text-forge-text font-mono">{s.weight}</span>
+              <span className="text-forge-text font-mono flex items-center gap-1">
+                {s.weight}
+                {prFlags[i] && (
+                  <span className="text-[8px] font-condensed font-bold text-forge-gold bg-forge-gold/15 border border-forge-gold/30 rounded px-1 py-0.5 leading-none">{t('log.prBadge')}</span>
+                )}
+              </span>
               <button onClick={() => onRemoveSet(i)} className="text-forge-dim hover:text-red-400 cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center transition-colors duration-150" aria-label={t('log.removeSet')}>
                 <X size={14} />
               </button>
