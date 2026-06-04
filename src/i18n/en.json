@@ -286,7 +286,15 @@
     "colVol": "Vol",
     "sharePoster": "Share Poster",
     "done": "Done",
-    "xpFooterPrefix": "+XP earned · view full history in"
+    "xpFooterPrefix": "+XP earned · view full history in",
+    "prToast_zero": "No new PRs",
+    "prToast_one": "New personal record! 💪",
+    "prToast_two": "2 new personal records! 💪",
+    "prToast_few": "{{count}} new personal records! 💪",
+    "prToast_many": "{{count}} new personal records! 💪",
+    "prToast_other": "{{count}} new personal records! 💪",
+    "levelUpTitle": "Level Up!",
+    "levelUpReached": "Level {{level}} · {{name}}"
   },
   "progressGuide": {
     "weekGoal": {

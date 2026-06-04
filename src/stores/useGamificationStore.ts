@@ -9,12 +9,19 @@ interface LevelInfo {
   progress: number;
 }
 
+export interface LevelUpResult {
+  leveledUp: boolean;
+  prevLevel: LevelInfo;
+  newLevel: LevelInfo;
+  gained: number;
+}
+
 interface GamificationState {
   achievements: Achievement[];
   experience: number;
   hydrate: () => void;
   addAchievement: (a: Achievement) => void;
-  addXP: (amount: number) => void;
+  addXP: (amount: number) => LevelUpResult;
   getLevel: () => LevelInfo;
 }
 
@@ -47,9 +54,12 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
   },
 
   addXP: (amount) => {
+    const prevLevel = get().getLevel();
     const updated = get().experience + amount;
     writeStorage(STORAGE_KEYS.EXPERIENCE, updated);
     set({ experience: updated });
+    const newLevel = get().getLevel();
+    return { leveledUp: newLevel.level > prevLevel.level, prevLevel, newLevel, gained: amount };
   },
 
   getLevel: (): LevelInfo => {

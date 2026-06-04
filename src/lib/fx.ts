@@ -1,67 +1,136 @@
-// Sound effects using Web Audio API
+// Premium Web Audio FX engine (iOS-safe) + haptics + motion helpers.
+//
+// Each sound is a short layered synth tone with a proper attack/decay envelope
+// and (optionally) a low-pass filter for warmth — a step up from raw beeps.
+// iOS requires the AudioContext to be created/resumed from a user gesture, so
+// call unlockAudio() on the first pointerdown/keydown (see App.tsx).
+
 let audioCtx: AudioContext | null = null;
 
-function getAudioContext(): AudioContext {
-  if (!audioCtx) {
-    audioCtx = new AudioContext();
-  }
-  return audioCtx;
-}
-
-export function playBeep(frequency: number = 800, duration: number = 100, volume: number = 0.3) {
+function getCtx(): AudioContext | null {
   try {
-    const ctx = getAudioContext();
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.frequency.value = frequency;
-    gain.gain.value = volume;
-    oscillator.start();
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
-    oscillator.stop(ctx.currentTime + duration / 1000);
+    if (!audioCtx) {
+      const Ctor: typeof AudioContext | undefined =
+        window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctor) return null;
+      audioCtx = new Ctor();
+    }
+    if (audioCtx.state === 'suspended') void audioCtx.resume();
+    return audioCtx;
   } catch {
-    // Web Audio not available
+    return null;
   }
 }
 
-// Predefined sound effects
+/** Unlock/resume audio on the first user gesture (required on iOS Safari). */
+export function unlockAudio(): void {
+  const ctx = getCtx();
+  if (ctx && ctx.state === 'suspended') void ctx.resume();
+}
+
+/** Honour the OS "reduce motion" setting for visual effects (confetti, ripple). */
+export function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
+interface ToneOpts {
+  freq: number;
+  duration?: number;   // seconds (release time)
+  type?: OscillatorType;
+  volume?: number;     // 0..1 peak
+  attack?: number;     // seconds
+  filter?: number;     // low-pass cutoff Hz
+  delay?: number;      // seconds before start
+}
+
+function tone(o: ToneOpts): void {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const { freq, duration = 0.15, type = 'sine', volume = 0.2, attack = 0.006, filter, delay = 0 } = o;
+  const t0 = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t0);
+
+  let head: AudioNode = osc;
+  if (filter) {
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(filter, t0);
+    osc.connect(lp);
+    head = lp;
+  }
+  head.connect(gain);
+  gain.connect(ctx.destination);
+
+  const peak = Math.max(0.0001, volume);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(peak, t0 + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + duration);
+  osc.start(t0);
+  osc.stop(t0 + attack + duration + 0.03);
+}
+
+/** Back-compat helper (legacy callers). */
+export function playBeep(frequency = 800, duration = 100, volume = 0.3): void {
+  tone({ freq: frequency, duration: duration / 1000, volume, type: 'triangle' });
+}
+
+// Predefined, cohesive sound palette.
 export const sounds = {
-  tap: () => playBeep(600, 50, 0.15),
-  save: () => playBeep(880, 150, 0.2),
+  tap: () => tone({ freq: 430, duration: 0.05, volume: 0.07, type: 'sine', filter: 1400 }),
+  tick: () => tone({ freq: 680, duration: 0.04, volume: 0.09, type: 'sine' }),
+  save: () => {
+    tone({ freq: 587, duration: 0.12, volume: 0.16, type: 'triangle', filter: 2600 });
+    tone({ freq: 880, duration: 0.18, volume: 0.12, type: 'sine', delay: 0.08 });
+  },
   success: () => {
-    playBeep(523, 100, 0.2);
-    setTimeout(() => playBeep(659, 100, 0.2), 100);
-    setTimeout(() => playBeep(784, 150, 0.25), 200);
+    [523, 659, 784].forEach((f, i) =>
+      tone({ freq: f, duration: 0.18, volume: 0.15, type: 'triangle', filter: 3200, delay: i * 0.085 }),
+    );
   },
   pr: () => {
-    playBeep(523, 80, 0.3);
-    setTimeout(() => playBeep(784, 80, 0.3), 80);
-    setTimeout(() => playBeep(1047, 200, 0.35), 160);
+    // Triumphant rising chord + sparkle.
+    [523, 784, 1047].forEach((f, i) =>
+      tone({ freq: f, duration: 0.24, volume: 0.18, type: 'sawtooth', filter: 2600, delay: i * 0.08 }),
+    );
+    tone({ freq: 1568, duration: 0.45, volume: 0.16, type: 'sine', delay: 0.26 });
   },
   levelUp: () => {
-    playBeep(440, 100, 0.25);
-    setTimeout(() => playBeep(554, 100, 0.25), 120);
-    setTimeout(() => playBeep(659, 100, 0.25), 240);
-    setTimeout(() => playBeep(880, 250, 0.3), 360);
+    // Fanfare: ascending run resolving to a held chord.
+    [392, 523, 659, 784].forEach((f, i) =>
+      tone({ freq: f, duration: 0.2, volume: 0.17, type: 'triangle', filter: 3200, delay: i * 0.1 }),
+    );
+    [784, 988, 1175].forEach((f) =>
+      tone({ freq: f, duration: 0.6, volume: 0.14, type: 'sine', delay: 0.46 }),
+    );
   },
-  error: () => playBeep(200, 200, 0.2),
-  timer: () => playBeep(1000, 300, 0.25),
+  error: () => tone({ freq: 196, duration: 0.2, volume: 0.16, type: 'sawtooth', filter: 700 }),
+  timer: () => {
+    tone({ freq: 880, duration: 0.12, volume: 0.18, type: 'sine' });
+    tone({ freq: 1320, duration: 0.32, volume: 0.16, type: 'sine', delay: 0.12 });
+  },
 };
 
-// Haptic feedback using Vibration API
+// Haptic feedback using the Vibration API (no-op on iOS / unsupported devices).
 export const haptics = {
-  tap: () => navigator.vibrate?.(10),
-  save: () => navigator.vibrate?.(30),
-  success: () => navigator.vibrate?.([20, 50, 20]),
-  pr: () => navigator.vibrate?.([30, 50, 30, 50, 50]),
-  levelUp: () => navigator.vibrate?.([20, 30, 20, 30, 40, 30, 60]),
-  error: () => navigator.vibrate?.([50, 30, 50]),
-  timer: () => navigator.vibrate?.([100, 50, 100]),
+  tap: () => navigator.vibrate?.(8),
+  tick: () => navigator.vibrate?.(5),
+  save: () => navigator.vibrate?.(28),
+  success: () => navigator.vibrate?.([18, 40, 18]),
+  pr: () => navigator.vibrate?.([28, 45, 28, 45, 55]),
+  levelUp: () => navigator.vibrate?.([18, 28, 18, 28, 38, 28, 60]),
+  error: () => navigator.vibrate?.([45, 28, 45]),
+  timer: () => navigator.vibrate?.([90, 45, 90]),
 };
 
-// Visual effects
-export function createRipple(element: HTMLElement, color: string = '#2ecc71') {
+// Visual ripple effect.
+export function createRipple(element: HTMLElement, color: string = '#2ecc71'): void {
   const rect = element.getBoundingClientRect();
   const ripple = document.createElement('div');
   const size = Math.max(rect.width, rect.height);

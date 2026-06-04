@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import { useCloudSync } from './hooks/useCloudSync';
 import { useSettingsStore } from './stores/useSettingsStore';
 import { applyLanguage } from './lib/i18n';
+import { unlockAudio } from './lib/fx';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -323,6 +324,17 @@ export default function App() {
   useEffect(() => {
     applyLanguage(language);
   }, [language]);
+
+  // Unlock the Web Audio context on the first user gesture (iOS requirement).
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
 
   if (loading) return <SplashScreen />;
 

@@ -13,8 +13,9 @@ import { useCardioStore } from '../../../stores/useCardioStore';
 import { useGamificationStore } from '../../../stores/useGamificationStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
+import { flagPRs } from '../../../lib/trainingScience';
 import type { Workout, BwWorkout, CardioEntry, MuscleGroup } from '../../../types/workout';
-import { Share2, Flame, Trophy, Zap, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Share2, Flame, Trophy, Zap, Clock, ChevronDown, ChevronUp, Award } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -28,6 +29,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
   const { t } = useTranslation();
   const session = useSessionStore();
   const addWorkout = useWorkoutStore((s) => s.addWorkout);
+  const workoutHistory = useWorkoutStore((s) => s.workouts);
   const addBwWorkout = useBwWorkoutStore((s) => s.addWorkout);
   const addCardioEntry = useCardioStore((s) => s.addEntry);
   const addXP = useGamificationStore((s) => s.addXP);
@@ -38,6 +40,9 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
   const [showPoster, setShowPoster] = useState(false);
   const [expandedEx, setExpandedEx] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  // Celebration state captured at save time.
+  const [levelUp, setLevelUp] = useState<{ level: number; name: string } | null>(null);
+  const [prCount, setPrCount] = useState(0);
   const savedWorkoutRef = useRef<Workout | null>(null);
   // Frozen snapshot of summary taken BEFORE session.reset() so post-save stats render correctly
   const savedSummaryRef = useRef<ReturnType<typeof buildSummary> | null>(null);
@@ -71,14 +76,17 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     savedSummaryRef.current = liveSummary;
 
     let xpGained = 0;
+    let prTotal = 0;
 
-    // Save weighted workout
+    // Save weighted workout — flag any new personal records first.
     if (session.exercises.length > 0) {
+      const { exercises: flaggedExercises, prCount: weightedPRs } = flagPRs(session.exercises, workoutHistory);
+      prTotal += weightedPRs;
       const workout: Workout = {
         id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
         date: new Date().toISOString(),
         name: summary.muscleNames.join(' + ') || t('saveWorkout.defaultWorkoutName'),
-        exercises: session.exercises,
+        exercises: flaggedExercises,
         duration: summary.duration,
       };
       addWorkout(workout);
@@ -135,11 +143,14 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
       xpGained += summary.cardioMinutes;
     }
 
-    addXP(xpGained);
-    // PR-sound if any set was flagged as PR, otherwise regular success
-    const hadPR = session.exercises.some((ex) => ex.sets.some((s) => s.isPR));
-    play(hadPR ? 'pr' : 'success');
-    toast(t('saveWorkout.toastSaved'), 'success');
+    const levelResult = addXP(xpGained);
+    // Tiered celebration: level-up trumps PR trumps a normal save.
+    if (levelResult.leveledUp) play('levelUp');
+    else if (prTotal > 0) play('pr');
+    else play('success');
+    setLevelUp(levelResult.leveledUp ? { level: levelResult.newLevel.level, name: levelResult.newLevel.name } : null);
+    setPrCount(prTotal);
+    toast(prTotal > 0 ? t('saveWorkout.prToast', { count: prTotal }) : t('saveWorkout.toastSaved'), 'success');
     session.reset();
     setSaved(true);
     setShowConfetti(true);
@@ -150,6 +161,8 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     savedWorkoutRef.current = null;
     savedSummaryRef.current = null;
     setExpandedEx(null);
+    setLevelUp(null);
+    setPrCount(0);
     onSaved();
     onClose();
   };
@@ -202,6 +215,29 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
         ) : (
           /* ── POST-SAVE CELEBRATION + HISTORY + POSTER ─────── */
           <div className="space-y-4">
+            {/* Level-up banner (trumps PR) */}
+            {levelUp && (
+              <div className="rounded-2xl p-4 text-center bg-gradient-to-br from-forge-gold/25 to-forge-gold/[0.06] border border-forge-gold/40 animate-fade-in shadow-[0_0_24px_rgba(212,175,55,0.25)]">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Award size={18} className="text-forge-gold" />
+                  <span className="label-cap text-forge-gold">{t('saveWorkout.levelUpTitle')}</span>
+                </div>
+                <div className="text-forge-text font-display text-2xl tracking-wide">
+                  {t('saveWorkout.levelUpReached', { level: levelUp.level, name: levelUp.name })}
+                </div>
+              </div>
+            )}
+            {/* PR banner */}
+            {!levelUp && prCount > 0 && (
+              <div className="rounded-2xl p-3 text-center bg-gradient-to-br from-forge-green/20 to-forge-green/[0.05] border border-forge-green/30 animate-fade-in">
+                <div className="flex items-center justify-center gap-2">
+                  <Trophy size={16} className="text-forge-green" />
+                  <span className="text-forge-green font-condensed font-semibold text-sm">
+                    {t('saveWorkout.prToast', { count: prCount })}
+                  </span>
+                </div>
+              </div>
+            )}
             {/* Hero card with body-map + stats */}
             <div className="card-elevated card-luxury-border rounded-2xl p-4 relative overflow-hidden">
               <div

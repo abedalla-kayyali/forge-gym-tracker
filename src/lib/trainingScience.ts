@@ -6,7 +6,7 @@
  * component/store without coupling.
  */
 
-import type { Workout, BwWorkout } from '../types/workout';
+import type { Workout, BwWorkout, WorkoutExercise } from '../types/workout';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // ADAPTIVE REST TIMER
@@ -241,6 +241,54 @@ export function suggestNextWeight(
     reps: Math.min(last.reps + 1, targetRepRange[1]),
     hint: 'Same weight, add 1 rep',
   };
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PERSONAL-RECORD (PR) DETECTION
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Flag sets in a just-finished workout that beat the all-time best weight for
+ * their exercise (across `history`). Returns immutable copies of the exercises
+ * with `isPR` set on each record-breaking set, plus a summary for celebration.
+ *
+ * A set is a PR if its weight (> 0) exceeds the best weight ever logged for that
+ * exercise; within the new workout the bar rises as you beat it, so only genuine
+ * new maxes are flagged (not every set).
+ */
+export function flagPRs(
+  exercises: WorkoutExercise[],
+  history: Workout[],
+): { exercises: WorkoutExercise[]; prCount: number; prExercises: string[] } {
+  const bestByEx = new Map<string, number>();
+  for (const w of history) {
+    for (const ex of w.exercises) {
+      const key = (ex.name || '').trim().toLowerCase();
+      if (!key) continue;
+      const top = Math.max(0, ...ex.sets.map((s) => s.weight ?? 0));
+      if (top > (bestByEx.get(key) ?? 0)) bestByEx.set(key, top);
+    }
+  }
+
+  const prExercises: string[] = [];
+  const flagged = exercises.map((ex) => {
+    const key = (ex.name || '').trim().toLowerCase();
+    let running = bestByEx.get(key) ?? 0;
+    let exHasPR = false;
+    const sets = ex.sets.map((s) => {
+      const w = s.weight ?? 0;
+      if (w > 0 && w > running) {
+        running = w;
+        exHasPR = true;
+        return { ...s, isPR: true };
+      }
+      return { ...s, isPR: false };
+    });
+    if (exHasPR) prExercises.push(ex.name);
+    return { ...ex, sets };
+  });
+
+  return { exercises: flagged, prCount: prExercises.length, prExercises };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════

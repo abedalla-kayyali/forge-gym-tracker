@@ -286,7 +286,15 @@
     "colVol": "الحجم",
     "sharePoster": "مشاركة البوستر",
     "done": "تم",
-    "xpFooterPrefix": "+نقاط خبرة مكتسبة · شاهد السجل الكامل في"
+    "xpFooterPrefix": "+نقاط خبرة مكتسبة · شاهد السجل الكامل في",
+    "prToast_zero": "لا أرقام قياسية جديدة",
+    "prToast_one": "رقم قياسي جديد! 💪",
+    "prToast_two": "رقمان قياسيان جديدان! 💪",
+    "prToast_few": "{{count}} أرقام قياسية جديدة! 💪",
+    "prToast_many": "{{count}} رقماً قياسياً جديداً! 💪",
+    "prToast_other": "{{count}} رقم قياسي جديد! 💪",
+    "levelUpTitle": "ترقية مستوى!",
+    "levelUpReached": "المستوى {{level}} · {{name}}"
   },
   "progressGuide": {
     "weekGoal": {

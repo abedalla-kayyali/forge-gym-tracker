@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { sounds, haptics, createRipple } from '../lib/fx';
+import { sounds, haptics, createRipple, prefersReducedMotion } from '../lib/fx';
 
-type FXEvent = 'tap' | 'save' | 'success' | 'pr' | 'levelUp' | 'error' | 'timer';
+type FXEvent = 'tap' | 'tick' | 'save' | 'success' | 'pr' | 'levelUp' | 'error' | 'timer';
 
 export function useFX() {
   const soundEnabled = useSettingsStore((s) => s.settings.sound);
@@ -18,7 +18,7 @@ export function useFX() {
 
   const ripple = useCallback(
     (element: HTMLElement, color?: string) => {
-      createRipple(element, color);
+      if (!prefersReducedMotion()) createRipple(element, color);
       play('tap');
     },
     [play],
