@@ -20,7 +20,10 @@ function spaFallback(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // GitHub Pages serves this project at /forge-gym-tracker/. Only apply that
+  // base for production builds so `vite dev` keeps serving from root.
+  base: command === 'build' ? '/forge-gym-tracker/' : '/',
   plugins: [
     react(),
     spaFallback(),
@@ -46,6 +49,7 @@ export default defineConfig({
   ],
   // Use app.html so the existing vanilla-JS index.html is untouched
   root: '.',
+  // (base is set above, per-command)
   publicDir: 'public',
   server: {
     port: 5173,
@@ -65,4 +69,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

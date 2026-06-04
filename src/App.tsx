@@ -16,6 +16,10 @@ import {
   Loader2, User as UserLucide, CheckCircle2,
 } from 'lucide-react';
 
+// Router basename derived from Vite's base URL
+// ('/forge-gym-tracker/' in a production Pages build, '/' in dev).
+const ROUTER_BASENAME = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+
 // Lazy-loaded pages
 const LogPage = lazy(() => import('./pages/LogPage').then((m) => ({ default: m.LogPage })));
 const StatsPage = lazy(() => import('./pages/StatsPage').then((m) => ({ default: m.StatsPage })));
@@ -337,7 +341,7 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={ROUTER_BASENAME}>
       <div className="min-h-dvh bg-forge-bg flex flex-col">
         <a
           href="#main-content"

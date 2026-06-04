@@ -3,6 +3,7 @@ dist/
 *.tsbuildinfo
 vite.config.d.ts
 .playwright-cli/
+.playwright-mcp/
 .worktrees/
 *.log
 check_output.txt
