@@ -988,20 +988,45 @@
 
   // â”€â”€ Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   window._authLogin = async function () {
-    if (!window._sb) { _authShowError('auth-error-login', _authT('errSupabase')); return; }
     const email = document.getElementById('auth-email-l')?.value.trim();
     const pass  = document.getElementById('auth-pass-l')?.value;
     if (!email || !pass) { _authShowError('auth-error-login', _authT('errFill')); return; }
     _authClearAllErrors();
     _authSetLoading('auth-btn-login', true);
+
+    const oa = window._forgeOfflineAuth;
+
+    // 1) Try online auth via Supabase
     try {
+      if (!window._sb) throw new Error('SB_NOT_CONFIGURED');
       const { data, error } = await window._sb.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
+      // Save fingerprint so we can offline-verify next time
+      if (oa) { try { await oa.saveFingerprint(email, pass); } catch {} }
       _authSuccessCelebrate(() => {
         _authHideOverlay();
         if (typeof window._authSuccess === 'function') window._authSuccess(data.session);
       });
+      return;
     } catch (e) {
+      // 2) If it looks like a network / 503 problem, try offline verification
+      const networkish = oa && oa.isLikelyNetworkError(e);
+      if (networkish && oa && oa.hasFingerprint()) {
+        const ok = await oa.verify(email, pass);
+        if (ok) {
+          oa.markOfflineSession(email);
+          try { localStorage.setItem('forge_guest', '1'); } catch {}
+          _authSuccessCelebrate(() => {
+            _authHideOverlay();
+            // Notify the app that we are running offline so it can show a banner
+            // and pause cloud-sync attempts gracefully.
+            try { window.dispatchEvent(new CustomEvent('forge:offline-auth', { detail: { email } })); } catch {}
+          });
+          return;
+        }
+        _authShowError('auth-error-login', 'Offline — could not verify. Check email/password.');
+        return;
+      }
       _authShowError('auth-error-login', e.message || _authT('errLogin'));
     } finally {
       _authSetLoading('auth-btn-login', false);
@@ -1020,6 +1045,10 @@
     try {
       const { data, error } = await window._sb.auth.signUp({ email, password: pass });
       if (error) throw error;
+      // Save fingerprint either way — once they confirm + log in, offline will work
+      if (window._forgeOfflineAuth) {
+        try { await window._forgeOfflineAuth.saveFingerprint(email, pass); } catch {}
+      }
       if (data.session) {
         _authSuccessCelebrate(() => {
           _authHideOverlay();

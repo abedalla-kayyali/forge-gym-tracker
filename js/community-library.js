@@ -182,6 +182,16 @@
       _exerciseCache = _mergeExercises(_exerciseCache, [localFallback]);
       _writeCache(EXERCISE_CACHE_KEY, _exerciseCache);
       _emit('forge:community-exercises-updated');
+      // Queue the upsert so it retries once Supabase is back online
+      if (window._forgeSyncQueue && !_isMissingTable(err)) {
+        window._forgeSyncQueue.enqueue({
+          type: 'upsert',
+          table: 'community_exercises',
+          row: payload,
+          onConflict: 'name_key',
+          dedupeKey: 'community_exercises:' + name_key,
+        });
+      }
       return localFallback;
     }
   }
@@ -222,6 +232,16 @@
       _mealCache = _mergeMealEntries(_mealCache, [localFallback]);
       _writeCache(MEAL_CACHE_KEY, _mealCache);
       _emit('forge:community-meals-updated');
+      // Queue the upsert so it retries once Supabase is back online
+      if (window._forgeSyncQueue && !_isMissingTable(err)) {
+        window._forgeSyncQueue.enqueue({
+          type: 'upsert',
+          table: 'community_meals',
+          row: payload,
+          onConflict: 'name_key',
+          dedupeKey: 'community_meals:' + name_key,
+        });
+      }
       return localFallback;
     }
   }

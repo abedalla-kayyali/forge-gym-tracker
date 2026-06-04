@@ -38,8 +38,16 @@ export function writeStorage<T>(key: string, value: T): void {
   } else {
     localStorage.setItem(key, JSON.stringify(value));
   }
+  // Stamp local mutation timestamp for cloud-sync last-writer-wins
+  try {
+    localStorage.setItem(`forge:sync:updated:${key}`, String(Date.now()));
+    window.dispatchEvent(new CustomEvent('forge:mutated', { detail: { key } }));
+  } catch { /* SSR / restricted env */ }
 }
 
 export function removeStorage(key: string): void {
   localStorage.removeItem(key);
+  try {
+    window.dispatchEvent(new CustomEvent('forge:mutated', { detail: { key, removed: true } }));
+  } catch { /* noop */ }
 }
