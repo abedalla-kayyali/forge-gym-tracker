@@ -117,7 +117,13 @@
     "exerciseLogged_many": "تم تسجيل {{name}} — {{count}} مجموعة",
     "exerciseLogged_other": "تم تسجيل {{name}} — {{count}} مجموعة",
     "endSession": "إنهاء الجلسة",
-    "endWorkout": "إنهاء التمرين"
+    "endWorkout": "إنهاء التمرين",
+    "pending_zero": "{{count}} معلّق",
+    "logExercise_zero": "سجّل التمرين · {{count}} مجموعة",
+    "exerciseCount_zero": "{{count}} تمرين",
+    "exerciseSummary_zero": "{{count}} مجموعة · {{vol}} كجم حجم",
+    "bwSummary_zero": "{{count}} مجموعة · {{total}} الإجمالي",
+    "exerciseLogged_zero": "تم تسجيل {{name}} — {{count}} مجموعة"
   },
   "workoutType": {
     "weighted": "أوزان",
@@ -186,7 +192,13 @@
     "logExerciseHolds_two": "تسجيل التمرين · ثباتان {{count}}",
     "logExerciseHolds_few": "تسجيل التمرين · {{count}} ثباتات",
     "logExerciseHolds_many": "تسجيل التمرين · {{count}} ثبات",
-    "logExerciseHolds_other": "تسجيل التمرين · {{count}} ثبات"
+    "logExerciseHolds_other": "تسجيل التمرين · {{count}} ثبات",
+    "seconds_zero": "{{count}} ث",
+    "repsCount_zero": "{{count}} تكرار",
+    "loggedSets_zero": "تم تسجيل {{name}} — {{count}} مجموعة",
+    "loggedHolds_zero": "تم تسجيل {{name}} — {{count}} ثبات",
+    "logExerciseSets_zero": "تسجيل التمرين · {{count}} مجموعة",
+    "logExerciseHolds_zero": "تسجيل التمرين · {{count}} ثبات"
   },
   "cardioLogger": {
     "activity": "النشاط",
@@ -235,7 +247,11 @@
     "bpmUnit_two": "نبضتان/دقيقة",
     "bpmUnit_few": "{{count}} نبضات/دقيقة",
     "bpmUnit_many": "{{count}} نبضة/دقيقة",
-    "bpmUnit_other": "{{count}} نبضة/دقيقة"
+    "bpmUnit_other": "{{count}} نبضة/دقيقة",
+    "loggedToast_zero": "{{type}} · تم تسجيل {{count}} دقيقة",
+    "minUnit_zero": "{{count}} دقيقة",
+    "kmUnit_zero": "{{count}} كم",
+    "bpmUnit_zero": "{{count}} نبضة/دقيقة"
   },
   "saveWorkout": {
     "titleEnd": "إنهاء الجلسة؟",
@@ -289,7 +305,9 @@
       "daysLeft_few": "باقٍ {{count}} أيام",
       "daysLeft_many": "باقٍ {{count}} يوماً",
       "todayDone": "✓ اليوم",
-      "todayPending": "· اليوم معلّق"
+      "todayPending": "· اليوم معلّق",
+      "remaining_zero": "بقي {{count}} تمارين",
+      "daysLeft_zero": "باقٍ {{count}} أيام"
     },
     "streak": {
       "label": "السلسلة",
@@ -309,7 +327,10 @@
       "best_other": "الأفضل: {{count}} أيام",
       "best_two": "الأفضل: يومان",
       "best_few": "الأفضل: {{count}} أيام",
-      "best_many": "الأفضل: {{count}} يوماً"
+      "best_many": "الأفضل: {{count}} يوماً",
+      "daysUnit_zero": "أيام",
+      "urgent_zero": "⚠ سجّل خلال {{count}} ساعات لإنقاذها",
+      "best_zero": "الأفضل: {{count}} أيام"
     },
     "nextPR": {
       "label": "الرقم القياسي التالي",
@@ -322,7 +343,8 @@
       "triedSince_other": "جُرّب {{count}} مرات منذ آخر رقم قياسي",
       "triedSince_two": "جُرّب مرتين منذ آخر رقم قياسي",
       "triedSince_few": "جُرّب {{count}} مرات منذ آخر رقم قياسي",
-      "triedSince_many": "جُرّب {{count}} مرة منذ آخر رقم قياسي"
+      "triedSince_many": "جُرّب {{count}} مرة منذ آخر رقم قياسي",
+      "triedSince_zero": "جُرّب {{count}} مرات منذ آخر رقم قياسي"
     },
     "coachPick": {
       "label": "اختيار المدرّب",
@@ -402,7 +424,8 @@
       "onARoll_few": "أنت في تألق — بقيت {{count}} أيام لشعلة الأسبوع",
       "onARoll_many": "أنت في تألق — بقي {{count}} يومًا لشعلة الأسبوع",
       "onARoll_other": "أنت في تألق — بقيت {{count}} أيام لشعلة الأسبوع",
-      "legendary": "انتظام أسطوري"
+      "legendary": "انتظام أسطوري",
+      "onARoll_zero": "أنت في تألق — بقيت {{count}} أيام لشعلة الأسبوع"
     },
     "ago": {
       "justNow": "الآن",
@@ -431,8 +454,14 @@
       "months_two": "قبل شهرين",
       "months_few": "قبل {{count}} أشهر",
       "months_many": "قبل {{count}} شهرًا",
-      "months_other": "قبل {{count}} شهر"
-    }
+      "months_other": "قبل {{count}} شهر",
+      "minutes_zero": "قبل {{count}} دقيقة",
+      "hours_zero": "قبل {{count}} ساعة",
+      "days_zero": "قبل {{count}} يوم",
+      "weeks_zero": "قبل {{count}} أسبوع",
+      "months_zero": "قبل {{count}} شهر"
+    },
+    "dayStreak_zero": "أيام متتالية"
   },
   "more": {
     "title": "المزيد",

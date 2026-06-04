@@ -117,7 +117,13 @@
     "exerciseLogged_many": "{{name}} logged — {{count}} sets",
     "exerciseLogged_other": "{{name}} logged — {{count}} sets",
     "endSession": "End Session",
-    "endWorkout": "End workout"
+    "endWorkout": "End workout",
+    "pending_zero": "{{count}} pending",
+    "logExercise_zero": "Log Exercise · {{count}} sets",
+    "exerciseCount_zero": "{{count}} exercises",
+    "exerciseSummary_zero": "{{count}} sets · {{vol}} kg vol",
+    "bwSummary_zero": "{{count}} sets · {{total}} total",
+    "exerciseLogged_zero": "{{name}} logged — {{count}} sets"
   },
   "workoutType": {
     "weighted": "Weighted",
@@ -186,7 +192,13 @@
     "logExerciseHolds_two": "Log Exercise · {{count}} holds",
     "logExerciseHolds_few": "Log Exercise · {{count}} holds",
     "logExerciseHolds_many": "Log Exercise · {{count}} holds",
-    "logExerciseHolds_other": "Log Exercise · {{count}} holds"
+    "logExerciseHolds_other": "Log Exercise · {{count}} holds",
+    "seconds_zero": "{{count}}s",
+    "repsCount_zero": "{{count}} reps",
+    "loggedSets_zero": "{{name}} logged — {{count}} sets",
+    "loggedHolds_zero": "{{name}} logged — {{count}} holds",
+    "logExerciseSets_zero": "Log Exercise · {{count}} sets",
+    "logExerciseHolds_zero": "Log Exercise · {{count}} holds"
   },
   "cardioLogger": {
     "activity": "Activity",
@@ -235,7 +247,11 @@
     "bpmUnit_two": "{{count}}bpm",
     "bpmUnit_few": "{{count}}bpm",
     "bpmUnit_many": "{{count}}bpm",
-    "bpmUnit_other": "{{count}}bpm"
+    "bpmUnit_other": "{{count}}bpm",
+    "loggedToast_zero": "{{type}} · {{count}} min logged",
+    "minUnit_zero": "{{count}}min",
+    "kmUnit_zero": "{{count}}km",
+    "bpmUnit_zero": "{{count}}bpm"
   },
   "saveWorkout": {
     "titleEnd": "End Session?",
@@ -289,7 +305,9 @@
       "daysLeft_few": "{{count}}d left",
       "daysLeft_many": "{{count}}d left",
       "todayDone": "✓ today",
-      "todayPending": "· today pending"
+      "todayPending": "· today pending",
+      "remaining_zero": "{{count}} to go",
+      "daysLeft_zero": "{{count}}d left"
     },
     "streak": {
       "label": "Streak",
@@ -309,7 +327,10 @@
       "best_other": "Best: {{count}}d",
       "best_two": "Best: {{count}}d",
       "best_few": "Best: {{count}}d",
-      "best_many": "Best: {{count}}d"
+      "best_many": "Best: {{count}}d",
+      "daysUnit_zero": "days",
+      "urgent_zero": "⚠ Log in {{count}}h to save it",
+      "best_zero": "Best: {{count}}d"
     },
     "nextPR": {
       "label": "Next PR",
@@ -322,7 +343,8 @@
       "triedSince_other": "Tried {{count}}× since last PR",
       "triedSince_two": "Tried {{count}}× since last PR",
       "triedSince_few": "Tried {{count}}× since last PR",
-      "triedSince_many": "Tried {{count}}× since last PR"
+      "triedSince_many": "Tried {{count}}× since last PR",
+      "triedSince_zero": "Tried {{count}}× since last PR"
     },
     "coachPick": {
       "label": "Coach Pick",
@@ -402,7 +424,8 @@
       "onARoll_few": "You're on a roll — {{count}} days to weekly flame",
       "onARoll_many": "You're on a roll — {{count}} days to weekly flame",
       "onARoll_other": "You're on a roll — {{count}} days to weekly flame",
-      "legendary": "Legendary consistency"
+      "legendary": "Legendary consistency",
+      "onARoll_zero": "You're on a roll — {{count}} days to weekly flame"
     },
     "ago": {
       "justNow": "just now",
@@ -431,8 +454,14 @@
       "months_two": "{{count}}mo ago",
       "months_few": "{{count}}mo ago",
       "months_many": "{{count}}mo ago",
-      "months_other": "{{count}}mo ago"
-    }
+      "months_other": "{{count}}mo ago",
+      "minutes_zero": "{{count}} min ago",
+      "hours_zero": "{{count}}h ago",
+      "days_zero": "{{count}}d ago",
+      "weeks_zero": "{{count}}w ago",
+      "months_zero": "{{count}}mo ago"
+    },
+    "dayStreak_zero": "Day Streak"
   },
   "more": {
     "title": "More",

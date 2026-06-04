@@ -17,6 +17,7 @@ import { useCustomExercisesStore } from '../stores/useCustomExercisesStore';
 import { useToast } from '../components/ui/Toast';
 import { useFX } from '../hooks/useFX';
 import { searchExercises } from '../lib/exercises-db';
+import { formatDate } from '../lib/format';
 import type { WorkoutSet, WorkoutExercise, MuscleGroup } from '../types/workout';
 
 function CircleRing({ size = 200 }: { size?: number }) {
@@ -173,7 +174,7 @@ export function LogPage() {
   }, [session, currentSets, play, toast, customStore, t]);
 
   // Not started yet — Whoop-style start screen
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const today = formatDate(new Date(), { weekday: 'short', month: 'short', day: 'numeric' });
 
   const content = !session.active ? (
       <div className="page-enter flex flex-col items-center justify-center min-h-[80vh] gap-0 px-6 relative overflow-hidden">
