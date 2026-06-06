@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
-import { BodyMap, MUSCLE_ORDER, MUSCLE_LABELS } from '../../../components/body/BodyMap';
+import { BodyMap, MUSCLE_ORDER } from '../../../components/body/BodyMap';
 import type { MuscleGroup } from '../../../types/workout';
 
 /** Freshness color ramp — matches the premium palette. */
@@ -25,6 +26,7 @@ function freshnessOf(daysSince: number | null): Freshness {
 
 function useMuscleFreshness() {
   const workouts = useWorkoutStore((s) => s.workouts);
+  const { t } = useTranslation();
 
   return useMemo(() => {
     const now = Date.now();
@@ -48,14 +50,15 @@ function useMuscleFreshness() {
       }
       // Only show badge for muscles with actual training data
       if (days !== null) {
-        values[m] = days === 0 ? 'today' : days > 9 ? '9+d' : `${days}d`;
+        values[m] = days === 0 ? t('heatmap.today') : days > 9 ? '9+d' : `${days}d`;
       }
     }
     return { daysMap, tints, values };
-  }, [workouts]);
+  }, [workouts, t]);
 }
 
 export function MuscleHeatmap() {
+  const { t } = useTranslation();
   const { tints, values, daysMap } = useMuscleFreshness();
 
   const topFresh = MUSCLE_ORDER
@@ -68,16 +71,16 @@ export function MuscleHeatmap() {
 
       {/* Legend */}
       <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] font-condensed text-forge-muted">
-        <LegendChip color={FRESH_COLORS.sore}       label="Sore" />
-        <LegendChip color={FRESH_COLORS.worked}     label="Worked" />
-        <LegendChip color={FRESH_COLORS.recovering} label="Recovering" />
-        <LegendChip color={FRESH_COLORS.ready}      label="Ready" />
-        <LegendChip color={FRESH_COLORS.overdue}    label="Overdue" />
+        <LegendChip color={FRESH_COLORS.sore}       label={t('heatmap.sore')} />
+        <LegendChip color={FRESH_COLORS.worked}     label={t('heatmap.worked')} />
+        <LegendChip color={FRESH_COLORS.recovering} label={t('heatmap.recovering')} />
+        <LegendChip color={FRESH_COLORS.ready}      label={t('heatmap.ready')} />
+        <LegendChip color={FRESH_COLORS.overdue}    label={t('heatmap.overdue')} />
       </div>
 
       {topFresh.length > 0 && (
         <div className="w-full mt-1 card-elevated rounded-xl px-3 py-2">
-          <div className="label-cap text-forge-muted mb-1">Worked recently</div>
+          <div className="label-cap text-forge-muted mb-1">{t('heatmap.workedRecently')}</div>
           <div className="flex flex-wrap gap-1.5">
             {topFresh.map((m) => (
               <span
@@ -89,7 +92,7 @@ export function MuscleHeatmap() {
                   border: '1px solid rgba(46,204,113,0.25)',
                 }}
               >
-                {MUSCLE_LABELS[m]}
+                {t('muscles.' + String(m).toLowerCase())}
                 <span className="text-forge-muted text-[10px]">· {values[m]}d</span>
               </span>
             ))}

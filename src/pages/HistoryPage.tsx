@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWorkoutStore } from '../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../stores/useBwWorkoutStore';
 import { useCardioStore } from '../stores/useCardioStore';
@@ -10,13 +11,13 @@ import type { Workout, BwWorkout, CardioEntry } from '../types/workout';
 type SortMode = 'newest' | 'oldest' | 'volume';
 type TypeFilter = 'all' | 'weighted' | 'bodyweight' | 'cardio';
 
-const SORT_LABELS: Record<SortMode, string> = { newest: 'Newest', oldest: 'Oldest', volume: 'Volume' };
+const SORT_LABEL_KEYS: Record<SortMode, string> = { newest: 'history.sortNewest', oldest: 'history.sortOldest', volume: 'history.sortVolume' };
 const MUSCLES = ['All', 'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Core', 'Legs', 'Glutes', 'Calves', 'Forearms'];
-const TYPE_TABS: { id: TypeFilter; label: string; Icon: typeof Dumbbell }[] = [
-  { id: 'all',        label: 'All',      Icon: Flame },
-  { id: 'weighted',   label: 'Weights',  Icon: Dumbbell },
-  { id: 'bodyweight', label: 'Cali',     Icon: Scaling },
-  { id: 'cardio',     label: 'Cardio',   Icon: HeartPulse },
+const TYPE_TABS: { id: TypeFilter; labelKey: string; Icon: typeof Dumbbell }[] = [
+  { id: 'all',        labelKey: 'history.tabAll',     Icon: Flame },
+  { id: 'weighted',   labelKey: 'history.tabWeights', Icon: Dumbbell },
+  { id: 'bodyweight', labelKey: 'history.tabCali',    Icon: Scaling },
+  { id: 'cardio',     labelKey: 'history.tabCardio',  Icon: HeartPulse },
 ];
 
 type UnifiedEntry =
@@ -52,6 +53,7 @@ const INTENSITY_COLOR: Record<string, string> = {
 };
 
 export function HistoryPage() {
+  const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
   const cardioEntries = useCardioStore((s) => s.entries);
@@ -156,7 +158,7 @@ export function HistoryPage() {
       {/* Hero: title + total count */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-forge-green font-display text-2xl tracking-wide">History</h2>
+          <h2 className="text-forge-green font-display text-2xl tracking-wide">{t('history.title')}</h2>
           <Badge variant="success" dot>{filtered.length}</Badge>
         </div>
         <button
@@ -164,28 +166,28 @@ export function HistoryPage() {
           className="inline-flex items-center gap-1.5 card-elevated border border-forge-border-light rounded-full px-3 py-1.5 text-xs font-medium text-forge-text cursor-pointer press-scale hover:bg-white/5 transition-all duration-200"
         >
           <ArrowUpDown size={12} className="text-forge-green" />
-          {SORT_LABELS[sort]}
+          {t(SORT_LABEL_KEYS[sort])}
         </button>
       </div>
 
       {/* KPI strip */}
       {totals.totalSessions > 0 && (
         <div className="grid grid-cols-3 gap-2">
-          <KpiCell label="Sessions" value={totals.totalSessions} accent="green" />
-          <KpiCell label="Vol (kg)" value={Math.round(totals.totalVolume).toLocaleString()} accent="gold" />
-          <KpiCell label={totals.totalCardioMin > 0 ? 'Cardio min' : 'BW reps'} value={totals.totalCardioMin > 0 ? totals.totalCardioMin : totals.totalBwReps} accent="green" />
+          <KpiCell label={t('history.kpiSessions')} value={totals.totalSessions} accent="green" />
+          <KpiCell label={t('history.kpiVolKg')} value={Math.round(totals.totalVolume).toLocaleString()} accent="gold" />
+          <KpiCell label={totals.totalCardioMin > 0 ? t('history.kpiCardioMin') : t('history.kpiBwReps')} value={totals.totalCardioMin > 0 ? totals.totalCardioMin : totals.totalBwReps} accent="green" />
         </div>
       )}
 
       {/* Type tabs */}
       <div className="scroll-hint overflow-x-auto -mx-1 px-1">
         <div className="flex gap-2">
-          {TYPE_TABS.map((t) => {
-            const active = typeFilter === t.id;
+          {TYPE_TABS.map((tab) => {
+            const active = typeFilter === tab.id;
             return (
               <button
-                key={t.id}
-                onClick={() => { play('tap'); setTypeFilter(t.id); }}
+                key={tab.id}
+                onClick={() => { play('tap'); setTypeFilter(tab.id); }}
                 className={[
                   'shrink-0 inline-flex items-center gap-1.5 rounded-full',
                   'px-3.5 py-2 min-h-[38px] cursor-pointer press-scale transition-all duration-200',
@@ -196,8 +198,8 @@ export function HistoryPage() {
                 ].join(' ')}
                 aria-pressed={active}
               >
-                <t.Icon size={13} strokeWidth={active ? 2.4 : 1.8} />
-                {t.label}
+                <tab.Icon size={13} strokeWidth={active ? 2.4 : 1.8} />
+                {t(tab.labelKey)}
               </button>
             );
           })}
@@ -221,7 +223,7 @@ export function HistoryPage() {
                       : 'bg-white/[0.03] text-forge-muted border border-white/[0.06]',
                   ].join(' ')}
                 >
-                  {muscle}
+                  {muscle === 'All' ? t('history.muscleAll') : t('muscles.' + muscle.toLowerCase())}
                 </button>
               );
             })}
@@ -271,18 +273,18 @@ export function HistoryPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-forge-text text-[14px] font-condensed font-semibold truncate capitalize">{entry.name}</span>
                       {entry.kind !== 'cardio' && entry.duration != null && entry.duration > 0 && (
-                        <span className="text-forge-dim text-[10px] font-mono shrink-0">{entry.duration}m</span>
+                        <span className="text-forge-dim text-[10px] font-mono shrink-0">{t('history.minSuffix', { count: entry.duration })}</span>
                       )}
                       {entry.kind === 'cardio' && (
-                        <span className="text-forge-dim text-[10px] font-mono shrink-0">{entry.duration}m</span>
+                        <span className="text-forge-dim text-[10px] font-mono shrink-0">{t('history.minSuffix', { count: entry.duration })}</span>
                       )}
                     </div>
                     <div className="text-forge-muted text-[11px] mt-0.5 font-condensed">
                       {dateStr}
-                      {exCount > 0 && ` · ${exCount} ex · ${totalSets} sets`}
-                      {entry.kind === 'bodyweight' && totalReps > 0 && ` · ${totalReps} reps`}
-                      {entry.kind === 'cardio' && entry.distance != null && entry.distance > 0 && ` · ${entry.distance} km`}
-                      {entry.kind === 'cardio' && entry.heartRate != null && ` · ${entry.heartRate} bpm`}
+                      {exCount > 0 && ` · ${t('history.metaExercises', { count: exCount })} · ${t('history.metaSets', { count: totalSets })}`}
+                      {entry.kind === 'bodyweight' && totalReps > 0 && ` · ${t('history.metaReps', { count: totalReps })}`}
+                      {entry.kind === 'cardio' && entry.distance != null && entry.distance > 0 && ` · ${t('history.metaKm', { count: entry.distance })}`}
+                      {entry.kind === 'cardio' && entry.heartRate != null && ` · ${t('history.metaBpm', { count: entry.heartRate })}`}
                     </div>
                     {muscles.length > 0 && (
                       <div className="flex gap-1 mt-1.5 flex-wrap">
@@ -291,7 +293,7 @@ export function HistoryPage() {
                             key={m}
                             className="text-forge-green/80 text-[9px] bg-forge-green/10 px-1.5 py-0.5 rounded font-condensed uppercase tracking-wider border border-forge-green/15"
                           >
-                            {m}
+                            {t('muscles.' + String(m).toLowerCase())}
                           </span>
                         ))}
                       </div>
@@ -302,13 +304,13 @@ export function HistoryPage() {
                     {entry.kind === 'weighted' && totalVolume > 0 && (
                       <div className="text-right">
                         <div className="kpi-md text-forge-green leading-none">{Math.round(totalVolume).toLocaleString()}</div>
-                        <div className="text-forge-dim text-[9px] font-condensed uppercase tracking-wider mt-0.5">kg vol</div>
+                        <div className="text-forge-dim text-[9px] font-condensed uppercase tracking-wider mt-0.5">{t('history.kgVol')}</div>
                       </div>
                     )}
                     {entry.kind === 'bodyweight' && totalReps > 0 && (
                       <div className="text-right">
                         <div className="kpi-md text-forge-green leading-none">{totalReps}</div>
-                        <div className="text-forge-dim text-[9px] font-condensed uppercase tracking-wider mt-0.5">reps</div>
+                        <div className="text-forge-dim text-[9px] font-condensed uppercase tracking-wider mt-0.5">{t('history.repsLabel')}</div>
                       </div>
                     )}
                     {entry.kind === 'cardio' && entry.intensity && (
@@ -320,7 +322,7 @@ export function HistoryPage() {
                           background: INTENSITY_COLOR[entry.intensity] + '14',
                         }}
                       >
-                        {entry.intensity}
+                        {t('cardioLogger.intensityLevels.' + entry.intensity)}
                       </span>
                     )}
                     <ChevronDown
@@ -341,14 +343,14 @@ export function HistoryPage() {
                         <div key={`${ex.name}-${ei}`}>
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-forge-text text-[13px] font-condensed font-semibold">{ex.name}</span>
-                            {ex.muscle && <Badge variant="success" className="text-[9px]">{ex.muscle}</Badge>}
+                            {ex.muscle && <Badge variant="success" className="text-[9px]">{t('muscles.' + String(ex.muscle).toLowerCase())}</Badge>}
                             {isAllTimePR && (
                               <span className="inline-flex items-center gap-1 text-[9px] font-condensed uppercase tracking-wider text-forge-gold">
-                                <Trophy size={10} /> PR
+                                <Trophy size={10} /> {t('log.prBadge')}
                               </span>
                             )}
                             <span className="ml-auto text-[10px] text-forge-muted font-mono">
-                              best · {maxReps}×{maxWeight > 0 ? `${maxWeight}kg` : 'bw'}
+                              {t('history.best')} · {maxReps}×{maxWeight > 0 ? `${maxWeight}${t('log.kgUnit')}` : t('history.bw')}
                             </span>
                           </div>
                           <div className="space-y-0.5">
@@ -362,9 +364,9 @@ export function HistoryPage() {
                                   <span className="text-forge-dim font-mono w-5 text-right shrink-0">{si + 1}</span>
                                   <span className="text-forge-text font-mono">{set.reps}</span>
                                   <span className="text-forge-dim">×</span>
-                                  <span className="text-forge-text font-mono">{set.weight}kg</span>
-                                  {set.rpe != null && <span className="text-forge-dim text-[10px]">RPE {set.rpe}</span>}
-                                  {set.isWarmup && <span className="text-amber-400/70 text-[9px] font-condensed">WU</span>}
+                                  <span className="text-forge-text font-mono">{set.weight}{t('log.kgUnit')}</span>
+                                  {set.rpe != null && <span className="text-forge-dim text-[10px]">{t('history.rpe', { value: set.rpe })}</span>}
+                                  {set.isWarmup && <span className="text-amber-400/70 text-[9px] font-condensed">{t('history.warmup')}</span>}
                                   <span className="ml-auto text-forge-green/70 font-mono text-[10px]">
                                     {set.weight > 0 ? (set.reps * set.weight).toLocaleString() : '—'}
                                   </span>
@@ -389,13 +391,13 @@ export function HistoryPage() {
                         <div key={`${ex.name}-${ei}`}>
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-forge-text text-[13px] font-condensed font-semibold">{ex.name}</span>
-                            {ex.muscle && <Badge variant="success" className="text-[9px]">{ex.muscle}</Badge>}
+                            {ex.muscle && <Badge variant="success" className="text-[9px]">{t('muscles.' + String(ex.muscle).toLowerCase())}</Badge>}
                             {isAllTimePR && (
                               <span className="inline-flex items-center gap-1 text-[9px] font-condensed uppercase tracking-wider text-forge-gold">
-                                <Trophy size={10} /> PR
+                                <Trophy size={10} /> {t('log.prBadge')}
                               </span>
                             )}
-                            <span className="ml-auto text-[10px] text-forge-muted font-mono">max {maxReps}</span>
+                            <span className="ml-auto text-[10px] text-forge-muted font-mono">{t('history.max', { count: maxReps })}</span>
                           </div>
                           <div className="space-y-0.5">
                             {ex.sets.map((set, si) => {
@@ -407,12 +409,12 @@ export function HistoryPage() {
                                 >
                                   <span className="text-forge-dim font-mono w-5 text-right shrink-0">{si + 1}</span>
                                   <span className="text-forge-text font-mono">{set.reps}</span>
-                                  <span className="text-forge-muted text-[11px]">reps</span>
+                                  <span className="text-forge-muted text-[11px]">{t('history.repsLower')}</span>
                                   {set.variation && (
-                                    <span className="text-forge-dim text-[10px] capitalize">· {set.variation}</span>
+                                    <span className="text-forge-dim text-[10px] capitalize">· {t('bwLogger.variation.' + set.variation)}</span>
                                   )}
                                   {set.assisted && (
-                                    <span className="text-amber-400/70 text-[9px] font-condensed">assisted</span>
+                                    <span className="text-amber-400/70 text-[9px] font-condensed">{t('history.assisted')}</span>
                                   )}
                                   {isPr && <Trophy size={11} className="text-forge-gold ml-auto shrink-0" />}
                                 </div>
@@ -429,18 +431,18 @@ export function HistoryPage() {
                 {isExpanded && entry.kind === 'cardio' && (
                   <div className="animate-fade-in border-t border-white/5 px-3 pb-3 pt-2">
                     <div className="grid grid-cols-2 gap-2">
-                      <CardioStat Icon={Clock} label="Duration" value={`${entry.duration} min`} />
+                      <CardioStat Icon={Clock} label={t('history.cardioDuration')} value={t('history.cardioMinValue', { count: entry.duration })} />
                       {entry.distance != null && entry.distance > 0 && (
-                        <CardioStat Icon={Route} label="Distance" value={`${entry.distance} km`} />
+                        <CardioStat Icon={Route} label={t('history.cardioDistance')} value={t('history.cardioKmValue', { count: entry.distance })} />
                       )}
                       {entry.heartRate != null && (
-                        <CardioStat Icon={Heart} label="Avg HR" value={`${entry.heartRate} bpm`} />
+                        <CardioStat Icon={Heart} label={t('history.cardioAvgHr')} value={t('history.cardioBpmValue', { count: entry.heartRate })} />
                       )}
                       {entry.intensity && (
                         <CardioStat
                           Icon={Flame}
-                          label="Intensity"
-                          value={entry.intensity}
+                          label={t('history.cardioIntensity')}
+                          value={t('cardioLogger.intensityLevels.' + entry.intensity)}
                           color={INTENSITY_COLOR[entry.intensity]}
                         />
                       )}
@@ -493,18 +495,19 @@ function CardioStat({
 }
 
 function EmptyState({ typeFilter, filter }: { typeFilter: TypeFilter; filter: string }) {
+  const { t } = useTranslation();
   const msg =
-    typeFilter === 'weighted' ? 'No weighted workouts yet' :
-    typeFilter === 'bodyweight' ? 'No calisthenics workouts yet' :
-    typeFilter === 'cardio' ? 'No cardio sessions yet' :
-    filter !== 'All' ? `No ${filter.toLowerCase()} workouts found` :
-    'No workouts yet';
+    typeFilter === 'weighted' ? t('history.emptyWeighted') :
+    typeFilter === 'bodyweight' ? t('history.emptyBodyweight') :
+    typeFilter === 'cardio' ? t('history.emptyCardio') :
+    filter !== 'All' ? t('history.emptyMuscle', { muscle: t('muscles.' + filter.toLowerCase()) }) :
+    t('history.emptyAll');
 
   const hint =
-    typeFilter === 'cardio' ? 'Log your first run, ride or swim from the Log tab' :
-    typeFilter === 'bodyweight' ? 'Switch to Bodyweight mode in Log to start calisthenics' :
-    filter !== 'All' ? 'Try a different muscle filter or type' :
-    'Head to the Log tab and hit START SESSION';
+    typeFilter === 'cardio' ? t('history.hintCardio') :
+    typeFilter === 'bodyweight' ? t('history.hintBodyweight') :
+    filter !== 'All' ? t('history.hintMuscle') :
+    t('history.hintAll');
 
   return (
     <div className="card-elevated rounded-2xl p-10 flex flex-col items-center text-center gap-2 mt-4">

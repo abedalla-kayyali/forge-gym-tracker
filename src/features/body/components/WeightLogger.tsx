@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useBodyStore } from '../../../stores/useBodyStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
 
 export function WeightLogger() {
+  const { t } = useTranslation();
   const { bodyWeight, addWeightEntry } = useBodyStore();
   const { toast } = useToast();
   const { play } = useFX();
@@ -18,12 +20,12 @@ export function WeightLogger() {
   const handleSave = () => {
     const w = parseFloat(weight);
     if (isNaN(w) || w <= 0) {
-      toast('Enter a valid weight', 'error');
+      toast(t('weightLog.invalidWeight'), 'error');
       return;
     }
     addWeightEntry({ date: new Date().toISOString(), weight_kg: w });
     play('save');
-    toast(`Weight logged: ${w} kg`, 'success');
+    toast(t('weightLog.logged', { weight: w }), 'success');
     setWeight('');
   };
 
@@ -35,7 +37,7 @@ export function WeightLogger() {
           type="number"
           inputMode="decimal"
           step="0.1"
-          placeholder="Weight (kg)"
+          placeholder={t('weightLog.placeholder')}
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSave()}
@@ -46,7 +48,7 @@ export function WeightLogger() {
           disabled={!weight}
           className="bg-forge-green text-forge-bg px-5 min-h-[44px] rounded-lg font-condensed font-semibold text-sm disabled:opacity-40 cursor-pointer press-scale"
         >
-          Log
+          {t('weightLog.log')}
         </button>
       </div>
 
@@ -58,14 +60,14 @@ export function WeightLogger() {
               <span className="text-forge-dim text-xs">
                 {new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
-              <span className="text-forge-green font-mono text-sm font-bold">{e.weight_kg} kg</span>
+              <span className="text-forge-green font-mono text-sm font-bold">{e.weight_kg} {t('log.kgUnit')}</span>
             </div>
           ))}
         </div>
       )}
 
       {recent.length === 0 && (
-        <p className="text-forge-muted text-sm text-center py-4 font-condensed">No weight entries yet</p>
+        <p className="text-forge-muted text-sm text-center py-4 font-condensed">{t('weightLog.empty')}</p>
       )}
     </div>
   );

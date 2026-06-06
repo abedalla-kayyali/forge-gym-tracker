@@ -1,17 +1,19 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useBodyStore } from '../../../stores/useBodyStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
 
-const INBODY_FIELDS: { key: string; label: string; unit: string }[] = [
-  { key: 'muscle_mass', label: 'Muscle Mass', unit: 'kg' },
-  { key: 'body_fat', label: 'Body Fat', unit: 'kg' },
-  { key: 'body_fat_pct', label: 'Body Fat %', unit: '%' },
-  { key: 'water', label: 'Body Water', unit: 'L' },
-  { key: 'bmi', label: 'BMI', unit: '' },
+const INBODY_FIELDS: { key: string; labelKey: string; unit: string }[] = [
+  { key: 'muscle_mass', labelKey: 'inbody.fieldMuscleMass', unit: 'kg' },
+  { key: 'body_fat', labelKey: 'inbody.fieldBodyFat', unit: 'kg' },
+  { key: 'body_fat_pct', labelKey: 'inbody.fieldBodyFatPct', unit: '%' },
+  { key: 'water', labelKey: 'inbody.fieldBodyWater', unit: 'L' },
+  { key: 'bmi', labelKey: 'inbody.fieldBmi', unit: '' },
 ];
 
 export function InBodyLog() {
+  const { t } = useTranslation();
   const { inbody, addInBody } = useBodyStore();
   const { toast } = useToast();
   const { play } = useFX();
@@ -38,12 +40,12 @@ export function InBodyLog() {
       }
     }
     if (!hasValue) {
-      toast('Enter at least one InBody value', 'error');
+      toast(t('inbody.errorNoValue'), 'error');
       return;
     }
     addInBody(entry as any);
     play('save');
-    toast('InBody data saved!', 'success');
+    toast(t('inbody.toastSaved'), 'success');
     setValues({});
   };
 
@@ -54,7 +56,7 @@ export function InBodyLog() {
         {INBODY_FIELDS.map((f) => (
           <div key={f.key} className="flex flex-col gap-1">
             <label className="text-forge-muted text-[10px] font-condensed uppercase">
-              {f.label} {f.unit && <span className="text-forge-dim">({f.unit})</span>}
+              {t(f.labelKey)} {f.unit && <span className="text-forge-dim">({f.unit})</span>}
             </label>
             <input
               type="number"
@@ -72,23 +74,23 @@ export function InBodyLog() {
         onClick={handleSave}
         className="w-full bg-forge-green text-forge-bg min-h-[44px] rounded-lg font-condensed font-semibold text-sm cursor-pointer press-scale"
       >
-        Save InBody Data
+        {t('inbody.saveButton')}
       </button>
 
       {/* History */}
       {recent.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-forge-muted text-xs font-condensed uppercase">Recent Scans</h4>
+          <h4 className="text-forge-muted text-xs font-condensed uppercase">{t('inbody.recentScans')}</h4>
           {recent.map((e, i) => (
             <div key={i} className="card-elevated space-y-1 py-2 px-3 rounded-xl">
               <div className="text-forge-dim text-xs">
                 {new Date(e.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
               <div className="flex flex-wrap gap-3 text-xs">
-                {e.muscle_mass != null && <span className="text-forge-text"><span className="text-forge-muted">Muscle:</span> {e.muscle_mass}kg</span>}
-                {e.body_fat_pct != null && <span className="text-forge-text"><span className="text-forge-muted">BF:</span> {e.body_fat_pct}%</span>}
-                {e.water != null && <span className="text-forge-text"><span className="text-forge-muted">Water:</span> {e.water}L</span>}
-                {e.bmi != null && <span className="text-forge-text"><span className="text-forge-muted">BMI:</span> {e.bmi}</span>}
+                {e.muscle_mass != null && <span className="text-forge-text"><span className="text-forge-muted">{t('inbody.histMuscle')}</span> {e.muscle_mass}kg</span>}
+                {e.body_fat_pct != null && <span className="text-forge-text"><span className="text-forge-muted">{t('inbody.histBodyFat')}</span> {e.body_fat_pct}%</span>}
+                {e.water != null && <span className="text-forge-text"><span className="text-forge-muted">{t('inbody.histWater')}</span> {e.water}L</span>}
+                {e.bmi != null && <span className="text-forge-text"><span className="text-forge-muted">{t('inbody.histBmi')}</span> {e.bmi}</span>}
               </div>
             </div>
           ))}

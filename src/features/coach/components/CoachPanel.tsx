@@ -1,9 +1,11 @@
 import { Dumbbell } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useCoachState } from '../hooks/useCoachState';
 import { useCoachTriggers } from '../hooks/useCoachTriggers';
 import { Badge } from '../../../components/ui/Badge';
 
 export function CoachPanel() {
+  const { t } = useTranslation();
   const state = useCoachState();
   const triggers = useCoachTriggers();
 
@@ -27,13 +29,13 @@ export function CoachPanel() {
           <Dumbbell size={20} className="text-forge-green" />
         </div>
         <div className="card-elevated flex-1 rounded-xl px-3 py-2">
-          <div className="text-forge-green font-condensed font-semibold text-xs">FORGE BUDDY</div>
+          <div className="text-forge-green font-condensed font-semibold text-xs">{t('coachPanel.buddyName')}</div>
           <div className="text-forge-text text-sm mt-1">
             {state.totalWorkouts7d === 0
-              ? "Ready to get back in the gym? Let's go!"
+              ? t('coachPanel.greetingReturn')
               : state.streak >= 3
-                ? `${state.streak}-day streak! You're on fire!`
-                : `${state.totalWorkouts7d} workouts this week. Keep pushing!`}
+                ? t('coachPanel.greetingStreak', { count: state.streak })
+                : t('coachPanel.greetingWeek', { count: state.totalWorkouts7d })}
           </div>
         </div>
       </div>
@@ -47,7 +49,7 @@ export function CoachPanel() {
           >
             {state.totalWorkouts7d}
           </div>
-          <div className="text-forge-dim text-[10px] font-condensed">This Week</div>
+          <div className="text-forge-dim text-[10px] font-condensed">{t('coachPanel.statThisWeek')}</div>
         </div>
         <div className="card-elevated text-center py-3 rounded-xl">
           <div
@@ -56,7 +58,7 @@ export function CoachPanel() {
           >
             {state.totalWorkouts30d}
           </div>
-          <div className="text-forge-dim text-[10px] font-condensed">This Month</div>
+          <div className="text-forge-dim text-[10px] font-condensed">{t('coachPanel.statThisMonth')}</div>
         </div>
         <div className="card-elevated text-center py-3 rounded-xl">
           <div
@@ -65,21 +67,21 @@ export function CoachPanel() {
           >
             {state.streak}
           </div>
-          <div className="text-forge-dim text-[10px] font-condensed">Day Streak</div>
+          <div className="text-forge-dim text-[10px] font-condensed">{t('sessionStreak.dayStreak', { count: state.streak })}</div>
         </div>
       </div>
 
       {/* Triggers/Alerts */}
       {triggers.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-forge-muted text-xs font-condensed uppercase">Insights</h3>
-          {triggers.map((t, i) => (
-            <div key={i} className={`border rounded-lg px-3 py-2 ${severityStyles[t.severity]}`}>
+          <h3 className="text-forge-muted text-xs font-condensed uppercase">{t('coachPanel.insights')}</h3>
+          {triggers.map((trigger, i) => (
+            <div key={i} className={`border rounded-lg px-3 py-2 ${severityStyles[trigger.severity]}`}>
               <div className="flex items-center gap-2">
-                <Badge variant={severityBadge[t.severity]}>
-                  {t.type}
+                <Badge variant={severityBadge[trigger.severity]}>
+                  {t('coachPanel.triggerType.' + trigger.type)}
                 </Badge>
-                <span className="text-forge-text text-sm">{t.message}</span>
+                <span className="text-forge-text text-sm">{trigger.message}</span>
               </div>
             </div>
           ))}
@@ -88,7 +90,7 @@ export function CoachPanel() {
 
       {/* Muscle Recovery Grid */}
       <div className="space-y-2">
-        <h3 className="text-forge-muted text-xs font-condensed uppercase">Muscle Recovery</h3>
+        <h3 className="text-forge-muted text-xs font-condensed uppercase">{t('coachPanel.muscleRecovery')}</h3>
         <div className="grid grid-cols-2 gap-2">
           {state.muscleRecovery.map((m) => {
             const statusColor = {
@@ -101,13 +103,15 @@ export function CoachPanel() {
             return (
               <div key={m.muscle} className="card-elevated py-2 px-3 rounded-xl">
                 <div className="flex items-center justify-between">
-                  <span className="text-forge-text text-sm font-body capitalize">{m.muscle}</span>
+                  <span className="text-forge-text text-sm font-body capitalize">{t('muscles.' + String(m.muscle).toLowerCase())}</span>
                   <span className={`text-[10px] font-condensed font-semibold uppercase ${statusColor}`}>
-                    {m.status}
+                    {t('coachPanel.status.' + m.status)}
                   </span>
                 </div>
                 <div className="text-forge-dim text-[10px] mt-0.5">
-                  {m.daysSince < 999 ? `${m.daysSince}d ago · ${m.totalSets7d} sets/wk` : 'Not trained yet'}
+                  {m.daysSince < 999
+                    ? t('coachPanel.recoveryDetail', { days: m.daysSince, sets: m.totalSets7d })
+                    : t('coachPanel.notTrainedYet')}
                 </div>
               </div>
             );

@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { MuscleGroup } from '../../types/workout';
 import { PATHS_BY_MUSCLE, DECORATIVE_PATHS, BODY_MAP_CENTROIDS, BODY_MAP_VIEWBOX } from './body-map-data';
 
@@ -52,6 +53,7 @@ export function BodyMap({
   interactive = false, maxWidth = 360, className = '',
   showLegend = false, overlay,
 }: BodyMapProps) {
+  const { t } = useTranslation();
   const selectedSet = useMemo(
     () => (selected instanceof Set ? selected : new Set(selected ?? [])),
     [selected],
@@ -63,7 +65,7 @@ export function BodyMap({
       className={`relative mx-auto w-full ${className}`}
       style={{ maxWidth }}
       role={isInteractive ? 'group' : 'img'}
-      aria-label="Body muscle map"
+      aria-label={t('bodyMap.mapAria')}
     >
       <svg
         viewBox={`0 0 ${BODY_MAP_VIEWBOX.w} ${BODY_MAP_VIEWBOX.h}`}
@@ -140,7 +142,13 @@ export function BodyMap({
               }}
               tabIndex={isInteractive ? 0 : -1}
               role={isInteractive ? 'button' : undefined}
-              aria-label={isInteractive ? `${active ? 'Selected ' : ''}${MUSCLE_LABELS[muscle]}` : undefined}
+              aria-label={
+                isInteractive
+                  ? t(active ? 'bodyMap.regionAriaSelected' : 'bodyMap.regionAria', {
+                      name: t('muscles.' + String(muscle).toLowerCase()),
+                    })
+                  : undefined
+              }
               aria-pressed={isInteractive ? active : undefined}
               className={isInteractive ? 'bm-region' : undefined}
               style={style}
@@ -187,9 +195,9 @@ export function BodyMap({
         {/* Front / Back labels */}
         <g pointerEvents="none">
           <text x={70} y={352} textAnchor="middle" fontSize="11" fontFamily="Barlow Condensed, sans-serif"
-                fontWeight={600} letterSpacing={2.5} fill="rgba(255,255,255,0.45)">FRONT</text>
+                fontWeight={600} letterSpacing={2.5} fill="rgba(255,255,255,0.45)">{t('bodyMap.front')}</text>
           <text x={170} y={352} textAnchor="middle" fontSize="11" fontFamily="Barlow Condensed, sans-serif"
-                fontWeight={600} letterSpacing={2.5} fill="rgba(255,255,255,0.45)">BACK</text>
+                fontWeight={600} letterSpacing={2.5} fill="rgba(255,255,255,0.45)">{t('bodyMap.back')}</text>
         </g>
       </svg>
 
@@ -216,25 +224,26 @@ export function BodyMap({
 
       {showLegend && (
         <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] font-condensed text-forge-muted">
-          <LegendDot color="#EF4444" label="Sore" />
-          <LegendDot color="#2ecc71" label="Worked" />
-          <LegendDot color="#8BC34A" label="Recovering" />
-          <LegendDot color="#F59E0B" label="Ready" />
-          <LegendDot color="#4B5563" label="Overdue" />
+          <LegendDot color="#EF4444" labelKey="bodyMap.legendSore" />
+          <LegendDot color="#2ecc71" labelKey="bodyMap.legendWorked" />
+          <LegendDot color="#8BC34A" labelKey="bodyMap.legendRecovering" />
+          <LegendDot color="#F59E0B" labelKey="bodyMap.legendReady" />
+          <LegendDot color="#4B5563" labelKey="bodyMap.legendOverdue" />
         </div>
       )}
     </div>
   );
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
+function LegendDot({ color, labelKey }: { color: string; labelKey: string }) {
+  const { t } = useTranslation();
   return (
     <span className="inline-flex items-center gap-1.5">
       <span
         className="inline-block w-2 h-2 rounded-full"
         style={{ background: color, boxShadow: `0 0 6px ${color}88` }}
       />
-      {label}
+      {t(labelKey)}
     </span>
   );
 }
