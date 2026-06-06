@@ -6,6 +6,7 @@ import { Button } from '../../../components/ui/Button';
 import { Download, Share2, Copy, Check } from 'lucide-react';
 import { bodyMapSvgDataUrl } from '../../../components/body/buildBodyMapSvg';
 import { BODY_MAP_VIEWBOX } from '../../../components/body/body-map-data';
+import { useProfileStore } from '../../../stores/useProfileStore';
 import { useFX } from '../../../hooks/useFX';
 import { formatNumber, formatDate } from '../../../lib/format';
 
@@ -39,6 +40,7 @@ export function SessionPoster({ workout, open, onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const sex = useProfileStore((s) => s.profile.sex);
   const { play } = useFX();
 
   const drawPoster = useCallback(async () => {
@@ -129,7 +131,7 @@ export function SessionPoster({ workout, open, onClose }: Props) {
     roundRect(ctx, bmX, bmTop, bmRegionW, bmRegionH, 32); ctx.stroke();
 
     try {
-      const svgUrl = bodyMapSvgDataUrl({ highlights: Array.from(muscles) });
+      const svgUrl = bodyMapSvgDataUrl({ highlights: Array.from(muscles), sex });
       const img = await loadImage(svgUrl);
       const { w: vbW, h: vbH } = BODY_MAP_VIEWBOX; // 240 × 360
       const scale = Math.min(bmRegionW / vbW, bmRegionH / vbH) * 0.92;
@@ -209,7 +211,7 @@ export function SessionPoster({ workout, open, onClose }: Props) {
 
     ctx.direction = rtl ? 'rtl' : 'ltr';
     setDataUrl(canvas.toDataURL('image/png'));
-  }, [workout, t, i18n.language]);
+  }, [workout, t, i18n.language, sex]);
 
   useEffect(() => {
     if (open && workout) {

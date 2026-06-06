@@ -9,6 +9,7 @@
 // "pills" laid over the silhouette.
 
 import type { MuscleGroup } from '../../types/workout';
+import type { Sex } from '../../types/profile';
 
 export const BODY_MAP_VIEWBOX = { w: 240, h: 360 };
 
@@ -26,9 +27,9 @@ function circle(cx: number, cy: number, r: number): string {
 const FRONT_CX = 70;
 const BACK_CX = 170;
 
-function silhouette(cx: number): string[] {
+function silhouette(cx: number, sex?: Sex): string[] {
   const o = cx - 70; // x-offset from the front figure
-  return [
+  const parts = [
     circle(cx, 34, 15),                 // head
     rr(64 + o, 50, 12, 16, 4),          // neck
     rr(48 + o, 64, 44, 94, 13),         // torso
@@ -37,12 +38,18 @@ function silhouette(cx: number): string[] {
     rr(50 + o, 156, 18, 128, 9),        // left leg
     rr(72 + o, 156, 18, 128, 9),        // right leg
   ];
+  // Sex-aware shaping: broader shoulders for male, wider hips for female.
+  if (sex === 'male') parts.push(rr(40 + o, 62, 60, 18, 12));
+  else if (sex === 'female') parts.push(rr(44 + o, 132, 52, 30, 15));
+  return parts;
 }
 
-export const DECORATIVE_PATHS: string[] = [
-  ...silhouette(FRONT_CX),
-  ...silhouette(BACK_CX),
-];
+/** Decorative silhouette paths, optionally shaped by sex. */
+export function getDecorativePaths(sex?: Sex): string[] {
+  return [...silhouette(FRONT_CX, sex), ...silhouette(BACK_CX, sex)];
+}
+
+export const DECORATIVE_PATHS: string[] = getDecorativePaths();
 
 // -- Muscle regions ----------------------------------------------------------
 // Each entry is one or more rounded pills. Front figure first, then back.

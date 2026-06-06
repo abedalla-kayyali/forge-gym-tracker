@@ -1,5 +1,6 @@
-import { PATHS_BY_MUSCLE, DECORATIVE_PATHS, BODY_MAP_VIEWBOX } from './body-map-data';
+import { PATHS_BY_MUSCLE, getDecorativePaths, BODY_MAP_VIEWBOX } from './body-map-data';
 import type { MuscleGroup } from '../../types/workout';
+import type { Sex } from '../../types/profile';
 
 const MUSCLE_ORDER: MuscleGroup[] = [
   'chest', 'shoulders', 'biceps', 'forearms', 'core',
@@ -14,6 +15,8 @@ interface BuildOpts {
   decorativeStroke?: string;
   /** If true, wraps in a card-like rounded-rect background. */
   background?: string;       // color or 'none'
+  /** Shapes the silhouette (broader shoulders / wider hips). */
+  sex?: Sex;
 }
 
 /**
@@ -29,6 +32,7 @@ export function buildBodyMapSvgString({
   accentStroke = '#1e9e55',
   decorativeStroke = 'rgba(255,255,255,0.85)',
   background = 'none',
+  sex,
 }: BuildOpts = {}): string {
   const { w, h } = BODY_MAP_VIEWBOX;
   const selected = new Set(highlights);
@@ -39,7 +43,7 @@ export function buildBodyMapSvgString({
       : '';
 
   // Decorative (head, neck, knees, hands) — rendered first so muscles overlay them
-  const decor = DECORATIVE_PATHS.map(
+  const decor = getDecorativePaths(sex).map(
     (d) =>
       `<path d="${d}" fill="${baseFill}" stroke="${decorativeStroke}" stroke-width="0.5" stroke-linejoin="round" fill-opacity="0.85"/>`,
   ).join('');

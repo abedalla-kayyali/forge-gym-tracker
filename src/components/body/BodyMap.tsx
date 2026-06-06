@@ -1,7 +1,8 @@
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MuscleGroup } from '../../types/workout';
-import { PATHS_BY_MUSCLE, DECORATIVE_PATHS, BODY_MAP_CENTROIDS, BODY_MAP_VIEWBOX } from './body-map-data';
+import { PATHS_BY_MUSCLE, getDecorativePaths, BODY_MAP_CENTROIDS, BODY_MAP_VIEWBOX } from './body-map-data';
+import { useProfileStore } from '../../stores/useProfileStore';
 
 /**
  * FORGE anatomical body map — 100% SVG, hand-authored clean regions.
@@ -59,6 +60,8 @@ export function BodyMap({
     [selected],
   );
   const isInteractive = interactive && !!onSelect;
+  const sex = useProfileStore((s) => s.profile.sex);
+  const decorative = useMemo(() => getDecorativePaths(sex), [sex]);
 
   return (
     <div
@@ -99,7 +102,7 @@ export function BodyMap({
         {/* Decorative paths — head, neck, knees, hands, feet, artifacts.
             Drawn first (behind), not clickable. */}
         <g pointerEvents="none">
-          {DECORATIVE_PATHS.map((d, i) => (
+          {decorative.map((d, i) => (
             <path
               key={i}
               d={d}
@@ -150,7 +153,8 @@ export function BodyMap({
                   : undefined
               }
               aria-pressed={isInteractive ? active : undefined}
-              className={isInteractive ? 'bm-region' : undefined}
+              className={[isInteractive ? 'bm-region' : '', tint && !active ? 'bm-heat' : '']
+                .filter(Boolean).join(' ') || undefined}
               style={style}
             >
               {paths.map((d, i) => (
@@ -214,6 +218,9 @@ export function BodyMap({
           stroke: #58d68d !important;
           stroke-width: ${STROKE_W * 3};
         }
+        @keyframes bm-pulse { 0%, 100% { fill-opacity: 0.78; } 50% { fill-opacity: 1; } }
+        .bm-heat path { animation: bm-pulse 2.8s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .bm-heat path { animation: none; } }
       `}</style>
 
       {overlay && (
