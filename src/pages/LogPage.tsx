@@ -13,6 +13,7 @@ import { TopExercisesCard } from '../features/workout/components/TopExercisesCar
 import { SessionStreakCard } from '../features/workout/components/SessionStreakCard';
 import { ProgressGuide } from '../features/workout/components/ProgressGuide';
 import { StrategyCard } from '../features/coach/components/StrategyCard';
+import { CoachThread } from '../features/coach/components/CoachThread';
 import { useSessionStore } from '../stores/useSessionStore';
 import { useCustomExercisesStore } from '../stores/useCustomExercisesStore';
 import { useToast } from '../components/ui/Toast';
@@ -208,6 +209,11 @@ export function LogPage() {
           <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
             <span className="text-forge-muted text-[11px] font-condensed">{session.exercises.length > 0 ? t('logPage.pending', { count: session.exercises.length }) : t('logPage.noActiveSession')}</span>
           </div>
+        </div>
+
+        {/* Interactive coach — proactive guidance reacting to your data */}
+        <div className="w-full px-2 mb-3 max-w-md mx-auto">
+          <CoachThread />
         </div>
 
         {/* Streak + last session */}

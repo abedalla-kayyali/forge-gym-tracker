@@ -1117,5 +1117,48 @@
     "applyMacros": "Apply to nutrition",
     "macrosApplied": "Targets applied!",
     "needWeight": "Log your weight to get calorie targets."
+  },
+  "coach": {
+    "threadTitle": "FORGE Coach",
+    "threadSubtitle": "Your daily game plan",
+    "athlete": "champion",
+    "greet": {
+      "morning": "Good morning, {{name}} ☀️",
+      "afternoon": "Let's go, {{name}} 💪",
+      "evening": "Good evening, {{name}} 🌙",
+      "night": "Burning the midnight oil, {{name}}? 🌙"
+    },
+    "action": {
+      "start": "Start",
+      "setGoal": "Set goal",
+      "applyMacros": "Set targets"
+    },
+    "setGoal": "Set your goal so I can build your plan.",
+    "pr_one": "🏆 You hit a PR last session — a new best!",
+    "pr_other": "🏆 {{count}} PRs last session — you're on fire!",
+    "streakStrong_one": "🔥 {{count}}-day streak. Don't break it now.",
+    "streakStrong_other": "🔥 {{count}}-day streak — keep it alive!",
+    "comeback_one": "It's been a day — let's get back to it.",
+    "comeback_other": "It's been {{count}} days. Time to get back under the bar.",
+    "plateau": "{{name}} hasn't moved in {{weeks}}w — try a deload or change the rep range.",
+    "weekHit": "Weekly goal smashed — {{goal}} sessions done 🎯",
+    "weekProgress": "{{current}}/{{goal}} sessions this week · {{remaining}} to go.",
+    "todayMuscle": "Today's pick: train {{muscle}}.",
+    "todayGeneric": "Ready when you are — let's start a session.",
+    "doneToday": "Logged today. Recovery counts too — nice work. ✅",
+    "needWeight": "Log your weight and I'll dial in your calories.",
+    "macros": "Want me to set your daily calorie + macro targets?",
+    "pr_zero": "🏆 {{count}} PRs last session — you're on fire!",
+    "streakStrong_zero": "🔥 {{count}}-day streak — keep it alive!",
+    "comeback_zero": "It's been {{count}} days. Time to get back under the bar.",
+    "pr_two": "🏆 {{count}} PRs last session — you're on fire!",
+    "pr_few": "🏆 {{count}} PRs last session — you're on fire!",
+    "pr_many": "🏆 {{count}} PRs last session — you're on fire!",
+    "streakStrong_two": "🔥 {{count}}-day streak — keep it alive!",
+    "streakStrong_few": "🔥 {{count}}-day streak — keep it alive!",
+    "streakStrong_many": "🔥 {{count}}-day streak — keep it alive!",
+    "comeback_two": "It's been {{count}} days. Time to get back under the bar.",
+    "comeback_few": "It's been {{count}} days. Time to get back under the bar.",
+    "comeback_many": "It's been {{count}} days. Time to get back under the bar."
   }
 }
