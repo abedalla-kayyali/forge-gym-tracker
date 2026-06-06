@@ -227,7 +227,7 @@ function TodayTab() {
                         <Icon size={14} className="text-forge-muted" />
                         <span className="text-forge-text text-[13px] font-condensed">{label}</span>
                       </div>
-                      <span className="kpi-md" style={{ color }}>{val}<span className="text-forge-muted text-[10px] ml-0.5">/5</span></span>
+                      <span className="kpi-md" style={{ color }}>{val}<span className="text-forge-muted text-[10px] ms-0.5">/5</span></span>
                     </div>
                     <input
                       type="range" min={1} max={5} value={val}
@@ -344,8 +344,8 @@ function InsightsTab() {
                 {scoreTier.label}
               </div>
               <div className="flex items-center gap-3 text-[11px] font-condensed mt-0.5">
-                <span className="text-forge-muted">{t('coachPage.trend')} <span className="text-forge-green ml-0.5">{score.volumeTrend}</span></span>
-                <span className="text-forge-muted">{t('coachPage.consistency')} <span className="text-forge-green ml-0.5">{score.consistency}</span></span>
+                <span className="text-forge-muted">{t('coachPage.trend')} <span className="text-forge-green ms-0.5">{score.volumeTrend}</span></span>
+                <span className="text-forge-muted">{t('coachPage.consistency')} <span className="text-forge-green ms-0.5">{score.consistency}</span></span>
               </div>
               <div className="text-forge-dim text-[10px] font-mono mt-1">
                 {t('coachPage.sessionsLast30Days', { count: score.sessionsLast30Days })}
@@ -632,7 +632,7 @@ function PlanTab() {
           <div className="label-cap text-[9px] mt-1">{t('coachPage.restDays')}</div>
         </div>
         <div className="card-elevated rounded-2xl p-3 text-center">
-          <div className="kpi-lg text-forge-gold leading-none">{Math.round(days.reduce((a, d) => a + d.volume, 0) / 1000)}<span className="text-forge-muted text-[10px] ml-0.5">K</span></div>
+          <div className="kpi-lg text-forge-gold leading-none">{Math.round(days.reduce((a, d) => a + d.volume, 0) / 1000)}<span className="text-forge-muted text-[10px] ms-0.5">K</span></div>
           <div className="label-cap text-[9px] mt-1">{t('coachPage.kgVolume')}</div>
         </div>
       </div>
@@ -648,7 +648,7 @@ function PlanTab() {
               onClick={() => { if (d.muscles.length > 0) { play('tap'); navigate('/history'); } }}
               disabled={d.muscles.length === 0}
               className={[
-                'w-full card-elevated rounded-2xl p-3 flex items-center gap-3 text-left transition-all duration-200',
+                'w-full card-elevated rounded-2xl p-3 flex items-center gap-3 text-start transition-all duration-200',
                 d.isToday ? 'card-luxury-border' : '',
                 d.muscles.length > 0 ? 'cursor-pointer press-scale hover:bg-white/[0.04]' : 'opacity-60 cursor-default',
               ].join(' ')}
@@ -754,7 +754,7 @@ function NutritionTab() {
                 {t('coachPage.ofKcalTarget', { target: macroTargets.calories })}
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div
                 className="kpi-lg leading-none"
                 style={{ color: calTier === 'under' ? '#F59E0B' : calTier === 'over' ? '#EF4444' : '#d4af37' }}
@@ -829,7 +829,7 @@ function NutritionTab() {
               <Droplets size={18} className="text-forge-sapphire" />
               <div>
                 <div className="kpi-lg text-forge-text leading-none">
-                  {todayWater.cups_drunk}<span className="text-forge-muted text-[11px] ml-1">{t('coachPage.slashCups', { count: todayWater.goal_cups })}</span>
+                  {todayWater.cups_drunk}<span className="text-forge-muted text-[11px] ms-1">{t('coachPage.slashCups', { count: todayWater.goal_cups })}</span>
                 </div>
                 <div className="label-cap text-[9px] mt-1">{t('coachPage.mlValue', { value: (todayWater.cups_drunk * 250).toLocaleString() })}</div>
               </div>
@@ -866,7 +866,7 @@ function NutritionTab() {
                 onClick={() => handleWater(opt.cups)}
                 className="rounded-xl py-2.5 cursor-pointer press-scale transition-all duration-200 font-condensed font-semibold uppercase tracking-wider text-[12px] bg-gradient-to-br from-forge-sapphire/20 to-forge-sapphire/5 border border-forge-sapphire/25 text-forge-sapphire hover:bg-forge-sapphire/15"
               >
-                <Plus size={12} className="inline -mt-0.5 mr-0.5" />
+                <Plus size={12} className="inline -mt-0.5 me-0.5" />
                 {t(opt.labelKey)}
               </button>
             ))}
@@ -943,7 +943,7 @@ function CaliTab() {
             key={p.nameKey}
             type="button"
             onClick={() => handlePick(p.muscle)}
-            className="w-full card-elevated rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer press-scale hover:bg-white/[0.04] transition-all duration-200 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-green"
+            className="w-full card-elevated rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer press-scale hover:bg-white/[0.04] transition-all duration-200 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-green"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-forge-green/20 to-forge-green/5 border border-forge-green/15 flex items-center justify-center shrink-0">
               <Scaling size={16} className="text-forge-green" />

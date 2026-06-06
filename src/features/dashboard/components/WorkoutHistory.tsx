@@ -59,7 +59,7 @@ export function WorkoutHistory() {
                 ))}
               </div>
             </div>
-            <div className="text-right ml-3">
+            <div className="text-end ms-3">
               <div className="text-forge-green font-mono text-sm font-bold">
                 {Math.round(totalVolume).toLocaleString()}
               </div>

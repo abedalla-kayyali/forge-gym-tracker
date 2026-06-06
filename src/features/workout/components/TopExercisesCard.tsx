@@ -164,7 +164,7 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3, ena
                 >
                   {i + 1}
                 </span>
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-start">
                   <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">
                     {s.name}
                   </div>
@@ -180,10 +180,10 @@ export function TopExercisesCard({ muscle, onPick, scope = 'any', limit = 3, ena
                     </span>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
+                <div className="text-end shrink-0">
                   {s.bestWeight > 0 ? (
                     <>
-                      <div className="kpi-md text-forge-green leading-none">{s.bestWeight}<span className="text-[9px] text-forge-muted ml-0.5">{t('log.kgUnit')}</span></div>
+                      <div className="kpi-md text-forge-green leading-none">{s.bestWeight}<span className="text-[9px] text-forge-muted ms-0.5">{t('log.kgUnit')}</span></div>
                       <div className="text-[9px] text-forge-dim font-condensed uppercase tracking-wider mt-0.5">{t('topExercises.best')}</div>
                     </>
                   ) : (

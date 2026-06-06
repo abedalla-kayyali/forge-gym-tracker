@@ -133,14 +133,14 @@ export function ExerciseProgressionCard({ exercise, workouts, limit = 12 }: Prop
           <div className="label-cap text-[9px] text-forge-muted">{t('stats.progression.topSet')}</div>
           <div className="kpi-md text-forge-green leading-none">
             {formatNumber(current.topSet)}
-            <span className="text-[10px] text-forge-muted ml-0.5">{t('log.kgUnit')}</span>
+            <span className="text-[10px] text-forge-muted ms-0.5">{t('log.kgUnit')}</span>
           </div>
         </div>
         <div>
           <div className="label-cap text-[9px] text-forge-muted">{t('stats.progression.e1rm')}</div>
           <div className="kpi-md text-forge-gold leading-none">
             {formatNumber(current.e1rm)}
-            <span className="text-[10px] text-forge-muted ml-0.5">{t('log.kgUnit')}</span>
+            <span className="text-[10px] text-forge-muted ms-0.5">{t('log.kgUnit')}</span>
           </div>
         </div>
       </div>

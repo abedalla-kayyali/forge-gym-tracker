@@ -1030,5 +1030,10 @@
     "invalidWeight": "Enter a valid weight",
     "logged": "Weight logged: {{weight}} kg",
     "empty": "No weight entries yet"
+  },
+  "install": {
+    "title": "Install FORGE",
+    "subtitle": "Add to your home screen for the full app",
+    "action": "Install"
   }
 }

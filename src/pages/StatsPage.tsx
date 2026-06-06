@@ -196,7 +196,7 @@ function MomentumHeadline() {
           </div>
           <div className="kpi-md text-forge-green leading-none mt-1">
             {m.thisVol >= 1000 ? `${formatNumber(m.thisVol / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(m.thisVol)}
-            <span className="text-[10px] text-forge-muted ml-0.5">{t('log.kgUnit')}</span>
+            <span className="text-[10px] text-forge-muted ms-0.5">{t('log.kgUnit')}</span>
           </div>
           <div className="text-[10px] text-forge-dim font-mono mt-0.5">
             {t('stats.momentum.lastWeekVol', {
@@ -383,7 +383,7 @@ function ActivityRingsHero() {
           </div>
           <div className="kpi-md text-forge-gold leading-none shrink-0">
             {data.latestPR.weight}
-            <span className="text-[10px] text-forge-muted ml-0.5">KG · {data.latestPR.reps}R</span>
+            <span className="text-[10px] text-forge-muted ms-0.5">KG · {data.latestPR.reps}R</span>
           </div>
         </div>
       )}
@@ -483,7 +483,7 @@ function TopPRs() {
           <Award size={13} className="text-forge-gold" />
         </div>
         <span className="label-cap-strong">Personal Records</span>
-        <Badge variant="gold" className="ml-auto">{prs.length}</Badge>
+        <Badge variant="gold" className="ms-auto">{prs.length}</Badge>
       </div>
       <ul className="space-y-1.5" role="list">
         {prs.map((pr, i) => (
@@ -502,10 +502,10 @@ function TopPRs() {
                 {new Date(pr.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </div>
             </div>
-            <div className="text-right shrink-0">
+            <div className="text-end shrink-0">
               <div className="kpi-md text-forge-gold leading-none">
                 {pr.kind === 'weighted' ? `${pr.weight}` : pr.reps}
-                <span className="text-[10px] text-forge-muted ml-0.5">
+                <span className="text-[10px] text-forge-muted ms-0.5">
                   {pr.kind === 'weighted' ? `KG · ${pr.reps}R` : 'REPS'}
                 </span>
               </div>
@@ -564,7 +564,7 @@ function MuscleVolumeByGroup() {
               style={{ width: `${r.pct}%` }}
             />
           </div>
-          <span className="text-forge-muted text-[10px] font-mono w-12 text-right flex-shrink-0">
+          <span className="text-forge-muted text-[10px] font-mono w-12 text-end flex-shrink-0">
             {r.label}{r.unit}
           </span>
         </div>
@@ -612,7 +612,7 @@ function MuscleFreshnessList() {
             {r.sessions}× · {r.dateStr}
           </span>
           <span
-            className="text-[10px] font-condensed font-semibold uppercase tracking-wider w-16 text-right"
+            className="text-[10px] font-condensed font-semibold uppercase tracking-wider w-16 text-end"
             style={{ color: r.color }}
           >
             {r.label}
@@ -824,7 +824,7 @@ function CompositionDonut() {
               <span className="text-forge-text text-[11px] font-mono font-semibold">
                 {m.value}{m.unit}
                 {m.delta && (
-                  <span className="text-[9px] ml-1" style={{ color: m.delta.color }}>
+                  <span className="text-[9px] ms-1" style={{ color: m.delta.color }}>
                     {m.delta.diff > 0 ? '+' : ''}{m.delta.diff}
                   </span>
                 )}
@@ -926,7 +926,7 @@ function CaliDashboard() {
                   <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{pr.name}</div>
                   <div className="text-forge-muted text-[10px] font-mono">{pr.muscle} · {new Date(pr.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                 </div>
-                <div className="kpi-md text-forge-gold leading-none">{pr.reps}<span className="text-[10px] text-forge-muted ml-0.5">REPS</span></div>
+                <div className="kpi-md text-forge-gold leading-none">{pr.reps}<span className="text-[10px] text-forge-muted ms-0.5">REPS</span></div>
               </li>
             ))}
           </ul>
@@ -1157,7 +1157,7 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
               />
             </div>
             <span
-              className="text-[11px] font-mono font-semibold w-14 text-right flex-shrink-0"
+              className="text-[11px] font-mono font-semibold w-14 text-end flex-shrink-0"
               style={{ color: isGain ? '#2ecc71' : isLoss ? '#EF4444' : '#4B5563' }}
             >
               {r.delta !== 0

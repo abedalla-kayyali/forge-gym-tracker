@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import { OfflineBanner } from './components/OfflineBanner';
+import { InstallPrompt } from './components/InstallPrompt';
 import { TabPills } from './components/ui/TabPills';
 import { Input } from './components/ui/Input';
 import { useToast } from './components/ui/Toast';
@@ -387,6 +388,7 @@ export default function App() {
         </main>
         <BottomNav />
         <OfflineBanner />
+        <InstallPrompt />
       </div>
     </BrowserRouter>
   );

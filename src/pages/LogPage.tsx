@@ -52,7 +52,7 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
           <div className="w-7 h-7 rounded-lg bg-forge-green/10 flex items-center justify-center">
             <span className="text-forge-green text-xs font-display">{index + 1}</span>
           </div>
-          <div className="text-left">
+          <div className="text-start">
             <div className="text-forge-text text-sm font-body font-medium">{ex.name}</div>
             <div className="text-forge-muted text-[11px] font-mono">
               {t('logPage.exerciseSummary', { count: ex.sets.length, vol: totalVol.toLocaleString() })}
@@ -67,14 +67,14 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
       {open && (
         <div className="border-t border-forge-border-light">
           <div className="grid grid-cols-4 px-4 py-2 text-[10px] font-condensed text-forge-dim uppercase tracking-wider">
-            <span>{t('logPage.colSet')}</span><span className="text-center">{t('logPage.colReps')}</span><span className="text-center">{t('logPage.colWeight')}</span><span className="text-right">{t('logPage.colVol')}</span>
+            <span>{t('logPage.colSet')}</span><span className="text-center">{t('logPage.colReps')}</span><span className="text-center">{t('logPage.colWeight')}</span><span className="text-end">{t('logPage.colVol')}</span>
           </div>
           {ex.sets.map((s, si) => (
             <div key={si} className={`grid grid-cols-4 px-4 py-2 text-xs font-mono ${si % 2 === 0 ? 'bg-[rgba(255,255,255,0.015)]' : ''}`}>
               <span className="text-forge-muted">{si + 1}</span>
               <span className="text-center text-forge-text">{s.reps}</span>
               <span className="text-center text-forge-text">{s.weight}{t('log.kgUnit')}</span>
-              <span className="text-right text-forge-green/70">{(s.reps * s.weight).toLocaleString()}</span>
+              <span className="text-end text-forge-green/70">{(s.reps * s.weight).toLocaleString()}</span>
             </div>
           ))}
         </div>

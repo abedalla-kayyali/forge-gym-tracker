@@ -130,7 +130,7 @@ export function SessionStreakCard() {
         </div>
 
         {sessions.length > 0 && (
-          <div className="text-right shrink-0">
+          <div className="text-end shrink-0">
             <div className="kpi-md text-forge-green leading-none">{sessions.length}</div>
             <div className="label-cap text-[9px] mt-0.5">{t('sessionStreak.total')}</div>
           </div>

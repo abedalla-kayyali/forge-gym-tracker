@@ -295,7 +295,7 @@ function RecommendedMuscle({
     <button
       type="button"
       onClick={() => onPick(data.muscle)}
-      className="col-span-2 card-elevated card-luxury-border rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer press-scale hover:bg-white/[0.04] transition-all duration-200 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-green"
+      className="col-span-2 card-elevated card-luxury-border rounded-2xl p-3.5 flex items-center gap-3 cursor-pointer press-scale hover:bg-white/[0.04] transition-all duration-200 text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forge-green"
       aria-label={t('progressGuide.coachPick.aria', { muscle: muscleLabel })}
     >
       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forge-green/25 to-forge-green/5 border border-forge-green/30 flex items-center justify-center shrink-0">

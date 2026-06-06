@@ -189,7 +189,7 @@ function LeaderboardTab() {
             </div>
             <div className="text-forge-muted text-[11px] font-condensed">{t(r.tagKey)}</div>
           </div>
-          <div className="kpi-md text-forge-green">{r.xp}<span className="text-[10px] text-forge-muted ml-0.5">{t('social.xp')}</span></div>
+          <div className="kpi-md text-forge-green">{r.xp}<span className="text-[10px] text-forge-muted ms-0.5">{t('social.xp')}</span></div>
         </Card>
       ))}
       <p className="text-center text-[11px] text-forge-muted mt-2 font-condensed">

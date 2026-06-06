@@ -237,8 +237,8 @@ export function BwLogger({ onLogged }: Props) {
                   <span className="text-forge-muted text-[12px] font-condensed">#{i + 1}</span>
                   <span className="text-forge-text text-[14px] font-mono">
                     {isHold ? t('bwLogger.seconds', { count: s.reps }) : t('bwLogger.repsCount', { count: s.reps })}
-                    {s.addedWeight ? <span className="text-forge-green ml-2 text-[12px]">+{s.addedWeight}{t('log.kgUnit')}</span> : null}
-                    <span className="text-forge-muted ml-2 text-[11px]">
+                    {s.addedWeight ? <span className="text-forge-green ms-2 text-[12px]">+{s.addedWeight}{t('log.kgUnit')}</span> : null}
+                    <span className="text-forge-muted ms-2 text-[11px]">
                       · {t('bwLogger.variation.' + (s.variation ?? 'regular'))}
                     </span>
                   </span>

@@ -302,13 +302,13 @@ export function HistoryPage() {
 
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {entry.kind === 'weighted' && totalVolume > 0 && (
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className="kpi-md text-forge-green leading-none">{Math.round(totalVolume).toLocaleString()}</div>
                         <div className="text-forge-dim text-[9px] font-condensed uppercase tracking-wider mt-0.5">{t('history.kgVol')}</div>
                       </div>
                     )}
                     {entry.kind === 'bodyweight' && totalReps > 0 && (
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className="kpi-md text-forge-green leading-none">{totalReps}</div>
                         <div className="text-forge-dim text-[9px] font-condensed uppercase tracking-wider mt-0.5">{t('history.repsLabel')}</div>
                       </div>
@@ -349,7 +349,7 @@ export function HistoryPage() {
                                 <Trophy size={10} /> {t('log.prBadge')}
                               </span>
                             )}
-                            <span className="ml-auto text-[10px] text-forge-muted font-mono">
+                            <span className="ms-auto text-[10px] text-forge-muted font-mono">
                               {t('history.best')} · {maxReps}×{maxWeight > 0 ? `${maxWeight}${t('log.kgUnit')}` : t('history.bw')}
                             </span>
                           </div>
@@ -361,13 +361,13 @@ export function HistoryPage() {
                                   key={si}
                                   className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[12px] ${si % 2 === 0 ? 'bg-white/[0.02]' : ''}`}
                                 >
-                                  <span className="text-forge-dim font-mono w-5 text-right shrink-0">{si + 1}</span>
+                                  <span className="text-forge-dim font-mono w-5 text-end shrink-0">{si + 1}</span>
                                   <span className="text-forge-text font-mono">{set.reps}</span>
                                   <span className="text-forge-dim">×</span>
                                   <span className="text-forge-text font-mono">{set.weight}{t('log.kgUnit')}</span>
                                   {set.rpe != null && <span className="text-forge-dim text-[10px]">{t('history.rpe', { value: set.rpe })}</span>}
                                   {set.isWarmup && <span className="text-amber-400/70 text-[9px] font-condensed">{t('history.warmup')}</span>}
-                                  <span className="ml-auto text-forge-green/70 font-mono text-[10px]">
+                                  <span className="ms-auto text-forge-green/70 font-mono text-[10px]">
                                     {set.weight > 0 ? (set.reps * set.weight).toLocaleString() : '—'}
                                   </span>
                                   {isPr && <Trophy size={11} className="text-forge-gold shrink-0" />}
@@ -397,7 +397,7 @@ export function HistoryPage() {
                                 <Trophy size={10} /> {t('log.prBadge')}
                               </span>
                             )}
-                            <span className="ml-auto text-[10px] text-forge-muted font-mono">{t('history.max', { count: maxReps })}</span>
+                            <span className="ms-auto text-[10px] text-forge-muted font-mono">{t('history.max', { count: maxReps })}</span>
                           </div>
                           <div className="space-y-0.5">
                             {ex.sets.map((set, si) => {
@@ -407,7 +407,7 @@ export function HistoryPage() {
                                   key={si}
                                   className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-[12px] ${si % 2 === 0 ? 'bg-white/[0.02]' : ''}`}
                                 >
-                                  <span className="text-forge-dim font-mono w-5 text-right shrink-0">{si + 1}</span>
+                                  <span className="text-forge-dim font-mono w-5 text-end shrink-0">{si + 1}</span>
                                   <span className="text-forge-text font-mono">{set.reps}</span>
                                   <span className="text-forge-muted text-[11px]">{t('history.repsLower')}</span>
                                   {set.variation && (
@@ -416,7 +416,7 @@ export function HistoryPage() {
                                   {set.assisted && (
                                     <span className="text-amber-400/70 text-[9px] font-condensed">{t('history.assisted')}</span>
                                   )}
-                                  {isPr && <Trophy size={11} className="text-forge-gold ml-auto shrink-0" />}
+                                  {isPr && <Trophy size={11} className="text-forge-gold ms-auto shrink-0" />}
                                 </div>
                               );
                             })}

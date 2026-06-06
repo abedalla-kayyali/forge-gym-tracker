@@ -77,7 +77,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md' }:
             </div>
             <button
               onClick={handleClose}
-              className="tap flex items-center justify-center rounded-full text-forge-muted hover:text-forge-text hover:bg-white/5 transition-all duration-200 cursor-pointer press-scale -mr-2"
+              className="tap flex items-center justify-center rounded-full text-forge-muted hover:text-forge-text hover:bg-white/5 transition-all duration-200 cursor-pointer press-scale -me-2"
               aria-label="Close"
             >
               <X size={20} />

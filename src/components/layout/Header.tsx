@@ -79,7 +79,7 @@ export function Header() {
                   <span className="text-forge-text font-condensed font-semibold text-[15px] tracking-wide truncate">
                     {level.name}
                   </span>
-                  <span className="kpi-md text-forge-green shrink-0">{experience}<span className="text-[10px] text-forge-muted ml-0.5">{t('header.xp')}</span></span>
+                  <span className="kpi-md text-forge-green shrink-0">{experience}<span className="text-[10px] text-forge-muted ms-0.5">{t('header.xp')}</span></span>
                 </div>
                 <div className="mt-1.5 track h-1.5">
                   <div

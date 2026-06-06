@@ -292,7 +292,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                           <div className="w-6 h-6 rounded-lg bg-forge-green/10 flex items-center justify-center shrink-0">
                             <span className="text-forge-green text-[11px] font-display">{i + 1}</span>
                           </div>
-                          <div className="text-left min-w-0">
+                          <div className="text-start min-w-0">
                             <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{ex.name}</div>
                             <div className="text-forge-muted text-[10px] font-mono">
                               {t('saveWorkout.setsCount', { count: ex.sets.length })}
@@ -305,14 +305,14 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                       {isOpen && (
                         <div className="border-t border-forge-border-light">
                           <div className="grid grid-cols-4 px-3.5 py-1.5 text-[9px] label-cap">
-                            <span>{t('saveWorkout.colSet')}</span><span className="text-center">{t('log.reps')}</span><span className="text-center">{t('saveWorkout.colWt')}</span><span className="text-right">{t('saveWorkout.colVol')}</span>
+                            <span>{t('saveWorkout.colSet')}</span><span className="text-center">{t('log.reps')}</span><span className="text-center">{t('saveWorkout.colWt')}</span><span className="text-end">{t('saveWorkout.colVol')}</span>
                           </div>
                           {ex.sets.map((s, si) => (
                             <div key={si} className="grid grid-cols-4 px-3.5 py-1.5 text-[12px] font-mono">
                               <span className="text-forge-muted">{si + 1}</span>
                               <span className="text-center text-forge-text">{s.reps}</span>
                               <span className="text-center text-forge-text">{s.weight > 0 ? `${s.weight}${t('log.kgUnit')}` : '—'}</span>
-                              <span className="text-right text-forge-green/80">
+                              <span className="text-end text-forge-green/80">
                                 {s.weight > 0 ? (s.reps * s.weight).toLocaleString() : '—'}
                               </span>
                             </div>

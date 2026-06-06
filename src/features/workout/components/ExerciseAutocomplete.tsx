@@ -103,7 +103,7 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
             ? t('exerciseAutocomplete.searchPlaceholder', { muscle: t('muscles.' + String(muscle).toLowerCase()) })
             : t('exerciseAutocomplete.selectMuscleFirst')}
           className={[
-            'w-full bg-[#070a0d] border rounded-xl pl-10 pr-12 py-3',
+            'w-full bg-[#070a0d] border rounded-xl ps-10 pe-12 py-3',
             'text-forge-text text-[15px] font-body min-h-[48px]',
             'placeholder:text-forge-muted/50',
             'focus:outline-none focus:border-forge-green/40 focus:shadow-[var(--shadow-input-focus)]',
@@ -137,7 +137,7 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
             <button
               type="button"
               onClick={handleAddCustom}
-              className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors duration-150 border-b border-white/5 bg-gradient-to-r from-forge-green/12 to-transparent hover:from-forge-green/25"
+              className="w-full text-start px-4 py-2.5 flex items-center gap-2.5 cursor-pointer transition-colors duration-150 border-b border-white/5 bg-gradient-to-r from-forge-green/12 to-transparent hover:from-forge-green/25"
               role="option"
             >
               <Sparkles size={14} className="text-forge-green shrink-0" />
@@ -158,7 +158,7 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
                   key={`custom-${ex.name}`}
                   type="button"
                   onClick={() => handleSelect(ex)}
-                  className="w-full text-left px-4 py-2 text-[14px] text-forge-text hover:bg-white/[0.05] cursor-pointer transition-colors duration-150 flex items-center gap-2 min-h-[40px]"
+                  className="w-full text-start px-4 py-2 text-[14px] text-forge-text hover:bg-white/[0.05] cursor-pointer transition-colors duration-150 flex items-center gap-2 min-h-[40px]"
                   role="option"
                 >
                   <Bookmark size={13} className="text-forge-gold shrink-0" />
@@ -176,7 +176,7 @@ export function ExerciseAutocomplete({ muscle, value, onChange }: Props) {
                   key={ex.name}
                   type="button"
                   onClick={() => handleSelect(ex)}
-                  className="w-full text-left px-4 py-2 text-[14px] text-forge-text hover:bg-white/[0.05] cursor-pointer transition-colors duration-150 flex items-center justify-between min-h-[40px]"
+                  className="w-full text-start px-4 py-2 text-[14px] text-forge-text hover:bg-white/[0.05] cursor-pointer transition-colors duration-150 flex items-center justify-between min-h-[40px]"
                   role="option"
                 >
                   <span className="font-body truncate">{ex.name}</span>

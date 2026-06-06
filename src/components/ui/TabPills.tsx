@@ -66,7 +66,7 @@ export function TabPills<T extends string>({
                 <t.Icon size={13} strokeWidth={active ? 2.4 : 1.8} />
               )}
               <span>{t.label}</span>
-              {t.badge && <span className="ml-1">{t.badge}</span>}
+              {t.badge && <span className="ms-1">{t.badge}</span>}
             </button>
           );
         })}
