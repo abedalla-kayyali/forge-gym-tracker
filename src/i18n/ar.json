@@ -1066,5 +1066,56 @@
     "quote5": "القوة تُكتسب ولا تُوهب.",
     "shareText": "أنهيت {{name}} للتو — سُجِّل على FORGE 💪",
     "shareTextGeneric": "أنهيت جلسة للتو على FORGE 💪"
+  },
+  "strategy": {
+    "title": "استراتيجيتك",
+    "chooseGoal": "الهدف",
+    "setup": "اختر هدفًا للحصول على خطتك المخصصة.",
+    "goal": {
+      "lose_fat": "خسارة الدهون",
+      "build_muscle": "بناء العضلات",
+      "recomp": "إعادة التكوين",
+      "strength": "القوة",
+      "general": "لياقة عامة"
+    },
+    "sex": {
+      "male": "ذكر",
+      "female": "أنثى"
+    },
+    "days": "{{count}}×/أسبوع",
+    "split": {
+      "full_body": "الجسم كامل",
+      "upper_lower": "علوي / سفلي",
+      "ppl": "دفع · سحب · أرجل"
+    },
+    "focus": {
+      "full": "كامل",
+      "upper": "علوي",
+      "lower": "سفلي",
+      "push": "دفع",
+      "pull": "سحب",
+      "legs": "أرجل"
+    },
+    "repRange": "{{low}}–{{high}} تكرار",
+    "rir": "احتياطي {{rir}}",
+    "progression": {
+      "double_progression": "تدرّج مزدوج — زِد التكرارات ثم الوزن",
+      "add_weight": "أضِف وزنًا عند بلوغ أعلى التكرارات",
+      "add_reps": "أضِف تكرارًا كل جلسة"
+    },
+    "emphasis": "التركيز",
+    "macros": "الأهداف اليومية",
+    "kcal": "سعرة",
+    "protein": "بروتين",
+    "carbs": "كربوهيدرات",
+    "fat": "دهون",
+    "delta": {
+      "deficit": "عجز",
+      "maintenance": "ثبات",
+      "surplus": "فائض"
+    },
+    "applyMacros": "تطبيق على التغذية",
+    "macrosApplied": "تم تطبيق الأهداف!",
+    "needWeight": "سجّل وزنك للحصول على أهداف السعرات."
   }
 }

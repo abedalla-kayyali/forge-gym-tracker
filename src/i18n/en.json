@@ -1066,5 +1066,56 @@
     "newPRs_two": "{{count}} NEW PRs",
     "newPRs_few": "{{count}} NEW PRs",
     "newPRs_many": "{{count}} NEW PRs"
+  },
+  "strategy": {
+    "title": "Your Strategy",
+    "chooseGoal": "Goal",
+    "setup": "Pick a goal to get your personalized plan.",
+    "goal": {
+      "lose_fat": "Lose fat",
+      "build_muscle": "Build muscle",
+      "recomp": "Recomp",
+      "strength": "Strength",
+      "general": "General fitness"
+    },
+    "sex": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "days": "{{count}}×/wk",
+    "split": {
+      "full_body": "Full Body",
+      "upper_lower": "Upper / Lower",
+      "ppl": "Push · Pull · Legs"
+    },
+    "focus": {
+      "full": "Full",
+      "upper": "Upper",
+      "lower": "Lower",
+      "push": "Push",
+      "pull": "Pull",
+      "legs": "Legs"
+    },
+    "repRange": "{{low}}–{{high}} reps",
+    "rir": "RIR {{rir}}",
+    "progression": {
+      "double_progression": "Double progression — add reps, then weight",
+      "add_weight": "Add weight when you hit the top reps",
+      "add_reps": "Add a rep each session"
+    },
+    "emphasis": "Focus",
+    "macros": "Daily targets",
+    "kcal": "kcal",
+    "protein": "Protein",
+    "carbs": "Carbs",
+    "fat": "Fat",
+    "delta": {
+      "deficit": "Deficit",
+      "maintenance": "Maintenance",
+      "surplus": "Surplus"
+    },
+    "applyMacros": "Apply to nutrition",
+    "macrosApplied": "Targets applied!",
+    "needWeight": "Log your weight to get calorie targets."
   }
 }

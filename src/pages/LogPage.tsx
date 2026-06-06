@@ -12,6 +12,7 @@ import { SaveWorkoutModal } from '../features/workout/components/SaveWorkoutModa
 import { TopExercisesCard } from '../features/workout/components/TopExercisesCard';
 import { SessionStreakCard } from '../features/workout/components/SessionStreakCard';
 import { ProgressGuide } from '../features/workout/components/ProgressGuide';
+import { StrategyCard } from '../features/coach/components/StrategyCard';
 import { useSessionStore } from '../stores/useSessionStore';
 import { useCustomExercisesStore } from '../stores/useCustomExercisesStore';
 import { useToast } from '../components/ui/Toast';
@@ -223,6 +224,11 @@ export function LogPage() {
               setTimeout(() => session.setMuscle(m), 50);
             }}
           />
+        </div>
+
+        {/* Smart training strategy — goal + sex aware plan & macros */}
+        <div className="w-full px-2 mb-5 max-w-md mx-auto">
+          <StrategyCard />
         </div>
 
         {/* CTA */}

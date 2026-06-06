@@ -6,7 +6,8 @@
  * component/store without coupling.
  */
 
-import type { Workout, BwWorkout, WorkoutExercise } from '../types/workout';
+import type { Workout, BwWorkout, WorkoutExercise, MuscleGroup } from '../types/workout';
+import type { Sex, FitnessGoal, ExperienceLevel } from '../types/profile';
 
 // ═════════════════════════════════════════════════════════════════════════════
 // ADAPTIVE REST TIMER
@@ -327,4 +328,135 @@ export function calcBwProgression(bwWorkouts: BwWorkout[]): {
       };
     })
     .sort((a, b) => b.bestReps - a.bestReps);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SMART TRAINING-STRATEGY ENGINE (goal + sex aware, pure & testable)
+// ═════════════════════════════════════════════════════════════════════════════
+
+export type SplitKey = 'full_body' | 'upper_lower' | 'ppl';
+
+export interface ScheduleDay {
+  focusKey: 'full' | 'upper' | 'lower' | 'push' | 'pull' | 'legs';
+  muscles: MuscleGroup[];
+}
+
+export interface ProgramRecommendation {
+  split: SplitKey;
+  daysPerWeek: number;
+  schedule: ScheduleDay[];
+  repRange: [number, number];
+  rir: number;                  // reps-in-reserve target
+  progressionKey: 'double_progression' | 'add_weight' | 'add_reps';
+  emphasis: MuscleGroup[];      // suggested priority muscles (a starting point, overridable)
+  goal: FitnessGoal;
+}
+
+const SPLIT_TEMPLATES: Record<SplitKey, ScheduleDay[]> = {
+  full_body: [
+    { focusKey: 'full', muscles: ['chest', 'back', 'legs', 'shoulders', 'biceps', 'triceps', 'core'] },
+  ],
+  upper_lower: [
+    { focusKey: 'upper', muscles: ['chest', 'back', 'shoulders', 'biceps', 'triceps'] },
+    { focusKey: 'lower', muscles: ['legs', 'glutes', 'calves', 'core'] },
+  ],
+  ppl: [
+    { focusKey: 'push', muscles: ['chest', 'shoulders', 'triceps'] },
+    { focusKey: 'pull', muscles: ['back', 'biceps', 'forearms'] },
+    { focusKey: 'legs', muscles: ['legs', 'glutes', 'calves', 'core'] },
+  ],
+};
+
+/** Default muscle emphasis by sex — a starting suggestion, fully overridable. */
+function defaultEmphasis(sex: Sex | undefined, goal: FitnessGoal): MuscleGroup[] {
+  if (sex === 'female') return ['glutes', 'legs', 'back'];
+  if (sex === 'male') return ['chest', 'back', 'shoulders'];
+  return goal === 'strength' ? ['legs', 'back', 'chest'] : ['back', 'legs', 'shoulders'];
+}
+
+/**
+ * Recommend a weekly program from goal + experience + days/week. Beginners and
+ * low-frequency users get full-body; 4 days → upper/lower; 5-6 → push/pull/legs.
+ * Rep range / RIR / progression scale with the goal.
+ */
+export function recommendProgram(opts: {
+  sex?: Sex;
+  goal?: FitnessGoal;
+  experience?: ExperienceLevel;
+  daysPerWeek?: number;
+}): ProgramRecommendation {
+  const goal = opts.goal ?? 'general';
+  const exp = opts.experience ?? 'beginner';
+  const days = Math.max(2, Math.min(6, opts.daysPerWeek ?? (exp === 'beginner' ? 3 : 4)));
+
+  let split: SplitKey;
+  if (days <= 3 || exp === 'beginner') split = 'full_body';
+  else if (days === 4) split = 'upper_lower';
+  else split = 'ppl';
+
+  const template = SPLIT_TEMPLATES[split];
+  const schedule: ScheduleDay[] = [];
+  for (let i = 0; i < days; i++) schedule.push(template[i % template.length]!);
+
+  let repRange: [number, number];
+  let rir: number;
+  let progressionKey: ProgramRecommendation['progressionKey'];
+  switch (goal) {
+    case 'strength':     repRange = [3, 6];   rir = 1; progressionKey = 'add_weight'; break;
+    case 'build_muscle': repRange = [6, 12];  rir = 1; progressionKey = 'double_progression'; break;
+    case 'lose_fat':     repRange = [10, 15]; rir = 1; progressionKey = 'double_progression'; break;
+    case 'recomp':       repRange = [8, 12];  rir = 2; progressionKey = 'double_progression'; break;
+    default:             repRange = [8, 12];  rir = 2; progressionKey = 'add_reps';
+  }
+
+  return {
+    split, daysPerWeek: days, schedule, repRange, rir, progressionKey,
+    emphasis: defaultEmphasis(opts.sex, goal), goal,
+  };
+}
+
+export interface MacroGuidance {
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  tdee: number;
+  deltaKey: 'deficit' | 'maintenance' | 'surplus';
+}
+
+/**
+ * Calorie + macro guidance: Mifflin-St Jeor BMR → activity-scaled TDEE →
+ * goal-adjusted calories, then a protein-first macro split. Returns null if
+ * there's no bodyweight to compute from. Pure.
+ */
+export function macroGuidance(opts: {
+  weightKg?: number | null;
+  heightCm?: number | null;
+  age?: number | null;
+  sex?: Sex;
+  goal?: FitnessGoal;
+  daysPerWeek?: number;
+}): MacroGuidance | null {
+  const kg = opts.weightKg && opts.weightKg > 0 ? opts.weightKg : null;
+  if (!kg) return null;
+  const goal = opts.goal ?? 'general';
+  const cm = opts.heightCm && opts.heightCm > 0 ? opts.heightCm : 170;
+  const age = opts.age && opts.age > 0 ? opts.age : 30;
+  const bmr = 10 * kg + 6.25 * cm - 5 * age + (opts.sex === 'female' ? -161 : 5);
+  const days = Math.max(0, Math.min(7, opts.daysPerWeek ?? 4));
+  const activity = 1.2 + days * 0.06;
+  const tdee = Math.round(bmr * activity);
+
+  let calories: number;
+  let deltaKey: MacroGuidance['deltaKey'];
+  switch (goal) {
+    case 'lose_fat':     calories = Math.round(tdee * 0.80); deltaKey = 'deficit'; break;
+    case 'build_muscle': calories = Math.round(tdee * 1.10); deltaKey = 'surplus'; break;
+    case 'strength':     calories = Math.round(tdee * 1.05); deltaKey = 'surplus'; break;
+    default:             calories = tdee; deltaKey = 'maintenance';
+  }
+  const protein_g = Math.round((goal === 'lose_fat' ? 2.2 : 2.0) * kg);
+  const fat_g = Math.round((calories * 0.25) / 9);
+  const carbs_g = Math.max(0, Math.round((calories - protein_g * 4 - fat_g * 9) / 4));
+  return { calories, protein_g, carbs_g, fat_g, tdee, deltaKey };
 }
