@@ -130,7 +130,8 @@ describe('normalizeWorkoutList', () => {
       },
     ]);
     expect(out[0]!.exercises).toHaveLength(1);
-    expect(out[0]!.exercises[0]).toMatchObject({ name: 'Smith', muscle: 'Traps' });
+    // muscle is canonicalized: "Traps" → "back"
+    expect(out[0]!.exercises[0]).toMatchObject({ name: 'Smith', muscle: 'back' });
     expect(out[0]!.exercises[0]!.sets).toHaveLength(2);
     expect(out[0]!.exercises[0]!.sets[1]).toMatchObject({ reps: 5, weight: 50 });
     expect(out[0]!.name).toBe('Smith'); // display name backfilled from exercise

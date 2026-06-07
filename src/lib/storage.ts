@@ -1,3 +1,5 @@
+import { canonicalMuscle } from './muscles';
+
 const PLAIN_STRING_KEYS = new Set([
   'forge_theme',
   'forge_accent',
@@ -74,10 +76,10 @@ export function normalizeWorkoutList<T>(raw: unknown): T[] {
 
     let exercises: Array<Record<string, unknown>>;
     if (Array.isArray(rec.exercises)) {
-      // Already nested — just guarantee each exercise has a sets array.
+      // Already nested — guarantee a sets array and a canonical muscle.
       exercises = rec.exercises
         .filter((e): e is Record<string, unknown> => !!e && typeof e === 'object')
-        .map((e) => ({ ...e, sets: Array.isArray(e.sets) ? e.sets : [] }));
+        .map((e) => ({ ...e, muscle: canonicalMuscle(e.muscle), sets: Array.isArray(e.sets) ? e.sets : [] }));
     } else if (typeof rec.exercise === 'string') {
       // Legacy flat per-exercise record from the original app:
       //   { exercise, muscle, sets:[{reps,weight}|{reps}], isPR, ... }
@@ -98,7 +100,7 @@ export function normalizeWorkoutList<T>(raw: unknown): T[] {
       }
       exercises = [{
         name: rec.exercise,
-        muscle: typeof rec.muscle === 'string' ? rec.muscle : '',
+        muscle: canonicalMuscle(rec.muscle),
         sets,
       }];
     } else {

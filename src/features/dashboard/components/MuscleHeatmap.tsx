@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { BodyMap, MUSCLE_ORDER } from '../../../components/body/BodyMap';
+import { toMuscleGroup } from '../../../lib/muscles';
 import type { MuscleGroup } from '../../../types/workout';
 
 /** Freshness color ramp — matches the premium palette. */
@@ -36,7 +37,7 @@ function useMuscleFreshness() {
 
     for (const m of MUSCLE_ORDER) {
       const lastSession = workouts
-        .filter((w) => w.exercises.some((e) => e.muscle.toLowerCase() === m))
+        .filter((w) => w.exercises.some((e) => toMuscleGroup(e.muscle) === m))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
 
       const days = lastSession

@@ -53,7 +53,7 @@ export function WorkoutHistory() {
               </div>
               <div className="flex gap-1 mt-1">
                 {muscles.slice(0, 4).map((m) => (
-                  <span key={m} className="text-forge-green/60 text-[10px] bg-forge-green/10 px-1.5 py-0.5 rounded font-condensed">
+                  <span key={m} className="text-forge-green/60 text-[10px] bg-forge-green/10 px-1.5 py-0.5 rounded font-condensed capitalize">
                     {m}
                   </span>
                 ))}
