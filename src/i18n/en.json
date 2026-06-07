@@ -1160,5 +1160,53 @@
     "comeback_two": "It's been {{count}} days. Time to get back under the bar.",
     "comeback_few": "It's been {{count}} days. Time to get back under the bar.",
     "comeback_many": "It's been {{count}} days. Time to get back under the bar."
+  },
+  "journey": {
+    "title": "Your Journey",
+    "subtitle": "Everything you've built, all-time",
+    "empty": "Log your first workout to start your journey.",
+    "totals": {
+      "sessions": "Sessions",
+      "volume": "Volume",
+      "sets": "Total sets",
+      "reps": "Total reps",
+      "trainingDays": "Training days",
+      "cardioMin": "Cardio",
+      "since": "Since {{date}}"
+    },
+    "strength": {
+      "title": "Strength trends",
+      "subtitle": "est. 1RM",
+      "empty": "Log weighted lifts to see strength trends.",
+      "best": "Best"
+    },
+    "calendar": {
+      "title": "Consistency",
+      "subtitle": "{{count}} training days in the last {{weeks}} weeks",
+      "less": "Less",
+      "more": "More",
+      "dayAria": "{{count}} sessions on {{date}}"
+    },
+    "milestones": {
+      "title": "Milestones",
+      "unlocked": "{{count}}/{{total}} unlocked",
+      "firstStep": "First Step",
+      "committed": "Committed",
+      "dedicated": "Dedicated",
+      "centurion": "Centurion",
+      "tonnage1": "Iron Mover",
+      "tonnage2": "Heavy Hauler",
+      "tonnage3": "Million Club",
+      "streak7": "Week Warrior",
+      "streak30": "Unbreakable",
+      "days50": "Half-Century"
+    },
+    "a11y": {
+      "achieved": "achieved",
+      "locked": "locked",
+      "up": "up {{pct}}%",
+      "down": "down {{pct}}%",
+      "flat": "no change"
+    }
   }
 }

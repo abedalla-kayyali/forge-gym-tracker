@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   TrendingUp, TrendingDown, Minus, Target, Activity as MuscleIcon, Scaling, BarChart3,
   Flame, Dumbbell, Trophy, HeartPulse, Award, ChevronRight,
-  Ruler, Weight, Gauge, Plus, Minus as MinusIcon, Zap,
+  Ruler, Weight, Gauge, Plus, Minus as MinusIcon, Zap, Rocket,
 } from 'lucide-react';
 import { TabPills } from '../components/ui/TabPills';
 import { Badge } from '../components/ui/Badge';
@@ -18,6 +18,7 @@ import {
   MuscleHeatmap,
   PRBoard,
 } from '../features/dashboard';
+import { JourneyTab } from '../features/dashboard/components/JourneyTab';
 import { StepsPanel } from '../features/steps';
 import { XPBar } from '../features/gamification';
 import { useWorkoutStore } from '../stores/useWorkoutStore';
@@ -28,7 +29,7 @@ import { readStorage, writeStorage } from '../lib/storage';
 import { STORAGE_KEYS } from '../lib/constants';
 import { formatNumber } from '../lib/format';
 
-type StatsTab = 'overview' | 'progress' | 'muscles' | 'body' | 'cali';
+type StatsTab = 'overview' | 'journey' | 'progress' | 'muscles' | 'body' | 'cali';
 type PeriodKey = '7D' | '1M' | '3M' | '6M' | 'ALL';
 
 const SESSION_TARGET = 12;
@@ -50,6 +51,7 @@ function daysForPeriod(period: PeriodKey): number | null {
 
 const TABS: { key: StatsTab; label: string; Icon: typeof TrendingUp }[] = [
   { key: 'overview',  label: 'Overview', Icon: BarChart3 },
+  { key: 'journey',   label: 'Journey',  Icon: Rocket },
   { key: 'progress',  label: 'Progress', Icon: TrendingUp },
   { key: 'muscles',   label: 'Muscles',  Icon: MuscleIcon },
   { key: 'body',      label: 'Body',     Icon: Target },
@@ -1211,6 +1213,9 @@ export function StatsPage() {
           </DashboardSection>
         </div>
       )}
+
+      {/* ── JOURNEY ──────────────────────────────────────────────────── */}
+      {tab === 'journey' && <JourneyTab />}
 
       {/* ── PROGRESS ─────────────────────────────────────────────────── */}
       {tab === 'progress' && (

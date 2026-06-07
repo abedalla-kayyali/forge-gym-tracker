@@ -1160,5 +1160,53 @@
     "pr_zero": "🏆 {{count}} رقم قياسي في آخر جلسة — أنت مشتعل!",
     "streakStrong_zero": "🔥 سلسلة {{count}} يوم — حافظ عليها!",
     "comeback_zero": "مضى {{count}} يوم. حان وقت العودة."
+  },
+  "journey": {
+    "title": "رحلتك",
+    "subtitle": "كل ما بنيته منذ البداية",
+    "empty": "سجّل أول تمرين لتبدأ رحلتك.",
+    "totals": {
+      "sessions": "الجلسات",
+      "volume": "الحِمل",
+      "sets": "إجمالي المجموعات",
+      "reps": "إجمالي التكرارات",
+      "trainingDays": "أيام التدريب",
+      "cardioMin": "كارديو",
+      "since": "منذ {{date}}"
+    },
+    "strength": {
+      "title": "تطوّر القوة",
+      "subtitle": "1RM مُقدّر",
+      "empty": "سجّل تمارين بالأوزان لرؤية تطوّر القوة.",
+      "best": "الأفضل"
+    },
+    "calendar": {
+      "title": "الانتظام",
+      "subtitle": "{{count}} يوم تدريب خلال آخر {{weeks}} أسبوعًا",
+      "less": "أقل",
+      "more": "أكثر",
+      "dayAria": "{{count}} جلسات في {{date}}"
+    },
+    "milestones": {
+      "title": "الإنجازات",
+      "unlocked": "{{count}}/{{total}} مفتوحة",
+      "firstStep": "الخطوة الأولى",
+      "committed": "ملتزم",
+      "dedicated": "مُتفانٍ",
+      "centurion": "المئوي",
+      "tonnage1": "محرّك الحديد",
+      "tonnage2": "الحمّال الثقيل",
+      "tonnage3": "نادي المليون",
+      "streak7": "محارب الأسبوع",
+      "streak30": "لا يُقهر",
+      "days50": "نصف قرن"
+    },
+    "a11y": {
+      "achieved": "مُنجز",
+      "locked": "مقفل",
+      "up": "ارتفاع {{pct}}%",
+      "down": "انخفاض {{pct}}%",
+      "flat": "بدون تغيير"
+    }
   }
 }
