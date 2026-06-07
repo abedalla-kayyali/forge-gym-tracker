@@ -71,14 +71,50 @@ export function normalizeWorkoutList<T>(raw: unknown): T[] {
   for (const item of raw) {
     if (!item || typeof item !== 'object') continue;
     const rec = item as Record<string, unknown>;
-    const exercises = (Array.isArray(rec.exercises) ? rec.exercises : [])
-      .filter((e): e is Record<string, unknown> => !!e && typeof e === 'object')
-      .map((e) => ({ ...e, sets: Array.isArray(e.sets) ? e.sets : [] }));
-    out.push({
+
+    let exercises: Array<Record<string, unknown>>;
+    if (Array.isArray(rec.exercises)) {
+      // Already nested — just guarantee each exercise has a sets array.
+      exercises = rec.exercises
+        .filter((e): e is Record<string, unknown> => !!e && typeof e === 'object')
+        .map((e) => ({ ...e, sets: Array.isArray(e.sets) ? e.sets : [] }));
+    } else if (typeof rec.exercise === 'string') {
+      // Legacy flat per-exercise record from the original app:
+      //   { exercise, muscle, sets:[{reps,weight}|{reps}], isPR, ... }
+      // Wrap it as a single-exercise workout so every consumer (volume, PRs,
+      // strength trends, charts) sees the real sets instead of an empty array.
+      const rawSets = (Array.isArray(rec.sets) ? rec.sets : [])
+        .filter((s): s is Record<string, unknown> => !!s && typeof s === 'object');
+      let sets = rawSets;
+      // Legacy isPR is per-record; propagate it to the best set so PR-based UI
+      // (latest PR, celebrations) lights up.
+      if (rec.isPR === true && rawSets.length) {
+        let bestIdx = 0, bestScore = -Infinity;
+        rawSets.forEach((s, i) => {
+          const score = (Number(s.weight) || 0) * 1000 + (Number(s.reps) || 0);
+          if (score > bestScore) { bestScore = score; bestIdx = i; }
+        });
+        sets = rawSets.map((s, i) => (i === bestIdx ? { ...s, isPR: true } : s));
+      }
+      exercises = [{
+        name: rec.exercise,
+        muscle: typeof rec.muscle === 'string' ? rec.muscle : '',
+        sets,
+      }];
+    } else {
+      exercises = [];
+    }
+
+    const norm: Record<string, unknown> = {
       ...rec,
       date: typeof rec.date === 'string' ? rec.date : '',
       exercises,
-    } as unknown as T);
+    };
+    // Give legacy single-exercise records a display name if they lack one.
+    if (typeof rec.name !== 'string' && typeof rec.exercise === 'string') {
+      norm.name = rec.exercise;
+    }
+    out.push(norm as unknown as T);
   }
   return out;
 }

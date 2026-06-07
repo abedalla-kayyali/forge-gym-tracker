@@ -120,4 +120,49 @@ describe('normalizeWorkoutList', () => {
     expect(out[0]!.id).toBe('w1');
     expect(out[0]!.exercises[0]).toMatchObject({ name: 'Squat' });
   });
+
+  it('migrates a legacy flat per-exercise record into a nested exercise', () => {
+    const out = normalizeWorkoutList<{ name: string; exercises: { name: string; muscle: string; sets: { reps: number; weight: number }[] }[] }>([
+      {
+        id: 'w1', date: '2026-03-15T00:00:00.000Z', isPR: false,
+        exercise: 'Smith', muscle: 'Traps', totalVolume: 300,
+        sets: [{ reps: 5, weight: 5 }, { reps: 5, weight: 50 }],
+      },
+    ]);
+    expect(out[0]!.exercises).toHaveLength(1);
+    expect(out[0]!.exercises[0]).toMatchObject({ name: 'Smith', muscle: 'Traps' });
+    expect(out[0]!.exercises[0]!.sets).toHaveLength(2);
+    expect(out[0]!.exercises[0]!.sets[1]).toMatchObject({ reps: 5, weight: 50 });
+    expect(out[0]!.name).toBe('Smith'); // display name backfilled from exercise
+  });
+
+  it('migrates a legacy bodyweight record (reps-only sets)', () => {
+    const out = normalizeWorkoutList<{ exercises: { name: string; sets: { reps: number }[] }[] }>([
+      {
+        id: 'b1', date: '2026-03-15T01:00:00.000Z', type: 'bodyweight',
+        exercise: 'Wall Push-Up', muscle: 'Chest',
+        sets: [{ reps: 5 }, { reps: 20 }],
+      },
+    ]);
+    expect(out[0]!.exercises[0]).toMatchObject({ name: 'Wall Push-Up' });
+    expect(out[0]!.exercises[0]!.sets.map((s) => s.reps)).toEqual([5, 20]);
+  });
+
+  it('propagates a record-level isPR onto the heaviest set', () => {
+    const out = normalizeWorkoutList<{ exercises: { sets: { weight: number; isPR?: boolean }[] }[] }>([
+      {
+        id: 'w2', date: '2026-03-15T00:00:00.000Z', isPR: true,
+        exercise: 'Bench', muscle: 'Chest',
+        sets: [{ reps: 5, weight: 60 }, { reps: 3, weight: 80 }, { reps: 5, weight: 70 }],
+      },
+    ]);
+    const sets = out[0]!.exercises[0]!.sets;
+    expect(sets.filter((s) => s.isPR)).toHaveLength(1);
+    expect(sets.find((s) => s.isPR)!.weight).toBe(80); // heaviest set flagged
+  });
+
+  it('does not invent exercises for records with neither exercises nor exercise', () => {
+    const out = normalizeWorkoutList<{ exercises: unknown[] }>([{ id: 'x', date: '2026-01-01', sets: [{ reps: 5 }] }]);
+    expect(out[0]!.exercises).toEqual([]);
+  });
 });
