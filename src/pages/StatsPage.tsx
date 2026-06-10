@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { TabPills } from '../components/ui/TabPills';
 import { Badge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
 import { useFX } from '../hooks/useFX';
 import {
   WorkoutHistory,
@@ -19,24 +21,22 @@ import {
   PRBoard,
 } from '../features/dashboard';
 import { JourneyTab } from '../features/dashboard/components/JourneyTab';
+import { GoalDashboard, WeeklyReview } from '../features/goals';
+import { WeightLogger, MeasurementsForm, InBodyLog } from '../features/body';
 import { StepsPanel } from '../features/steps';
 import { XPBar } from '../features/gamification';
 import { useWorkoutStore } from '../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../stores/useBwWorkoutStore';
 import { useCardioStore } from '../stores/useCardioStore';
 import { useBodyStore } from '../stores/useBodyStore';
-import { readStorage, writeStorage } from '../lib/storage';
-import { STORAGE_KEYS } from '../lib/constants';
-import { formatNumber } from '../lib/format';
+import { useGoalsStore, type WeightDirection } from '../stores/useGoalsStore';
+import { toMuscleGroup } from '../lib/muscles';
+import { formatNumber, formatDate } from '../lib/format';
 
 type StatsTab = 'overview' | 'journey' | 'progress' | 'muscles' | 'body' | 'cali';
 type PeriodKey = '7D' | '1M' | '3M' | '6M' | 'ALL';
 
-const SESSION_TARGET = 12;
-const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const WEEKLY_GOAL_MIN = 1;
-const WEEKLY_GOAL_MAX = 14;
-const WEEKLY_GOAL_DEFAULT = 4;
+const DOW_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 /** Days to look back for a given progress period; null = all-time. */
 function daysForPeriod(period: PeriodKey): number | null {
@@ -49,24 +49,39 @@ function daysForPeriod(period: PeriodKey): number | null {
   }
 }
 
-const TABS: { key: StatsTab; label: string; Icon: typeof TrendingUp }[] = [
-  { key: 'overview',  label: 'Overview', Icon: BarChart3 },
-  { key: 'journey',   label: 'Journey',  Icon: Rocket },
-  { key: 'progress',  label: 'Progress', Icon: TrendingUp },
-  { key: 'muscles',   label: 'Muscles',  Icon: MuscleIcon },
-  { key: 'body',      label: 'Body',     Icon: Target },
-  { key: 'cali',      label: 'Cali',     Icon: Scaling },
+const TABS: { key: StatsTab; Icon: typeof TrendingUp }[] = [
+  { key: 'overview',  Icon: BarChart3 },
+  { key: 'journey',   Icon: Rocket },
+  { key: 'progress',  Icon: TrendingUp },
+  { key: 'muscles',   Icon: MuscleIcon },
+  { key: 'body',      Icon: Target },
+  { key: 'cali',      Icon: Scaling },
 ];
 
 const PERIODS: PeriodKey[] = ['7D', '1M', '3M', '6M', 'ALL'];
 
-function freshLabel(days: number | null): { label: string; color: string } {
-  if (days === null)    return { label: 'Never',      color: '#4B5563' };
-  if (days < 1)         return { label: 'Sore',       color: '#EF4444' };
-  if (days <= 2)        return { label: 'Worked',     color: '#2ecc71' };
-  if (days <= 4)        return { label: 'Recovering', color: '#8BC34A' };
-  if (days <= 6)        return { label: 'Ready',      color: '#F59E0B' };
-  return                 { label: 'Overdue',    color: '#4B5563' };
+function freshInfo(days: number | null): { labelKey: string; color: string } {
+  if (days === null)    return { labelKey: 'never',      color: '#4B5563' };
+  if (days < 1)         return { labelKey: 'sore',       color: '#EF4444' };
+  if (days <= 2)        return { labelKey: 'worked',     color: '#2ecc71' };
+  if (days <= 4)        return { labelKey: 'recovering', color: '#8BC34A' };
+  if (days <= 6)        return { labelKey: 'ready',      color: '#F59E0B' };
+  return                 { labelKey: 'overdue',    color: '#4B5563' };
+}
+
+/** Translated label for an arbitrary stored muscle string (canonical or custom). */
+function useMuscleLabel(): (muscle: string) => string {
+  const { t } = useTranslation();
+  return (muscle: string) => {
+    const group = toMuscleGroup(muscle);
+    return group ? t(`muscles.${group}`) : muscle;
+  };
+}
+
+/** Direction-aware delta verdict: is this weight-trend delta good news? */
+function deltaIsGood(delta: number, direction: WeightDirection): boolean {
+  if (direction === 'maintain') return Math.abs(delta) <= 0.5;
+  return direction === 'lose' ? delta < 0 : delta > 0;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -125,15 +140,12 @@ function MomentumHeadline() {
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
   const cardio     = useCardioStore((s) => s.entries);
 
-  const [goal, setGoal] = useState<number>(() => {
-    const v = Number(readStorage<number>(STORAGE_KEYS.WEEKLY_GOAL, WEEKLY_GOAL_DEFAULT));
-    return Number.isFinite(v) && v > 0 ? v : WEEKLY_GOAL_DEFAULT;
-  });
+  // Reactive weekly goal — shared with Coach, Log and the Goal Dashboard.
+  const goal = useGoalsStore((s) => s.weeklySessions);
+  const setWeeklySessions = useGoalsStore((s) => s.setWeeklySessions);
 
   const setGoalClamped = (next: number) => {
-    const clamped = Math.max(WEEKLY_GOAL_MIN, Math.min(WEEKLY_GOAL_MAX, next));
-    setGoal(clamped);
-    writeStorage(STORAGE_KEYS.WEEKLY_GOAL, clamped);
+    setWeeklySessions(next);
     play('tap');
   };
 
@@ -219,7 +231,7 @@ function MomentumHeadline() {
             <button
               type="button"
               onClick={() => setGoalClamped(goal - 1)}
-              disabled={goal <= WEEKLY_GOAL_MIN}
+              disabled={goal <= 1}
               className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-forge-text-soft disabled:opacity-30 cursor-pointer press-scale transition-colors hover:bg-white/10"
               aria-label={t('stats.momentum.decreaseGoal')}
             >
@@ -231,7 +243,7 @@ function MomentumHeadline() {
             <button
               type="button"
               onClick={() => setGoalClamped(goal + 1)}
-              disabled={goal >= WEEKLY_GOAL_MAX}
+              disabled={goal >= 14}
               className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-forge-text-soft disabled:opacity-30 cursor-pointer press-scale transition-colors hover:bg-white/10"
               aria-label={t('stats.momentum.increaseGoal')}
             >
@@ -256,9 +268,14 @@ function MomentumHeadline() {
 }
 
 function ActivityRingsHero() {
+  const { t } = useTranslation();
   const workouts    = useWorkoutStore((s) => s.workouts);
   const bwWorkouts  = useBwWorkoutStore((s) => s.bwWorkouts);
   const cardio      = useCardioStore((s) => s.entries);
+  const weeklySessions = useGoalsStore((s) => s.weeklySessions);
+
+  // Monthly session target derived from the weekly goal (≈4.33 weeks/month).
+  const sessionTarget = Math.max(1, Math.round(weeklySessions * 4.33));
 
   const data = useMemo(() => {
     const now = new Date();
@@ -270,7 +287,7 @@ function ActivityRingsHero() {
       ...bwWorkouts.filter((w) => new Date(w.date).getTime() >= monthStart),
       ...cardio.filter((c) => new Date(c.date).getTime() >= monthStart),
     ].length;
-    const sessionsPct = Math.min(100, (sessionsThisMonth / SESSION_TARGET) * 100);
+    const sessionsPct = Math.min(100, (sessionsThisMonth / sessionTarget) * 100);
 
     // Streak
     const daySet = new Set<string>();
@@ -329,30 +346,30 @@ function ActivityRingsHero() {
     const todayDow = dow;
 
     return { sessionsThisMonth, sessionsPct, streak, streakPct, volumeThisMonth, volumePct, latestPR, weekDays, todayDow };
-  }, [workouts, bwWorkouts, cardio]);
+  }, [workouts, bwWorkouts, cardio, sessionTarget]);
 
   return (
     <div className="space-y-2">
       {/* Activity rings card */}
       <div className="card-elevated rounded-2xl p-4">
         <div className="flex justify-around items-center">
-          <RingCircle pct={data.sessionsPct} color="#2ecc71" dim="#1e3a1e" label="Sessions" value={String(data.sessionsThisMonth)} />
-          <RingCircle pct={data.streakPct}   color="#f59e0b" dim="#2a1e00" label="Streak"   value={`${data.streak}d`} />
-          <RingCircle pct={data.volumePct}   color="#6366f1" dim="#1a1a2e" label="Volume"   value={data.volumeThisMonth >= 1000 ? `${Math.round(data.volumeThisMonth / 1000)}k` : String(Math.round(data.volumeThisMonth))} />
+          <RingCircle pct={data.sessionsPct} color="#2ecc71" dim="#1e3a1e" label={t('stats.rings.sessions')} value={formatNumber(data.sessionsThisMonth)} />
+          <RingCircle pct={data.streakPct}   color="#f59e0b" dim="#2a1e00" label={t('stats.rings.streak')}   value={`${formatNumber(data.streak)}d`} />
+          <RingCircle pct={data.volumePct}   color="#6366f1" dim="#1a1a2e" label={t('stats.rings.volume')}   value={data.volumeThisMonth >= 1000 ? `${formatNumber(Math.round(data.volumeThisMonth / 1000))}k` : formatNumber(Math.round(data.volumeThisMonth))} />
         </div>
         <div className="flex justify-around mt-2">
-          <span className="text-[9px] text-forge-green text-center">↑ this month</span>
-          <span className="text-[9px] text-forge-ember text-center">{data.streak > 0 ? 'keep going' : 'start today'}</span>
-          <span className="text-[9px] text-[#6366f1] text-center">{Math.round(data.volumeThisMonth).toLocaleString()} kg</span>
+          <span className="text-[9px] text-forge-green text-center">{t('stats.rings.thisMonth')}</span>
+          <span className="text-[9px] text-forge-ember text-center">{data.streak > 0 ? t('stats.rings.keepGoing') : t('stats.rings.startToday')}</span>
+          <span className="text-[9px] text-[#6366f1] text-center">{formatNumber(Math.round(data.volumeThisMonth))} {t('log.kgUnit')}</span>
         </div>
       </div>
 
       {/* Weekly dot strip */}
       <div className="card-elevated rounded-xl px-4 py-3">
-        <div className="label-cap text-forge-muted mb-2">This Week</div>
+        <div className="label-cap text-forge-muted mb-2">{t('stats.thisWeek')}</div>
         <div className="flex justify-between">
-          {DOW_LABELS.map((d, i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5">
+          {DOW_KEYS.map((k, i) => (
+            <div key={k} className="flex flex-col items-center gap-1.5">
               <div
                 className="w-2.5 h-2.5 rounded-full"
                 style={{
@@ -365,7 +382,7 @@ function ActivityRingsHero() {
                   boxShadow: i === data.todayDow && data.weekDays[i] ? '0 0 6px #2ecc71' : 'none',
                 }}
               />
-              <span className="text-[8px] text-forge-dim">{d}</span>
+              <span className="text-[8px] text-forge-dim">{t(`stats.dow.${k}`)}</span>
             </div>
           ))}
         </div>
@@ -380,12 +397,12 @@ function ActivityRingsHero() {
           <div className="flex-1 min-w-0">
             <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{data.latestPR.name}</div>
             <div className="text-forge-muted text-[10px] font-mono">
-              {new Date(data.latestPR.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {formatDate(data.latestPR.date, { month: 'short', day: 'numeric' })}
             </div>
           </div>
           <div className="kpi-md text-forge-gold leading-none shrink-0">
-            {data.latestPR.weight}
-            <span className="text-[10px] text-forge-muted ms-0.5">KG · {data.latestPR.reps}R</span>
+            {formatNumber(data.latestPR.weight)}
+            <span className="text-[10px] text-forge-muted ms-0.5">{t('stats.unitKgReps', { reps: data.latestPR.reps })}</span>
           </div>
         </div>
       )}
@@ -429,7 +446,7 @@ function KpiBigCell({
             background: delta!.value > 0 ? 'rgba(46,204,113,0.1)' : 'rgba(239,68,68,0.1)',
           }}
         >
-          {delta!.value > 0 ? '↑' : '↓'} {Math.abs(delta!.value).toLocaleString()}{delta!.unit ?? ''}
+          {delta!.value > 0 ? '↑' : '↓'} {formatNumber(Math.abs(delta!.value))}{delta!.unit ?? ''}
         </div>
       )}
       {sub && !hasDelta && (
@@ -440,6 +457,7 @@ function KpiBigCell({
 }
 
 function TopPRs() {
+  const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
 
@@ -484,7 +502,7 @@ function TopPRs() {
         <div className="w-7 h-7 rounded-lg bg-forge-gold/15 border border-forge-gold/30 flex items-center justify-center">
           <Award size={13} className="text-forge-gold" />
         </div>
-        <span className="label-cap-strong">Personal Records</span>
+        <span className="label-cap-strong">{t('stats.personalRecords')}</span>
         <Badge variant="gold" className="ms-auto">{prs.length}</Badge>
       </div>
       <ul className="space-y-1.5" role="list">
@@ -501,14 +519,14 @@ function TopPRs() {
             <div className="flex-1 min-w-0">
               <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{pr.name}</div>
               <div className="text-forge-muted text-[10px] font-mono">
-                {new Date(pr.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {formatDate(pr.date, { month: 'short', day: 'numeric' })}
               </div>
             </div>
             <div className="text-end shrink-0">
               <div className="kpi-md text-forge-gold leading-none">
-                {pr.kind === 'weighted' ? `${pr.weight}` : pr.reps}
+                {pr.kind === 'weighted' ? formatNumber(pr.weight) : formatNumber(pr.reps)}
                 <span className="text-[10px] text-forge-muted ms-0.5">
-                  {pr.kind === 'weighted' ? `KG · ${pr.reps}R` : 'REPS'}
+                  {pr.kind === 'weighted' ? t('stats.unitKgReps', { reps: pr.reps }) : t('stats.unitReps')}
                 </span>
               </div>
             </div>
@@ -525,6 +543,7 @@ function TopPRs() {
 
 function MuscleVolumeByGroup() {
   const workouts   = useWorkoutStore((s) => s.workouts);
+  const muscleLabel = useMuscleLabel();
   const rows = useMemo(() => {
     const cutoff = Date.now() - 30 * 86400000;
     const byMuscle: Record<string, number> = {};
@@ -546,7 +565,7 @@ function MuscleVolumeByGroup() {
     return entries.map(([muscle, vol]) => ({
       muscle,
       pct: (vol / max) * 100,
-      label: vol >= 1000 ? `${(vol / 1000).toFixed(1)}k` : String(Math.round(vol)),
+      label: vol >= 1000 ? `${formatNumber(vol / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(Math.round(vol)),
       unit: vol >= 1000 ? '' : ' kg',
     }));
   }, [workouts]);
@@ -558,7 +577,7 @@ function MuscleVolumeByGroup() {
       {rows.map((r) => (
         <div key={r.muscle} className="flex items-center gap-3 min-h-[36px]">
           <span className="text-forge-text-soft text-[11px] font-condensed font-semibold capitalize w-[72px] flex-shrink-0">
-            {r.muscle}
+            {muscleLabel(r.muscle)}
           </span>
           <div className="flex-1 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
             <div
@@ -576,8 +595,10 @@ function MuscleVolumeByGroup() {
 }
 
 function MuscleFreshnessList() {
+  const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
+  const muscleLabel = useMuscleLabel();
 
   const rows = useMemo(() => {
     const now = Date.now();
@@ -588,12 +609,12 @@ function MuscleFreshnessList() {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const last = allSessions[0];
       const days = last ? Math.floor((now - new Date(last.date).getTime()) / 86400000) : null;
-      const { label, color } = freshLabel(days);
+      const { labelKey, color } = freshInfo(days);
       const dateStr = last
-        ? new Date(last.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        ? formatDate(last.date, { month: 'short', day: 'numeric' })
         : '—';
       const sessions = allSessions.length;
-      return { muscle: m, days, label, color, dateStr, sessions };
+      return { muscle: m, days, labelKey, color, dateStr, sessions };
     });
   }, [workouts, bwWorkouts]);
 
@@ -609,15 +630,15 @@ function MuscleFreshnessList() {
             style={{ background: r.color, boxShadow: `0 0 8px ${r.color}88` }}
             aria-hidden
           />
-          <span className="flex-1 text-forge-text text-[13px] font-condensed font-semibold capitalize">{r.muscle}</span>
+          <span className="flex-1 text-forge-text text-[13px] font-condensed font-semibold capitalize">{muscleLabel(r.muscle)}</span>
           <span className="text-forge-muted text-[10px] font-mono">
-            {r.sessions}× · {r.dateStr}
+            {formatNumber(r.sessions)}× · {r.dateStr}
           </span>
           <span
             className="text-[10px] font-condensed font-semibold uppercase tracking-wider w-16 text-end"
             style={{ color: r.color }}
           >
-            {r.label}
+            {t(`stats.fresh.${r.labelKey}`)}
           </span>
         </div>
       ))}
@@ -626,11 +647,30 @@ function MuscleFreshnessList() {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// BODY TAB — with deltas
+// BODY TAB — with deltas + add-entry CTAs
 // ═════════════════════════════════════════════════════════════════════════════
 
+/** Small round "+" affordance shown when a body card already has data. */
+function AddIconButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-forge-muted hover:text-forge-green hover:bg-white/10 cursor-pointer press-scale transition-colors shrink-0"
+      aria-label={label}
+    >
+      <Plus size={14} />
+    </button>
+  );
+}
+
 function WeightHeroCard() {
+  const { t } = useTranslation();
+  const { play } = useFX();
   const bodyWeight = useBodyStore((s) => s.bodyWeight);
+  const weightDirection = useGoalsStore((s) => s.weightDirection);
+  const targetWeightKg = useGoalsStore((s) => s.targetWeightKg);
+  const [open, setOpen] = useState(false);
 
   const { latest, delta } = useMemo(() => {
     const sorted = [...bodyWeight].sort((a, b) => b.date.localeCompare(a.date));
@@ -640,49 +680,76 @@ function WeightHeroCard() {
     return { latest, delta };
   }, [bodyWeight]);
 
-  if (!latest) return (
-    <div className="card-elevated rounded-2xl p-8 text-center">
-      <Weight size={28} className="text-forge-dim mx-auto mb-2" />
-      <p className="text-forge-text-soft font-condensed font-semibold">No weight entries yet</p>
-      <p className="text-forge-muted text-[12px] mt-1">Log your weight in the Body section</p>
-    </div>
+  const modal = (
+    <Modal open={open} onClose={() => setOpen(false)} title={t('stats.body.addWeight')} size="sm">
+      <WeightLogger />
+    </Modal>
   );
 
-  const isDown = delta !== null && delta < 0;
+  if (!latest) return (
+    <>
+      <div className="card-elevated rounded-2xl p-8 text-center">
+        <Weight size={28} className="text-forge-dim mx-auto mb-2" />
+        <p className="text-forge-text-soft font-condensed font-semibold">{t('stats.body.noWeight')}</p>
+        <p className="text-forge-muted text-[12px] mt-1 mb-4">{t('stats.body.noWeightHint')}</p>
+        <Button variant="outline" size="sm" onClick={() => { play('tap'); setOpen(true); }}>
+          <Plus size={14} /> {t('stats.body.addWeight')}
+        </Button>
+      </div>
+      {modal}
+    </>
+  );
+
+  // Goal-aware delta coloring: "down = green" only when the user wants to lose.
+  const good = delta !== null && delta !== 0 && deltaIsGood(delta, weightDirection);
 
   return (
-    <div
-      className="card-elevated rounded-2xl p-4"
-      style={{ background: 'linear-gradient(135deg, #0d1f0d88, #0f0f0f)' }}
-    >
-      <div className="label-cap text-forge-muted mb-2">Current Weight</div>
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-baseline gap-1.5">
-          <span className="kpi-lg text-forge-green leading-none">{latest.weight_kg}</span>
-          <span className="text-forge-muted text-[12px] font-condensed">KG</span>
+    <>
+      <div
+        className="card-elevated rounded-2xl p-4"
+        style={{ background: 'linear-gradient(135deg, #0d1f0d88, #0f0f0f)' }}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <span className="label-cap text-forge-muted flex-1">{t('stats.body.currentWeight')}</span>
+          <AddIconButton label={t('stats.body.addWeight')} onClick={() => { play('tap'); setOpen(true); }} />
         </div>
-        {delta !== null && delta !== 0 && (
-          <span
-            className="inline-flex items-center text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
-            style={{
-              color:      isDown ? '#2ecc71' : '#EF4444',
-              background: isDown ? 'rgba(46,204,113,0.12)' : 'rgba(239,68,68,0.12)',
-              border:     `1px solid ${isDown ? 'rgba(46,204,113,0.3)' : 'rgba(239,68,68,0.3)'}`,
-            }}
-          >
-            {isDown ? '↓' : '↑'} {Math.abs(delta)} kg
-          </span>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-baseline gap-1.5">
+            <span className="kpi-lg text-forge-green leading-none">{formatNumber(latest.weight_kg, { maximumFractionDigits: 1 })}</span>
+            <span className="text-forge-muted text-[12px] font-condensed">{t('log.kgUnit').toUpperCase()}</span>
+          </div>
+          {delta !== null && delta !== 0 && (
+            <span
+              className="inline-flex items-center text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
+              style={{
+                color:      good ? '#2ecc71' : '#EF4444',
+                background: good ? 'rgba(46,204,113,0.12)' : 'rgba(239,68,68,0.12)',
+                border:     `1px solid ${good ? 'rgba(46,204,113,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              }}
+            >
+              {delta < 0 ? '↓' : '↑'} {formatNumber(Math.abs(delta), { maximumFractionDigits: 1 })} {t('log.kgUnit')}
+            </span>
+          )}
+          {targetWeightKg !== null && (
+            <span className="text-[10px] font-mono text-forge-muted">
+              {t('stats.body.targetChip', { target: formatNumber(targetWeightKg, { maximumFractionDigits: 1 }) })}
+            </span>
+          )}
+        </div>
+        <div className="text-forge-muted text-[10px] font-mono mt-1">
+          {formatDate(latest.date, { month: 'long', day: 'numeric', year: 'numeric' })}
+        </div>
       </div>
-      <div className="text-forge-muted text-[10px] font-mono mt-1">
-        {new Date(latest.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-      </div>
-    </div>
+      {modal}
+    </>
   );
 }
 
 function MeasurementsGrid() {
+  const { t } = useTranslation();
+  const { play } = useFX();
   const measurements = useBodyStore((s) => s.measurements);
+  const [open, setOpen] = useState(false);
   const sorted = useMemo(
     () => [...measurements].sort((a, b) => b.date.localeCompare(a.date)),
     [measurements],
@@ -690,77 +757,111 @@ function MeasurementsGrid() {
   const latest = sorted[0];
   const previous = sorted[1];
 
+  const modal = (
+    <Modal open={open} onClose={() => setOpen(false)} title={t('stats.body.addMeasurement')} size="md">
+      <MeasurementsForm />
+    </Modal>
+  );
+
   if (!latest) {
     return (
-      <div className="card-elevated rounded-2xl p-8 text-center">
-        <Ruler size={28} className="text-forge-dim mx-auto mb-2" />
-        <p className="text-forge-text-soft font-condensed font-semibold">No measurements yet</p>
-        <p className="text-forge-muted text-[12px] mt-1">Log your first measurement in the Body section</p>
-      </div>
+      <>
+        <div className="card-elevated rounded-2xl p-8 text-center">
+          <Ruler size={28} className="text-forge-dim mx-auto mb-2" />
+          <p className="text-forge-text-soft font-condensed font-semibold">{t('stats.body.noMeasurements')}</p>
+          <p className="text-forge-muted text-[12px] mt-1 mb-4">{t('stats.body.noMeasurementsHint')}</p>
+          <Button variant="outline" size="sm" onClick={() => { play('tap'); setOpen(true); }}>
+            <Plus size={14} /> {t('stats.body.addMeasurement')}
+          </Button>
+        </div>
+        {modal}
+      </>
     );
   }
 
   const fields: Array<{ key: keyof typeof latest; label: string }> = [
-    { key: 'chest',      label: 'Chest' },
-    { key: 'waist',      label: 'Waist' },
-    { key: 'hips',       label: 'Hips' },
-    { key: 'shoulders',  label: 'Shoulders' },
-    { key: 'neck',       label: 'Neck' },
-    { key: 'left_arm',   label: 'L Arm' },
-    { key: 'right_arm',  label: 'R Arm' },
-    { key: 'left_thigh', label: 'L Thigh' },
-    { key: 'right_thigh',label: 'R Thigh' },
-    { key: 'left_calf',  label: 'L Calf' },
-    { key: 'right_calf', label: 'R Calf' },
+    { key: 'chest',      label: t('measurements.chest') },
+    { key: 'waist',      label: t('measurements.waist') },
+    { key: 'hips',       label: t('measurements.hips') },
+    { key: 'shoulders',  label: t('measurements.shoulders') },
+    { key: 'neck',       label: t('measurements.neck') },
+    { key: 'left_arm',   label: t('measurements.leftArm') },
+    { key: 'right_arm',  label: t('measurements.rightArm') },
+    { key: 'left_thigh', label: t('measurements.leftThigh') },
+    { key: 'right_thigh',label: t('measurements.rightThigh') },
+    { key: 'left_calf',  label: t('measurements.leftCalf') },
+    { key: 'right_calf', label: t('measurements.rightCalf') },
   ];
   const defined = fields.filter((f) => latest[f.key] !== undefined && latest[f.key] !== null);
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="label-cap">Latest — {new Date(latest.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-        {previous && <Badge variant="default">vs {new Date(previous.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Badge>}
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {defined.map(({ key, label }) => {
-          const val = latest[key] as number;
-          const prev = previous ? (previous[key] as number | undefined) : undefined;
-          const delta = prev != null ? val - prev : null;
-          const deltaColor = delta == null ? '#4B5563' : delta > 0 ? '#2ecc71' : delta < 0 ? '#EF4444' : '#4B5563';
-          return (
-            <div key={key} className="card-elevated rounded-xl p-2.5 text-center">
-              <div className="label-cap text-[9px]">{label}</div>
-              <div className="kpi-lg text-forge-green leading-none mt-0.5">{val}</div>
-              <div className="flex items-center justify-center gap-1 mt-0.5">
-                <span className="text-forge-dim text-[9px]">cm</span>
-                {delta != null && delta !== 0 && (
-                  <span className="text-[9px] font-mono font-semibold" style={{ color: deltaColor }}>
-                    {delta > 0 ? '+' : ''}{delta.toFixed(1)}
-                  </span>
-                )}
+    <>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <span className="label-cap">{t('stats.body.latest', { date: formatDate(latest.date, { month: 'short', day: 'numeric', year: 'numeric' }) })}</span>
+          <div className="flex items-center gap-2">
+            {previous && <Badge variant="default">{t('stats.body.vs', { date: formatDate(previous.date, { month: 'short', day: 'numeric' }) })}</Badge>}
+            <AddIconButton label={t('stats.body.addMeasurement')} onClick={() => { play('tap'); setOpen(true); }} />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {defined.map(({ key, label }) => {
+            const val = latest[key] as number;
+            const prev = previous ? (previous[key] as number | undefined) : undefined;
+            const delta = prev != null ? val - prev : null;
+            const deltaColor = delta == null ? '#4B5563' : delta > 0 ? '#2ecc71' : delta < 0 ? '#EF4444' : '#4B5563';
+            return (
+              <div key={key} className="card-elevated rounded-xl p-2.5 text-center">
+                <div className="label-cap text-[9px]">{label}</div>
+                <div className="kpi-lg text-forge-green leading-none mt-0.5">{formatNumber(val, { maximumFractionDigits: 1 })}</div>
+                <div className="flex items-center justify-center gap-1 mt-0.5">
+                  <span className="text-forge-dim text-[9px]">{t('measurements.cmUnit')}</span>
+                  {delta != null && delta !== 0 && (
+                    <span className="text-[9px] font-mono font-semibold" style={{ color: deltaColor }}>
+                      {delta > 0 ? '+' : ''}{formatNumber(delta, { maximumFractionDigits: 1 })}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+      {modal}
+    </>
   );
 }
 
 function CompositionDonut() {
+  const { t } = useTranslation();
+  const { play } = useFX();
   const inbody = useBodyStore((s) => s.inbody);
+  const weightDirection = useGoalsStore((s) => s.weightDirection);
+  const [open, setOpen] = useState(false);
 
   const { latest, previous } = useMemo(() => {
     const sorted = [...inbody].sort((a, b) => b.date.localeCompare(a.date));
     return { latest: sorted[0] ?? null, previous: sorted[1] ?? null };
   }, [inbody]);
 
+  const modal = (
+    <Modal open={open} onClose={() => setOpen(false)} title={t('stats.body.addInbody')} size="md">
+      <InBodyLog />
+    </Modal>
+  );
+
   if (!latest) return (
-    <div className="card-elevated rounded-2xl p-8 text-center">
-      <Gauge size={28} className="text-forge-dim mx-auto mb-2" />
-      <p className="text-forge-text-soft font-condensed font-semibold">No InBody tests yet</p>
-      <p className="text-forge-muted text-[12px] mt-1">Add your scan in the Body section</p>
-    </div>
+    <>
+      <div className="card-elevated rounded-2xl p-8 text-center">
+        <Gauge size={28} className="text-forge-dim mx-auto mb-2" />
+        <p className="text-forge-text-soft font-condensed font-semibold">{t('stats.body.noInbody')}</p>
+        <p className="text-forge-muted text-[12px] mt-1 mb-4">{t('stats.body.noInbodyHint')}</p>
+        <Button variant="outline" size="sm" onClick={() => { play('tap'); setOpen(true); }}>
+          <Plus size={14} /> {t('stats.body.addInbody')}
+        </Button>
+      </div>
+      {modal}
+    </>
   );
 
   const muscle = latest.muscle_mass ?? 0;
@@ -774,13 +875,17 @@ function CompositionDonut() {
   const fArc = (fat    / total) * CIRC;
   const wArc = (water  / total) * CIRC;
 
-  const d = (key: keyof typeof latest, lowerBetter = false) => {
+  // Goal-aware coloring: 'direction' verdicts follow the user's weight goal
+  // (BMI tracks body-weight); muscle stays higher-better and fat lower-better.
+  const d = (key: keyof typeof latest, judge: 'higherBetter' | 'lowerBetter' | 'direction') => {
     if (!previous) return null;
     const cur  = (latest[key]   as number | undefined) ?? 0;
     const prev = (previous[key] as number | undefined) ?? 0;
     const diff = +(cur - prev).toFixed(1);
     if (diff === 0) return null;
-    const good = lowerBetter ? diff < 0 : diff > 0;
+    const good =
+      judge === 'direction'    ? deltaIsGood(diff, weightDirection) :
+      judge === 'lowerBetter'  ? diff < 0 : diff > 0;
     return { diff, color: good ? '#2ecc71' : '#EF4444' };
   };
 
@@ -788,54 +893,60 @@ function CompositionDonut() {
     label: string; color: string; value: number | undefined; unit: string;
     delta: ReturnType<typeof d>;
   }> = [
-    { label: 'Muscle',   color: '#2ecc71', value: latest.muscle_mass,  unit: 'kg', delta: d('muscle_mass') },
-    { label: 'Fat Mass', color: '#EF4444', value: latest.body_fat,      unit: 'kg', delta: d('body_fat', true) },
-    { label: 'Fat %',    color: '#EF4444', value: latest.body_fat_pct,  unit: '%',  delta: d('body_fat_pct', true) },
-    { label: 'Water',    color: '#6366f1', value: latest.water,         unit: 'L',  delta: null },
-    { label: 'BMI',      color: '#4B5563', value: latest.bmi,           unit: '',   delta: d('bmi', true) },
+    { label: t('stats.body.muscleMass'), color: '#2ecc71', value: latest.muscle_mass,  unit: 'kg', delta: d('muscle_mass', 'higherBetter') },
+    { label: t('stats.body.fatMass'),    color: '#EF4444', value: latest.body_fat,      unit: 'kg', delta: d('body_fat', 'lowerBetter') },
+    { label: t('stats.body.fatPct'),     color: '#EF4444', value: latest.body_fat_pct,  unit: '%',  delta: d('body_fat_pct', 'lowerBetter') },
+    { label: t('stats.body.water'),      color: '#6366f1', value: latest.water,         unit: 'L',  delta: null },
+    { label: t('stats.body.bmi'),        color: '#4B5563', value: latest.bmi,           unit: '',   delta: d('bmi', 'direction') },
   ].filter((m) => m.value != null);
 
   return (
-    <div className="card-elevated rounded-2xl p-4">
-      <div className="label-cap text-forge-muted mb-3">Body Composition (InBody)</div>
-      <div className="flex items-center gap-5">
-        {/* Donut */}
-        <div className="relative flex-shrink-0">
-          <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
-            <circle cx="40" cy="40" r={R} fill="none" stroke="#1a1a1a" strokeWidth="10" />
-            <circle cx="40" cy="40" r={R} fill="none" stroke="#2ecc71" strokeWidth="10"
-              strokeDasharray={`${mArc} ${CIRC}`} strokeLinecap="butt" />
-            <circle cx="40" cy="40" r={R} fill="none" stroke="#EF4444" strokeWidth="10"
-              strokeDasharray={`${fArc} ${CIRC}`} strokeDashoffset={-mArc} strokeLinecap="butt" />
-            <circle cx="40" cy="40" r={R} fill="none" stroke="#6366f1" strokeWidth="10"
-              strokeDasharray={`${wArc} ${CIRC}`} strokeDashoffset={-(mArc + fArc)} strokeLinecap="butt" />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-forge-text font-bold text-[13px] leading-none">
-              {latest.body_fat_pct != null ? `${latest.body_fat_pct}%` : '—'}
-            </span>
-            <span className="text-forge-dim text-[8px] uppercase tracking-wide">Fat</span>
+    <>
+      <div className="card-elevated rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="label-cap text-forge-muted flex-1">{t('stats.body.composition')}</span>
+          <AddIconButton label={t('stats.body.addInbody')} onClick={() => { play('tap'); setOpen(true); }} />
+        </div>
+        <div className="flex items-center gap-5">
+          {/* Donut */}
+          <div className="relative flex-shrink-0">
+            <svg width="80" height="80" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="40" cy="40" r={R} fill="none" stroke="#1a1a1a" strokeWidth="10" />
+              <circle cx="40" cy="40" r={R} fill="none" stroke="#2ecc71" strokeWidth="10"
+                strokeDasharray={`${mArc} ${CIRC}`} strokeLinecap="butt" />
+              <circle cx="40" cy="40" r={R} fill="none" stroke="#EF4444" strokeWidth="10"
+                strokeDasharray={`${fArc} ${CIRC}`} strokeDashoffset={-mArc} strokeLinecap="butt" />
+              <circle cx="40" cy="40" r={R} fill="none" stroke="#6366f1" strokeWidth="10"
+                strokeDasharray={`${wArc} ${CIRC}`} strokeDashoffset={-(mArc + fArc)} strokeLinecap="butt" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-forge-text font-bold text-[13px] leading-none">
+                {latest.body_fat_pct != null ? `${formatNumber(latest.body_fat_pct)}%` : '—'}
+              </span>
+              <span className="text-forge-dim text-[8px] uppercase tracking-wide">{t('stats.body.fatCenter')}</span>
+            </div>
+          </div>
+          {/* Legend */}
+          <div className="flex-1 space-y-1.5">
+            {metrics.map((m) => (
+              <div key={m.label} className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
+                <span className="text-forge-muted text-[10px] flex-1">{m.label}</span>
+                <span className="text-forge-text text-[11px] font-mono font-semibold">
+                  {m.value}{m.unit}
+                  {m.delta && (
+                    <span className="text-[9px] ms-1" style={{ color: m.delta.color }}>
+                      {m.delta.diff > 0 ? '+' : ''}{m.delta.diff}
+                    </span>
+                  )}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
-        {/* Legend */}
-        <div className="flex-1 space-y-1.5">
-          {metrics.map((m) => (
-            <div key={m.label} className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
-              <span className="text-forge-muted text-[10px] flex-1">{m.label}</span>
-              <span className="text-forge-text text-[11px] font-mono font-semibold">
-                {m.value}{m.unit}
-                {m.delta && (
-                  <span className="text-[9px] ms-1" style={{ color: m.delta.color }}>
-                    {m.delta.diff > 0 ? '+' : ''}{m.delta.diff}
-                  </span>
-                )}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
-    </div>
+      {modal}
+    </>
   );
 }
 
@@ -844,7 +955,9 @@ function CompositionDonut() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function CaliDashboard() {
+  const { t } = useTranslation();
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
+  const muscleLabel = useMuscleLabel();
 
   const data = useMemo(() => {
     const totalSessions = bwWorkouts.length;
@@ -884,14 +997,14 @@ function CaliDashboard() {
           <Scaling size={24} className="text-forge-green" />
         </div>
         <div>
-          <p className="text-forge-text font-condensed font-semibold text-[15px]">Start your calisthenics journey</p>
+          <p className="text-forge-text font-condensed font-semibold text-[15px]">{t('stats.cali.startTitle')}</p>
           <p className="text-forge-muted text-[12px] mt-1 leading-snug max-w-[260px]">
-            Log your first bodyweight session in the Log tab (Bodyweight mode) to see progress here.
+            {t('stats.cali.startBody')}
           </p>
         </div>
         <div className="flex gap-1.5 mt-2">
-          {['Push', 'Pull', 'Core', 'Legs'].map((g) => (
-            <Badge key={g} variant="default">{g}</Badge>
+          {(['push', 'pull', 'core', 'legs'] as const).map((g) => (
+            <Badge key={g} variant="default">{t(`stats.cali.${g}`)}</Badge>
           ))}
         </div>
       </div>
@@ -902,9 +1015,9 @@ function CaliDashboard() {
     <div className="space-y-4">
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-2">
-        <KpiBigCell label="Sessions" value={data.totalSessions} icon={<Flame size={13} />} accent="green" />
-        <KpiBigCell label="Reps"    value={data.totalReps.toLocaleString()} icon={<Dumbbell size={13} />} accent="green" />
-        <KpiBigCell label="Sets"    value={data.totalSets} icon={<Trophy size={13} />} accent="gold" />
+        <KpiBigCell label={t('stats.cali.sessions')} value={formatNumber(data.totalSessions)} icon={<Flame size={13} />} accent="green" />
+        <KpiBigCell label={t('stats.cali.reps')}    value={formatNumber(data.totalReps)} icon={<Dumbbell size={13} />} accent="green" />
+        <KpiBigCell label={t('stats.cali.sets')}    value={formatNumber(data.totalSets)} icon={<Trophy size={13} />} accent="gold" />
       </div>
 
       {/* Top PRs */}
@@ -912,7 +1025,7 @@ function CaliDashboard() {
         <div className="card-elevated card-luxury-border rounded-2xl p-4 space-y-2">
           <div className="flex items-center gap-2">
             <Award size={14} className="text-forge-gold" />
-            <span className="label-cap-strong">Top Rep PRs</span>
+            <span className="label-cap-strong">{t('stats.cali.topRepPRs')}</span>
           </div>
           <ul className="space-y-1.5">
             {data.topPRs.map((pr, i) => (
@@ -926,9 +1039,9 @@ function CaliDashboard() {
                 >{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-forge-text text-[13px] font-condensed font-semibold truncate">{pr.name}</div>
-                  <div className="text-forge-muted text-[10px] font-mono">{pr.muscle} · {new Date(pr.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                  <div className="text-forge-muted text-[10px] font-mono">{muscleLabel(pr.muscle)} · {formatDate(pr.date, { month: 'short', day: 'numeric' })}</div>
                 </div>
-                <div className="kpi-md text-forge-gold leading-none">{pr.reps}<span className="text-[10px] text-forge-muted ms-0.5">REPS</span></div>
+                <div className="kpi-md text-forge-gold leading-none">{formatNumber(pr.reps)}<span className="text-[10px] text-forge-muted ms-0.5">{t('stats.unitReps')}</span></div>
               </li>
             ))}
           </ul>
@@ -938,7 +1051,7 @@ function CaliDashboard() {
       {/* Recent sessions */}
       {data.recent.length > 0 && (
         <div className="space-y-2">
-          <span className="label-cap-strong">Recent Sessions</span>
+          <span className="label-cap-strong">{t('stats.cali.recentSessions')}</span>
           {data.recent.map((w) => (
             <div key={w.id} className="card-elevated rounded-xl p-3 flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-forge-green/10 flex items-center justify-center shrink-0">
@@ -947,9 +1060,12 @@ function CaliDashboard() {
               <div className="flex-1 min-w-0">
                 <div className="text-forge-text text-[13px] font-condensed font-semibold truncate capitalize">{w.name}</div>
                 <div className="text-forge-muted text-[10px] font-mono">
-                  {new Date(w.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {formatDate(w.date, { weekday: 'short', month: 'short', day: 'numeric' })}
                   {' · '}
-                  {w.exercises.length} ex · {w.exercises.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + s.reps, 0), 0)} reps
+                  {t('stats.cali.sessionMeta', {
+                    ex: w.exercises.length,
+                    reps: w.exercises.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + s.reps, 0), 0),
+                  })}
                 </div>
               </div>
               <ChevronRight size={13} className="text-forge-dim" />
@@ -966,6 +1082,7 @@ function CaliDashboard() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function PeriodSummary({ period }: { period: PeriodKey }) {
+  const { t } = useTranslation();
   const workouts   = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
   const cardio     = useCardioStore((s) => s.entries);
@@ -1002,16 +1119,16 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      <KpiBigCell label={`Sessions (${period})`} value={current.sessions}
+      <KpiBigCell label={t('stats.period.sessions', { period })} value={formatNumber(current.sessions)}
         icon={<Dumbbell size={13} />} accent="green"
         delta={prev ? mkDelta(current.sessions, prev.sessions) : null} />
-      <KpiBigCell label="Volume" value={current.volume.toLocaleString()} unit="KG"
+      <KpiBigCell label={t('stats.period.volume')} value={formatNumber(current.volume)} unit={t('log.kgUnit').toUpperCase()}
         icon={<Weight size={13} />} accent="green"
         delta={prev ? mkDelta(current.volume, prev.volume, ' kg') : null} />
-      <KpiBigCell label="PRs" value={current.prs}
+      <KpiBigCell label={t('stats.period.prs')} value={formatNumber(current.prs)}
         icon={<Trophy size={13} />} accent={current.prs > 0 ? 'gold' : 'muted'}
         delta={prev ? mkDelta(current.prs, prev.prs) : null} />
-      <KpiBigCell label="Cardio" value={current.minutes} unit="MIN"
+      <KpiBigCell label={t('stats.period.cardio')} value={formatNumber(current.minutes)} unit={t('stats.period.minUnit')}
         icon={<HeartPulse size={13} />} accent="green"
         delta={prev ? mkDelta(current.minutes, prev.minutes, ' min') : null} />
     </div>
@@ -1019,6 +1136,7 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
 }
 
 function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
+  const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
 
   const weeks = useMemo(() => {
@@ -1046,7 +1164,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
     const entries = Object.entries(byWeek).sort(([a], [b]) => a.localeCompare(b));
     const max = Math.max(...entries.map(([, v]) => v), 1);
     return entries.map(([key, vol], i) => ({
-      label: new Date(key).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      label: formatDate(key, { month: 'short', day: 'numeric' }),
       vol,
       pct: (vol / max) * 100,
       opacity: 0.45 + (i / Math.max(entries.length - 1, 1)) * 0.55,
@@ -1057,7 +1175,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
 
   return (
     <div className="card-elevated rounded-2xl p-4">
-      <div className="label-cap text-forge-muted mb-3">Weekly Volume</div>
+      <div className="label-cap text-forge-muted mb-3">{t('stats.weeklyVolume')}</div>
       <div className="flex items-end gap-1.5 h-16">
         {weeks.map((w, i) => (
           <div key={i} className="flex-1 flex flex-col justify-end">
@@ -1085,6 +1203,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
 }
 
 function ProgressiveOverload({ period }: { period: PeriodKey }) {
+  const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
 
   const rows = useMemo(() => {
@@ -1140,7 +1259,7 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
 
   return (
     <div className="card-elevated rounded-2xl p-4 space-y-3">
-      <div className="label-cap text-forge-muted">Progressive Overload</div>
+      <div className="label-cap text-forge-muted">{t('stats.progressiveOverload')}</div>
       {rows.map((r) => {
         const isGain = r.delta > 0;
         const isLoss = r.delta < 0;
@@ -1163,8 +1282,8 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
               style={{ color: isGain ? '#2ecc71' : isLoss ? '#EF4444' : '#4B5563' }}
             >
               {r.delta !== 0
-                ? `${r.delta > 0 ? '+' : ''}${r.delta}kg`
-                : `${r.cur}kg`}
+                ? `${r.delta > 0 ? '+' : ''}${formatNumber(r.delta)}${t('log.kgUnit')}`
+                : `${formatNumber(r.cur)}${t('log.kgUnit')}`}
             </span>
           </div>
         );
@@ -1186,29 +1305,28 @@ export function StatsPage() {
   return (
     <div className="p-4 space-y-4 pb-28 page-enter">
       <div className="flex items-center justify-between">
-        <h2 className="text-forge-green font-display text-2xl tracking-wide">Stats</h2>
-        <Badge variant="success" dot>live</Badge>
+        <h2 className="text-forge-green font-display text-2xl tracking-wide">{t('stats.title')}</h2>
+        <Badge variant="success" dot>{t('stats.live')}</Badge>
       </div>
 
       <TabPills
-        tabs={TABS.map((t) => ({ id: t.key, label: t.label, Icon: t.Icon }))}
+        tabs={TABS.map((tb) => ({ id: tb.key, label: t(`stats.tabs.${tb.key}`), Icon: tb.Icon }))}
         value={tab}
         onChange={setTab}
-        ariaLabel="Stats sub-navigation"
+        ariaLabel={t('stats.subNavAria')}
       />
 
       {/* ── OVERVIEW ─────────────────────────────────────────────────── */}
       {tab === 'overview' && (
         <div className="space-y-4">
+          <GoalDashboard />
+          <WeeklyReview />
+          <TopPRs />
           <MomentumHeadline />
           <ActivityRingsHero />
           <XPBar />
-          <TopPRs />
           <StepsPanel />
-          <DashboardSection title="Muscle Freshness">
-            <MuscleHeatmap />
-          </DashboardSection>
-          <DashboardSection title="Recent Workouts">
+          <DashboardSection title={t('stats.sections.recentWorkouts')}>
             <WorkoutHistory />
           </DashboardSection>
         </div>
@@ -1225,7 +1343,7 @@ export function StatsPage() {
             value={period}
             onChange={(p) => { play('tap'); setPeriod(p as PeriodKey); }}
             size="sm"
-            ariaLabel="Progress period filter"
+            ariaLabel={t('stats.periodAria')}
           />
           <PeriodSummary period={period} />
           <WeeklyVolumeBars period={period} />
@@ -1245,16 +1363,16 @@ export function StatsPage() {
       {/* ── MUSCLES ──────────────────────────────────────────────────── */}
       {tab === 'muscles' && (
         <div className="space-y-4">
-          <DashboardSection title="Muscle Status">
+          <DashboardSection title={t('stats.sections.muscleStatus')}>
             <MuscleHeatmap />
           </DashboardSection>
-          <DashboardSection title="Volume by Muscle (30d)">
+          <DashboardSection title={t('stats.sections.volumeByMuscle')}>
             <MuscleVolumeByGroup />
           </DashboardSection>
-          <DashboardSection title="Freshness by Group">
+          <DashboardSection title={t('stats.sections.freshnessByGroup')}>
             <MuscleFreshnessList />
           </DashboardSection>
-          <DashboardSection title="Muscle Balance">
+          <DashboardSection title={t('stats.sections.muscleBalance')}>
             <BalanceChart />
           </DashboardSection>
         </div>
@@ -1264,13 +1382,13 @@ export function StatsPage() {
       {tab === 'body' && (
         <div className="space-y-4">
           <WeightHeroCard />
-          <DashboardSection title="Weight Trend">
+          <DashboardSection title={t('stats.sections.weightTrend')}>
             <WeightChart />
           </DashboardSection>
-          <DashboardSection title="InBody Analysis">
+          <DashboardSection title={t('stats.sections.inbodyAnalysis')}>
             <CompositionDonut />
           </DashboardSection>
-          <DashboardSection title="Measurements">
+          <DashboardSection title={t('stats.sections.measurements')}>
             <MeasurementsGrid />
           </DashboardSection>
         </div>

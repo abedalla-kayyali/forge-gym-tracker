@@ -1,7 +1,8 @@
-import { useEffect, useCallback, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useFX } from '../../hooks/useFX';
+import { prefersReducedMotion } from '../../lib/fx';
 
 interface ModalProps {
   open: boolean;
@@ -18,15 +19,73 @@ const sizeClasses = {
   lg: 'sm:max-w-lg',
 };
 
+const EXIT_MS = 200;
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({ open, onClose, title, subtitle, children, size = 'md' }: ModalProps) {
   const { play } = useFX();
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  // `shown` keeps the portal mounted during the exit animation.
+  const [shown, setShown] = useState(open);
+  const [closing, setClosing] = useState(false);
+
   const handleClose = useCallback(() => { play('tap'); onClose(); }, [onClose, play]);
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
+      if (e.key === 'Escape') {
+        handleClose();
+        return;
+      }
+      // Focus trap: keep Tab cycling inside the sheet.
+      if (e.key === 'Tab') {
+        const root = sheetRef.current;
+        if (!root) return;
+        const focusables = root.querySelectorAll<HTMLElement>(FOCUSABLE);
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (!first || !last) {
+          e.preventDefault();
+          root.focus();
+          return;
+        }
+        const activeEl = document.activeElement;
+        if (e.shiftKey) {
+          if (activeEl === first || !root.contains(activeEl)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else if (activeEl === last || !root.contains(activeEl)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     },
     [handleClose],
   );
+
+  // Mount/unmount with exit animation (backdrop fade + sheet slide-down).
+  useEffect(() => {
+    if (open) {
+      setShown(true);
+      setClosing(false);
+      return;
+    }
+    if (!shown) return;
+    if (prefersReducedMotion()) {
+      setShown(false);
+      return;
+    }
+    setClosing(true);
+    const timer = setTimeout(() => {
+      setShown(false);
+      setClosing(false);
+    }, EXIT_MS);
+    return () => clearTimeout(timer);
+  }, [open, shown]);
 
   useEffect(() => {
     if (open) {
@@ -39,7 +98,26 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md' }:
     };
   }, [open, handleKeyDown]);
 
-  if (!open) return null;
+  // Initial focus into the sheet on open; restore focus to the opener on close.
+  useEffect(() => {
+    if (open) {
+      restoreFocusRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      const id = requestAnimationFrame(() => {
+        const root = sheetRef.current;
+        if (!root) return;
+        const first = root.querySelector<HTMLElement>(FOCUSABLE);
+        (first ?? root).focus();
+      });
+      return () => cancelAnimationFrame(id);
+    }
+    const restore = restoreFocusRef.current;
+    restoreFocusRef.current = null;
+    if (restore && document.contains(restore)) restore.focus();
+    return;
+  }, [open]);
+
+  if (!shown) return null;
 
   return createPortal(
     <div
@@ -49,17 +127,24 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md' }:
       aria-modal="true"
       aria-label={title}
     >
-      {/* Dimmed, blurred luxury backdrop */}
-      <div className="absolute inset-0 bg-black/65 backdrop-blur-xl animate-fade-in" />
+      {/* Dimmed, blurred luxury backdrop (pointer-events-none so clicks land on
+          the wrapper and trigger close-on-backdrop as intended) */}
+      <div
+        className={`absolute inset-0 bg-black/65 backdrop-blur-xl pointer-events-none ${closing ? 'animate-fade-out' : 'animate-fade-in'}`}
+      />
 
       {/* Modal surface with sheen + luxury border */}
       <div
+        ref={sheetRef}
+        tabIndex={-1}
         className={[
-          'relative w-full max-h-[92dvh] overflow-y-auto animate-scale-in',
+          'relative w-full max-h-[92dvh] overflow-y-auto',
+          closing ? 'animate-sheet-down' : 'animate-scale-in',
           'card-elevated card-luxury-border',
           'rounded-t-3xl sm:rounded-3xl',
           sizeClasses[size],
           'shadow-[var(--shadow-modal)]',
+          'focus:outline-none',
         ].join(' ')}
       >
         {/* Drag handle for bottom-sheet feel on mobile */}

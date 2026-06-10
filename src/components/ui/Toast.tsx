@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, createContext, useContext, type ReactNode } from 'react';
 import { CheckCircle2, AlertTriangle, Info, XCircle } from 'lucide-react';
+import { prefersReducedMotion } from '../../lib/fx';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -21,12 +22,17 @@ export function useToast() {
 
 let nextId = 0;
 
+/** Max simultaneously visible toasts — older ones are dropped when exceeded. */
+const MAX_VISIBLE = 3;
+const SHOW_MS = 3000;
+const EXIT_MS = 200;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = nextId++;
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type }].slice(-MAX_VISIBLE));
   }, []);
 
   const removeToast = useCallback((id: number) => {
@@ -56,9 +62,9 @@ const typeConfig: Record<ToastType, { style: string; Icon: typeof CheckCircle2; 
     iconClass: 'text-forge-green',
   },
   error: {
-    style: 'border-red-500/40 bg-red-500/[0.08]',
+    style: 'border-forge-danger/40 bg-forge-danger/[0.08]',
     Icon: XCircle,
-    iconClass: 'text-red-400',
+    iconClass: 'text-forge-danger',
   },
   info: {
     style: 'border-white/10',
@@ -66,16 +72,29 @@ const typeConfig: Record<ToastType, { style: string; Icon: typeof CheckCircle2; 
     iconClass: 'text-forge-text-soft',
   },
   warning: {
-    style: 'border-yellow-500/30 bg-yellow-500/[0.08]',
+    style: 'border-forge-warn/30 bg-forge-warn/[0.08]',
     Icon: AlertTriangle,
-    iconClass: 'text-yellow-400',
+    iconClass: 'text-forge-warn',
   },
 };
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
-    const timer = setTimeout(() => onDismiss(toast.id), 3000);
-    return () => clearTimeout(timer);
+    let exitTimer: ReturnType<typeof setTimeout> | undefined;
+    const showTimer = setTimeout(() => {
+      if (prefersReducedMotion()) {
+        onDismiss(toast.id);
+        return;
+      }
+      setLeaving(true);
+      exitTimer = setTimeout(() => onDismiss(toast.id), EXIT_MS);
+    }, SHOW_MS);
+    return () => {
+      clearTimeout(showTimer);
+      if (exitTimer !== undefined) clearTimeout(exitTimer);
+    };
   }, [toast.id, onDismiss]);
 
   const { style, Icon, iconClass } = typeConfig[toast.type];
@@ -87,7 +106,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
         'pointer-events-auto max-w-md w-full',
         'card-glass border rounded-2xl px-4 py-3',
         'text-sm font-body text-forge-text',
-        'animate-slide-up flex items-center gap-3',
+        leaving ? 'animate-sheet-down' : 'animate-slide-up',
+        'flex items-center gap-3',
         'shadow-[0_12px_40px_rgba(0,0,0,0.5)]',
         style,
       ].join(' ')}

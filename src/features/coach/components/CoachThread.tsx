@@ -9,11 +9,10 @@ import { useProfileStore } from '../../../stores/useProfileStore';
 import { useBodyStore } from '../../../stores/useBodyStore';
 import { useNutritionStore } from '../../../stores/useNutritionStore';
 import { useSessionStore } from '../../../stores/useSessionStore';
+import { useGoalsStore } from '../../../stores/useGoalsStore';
 import { useProgressInsights } from '../../../hooks/useProgressInsights';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
-import { readStorage } from '../../../lib/storage';
-import { STORAGE_KEYS } from '../../../lib/constants';
 import { detectPlateaus, macroGuidance } from '../../../lib/trainingScience';
 import { buildCoachThread, type CoachMessage, type CoachAction } from '../../../lib/coachEngine';
 
@@ -38,7 +37,7 @@ export function CoachThread() {
   const { toast } = useToast();
   const { play } = useFX();
 
-  const weeklyGoal = readStorage<number>(STORAGE_KEYS.WEEKLY_GOAL, 4);
+  const weeklyGoal = useGoalsStore((s) => s.weeklySessions);
   const insights = useProgressInsights(weeklyGoal);
   const profile = useProfileStore((s) => s.profile);
   const workouts = useWorkoutStore((s) => s.workouts);

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Dumbbell, Flame, CalendarDays, Layers, Repeat, HeartPulse, Award,
-  TrendingUp, TrendingDown, Minus, Lock, Rocket,
+  TrendingUp, TrendingDown, Minus, Lock, Rocket, Zap,
 } from 'lucide-react';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../../../stores/useBwWorkoutStore';
@@ -256,6 +256,23 @@ export function JourneyTab() {
         <StatCell icon={<Layers size={13} />} label={t('journey.totals.sets')} value={totals.totalSets} />
         <StatCell icon={<Repeat size={13} />} label={t('journey.totals.reps')} value={totals.totalReps} />
         <StatCell icon={<HeartPulse size={13} />} label={t('journey.totals.cardioMin')} value={totals.cardioMinutes} unit="min" />
+      </div>
+
+      {/* Streaks — current run vs all-time best (already computed by computeJourney) */}
+      <div className="grid grid-cols-2 gap-2">
+        <StatCell
+          icon={<Zap size={13} />}
+          label={t('journey.totals.currentStreak')}
+          value={journey.currentStreak}
+          unit={t('journey.totals.daysUnit')}
+          accent={journey.currentStreak > 0 ? 'gold' : 'green'}
+        />
+        <StatCell
+          icon={<Flame size={13} />}
+          label={t('journey.totals.longestStreak')}
+          value={journey.longestStreak}
+          unit={t('journey.totals.daysUnit')}
+        />
       </div>
 
       {/* Strength trends */}

@@ -33,7 +33,19 @@
     "progress": "التقدّم",
     "xp": "نقاط",
     "coachTitle": "مدرّب FORGE",
-    "coachWhisper": "كل بطل بدأ من نقطة ما. سجّل مجموعة واحدة لإبقاء الشعلة مشتعلة."
+    "levelChip": "مستوى {{level}}",
+    "tips": {
+      "0": "كل بطل بدأ من نقطة ما. سجّل مجموعة واحدة لإبقاء الشعلة مشتعلة.",
+      "1": "الاستمرارية تتفوّق على الشدّة. احضر اليوم ولو لعشرين دقيقة فقط.",
+      "2": "التحميل التدريجي: أضف تكرارًا واحدًا أو ٢٫٥ كجم عندما يصبح التمرين سهلًا.",
+      "3": "الراحة تدريب أيضًا — العضلات تنمو بين الجلسات لا أثناءها.",
+      "4": "قم بالإحماء قبل المجموعات الثقيلة لحماية مفاصلك ورفع أوزان أكبر.",
+      "5": "سجّل كل مجموعة. ما يُقاس يتحسّن.",
+      "6": "تناول البروتين خلال ساعة بعد التمرين يسرّع الاستشفاء.",
+      "7": "النوم هو مكمّلك الأقوى — استهدف من ٧ إلى ٩ ساعات.",
+      "8": "الأداء الصحيح أولًا ثم الوزن. التكرارات المتقنة تبني قوة متينة.",
+      "9": "اشرب الماء: حتى ٢٪ من الجفاف يقلّل من قوتك."
+    }
   },
   "offline": {
     "offline": "غير متصل — يتم الحفظ محليًا",
@@ -125,7 +137,16 @@
     "exerciseCount_zero": "{{count}} تمرين",
     "exerciseSummary_zero": "{{count}} مجموعة · {{vol}} كجم حجم",
     "bwSummary_zero": "{{count}} مجموعة · {{total}} الإجمالي",
-    "exerciseLogged_zero": "تم تسجيل {{name}} — {{count}} مجموعة"
+    "exerciseLogged_zero": "تم تسجيل {{name}} — {{count}} مجموعة",
+    "discard": "تجاهل",
+    "discardTitle": "تجاهل الجلسة؟",
+    "discardBody": "لن يتم حفظ أي شيء.",
+    "stripSets_zero": "لا مجموعات",
+    "stripSets_one": "مجموعة واحدة",
+    "stripSets_two": "مجموعتان",
+    "stripSets_few": "{{count}} مجموعات",
+    "stripSets_many": "{{count}} مجموعة",
+    "stripSets_other": "{{count}} مجموعة"
   },
   "workoutType": {
     "weighted": "أوزان",
@@ -296,7 +317,9 @@
     "prToast_many": "{{count}} رقماً قياسياً جديداً! 💪",
     "prToast_other": "{{count}} رقم قياسي جديد! 💪",
     "levelUpTitle": "ترقية مستوى!",
-    "levelUpReached": "المستوى {{level}} · {{name}}"
+    "levelUpReached": "المستوى {{level}} · {{name}}",
+    "xpUnit": "نقطة خبرة",
+    "xpGainedLabel": "الخبرة المكتسبة"
   },
   "progressGuide": {
     "weekGoal": {
@@ -627,7 +650,15 @@
     "sections": {
       "volumeTrend": "اتجاه الحِمل ({{period}})",
       "frequency": "تكرار التمارين ({{period}})",
-      "prBoard": "لوحة الأرقام القياسية"
+      "prBoard": "لوحة الأرقام القياسية",
+      "recentWorkouts": "التمارين الأخيرة",
+      "muscleStatus": "حالة العضلات",
+      "volumeByMuscle": "الحجم حسب العضلة (30 يومًا)",
+      "freshnessByGroup": "الجاهزية حسب المجموعة",
+      "muscleBalance": "توازن العضلات",
+      "weightTrend": "اتجاه الوزن",
+      "inbodyAnalysis": "تحليل InBody",
+      "measurements": "القياسات"
     },
     "volumeTrend": {
       "empty": "لا توجد بيانات حِمل بعد",
@@ -666,6 +697,92 @@
       "sessions_few": "{{count}} جلسات مسجّلة",
       "sessions_many": "{{count}} جلسة مسجّلة",
       "sessions_other": "{{count}} جلسة مسجّلة"
+    },
+    "title": "الإحصائيات",
+    "live": "مباشر",
+    "subNavAria": "التنقل الفرعي للإحصائيات",
+    "periodAria": "تصفية فترة التقدم",
+    "thisWeek": "هذا الأسبوع",
+    "personalRecords": "الأرقام القياسية",
+    "unitKgReps": "كجم · {{reps}} تكرار",
+    "unitReps": "تكرار",
+    "weeklyVolume": "الحجم الأسبوعي",
+    "progressiveOverload": "زيادة الحمل التدريجي",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "journey": "الرحلة",
+      "progress": "التقدم",
+      "muscles": "العضلات",
+      "body": "الجسم",
+      "cali": "كالي"
+    },
+    "fresh": {
+      "never": "أبدًا",
+      "sore": "متعَب",
+      "worked": "مُدرَّب",
+      "recovering": "يتعافى",
+      "ready": "جاهز",
+      "overdue": "متأخر"
+    },
+    "dow": {
+      "mon": "ن",
+      "tue": "ث",
+      "wed": "ر",
+      "thu": "خ",
+      "fri": "ج",
+      "sat": "س",
+      "sun": "ح"
+    },
+    "rings": {
+      "sessions": "الجلسات",
+      "streak": "السلسلة",
+      "volume": "الحجم",
+      "thisMonth": "↑ هذا الشهر",
+      "keepGoing": "واصل التقدم",
+      "startToday": "ابدأ اليوم"
+    },
+    "period": {
+      "sessions": "الجلسات ({{period}})",
+      "volume": "الحجم",
+      "prs": "أرقام قياسية",
+      "cardio": "كارديو",
+      "minUnit": "دقيقة"
+    },
+    "body": {
+      "currentWeight": "الوزن الحالي",
+      "noWeight": "لا توجد إدخالات وزن بعد",
+      "noWeightHint": "تابع اتجاه وزنك نحو هدفك",
+      "addWeight": "إضافة وزن",
+      "targetChip": "→ {{target}} كجم",
+      "noMeasurements": "لا توجد قياسات بعد",
+      "noMeasurementsHint": "سجّل قياسات جسمك الأولى",
+      "addMeasurement": "إضافة قياس",
+      "noInbody": "لا توجد فحوصات InBody بعد",
+      "noInbodyHint": "أضف فحصك لتتبع تكوين الجسم",
+      "addInbody": "إضافة فحص InBody",
+      "latest": "الأحدث — {{date}}",
+      "vs": "مقابل {{date}}",
+      "composition": "تكوين الجسم (InBody)",
+      "muscleMass": "عضلات",
+      "fatMass": "كتلة الدهون",
+      "fatPct": "نسبة الدهون",
+      "water": "ماء",
+      "bmi": "مؤشر كتلة الجسم",
+      "fatCenter": "دهون"
+    },
+    "cali": {
+      "startTitle": "ابدأ رحلتك في الكاليسثينيكس",
+      "startBody": "سجّل أول جلسة وزن جسم من تبويب التسجيل (وضع وزن الجسم) لترى تقدمك هنا.",
+      "push": "دفع",
+      "pull": "سحب",
+      "core": "جذع",
+      "legs": "أرجل",
+      "sessions": "الجلسات",
+      "reps": "التكرارات",
+      "sets": "المجموعات",
+      "topRepPRs": "أفضل أرقام التكرارات",
+      "recentSessions": "الجلسات الأخيرة",
+      "sessionMeta": "{{ex}} تمرين · {{reps}} تكرار"
     }
   },
   "bodyMap": {
@@ -862,6 +979,34 @@
     "greetingStreak_zero": "سلسلة {{count}} يوم! أنت مشتعل حماسًا!",
     "greetingWeek_zero": "{{count}} تمرين هذا الأسبوع. واصل الدفع!"
   },
+  "coachTriggers": {
+    "listSeparator": "، ",
+    "overdue_zero": "لم تتدرّب عضلة {{muscle}} منذ {{count}} يوم",
+    "overdue_one": "لم تتدرّب عضلة {{muscle}} منذ يوم واحد",
+    "overdue_two": "لم تتدرّب عضلة {{muscle}} منذ يومين",
+    "overdue_few": "لم تتدرّب عضلة {{muscle}} منذ {{count}} أيام",
+    "overdue_many": "لم تتدرّب عضلة {{muscle}} منذ {{count}} يومًا",
+    "overdue_other": "لم تتدرّب عضلة {{muscle}} منذ {{count}} يوم",
+    "highVolume_zero": "{{muscle}}: لا مجموعات هذا الأسبوع — فكّر في تخفيف الحمل",
+    "highVolume_one": "{{muscle}}: مجموعة واحدة هذا الأسبوع — فكّر في تخفيف الحمل",
+    "highVolume_two": "{{muscle}}: مجموعتان هذا الأسبوع — فكّر في تخفيف الحمل",
+    "highVolume_few": "{{muscle}}: {{count}} مجموعات هذا الأسبوع — فكّر في تخفيف الحمل",
+    "highVolume_many": "{{muscle}}: {{count}} مجموعة هذا الأسبوع — فكّر في تخفيف الحمل",
+    "highVolume_other": "{{muscle}}: {{count}} مجموعة هذا الأسبوع — فكّر في تخفيف الحمل",
+    "streak_zero": "سلسلة تدريب {{count}} يوم! واصل!",
+    "streak_one": "سلسلة تدريب يوم واحد! واصل!",
+    "streak_two": "سلسلة تدريب يومين متتاليين! واصل!",
+    "streak_few": "سلسلة تدريب {{count}} أيام متتالية! واصل!",
+    "streak_many": "سلسلة تدريب {{count}} يومًا متتاليًا! واصل!",
+    "streak_other": "سلسلة تدريب {{count}} يوم متتالٍ! واصل!",
+    "restDay_zero": "لا تمارين هذا الأسبوع — فكّر في يوم راحة",
+    "restDay_one": "تمرين واحد هذا الأسبوع — فكّر في يوم راحة",
+    "restDay_two": "تمرينان هذا الأسبوع — فكّر في يوم راحة",
+    "restDay_few": "{{count}} تمارين هذا الأسبوع — فكّر في يوم راحة",
+    "restDay_many": "{{count}} تمرينًا هذا الأسبوع — فكّر في يوم راحة",
+    "restDay_other": "{{count}} تمرين هذا الأسبوع — فكّر في يوم راحة",
+    "neglected": "عضلات مُهملة: {{muscles}}"
+  },
   "heatmap": {
     "today": "اليوم",
     "sore": "متعب",
@@ -876,6 +1021,7 @@
     "sortNewest": "الأحدث",
     "sortOldest": "الأقدم",
     "sortVolume": "الحجم",
+    "sortAria": "ترتيب العرض",
     "tabAll": "الكل",
     "tabWeights": "الأوزان",
     "tabCali": "كالستينيكس",
@@ -1172,7 +1318,10 @@
       "reps": "إجمالي التكرارات",
       "trainingDays": "أيام التدريب",
       "cardioMin": "كارديو",
-      "since": "منذ {{date}}"
+      "since": "منذ {{date}}",
+      "currentStreak": "السلسلة الحالية",
+      "longestStreak": "أطول سلسلة",
+      "daysUnit": "يوم"
     },
     "strength": {
       "title": "تطوّر القوة",
@@ -1207,6 +1356,103 @@
       "up": "ارتفاع {{pct}}%",
       "down": "انخفاض {{pct}}%",
       "flat": "بدون تغيير"
+    }
+  },
+  "goals": {
+    "title": "هل أنا على المسار؟",
+    "edit": "تعديل الأهداف",
+    "trainingScore": "درجة التدريب",
+    "trainingScoreAria": "درجة التدريب {{score}} من 100",
+    "scoreMeta": "الاتجاه {{trend}} · الانتظام {{consistency}}",
+    "leading": "مؤشرات قائدة — سلوكياتك",
+    "lagging": "مؤشرات تابعة — نتائجك",
+    "status": {
+      "onTrack": "على المسار",
+      "needsAttention": "يحتاج انتباهًا",
+      "offTrack": "خارج المسار"
+    },
+    "kpi": {
+      "sessions": "جلسات / أسبوع",
+      "overload": "زيادة الحمل",
+      "overloadSub": "آخر 10 جلسات",
+      "protein": "البروتين 7 أيام",
+      "proteinSub": "الهدف {{grams}} جم",
+      "weight": "الوزن",
+      "weightDelta": "{{delta}} كجم · 14 يومًا",
+      "weightTarget": "الهدف {{target}} كجم",
+      "bestLift": "أفضل رفعة (1RM تقديري)",
+      "streak": "السلسلة",
+      "streakBest_zero": "الأفضل {{count}} يوم",
+      "streakBest_one": "الأفضل {{count}} يوم",
+      "streakBest_two": "الأفضل {{count}} يوم",
+      "streakBest_few": "الأفضل {{count}} يوم",
+      "streakBest_many": "الأفضل {{count}} يوم",
+      "streakBest_other": "الأفضل {{count}} يوم",
+      "daysUnit": "يوم",
+      "noData": "لا بيانات"
+    },
+    "editor": {
+      "title": "أهدافك",
+      "subtitle": "حدّد الأهداف التي تقود لوحتك",
+      "weeklySessions": "جلسات أسبوعية",
+      "perWeek": "/أسبوع",
+      "decreaseSessions": "تقليل الجلسات الأسبوعية",
+      "increaseSessions": "زيادة الجلسات الأسبوعية",
+      "targetWeight": "الوزن المستهدف (كجم)",
+      "targetWeightPlaceholder": "مثال: 78.5",
+      "direction": "اتجاه الوزن",
+      "lose": "خسارة",
+      "maintain": "ثبات",
+      "gain": "زيادة",
+      "proteinTarget": "هدف البروتين (جم/يوم)",
+      "proteinPlaceholder": "افتراضي {{grams}} جم",
+      "proteinHint": "اتركه فارغًا لاستخدام هدف الماكروز ({{grams}} جم).",
+      "done": "تم"
+    },
+    "review": {
+      "title": "المراجعة الأسبوعية",
+      "thisVsLast": "هذا الأسبوع مقابل الماضي",
+      "sessions": "الجلسات",
+      "volume": "الحجم",
+      "prs": "أرقام قياسية",
+      "lastWeekValue": "الأسبوع الماضي: {{value}}",
+      "win": "إنجاز",
+      "fix": "تحسين",
+      "winPRs_zero": "{{count}} رقم قياسي هذا الأسبوع — القوة تتقدم.",
+      "winPRs_one": "رقم قياسي واحد هذا الأسبوع — القوة تتقدم.",
+      "winPRs_two": "رقمان قياسيان هذا الأسبوع — القوة تتقدم.",
+      "winPRs_few": "{{count}} أرقام قياسية هذا الأسبوع — القوة تتقدم.",
+      "winPRs_many": "{{count}} رقمًا قياسيًا هذا الأسبوع — القوة تتقدم.",
+      "winPRs_other": "{{count}} رقم قياسي هذا الأسبوع — القوة تتقدم.",
+      "winVolume": "ارتفع الحجم {{pct}}% عن الأسبوع الماضي.",
+      "winSessions_zero": "{{count}} جلسة إضافية عن الأسبوع الماضي.",
+      "winSessions_one": "جلسة إضافية واحدة عن الأسبوع الماضي.",
+      "winSessions_two": "جلستان إضافيتان عن الأسبوع الماضي.",
+      "winSessions_few": "{{count}} جلسات إضافية عن الأسبوع الماضي.",
+      "winSessions_many": "{{count}} جلسة إضافية عن الأسبوع الماضي.",
+      "winSessions_other": "{{count}} جلسة إضافية عن الأسبوع الماضي.",
+      "winShowedUp_zero": "حضرت {{count}} مرة — الانتظام هو الفوز.",
+      "winShowedUp_one": "حضرت مرة واحدة — الانتظام هو الفوز.",
+      "winShowedUp_two": "حضرت مرتين — الانتظام هو الفوز.",
+      "winShowedUp_few": "حضرت {{count}} مرات — الانتظام هو الفوز.",
+      "winShowedUp_many": "حضرت {{count}} مرة — الانتظام هو الفوز.",
+      "winShowedUp_other": "حضرت {{count}} مرة — الانتظام هو الفوز.",
+      "winFreshStart": "أسبوع جديد — أول جلسة تحدد الإيقاع.",
+      "fixSessions_zero": "جدوِل {{count}} جلسة إضافية لتحقيق هدفك الأسبوعي.",
+      "fixSessions_one": "جدوِل جلسة إضافية واحدة لتحقيق هدفك الأسبوعي.",
+      "fixSessions_two": "جدوِل جلستين إضافيتين لتحقيق هدفك الأسبوعي.",
+      "fixSessions_few": "جدوِل {{count}} جلسات إضافية لتحقيق هدفك الأسبوعي.",
+      "fixSessions_many": "جدوِل {{count}} جلسة إضافية لتحقيق هدفك الأسبوعي.",
+      "fixSessions_other": "جدوِل {{count}} جلسة إضافية لتحقيق هدفك الأسبوعي.",
+      "fixOverload": "انخفض الحجم — حاول تجاوز حجم جلستك السابقة.",
+      "fixProtein": "الالتزام بالبروتين {{pct}}% — خطط للبروتين في كل وجبة.",
+      "fixNone": "كل المؤشرات القائدة خضراء — واصل على نفس النظام.",
+      "projection_zero": "بهذا المعدل: ~{{count}} جلسة شهريًا.",
+      "projection_one": "بهذا المعدل: ~جلسة واحدة شهريًا.",
+      "projection_two": "بهذا المعدل: ~جلستان شهريًا.",
+      "projection_few": "بهذا المعدل: ~{{count}} جلسات شهريًا.",
+      "projection_many": "بهذا المعدل: ~{{count}} جلسة شهريًا.",
+      "projection_other": "بهذا المعدل: ~{{count}} جلسة شهريًا."
     }
   }
 }

@@ -8,6 +8,7 @@ import { useNutritionStore } from './useNutritionStore';
 import { useStepsStore } from './useStepsStore';
 import { useGamificationStore } from './useGamificationStore';
 import { useCustomExercisesStore } from './useCustomExercisesStore';
+import { useGoalsStore } from './useGoalsStore';
 
 /**
  * Re-read every persisted store from localStorage. Call this after a cloud pull
@@ -29,4 +30,5 @@ export function rehydrateAllStores(): void {
   useStepsStore.getState().hydrate();
   useGamificationStore.getState().hydrate();
   useCustomExercisesStore.getState().hydrate();
+  useGoalsStore.getState().hydrate();
 }

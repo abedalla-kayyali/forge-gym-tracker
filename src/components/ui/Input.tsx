@@ -21,7 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div
           className={[
             'group relative flex items-center gap-2',
-            'bg-[#070a0d] border rounded-xl px-3 transition-all duration-200',
+            'bg-forge-input-bg border rounded-xl px-3 transition-all duration-200',
             error
               ? 'border-red-500/50 shadow-[0_0_0_3px_rgba(239,68,68,0.1)]'
               : 'border-white/[0.06] focus-within:border-forge-green/40 focus-within:shadow-[var(--shadow-input-focus)]',

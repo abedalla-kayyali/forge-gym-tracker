@@ -4,6 +4,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Badge } from '../../../components/ui/Badge';
 import { Confetti } from '../../../components/ui/Confetti';
+import { CountUp } from '../../../components/ui/CountUp';
 import { SessionPoster } from '../../poster/components/SessionPoster';
 import { BodyMap } from '../../../components/body/BodyMap';
 import { useSessionStore } from '../../../stores/useSessionStore';
@@ -43,6 +44,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
   // Celebration state captured at save time.
   const [levelUp, setLevelUp] = useState<{ level: number; name: string } | null>(null);
   const [prCount, setPrCount] = useState(0);
+  const [earnedXP, setEarnedXP] = useState(0);
   const savedWorkoutRef = useRef<Workout | null>(null);
   // Frozen snapshot of summary taken BEFORE session.reset() so post-save stats render correctly
   const savedSummaryRef = useRef<ReturnType<typeof buildSummary> | null>(null);
@@ -150,6 +152,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     else play('success');
     setLevelUp(levelResult.leveledUp ? { level: levelResult.newLevel.level, name: levelResult.newLevel.name } : null);
     setPrCount(prTotal);
+    setEarnedXP(xpGained);
     toast(prTotal > 0 ? t('saveWorkout.prToast', { count: prTotal }) : t('saveWorkout.toastSaved'), 'success');
     session.reset();
     setSaved(true);
@@ -163,6 +166,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     setExpandedEx(null);
     setLevelUp(null);
     setPrCount(0);
+    setEarnedXP(0);
     onSaved();
     onClose();
   };
@@ -227,8 +231,8 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                 </div>
               </div>
             )}
-            {/* PR banner */}
-            {!levelUp && prCount > 0 && (
+            {/* PR banner — stacks under the level-up banner when both happen */}
+            {prCount > 0 && (
               <div className="rounded-2xl p-3 text-center bg-gradient-to-br from-forge-green/20 to-forge-green/[0.05] border border-forge-green/30 animate-fade-in">
                 <div className="flex items-center justify-center gap-2">
                   <Trophy size={16} className="text-forge-green" />
@@ -238,6 +242,14 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                 </div>
               </div>
             )}
+            {/* XP earned — counts up to the session's computed XP */}
+            <div className="text-center">
+              <span className="kpi-lg text-forge-green">
+                +<CountUp value={earnedXP} />
+                <span className="text-[11px] text-forge-muted ms-1">{t('saveWorkout.xpUnit')}</span>
+              </span>
+              <div className="label-cap text-[9px] mt-0.5">{t('saveWorkout.xpGainedLabel')}</div>
+            </div>
             {/* Hero card with body-map + stats */}
             <div className="card-elevated card-luxury-border rounded-2xl p-4 relative overflow-hidden">
               <div

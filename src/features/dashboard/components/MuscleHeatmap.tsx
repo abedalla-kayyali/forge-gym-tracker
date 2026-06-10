@@ -5,25 +5,7 @@ import { BodyMap, MUSCLE_ORDER } from '../../../components/body/BodyMap';
 import { toMuscleGroup } from '../../../lib/muscles';
 import type { MuscleGroup } from '../../../types/workout';
 
-/** Freshness color ramp — matches the premium palette. */
-const FRESH_COLORS = {
-  overdue:    '#4B5563', // slate  — not trained recently
-  ready:      '#F59E0B', // amber  — 5-6 days ago
-  recovering: '#8BC34A', // lime   — 3-4 days ago
-  worked:     '#2ecc71', // green  — 1-2 days ago
-  sore:       '#EF4444', // red    — <24h (muscle still recovering)
-};
-
-type Freshness = 'overdue' | 'ready' | 'recovering' | 'worked' | 'sore';
-
-function freshnessOf(daysSince: number | null): Freshness {
-  if (daysSince === null) return 'overdue';
-  if (daysSince < 1) return 'sore';
-  if (daysSince <= 2) return 'worked';
-  if (daysSince <= 4) return 'recovering';
-  if (daysSince <= 6) return 'ready';
-  return 'overdue';
-}
+import { FRESHNESS_COLORS, freshnessOf } from '../../../lib/freshness';
 
 function useMuscleFreshness() {
   const workouts = useWorkoutStore((s) => s.workouts);
@@ -47,7 +29,7 @@ function useMuscleFreshness() {
       const fresh = freshnessOf(days);
       // Only tint muscles that have been trained — overdue uses the base gray
       if (fresh !== 'overdue') {
-        tints[m] = FRESH_COLORS[fresh];
+        tints[m] = FRESHNESS_COLORS[fresh];
       }
       // Only show badge for muscles with actual training data
       if (days !== null) {
@@ -72,11 +54,11 @@ export function MuscleHeatmap() {
 
       {/* Legend */}
       <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] font-condensed text-forge-muted">
-        <LegendChip color={FRESH_COLORS.sore}       label={t('heatmap.sore')} />
-        <LegendChip color={FRESH_COLORS.worked}     label={t('heatmap.worked')} />
-        <LegendChip color={FRESH_COLORS.recovering} label={t('heatmap.recovering')} />
-        <LegendChip color={FRESH_COLORS.ready}      label={t('heatmap.ready')} />
-        <LegendChip color={FRESH_COLORS.overdue}    label={t('heatmap.overdue')} />
+        <LegendChip color={FRESHNESS_COLORS.sore}       label={t('heatmap.sore')} />
+        <LegendChip color={FRESHNESS_COLORS.worked}     label={t('heatmap.worked')} />
+        <LegendChip color={FRESHNESS_COLORS.recovering} label={t('heatmap.recovering')} />
+        <LegendChip color={FRESHNESS_COLORS.ready}      label={t('heatmap.ready')} />
+        <LegendChip color={FRESHNESS_COLORS.overdue}    label={t('heatmap.overdue')} />
       </div>
 
       {topFresh.length > 0 && (
@@ -94,7 +76,7 @@ export function MuscleHeatmap() {
                 }}
               >
                 {t('muscles.' + String(m).toLowerCase())}
-                <span className="text-forge-muted text-[10px]">· {values[m]}d</span>
+                <span className="text-forge-muted text-[10px]">· {values[m]}</span>
               </span>
             ))}
           </div>

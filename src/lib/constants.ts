@@ -32,6 +32,9 @@ export const STORAGE_KEYS = {
   STEPS: 'forge_steps',
   STEP_GOAL: 'forge_step_goal',
   WEEKLY_GOAL: 'forge_weekly_goal',
+  /** Extra goal targets (target weight, direction, protein) — weekly sessions
+   *  stays under WEEKLY_GOAL for backward compat. */
+  GOALS: 'forge_goals',
   READINESS: 'forge_readiness',
   READINESS_TODAY: 'forge_readiness_today',
   CHECKINS: 'forge_checkins',

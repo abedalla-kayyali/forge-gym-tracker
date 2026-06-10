@@ -130,7 +130,10 @@ function DuelsTab() {
       </Card>
 
       <Card className="p-4">
-        <div className="label-cap mb-2">{t('social.preview')}</div>
+        {/* Gold badge — these duel metrics are placeholder data */}
+        <div className="mb-2">
+          <Badge variant="gold">{t('social.preview')}</Badge>
+        </div>
         <div className="grid grid-cols-3 gap-2 text-center">
           <DuelCell label={t('social.duelVolumeWeek')} metric="+12%" accent="green" />
           <DuelCell label={t('social.duelPrRace')} metric="3 / 5" accent="gold" />
@@ -169,7 +172,11 @@ function LeaderboardTab() {
       <Card className="p-4 flex items-center gap-3">
         <Trophy size={20} className="text-forge-gold" />
         <div className="flex-1">
-          <div className="text-forge-text font-condensed font-semibold">{t('social.globalBoard')}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-forge-text font-condensed font-semibold">{t('social.globalBoard')}</span>
+            {/* Gold badge — leaderboard rows below are seed/placeholder data */}
+            <Badge variant="gold">{t('social.preview')}</Badge>
+          </div>
           <div className="text-forge-muted text-[12px]">{t('social.boardDescription')}</div>
         </div>
       </Card>

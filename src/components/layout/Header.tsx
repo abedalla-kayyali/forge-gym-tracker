@@ -7,6 +7,15 @@ import { useFX } from '../../hooks/useFX';
 import { ChevronDown, Trophy, Flame, Sparkles } from 'lucide-react';
 import { CountUp } from '../ui/CountUp';
 
+const TIP_COUNT = 10;
+
+/** Deterministic day-of-year so the daily tip rotates once per day. */
+function dayOfYear(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now.getTime() - start.getTime()) / 86_400_000);
+}
+
 export function Header() {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -16,6 +25,7 @@ export function Header() {
   const { getLevel, experience } = useGamificationStore();
   const { play } = useFX();
   const level = getLevel();
+  const tipIndex = dayOfYear() % TIP_COUNT;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -38,6 +48,9 @@ export function Header() {
           <div className="relative">
             <span className="brand-mark text-[1.65rem] leading-none tracking-[0.2em]">FORGE</span>
           </div>
+          <span className="bg-forge-green/10 border border-forge-green/25 text-forge-green text-[9px] font-mono font-bold tracking-wider rounded-full px-2 py-0.5 shrink-0">
+            {t('header.levelChip', { level: level.level })}
+          </span>
           {profile.name && (
             <span className="text-forge-dim text-[11px] font-mono uppercase tracking-[0.18em]">
               · {profile.name.split(' ')[0]}
@@ -104,7 +117,7 @@ export function Header() {
             <div className="flex-1 card-elevated rounded-xl px-3.5 py-2.5">
               <div className="label-cap text-forge-green/90">{t('header.coachTitle')}</div>
               <div className="text-forge-text-soft text-sm mt-0.5 leading-relaxed">
-                {t('header.coachWhisper')}
+                {t(`header.tips.${tipIndex}`)}
               </div>
             </div>
           </div>

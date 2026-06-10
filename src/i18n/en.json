@@ -33,7 +33,19 @@
     "progress": "Progress",
     "xp": "XP",
     "coachTitle": "FORGE Coach",
-    "coachWhisper": "Every legend starts somewhere. Log one set to keep the fire alive."
+    "levelChip": "LV {{level}}",
+    "tips": {
+      "0": "Every legend starts somewhere. Log one set to keep the fire alive.",
+      "1": "Consistency beats intensity. Show up today, even for 20 minutes.",
+      "2": "Progressive overload: add one rep or 2.5 kg when it starts feeling easy.",
+      "3": "Rest is training too — muscles grow between sessions, not during them.",
+      "4": "Warm up before heavy sets to protect your joints and lift more.",
+      "5": "Track every set. What gets measured gets improved.",
+      "6": "Protein within an hour after training speeds up recovery.",
+      "7": "Sleep is your strongest supplement — aim for 7 to 9 hours.",
+      "8": "Form first, weight second. Perfect reps build perfect strength.",
+      "9": "Hydrate: even 2% dehydration cuts your strength output."
+    }
   },
   "offline": {
     "offline": "Offline — saving locally",
@@ -125,7 +137,16 @@
     "exerciseCount_zero": "{{count}} exercises",
     "exerciseSummary_zero": "{{count}} sets · {{vol}} kg vol",
     "bwSummary_zero": "{{count}} sets · {{total}} total",
-    "exerciseLogged_zero": "{{name}} logged — {{count}} sets"
+    "exerciseLogged_zero": "{{name}} logged — {{count}} sets",
+    "discard": "Discard",
+    "discardTitle": "Discard session?",
+    "discardBody": "Nothing will be saved.",
+    "stripSets_zero": "{{count}} sets",
+    "stripSets_one": "{{count}} set",
+    "stripSets_two": "{{count}} sets",
+    "stripSets_few": "{{count}} sets",
+    "stripSets_many": "{{count}} sets",
+    "stripSets_other": "{{count}} sets"
   },
   "workoutType": {
     "weighted": "Weighted",
@@ -296,7 +317,9 @@
     "prToast_many": "{{count}} new personal records! 💪",
     "prToast_other": "{{count}} new personal records! 💪",
     "levelUpTitle": "Level Up!",
-    "levelUpReached": "Level {{level}} · {{name}}"
+    "levelUpReached": "Level {{level}} · {{name}}",
+    "xpUnit": "XP",
+    "xpGainedLabel": "XP earned"
   },
   "progressGuide": {
     "weekGoal": {
@@ -627,7 +650,15 @@
     "sections": {
       "volumeTrend": "Volume Trend ({{period}})",
       "frequency": "Exercise Frequency ({{period}})",
-      "prBoard": "PR Board"
+      "prBoard": "PR Board",
+      "recentWorkouts": "Recent Workouts",
+      "muscleStatus": "Muscle Status",
+      "volumeByMuscle": "Volume by Muscle (30d)",
+      "freshnessByGroup": "Freshness by Group",
+      "muscleBalance": "Muscle Balance",
+      "weightTrend": "Weight Trend",
+      "inbodyAnalysis": "InBody Analysis",
+      "measurements": "Measurements"
     },
     "volumeTrend": {
       "empty": "No volume data yet",
@@ -666,6 +697,92 @@
       "sessions_few": "{{count}} sessions logged",
       "sessions_many": "{{count}} sessions logged",
       "sessions_other": "{{count}} sessions logged"
+    },
+    "title": "Stats",
+    "live": "live",
+    "subNavAria": "Stats sub-navigation",
+    "periodAria": "Progress period filter",
+    "thisWeek": "This Week",
+    "personalRecords": "Personal Records",
+    "unitKgReps": "KG · {{reps}}R",
+    "unitReps": "REPS",
+    "weeklyVolume": "Weekly Volume",
+    "progressiveOverload": "Progressive Overload",
+    "tabs": {
+      "overview": "Overview",
+      "journey": "Journey",
+      "progress": "Progress",
+      "muscles": "Muscles",
+      "body": "Body",
+      "cali": "Cali"
+    },
+    "fresh": {
+      "never": "Never",
+      "sore": "Sore",
+      "worked": "Worked",
+      "recovering": "Recovering",
+      "ready": "Ready",
+      "overdue": "Overdue"
+    },
+    "dow": {
+      "mon": "M",
+      "tue": "T",
+      "wed": "W",
+      "thu": "T",
+      "fri": "F",
+      "sat": "S",
+      "sun": "S"
+    },
+    "rings": {
+      "sessions": "Sessions",
+      "streak": "Streak",
+      "volume": "Volume",
+      "thisMonth": "↑ this month",
+      "keepGoing": "keep going",
+      "startToday": "start today"
+    },
+    "period": {
+      "sessions": "Sessions ({{period}})",
+      "volume": "Volume",
+      "prs": "PRs",
+      "cardio": "Cardio",
+      "minUnit": "MIN"
+    },
+    "body": {
+      "currentWeight": "Current Weight",
+      "noWeight": "No weight entries yet",
+      "noWeightHint": "Track your body-weight trend toward your goal",
+      "addWeight": "Add weight",
+      "targetChip": "→ {{target}} kg",
+      "noMeasurements": "No measurements yet",
+      "noMeasurementsHint": "Log your first body measurements",
+      "addMeasurement": "Add measurement",
+      "noInbody": "No InBody tests yet",
+      "noInbodyHint": "Add your scan to track body composition",
+      "addInbody": "Add InBody scan",
+      "latest": "Latest — {{date}}",
+      "vs": "vs {{date}}",
+      "composition": "Body Composition (InBody)",
+      "muscleMass": "Muscle",
+      "fatMass": "Fat Mass",
+      "fatPct": "Fat %",
+      "water": "Water",
+      "bmi": "BMI",
+      "fatCenter": "Fat"
+    },
+    "cali": {
+      "startTitle": "Start your calisthenics journey",
+      "startBody": "Log your first bodyweight session in the Log tab (Bodyweight mode) to see progress here.",
+      "push": "Push",
+      "pull": "Pull",
+      "core": "Core",
+      "legs": "Legs",
+      "sessions": "Sessions",
+      "reps": "Reps",
+      "sets": "Sets",
+      "topRepPRs": "Top Rep PRs",
+      "recentSessions": "Recent Sessions",
+      "sessionMeta": "{{ex}} ex · {{reps}} reps"
     }
   },
   "bodyMap": {
@@ -862,6 +979,34 @@
     "greetingStreak_zero": "{{count}}-day streak! You're on fire!",
     "greetingWeek_zero": "{{count}} workouts this week. Keep pushing!"
   },
+  "coachTriggers": {
+    "listSeparator": ", ",
+    "overdue_zero": "{{muscle}} hasn't been trained in {{count}} days",
+    "overdue_one": "{{muscle}} hasn't been trained in {{count}} day",
+    "overdue_two": "{{muscle}} hasn't been trained in {{count}} days",
+    "overdue_few": "{{muscle}} hasn't been trained in {{count}} days",
+    "overdue_many": "{{muscle}} hasn't been trained in {{count}} days",
+    "overdue_other": "{{muscle}} hasn't been trained in {{count}} days",
+    "highVolume_zero": "{{muscle}}: {{count}} sets this week — consider a deload",
+    "highVolume_one": "{{muscle}}: {{count}} set this week — consider a deload",
+    "highVolume_two": "{{muscle}}: {{count}} sets this week — consider a deload",
+    "highVolume_few": "{{muscle}}: {{count}} sets this week — consider a deload",
+    "highVolume_many": "{{muscle}}: {{count}} sets this week — consider a deload",
+    "highVolume_other": "{{muscle}}: {{count}} sets this week — consider a deload",
+    "streak_zero": "{{count}}-day training streak! Keep it up!",
+    "streak_one": "{{count}}-day training streak! Keep it up!",
+    "streak_two": "{{count}}-day training streak! Keep it up!",
+    "streak_few": "{{count}}-day training streak! Keep it up!",
+    "streak_many": "{{count}}-day training streak! Keep it up!",
+    "streak_other": "{{count}}-day training streak! Keep it up!",
+    "restDay_zero": "{{count}} workouts this week — consider a rest day",
+    "restDay_one": "{{count}} workout this week — consider a rest day",
+    "restDay_two": "{{count}} workouts this week — consider a rest day",
+    "restDay_few": "{{count}} workouts this week — consider a rest day",
+    "restDay_many": "{{count}} workouts this week — consider a rest day",
+    "restDay_other": "{{count}} workouts this week — consider a rest day",
+    "neglected": "Neglected muscles: {{muscles}}"
+  },
   "heatmap": {
     "today": "today",
     "sore": "Sore",
@@ -876,6 +1021,7 @@
     "sortNewest": "Newest",
     "sortOldest": "Oldest",
     "sortVolume": "Volume",
+    "sortAria": "Sort order",
     "tabAll": "All",
     "tabWeights": "Weights",
     "tabCali": "Cali",
@@ -1172,7 +1318,10 @@
       "reps": "Total reps",
       "trainingDays": "Training days",
       "cardioMin": "Cardio",
-      "since": "Since {{date}}"
+      "since": "Since {{date}}",
+      "currentStreak": "Current streak",
+      "longestStreak": "Longest streak",
+      "daysUnit": "days"
     },
     "strength": {
       "title": "Strength trends",
@@ -1207,6 +1356,103 @@
       "up": "up {{pct}}%",
       "down": "down {{pct}}%",
       "flat": "no change"
+    }
+  },
+  "goals": {
+    "title": "Am I on Track?",
+    "edit": "Edit goals",
+    "trainingScore": "Training Score",
+    "trainingScoreAria": "Training score {{score}} out of 100",
+    "scoreMeta": "Trend {{trend}} · Consistency {{consistency}}",
+    "leading": "Leading — your behaviors",
+    "lagging": "Lagging — your outcomes",
+    "status": {
+      "onTrack": "On track",
+      "needsAttention": "Needs attention",
+      "offTrack": "Off track"
+    },
+    "kpi": {
+      "sessions": "Sessions / wk",
+      "overload": "Overload",
+      "overloadSub": "last 10 sessions",
+      "protein": "Protein 7d",
+      "proteinSub": "target {{grams}}g",
+      "weight": "Weight",
+      "weightDelta": "{{delta}} kg · 14d",
+      "weightTarget": "target {{target}} kg",
+      "bestLift": "Best lift e1RM",
+      "streak": "Streak",
+      "streakBest_zero": "best {{count}}d",
+      "streakBest_one": "best {{count}}d",
+      "streakBest_two": "best {{count}}d",
+      "streakBest_few": "best {{count}}d",
+      "streakBest_many": "best {{count}}d",
+      "streakBest_other": "best {{count}}d",
+      "daysUnit": "d",
+      "noData": "no data"
+    },
+    "editor": {
+      "title": "Your Goals",
+      "subtitle": "Set the targets that drive your dashboard",
+      "weeklySessions": "Weekly sessions",
+      "perWeek": "/wk",
+      "decreaseSessions": "Decrease weekly sessions",
+      "increaseSessions": "Increase weekly sessions",
+      "targetWeight": "Target weight (kg)",
+      "targetWeightPlaceholder": "e.g. 78.5",
+      "direction": "Weight direction",
+      "lose": "Lose",
+      "maintain": "Maintain",
+      "gain": "Gain",
+      "proteinTarget": "Protein target (g/day)",
+      "proteinPlaceholder": "default {{grams}}g",
+      "proteinHint": "Leave empty to use your macro target ({{grams}}g).",
+      "done": "Done"
+    },
+    "review": {
+      "title": "Weekly Review",
+      "thisVsLast": "This week vs last",
+      "sessions": "Sessions",
+      "volume": "Volume",
+      "prs": "PRs",
+      "lastWeekValue": "last wk: {{value}}",
+      "win": "Win",
+      "fix": "Fix",
+      "winPRs_zero": "{{count}} PRs this week — strength is moving.",
+      "winPRs_one": "1 PR this week — strength is moving.",
+      "winPRs_two": "{{count}} PRs this week — strength is moving.",
+      "winPRs_few": "{{count}} PRs this week — strength is moving.",
+      "winPRs_many": "{{count}} PRs this week — strength is moving.",
+      "winPRs_other": "{{count}} PRs this week — strength is moving.",
+      "winVolume": "Volume up {{pct}}% vs last week.",
+      "winSessions_zero": "{{count}} more sessions than last week.",
+      "winSessions_one": "1 more session than last week.",
+      "winSessions_two": "{{count}} more sessions than last week.",
+      "winSessions_few": "{{count}} more sessions than last week.",
+      "winSessions_many": "{{count}} more sessions than last week.",
+      "winSessions_other": "{{count}} more sessions than last week.",
+      "winShowedUp_zero": "You showed up {{count}} times — consistency wins.",
+      "winShowedUp_one": "You showed up {{count}} time — consistency wins.",
+      "winShowedUp_two": "You showed up {{count}} times — consistency wins.",
+      "winShowedUp_few": "You showed up {{count}} times — consistency wins.",
+      "winShowedUp_many": "You showed up {{count}} times — consistency wins.",
+      "winShowedUp_other": "You showed up {{count}} times — consistency wins.",
+      "winFreshStart": "Fresh week — your first session sets the tone.",
+      "fixSessions_zero": "Schedule {{count}} more sessions to hit your weekly goal.",
+      "fixSessions_one": "Schedule 1 more session to hit your weekly goal.",
+      "fixSessions_two": "Schedule {{count}} more sessions to hit your weekly goal.",
+      "fixSessions_few": "Schedule {{count}} more sessions to hit your weekly goal.",
+      "fixSessions_many": "Schedule {{count}} more sessions to hit your weekly goal.",
+      "fixSessions_other": "Schedule {{count}} more sessions to hit your weekly goal.",
+      "fixOverload": "Volume dipped — aim to beat last session's total volume.",
+      "fixProtein": "Protein adherence at {{pct}}% — plan protein into each meal.",
+      "fixNone": "All leading KPIs green — keep the system running.",
+      "projection_zero": "At this rate: ~{{count}} sessions/month.",
+      "projection_one": "At this rate: ~{{count}} session/month.",
+      "projection_two": "At this rate: ~{{count}} sessions/month.",
+      "projection_few": "At this rate: ~{{count}} sessions/month.",
+      "projection_many": "At this rate: ~{{count}} sessions/month.",
+      "projection_other": "At this rate: ~{{count}} sessions/month."
     }
   }
 }

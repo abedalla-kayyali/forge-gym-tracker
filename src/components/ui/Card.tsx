@@ -26,6 +26,8 @@ export function Card({
   variant = 'default',
   ...rest
 }: CardProps) {
+  // Any clickable card automatically gets press feedback + pointer cursor.
+  const clickable = typeof rest.onClick === 'function';
   return (
     <div
       className={[
@@ -34,7 +36,9 @@ export function Card({
         padding ? 'p-4' : '',
         hoverable
           ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] press-scale'
-          : '',
+          : clickable
+            ? 'cursor-pointer press-scale'
+            : '',
         className,
       ].join(' ')}
       {...rest}

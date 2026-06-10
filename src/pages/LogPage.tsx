@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Dumbbell, ChevronDown, ChevronUp, Zap } from 'lucide-react';
+import { Dumbbell, ChevronDown, ChevronUp, Zap, Clock } from 'lucide-react';
 import { WorkoutTypeSelector, type WorkoutType } from '../features/workout';
 import { MuscleGroupPicker } from '../features/workout';
 import { ExerciseAutocomplete } from '../features/workout';
@@ -15,7 +15,10 @@ import { ProgressGuide } from '../features/workout/components/ProgressGuide';
 import { StrategyCard } from '../features/coach/components/StrategyCard';
 import { CoachThread } from '../features/coach/components/CoachThread';
 import { useSessionStore } from '../stores/useSessionStore';
+import { useGoalsStore } from '../stores/useGoalsStore';
 import { useCustomExercisesStore } from '../stores/useCustomExercisesStore';
+import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
 import { useFX } from '../hooks/useFX';
 import { searchExercises } from '../lib/exercises-db';
@@ -85,6 +88,59 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
   );
 }
 
+function SessionStrip({
+  startTime,
+  totalSets,
+  muscle,
+  onDiscard,
+}: {
+  startTime: number | null;
+  totalSets: number;
+  muscle: MuscleGroup | null;
+  onDiscard: () => void;
+}) {
+  const { t } = useTranslation();
+  const [elapsed, setElapsed] = useState('00:00');
+
+  useEffect(() => {
+    if (startTime === null) return;
+    const tick = () => {
+      const secs = Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+      const m = Math.floor(secs / 60).toString().padStart(2, '0');
+      const s = (secs % 60).toString().padStart(2, '0');
+      setElapsed(`${m}:${s}`);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  return (
+    <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30">
+      <div className="card-elevated border border-forge-border-light rounded-full px-4 py-2 flex items-center gap-2 bg-forge-bg-deep/85 backdrop-blur-xl">
+        <Clock size={12} className="text-forge-green shrink-0" />
+        <span className="text-forge-green text-[11px] font-mono font-semibold tracking-wider">{elapsed}</span>
+        <span aria-hidden className="text-forge-dim text-[11px]">·</span>
+        <span className="text-forge-muted text-[11px] font-condensed">{t('logPage.stripSets', { count: totalSets })}</span>
+        {muscle && (
+          <>
+            <span aria-hidden className="text-forge-dim text-[11px]">·</span>
+            <span className="text-forge-green/70 text-[10px] font-condensed uppercase tracking-wider truncate">
+              {t('muscles.' + String(muscle).toLowerCase())}
+            </span>
+          </>
+        )}
+        <button
+          onClick={onDiscard}
+          className="ms-auto shrink-0 text-forge-muted hover:text-red-400 text-[11px] font-condensed uppercase tracking-wider cursor-pointer press-scale px-2 py-1.5 transition-colors duration-200"
+        >
+          {t('logPage.discard')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function LogPage() {
   const { t } = useTranslation();
   const session = useSessionStore();
@@ -94,8 +150,10 @@ export function LogPage() {
     return s.active ? (s.type as WorkoutType) : 'weighted';
   });
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
   // In-progress sets now live in the session store so they survive a reload.
   const currentSets = session.currentSets;
+  const weeklySessions = useGoalsStore((s) => s.weeklySessions);
   const customStore = useCustomExercisesStore();
   const { toast } = useToast();
   const { play } = useFX();
@@ -175,6 +233,18 @@ export function LogPage() {
     session.setExercise('');
   }, [session, currentSets, play, toast, customStore, t]);
 
+  // Discard the active session without saving anything
+  const handleDiscard = useCallback(() => {
+    session.reset();
+    setShowDiscardModal(false);
+    play('tap');
+  }, [session, play]);
+
+  // Total committed sets in this session (weighted + bodyweight)
+  const totalLoggedSets =
+    session.exercises.reduce((a, ex) => a + ex.sets.length, 0) +
+    session.bwExercises.reduce((a, ex) => a + ex.sets.length, 0);
+
   // Not started yet — Whoop-style start screen
   const today = formatDate(new Date(), { weekday: 'short', month: 'short', day: 'numeric' });
 
@@ -196,20 +266,31 @@ export function LogPage() {
 
         {/* Headline */}
         <h2 className="text-forge-green font-display text-4xl tracking-tight mb-1">FORGE</h2>
-        <p className="text-forge-muted text-sm text-center max-w-[220px] mb-6 leading-relaxed">
+        <p className="text-forge-muted text-sm text-center max-w-[220px] mb-3 leading-relaxed">
           {t('logPage.startTagline')}
         </p>
 
-        {/* Quick stat pills */}
-        <div className="flex gap-2 mb-6">
-          <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
-            <Zap size={11} className="text-forge-green" />
-            <span className="text-forge-dim text-[11px] font-condensed">{today}</span>
-          </div>
-          <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5">
-            <span className="text-forge-muted text-[11px] font-condensed">{session.exercises.length > 0 ? t('logPage.pending', { count: session.exercises.length }) : t('logPage.noActiveSession')}</span>
-          </div>
+        {/* Date pill — part of the hero */}
+        <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5 mb-6">
+          <Zap size={11} className="text-forge-green" />
+          <span className="text-forge-dim text-[11px] font-condensed">{today}</span>
         </div>
+
+        {/* CTA — THE first interactive element */}
+        <button
+          onClick={handleStartSession}
+          className="relative w-full max-w-md bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-14 py-4 rounded-2xl font-condensed font-bold text-xl cursor-pointer press-scale min-h-[56px] shadow-[0_8px_32px_rgba(46,204,113,0.35)] tracking-wider transition-all duration-200 hover:shadow-[0_8px_40px_rgba(46,204,113,0.5)]"
+        >
+          {t('logPage.startSession')}
+        </button>
+        <p className="text-forge-dim text-[11px] mt-3 mb-4 font-condensed">{t('logPage.tapToBegin')}</p>
+
+        {/* Pending entries pill — only when a previous session left unsaved work */}
+        {session.exercises.length > 0 && (
+          <div className="bg-[rgba(255,255,255,0.04)] border border-forge-border-light rounded-full px-3.5 py-1.5 flex items-center gap-1.5 mb-4">
+            <span className="text-forge-muted text-[11px] font-condensed">{t('logPage.pending', { count: session.exercises.length })}</span>
+          </div>
+        )}
 
         {/* Interactive coach — proactive guidance reacting to your data */}
         <div className="w-full px-2 mb-3 max-w-md mx-auto">
@@ -224,6 +305,7 @@ export function LogPage() {
         {/* Progress KPI guide — weekly goal · streak · next PR · recommended muscle */}
         <div className="w-full px-2 mb-5 max-w-md mx-auto">
           <ProgressGuide
+            weeklyGoal={weeklySessions}
             onPickMuscle={(m) => {
               // Start session + pre-pick the muscle for instant flow
               handleStartSession();
@@ -236,19 +318,17 @@ export function LogPage() {
         <div className="w-full px-2 mb-5 max-w-md mx-auto">
           <StrategyCard />
         </div>
-
-        {/* CTA */}
-        <button
-          onClick={handleStartSession}
-          className="relative bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg px-14 py-4 rounded-2xl font-condensed font-bold text-xl cursor-pointer press-scale min-h-[56px] shadow-[0_8px_32px_rgba(46,204,113,0.35)] tracking-wider transition-all duration-200 hover:shadow-[0_8px_40px_rgba(46,204,113,0.5)]"
-        >
-          {t('logPage.startSession')}
-        </button>
-
-        <p className="text-forge-dim text-[11px] mt-4 font-condensed">{t('logPage.tapToBegin')}</p>
       </div>
   ) : (
     <div className="page-enter p-4 space-y-4 pb-32">
+      {/* Sticky compact session strip — elapsed · sets · muscle · discard */}
+      <SessionStrip
+        startTime={session.startTime}
+        totalSets={totalLoggedSets}
+        muscle={session.selectedMuscle}
+        onDiscard={() => { play('tap'); setShowDiscardModal(true); }}
+      />
+
       {/* Workout type */}
       <WorkoutTypeSelector value={workoutType} onChange={setWorkoutType} />
 
@@ -377,6 +457,26 @@ export function LogPage() {
         onClose={() => setShowSaveModal(false)}
         onSaved={() => setWorkoutType('weighted')}
       />
+
+      {/* Discard confirmation — mounted outside the session.active conditional */}
+      <Modal
+        open={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        title={t('logPage.discardTitle')}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-forge-muted text-sm leading-relaxed">{t('logPage.discardBody')}</p>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="md" fullWidth onClick={() => setShowDiscardModal(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" fullWidth onClick={handleDiscard}>
+              {t('logPage.discard')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

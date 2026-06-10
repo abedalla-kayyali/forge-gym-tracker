@@ -1,13 +1,18 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCoachState } from './useCoachState';
 import type { CoachTrigger } from '../../../types/coach';
 
 export function useCoachTriggers(): CoachTrigger[] {
+  // Translating here (instead of storing English text) means messages re-render
+  // in the active language — the hook re-runs whenever i18n language changes.
+  const { t } = useTranslation();
   const state = useCoachState();
 
   return useMemo(() => {
     const triggers: CoachTrigger[] = [];
     const now = new Date().toISOString();
+    const muscleName = (m: string) => t('muscles.' + m.toLowerCase());
 
     // Overdue muscles
     for (const m of state.muscleRecovery) {
@@ -15,7 +20,7 @@ export function useCoachTriggers(): CoachTrigger[] {
         triggers.push({
           type: 'recovery',
           muscle: m.muscle,
-          message: `${m.muscle.charAt(0).toUpperCase() + m.muscle.slice(1)} hasn't been trained in ${m.daysSince} days`,
+          message: t('coachTriggers.overdue', { muscle: muscleName(m.muscle), count: m.daysSince }),
           severity: 'warning',
           timestamp: now,
         });
@@ -28,7 +33,7 @@ export function useCoachTriggers(): CoachTrigger[] {
         triggers.push({
           type: 'overload',
           muscle: m.muscle,
-          message: `${m.muscle.charAt(0).toUpperCase() + m.muscle.slice(1)}: ${m.totalSets7d} sets this week — consider a deload`,
+          message: t('coachTriggers.highVolume', { muscle: muscleName(m.muscle), count: m.totalSets7d }),
           severity: 'warning',
           timestamp: now,
         });
@@ -39,7 +44,7 @@ export function useCoachTriggers(): CoachTrigger[] {
     if (state.streak >= 7) {
       triggers.push({
         type: 'pr',
-        message: `${state.streak}-day training streak! Keep it up!`,
+        message: t('coachTriggers.streak', { count: state.streak }),
         severity: 'success',
         timestamp: now,
       });
@@ -49,7 +54,7 @@ export function useCoachTriggers(): CoachTrigger[] {
     if (state.totalWorkouts7d >= 6) {
       triggers.push({
         type: 'deload',
-        message: `${state.totalWorkouts7d} workouts this week — consider a rest day`,
+        message: t('coachTriggers.restDay', { count: state.totalWorkouts7d }),
         severity: 'info',
         timestamp: now,
       });
@@ -59,12 +64,14 @@ export function useCoachTriggers(): CoachTrigger[] {
     if (state.neglectedMuscles.length > 0 && state.totalWorkouts30d > 5) {
       triggers.push({
         type: 'recovery',
-        message: `Neglected muscles: ${state.neglectedMuscles.join(', ')}`,
+        message: t('coachTriggers.neglected', {
+          muscles: state.neglectedMuscles.map(muscleName).join(t('coachTriggers.listSeparator')),
+        }),
         severity: 'info',
         timestamp: now,
       });
     }
 
     return triggers;
-  }, [state]);
+  }, [state, t]);
 }

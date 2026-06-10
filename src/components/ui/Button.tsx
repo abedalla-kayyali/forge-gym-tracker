@@ -2,7 +2,7 @@ import { type ButtonHTMLAttributes, type MouseEvent } from 'react';
 import { createRipple } from '../../lib/fx';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'luxury' | 'outline';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -40,6 +40,7 @@ const sizeStyles: Record<ButtonSize, string> = {
   sm: 'px-3.5 py-2 text-[13px] rounded-lg min-h-[36px] gap-1.5',
   md: 'px-5 py-2.5 text-[15px] rounded-xl min-h-[44px] gap-2',
   lg: 'px-7 py-3.5 text-[17px] rounded-2xl min-h-[52px] gap-2.5',
+  icon: 'p-0 w-11 h-11 min-h-[44px] rounded-full',
 };
 
 export function Button({
@@ -75,16 +76,18 @@ export function Button({
         className,
       ].join(' ')}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       onClick={handleClick}
       {...props}
     >
       {loading && (
-        <span
-          className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"
-          aria-hidden
-        />
+        <span className="absolute inset-0 z-[1] flex items-center justify-center" aria-hidden>
+          <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        </span>
       )}
-      {children}
+      {/* display:contents keeps the children as direct flex items (width-preserving),
+          while inherited visibility:hidden hides them under the spinner. */}
+      <span className={loading ? 'contents invisible' : 'contents'}>{children}</span>
     </button>
   );
 }

@@ -3,36 +3,23 @@ import { useTranslation } from 'react-i18next';
 import type { MuscleGroup } from '../../types/workout';
 import { PATHS_BY_MUSCLE, getDecorativePaths, BODY_MAP_CENTROIDS, BODY_MAP_VIEWBOX } from './body-map-data';
 import { useProfileStore } from '../../stores/useProfileStore';
+import { FRESHNESS_COLORS } from '../../lib/freshness';
 
 /**
  * FORGE anatomical body map — 100% SVG, hand-authored clean regions.
  *
  * Viewbox 240×360: FRONT figure on the left, BACK figure on the right. Each
- * MuscleGroup is a <g> of deliberately-placed, non-overlapping rounded regions
- * (e.g. both pecs for chest), so tapping a muscle reliably selects that muscle.
+ * MuscleGroup is a <g> of deliberately-placed, non-overlapping anatomical
+ * regions (e.g. both pecs for chest), so tapping a muscle reliably selects
+ * that muscle.
  */
-
-export const MUSCLE_LABELS: Record<MuscleGroup, string> = {
-  chest: 'Chest', back: 'Back', shoulders: 'Shoulders',
-  biceps: 'Biceps', triceps: 'Triceps', forearms: 'Forearms',
-  core: 'Core', legs: 'Legs', glutes: 'Glutes', calves: 'Calves',
-};
 
 export const MUSCLE_ORDER: MuscleGroup[] = [
   'chest', 'shoulders', 'biceps', 'forearms', 'core',
   'back', 'triceps', 'glutes', 'legs', 'calves',
 ];
 
-// Re-export for consumers (SessionPoster still uses legacy ellipse shape)
 export { BODY_MAP_VIEWBOX };
-export const BODY_MAP_REGIONS: Record<MuscleGroup, { type: 'ellipse'; cx: number; cy: number; rx: number; ry: number }[]> =
-  Object.fromEntries(
-    (Object.entries(BODY_MAP_CENTROIDS) as [MuscleGroup, { cx: number; cy: number }[]][])
-      .map(([k, arr]) => [
-        k,
-        arr.map((c) => ({ type: 'ellipse' as const, cx: c.cx, cy: c.cy, rx: 18, ry: 22 })),
-      ]),
-  ) as Record<MuscleGroup, { type: 'ellipse'; cx: number; cy: number; rx: number; ry: number }[]>;
 
 export interface BodyMapProps {
   selected?: Set<MuscleGroup> | MuscleGroup[];
@@ -47,7 +34,7 @@ export interface BodyMapProps {
 }
 
 const BASE_FILL = 'url(#bm-muscle)';
-const STROKE_W = 0.7;
+const STROKE_W = 0.6;
 
 export function BodyMap({
   selected, tints, values, onSelect,
@@ -76,125 +63,161 @@ export function BodyMap({
         className="block w-full h-auto"
       >
         <defs>
+          {/* Selected muscle — signature green, lit from above */}
           <linearGradient id="bm-green" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#58d68d" />
+            <stop offset="0%"   stopColor="#62dd97" />
+            <stop offset="55%"  stopColor="#2ecc71" />
             <stop offset="100%" stopColor="#1e9e55" />
           </linearGradient>
+          {/* Idle muscle — sculpted steel with a faint top sheen */}
           <linearGradient id="bm-muscle" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#9ca3af" />
-            <stop offset="100%" stopColor="#6b7280" />
+            <stop offset="0%"   stopColor="#525c66" />
+            <stop offset="45%"  stopColor="#434c55" />
+            <stop offset="100%" stopColor="#353d45" />
           </linearGradient>
-          <filter id="bm-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2.5" result="blur" />
-            <feFlood floodColor="#2ecc71" floodOpacity="0.25" result="color" />
+          {/* Silhouette under-layer — deep graphite so muscles read in relief */}
+          <linearGradient id="bm-body" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#262d34" />
+            <stop offset="100%" stopColor="#181d22" />
+          </linearGradient>
+          {/* Ambient aura behind each figure */}
+          <radialGradient id="bm-aura" cx="50%" cy="42%" r="60%">
+            <stop offset="0%"   stopColor="rgba(46,204,113,0.10)" />
+            <stop offset="55%"  stopColor="rgba(46,204,113,0.04)" />
+            <stop offset="100%" stopColor="rgba(46,204,113,0)" />
+          </radialGradient>
+          {/* Green glow for the selected muscle */}
+          <filter id="bm-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2.6" result="blur" />
+            <feFlood floodColor="#2ecc71" floodOpacity="0.32" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
             <feMerge>
               <feMergeNode in="coloredBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <linearGradient id="bm-body" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#8a9098" />
-            <stop offset="100%" stopColor="#747a83" />
-          </linearGradient>
+          {/* Soft grounding shadow under the whole figure */}
+          <filter id="bm-soft" x="-15%" y="-15%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="1.4" stdDeviation="2.2" floodColor="#000000" floodOpacity="0.45" />
+          </filter>
         </defs>
 
-        {/* Decorative paths — head, neck, knees, hands, feet, artifacts.
-            Drawn first (behind), not clickable. */}
-        <g pointerEvents="none">
-          {decorative.map((d, i) => (
-            <path
-              key={i}
-              d={d}
-              fill="url(#bm-body)"
-              stroke="rgba(255,255,255,0.22)"
-              strokeWidth={STROKE_W}
-              strokeLinejoin="round"
-            />
-          ))}
+        {/* Ambient halos — pure atmosphere, never interactive */}
+        <g pointerEvents="none" aria-hidden="true">
+          <ellipse cx={70}  cy={150} rx={60} ry={138} fill="url(#bm-aura)" />
+          <ellipse cx={170} cy={150} rx={60} ry={138} fill="url(#bm-aura)" />
         </g>
 
-        {/* Muscle groups — each rendered as a <g> with all its traced sub-paths */}
-        {MUSCLE_ORDER.map((muscle) => {
-          const paths = PATHS_BY_MUSCLE[muscle];
-          if (!paths || paths.length === 0) return null;
+        <g filter="url(#bm-soft)">
+          {/* Decorative paths — head, neck, hands, feet silhouette.
+              Drawn first (behind), not clickable. */}
+          <g pointerEvents="none">
+            {decorative.map((d, i) => (
+              <path
+                key={i}
+                d={d}
+                fill="url(#bm-body)"
+                stroke="rgba(255,255,255,0.07)"
+                strokeWidth={STROKE_W}
+                strokeLinejoin="round"
+              />
+            ))}
+          </g>
 
-          const active = selectedSet.has(muscle);
-          const tint = tints?.[muscle];
-          const fill = tint ?? (active ? 'url(#bm-green)' : BASE_FILL);
-          const fillOpacity = active ? 1 : tint ? 0.92 : 1;
-          const filter = active ? 'url(#bm-glow)' : undefined;
+          {/* Muscle groups — each rendered as a <g> with all its sub-paths */}
+          {MUSCLE_ORDER.map((muscle, mi) => {
+            const paths = PATHS_BY_MUSCLE[muscle];
+            if (!paths || paths.length === 0) return null;
 
-          const handleClick = isInteractive ? () => onSelect!(muscle) : undefined;
-          const style: React.CSSProperties = {
-            cursor: isInteractive ? 'pointer' : 'default',
-            pointerEvents: isInteractive ? 'auto' : 'none',
-            transition: 'fill 220ms ease, filter 220ms ease',
-          };
+            const active = selectedSet.has(muscle);
+            const tint = tints?.[muscle];
+            const fill = tint ?? (active ? 'url(#bm-green)' : BASE_FILL);
+            const fillOpacity = active ? 1 : tint ? 0.92 : 1;
+            const filter = active ? 'url(#bm-glow)' : undefined;
 
-          return (
-            <g
-              key={muscle}
-              onClick={handleClick}
-              onKeyDown={(e) => {
-                if (!isInteractive) return;
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelect!(muscle);
+            const handleClick = isInteractive ? () => onSelect!(muscle) : undefined;
+            const style = {
+              cursor: isInteractive ? 'pointer' : 'default',
+              pointerEvents: isInteractive ? 'auto' : 'none',
+              transition: 'fill 220ms ease, filter 220ms ease, transform 160ms ease',
+              // Stagger the heat pulse so the map breathes instead of blinking
+              '--bm-delay': `${mi * 0.22}s`,
+            } as React.CSSProperties;
+
+            return (
+              <g
+                key={muscle}
+                onClick={handleClick}
+                onKeyDown={(e) => {
+                  if (!isInteractive) return;
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect!(muscle);
+                  }
+                }}
+                tabIndex={isInteractive ? 0 : -1}
+                role={isInteractive ? 'button' : undefined}
+                aria-label={
+                  isInteractive
+                    ? t(active ? 'bodyMap.regionAriaSelected' : 'bodyMap.regionAria', {
+                        name: t('muscles.' + String(muscle).toLowerCase()),
+                      })
+                    : undefined
                 }
-              }}
-              tabIndex={isInteractive ? 0 : -1}
-              role={isInteractive ? 'button' : undefined}
-              aria-label={
-                isInteractive
-                  ? t(active ? 'bodyMap.regionAriaSelected' : 'bodyMap.regionAria', {
-                      name: t('muscles.' + String(muscle).toLowerCase()),
-                    })
-                  : undefined
-              }
-              aria-pressed={isInteractive ? active : undefined}
-              className={[isInteractive ? 'bm-region' : '', tint && !active ? 'bm-heat' : '']
-                .filter(Boolean).join(' ') || undefined}
-              style={style}
-            >
-              {paths.map((d, i) => (
-                <path
-                  key={i}
-                  d={d}
-                  fill={fill}
-                  fillOpacity={fillOpacity}
-                  stroke="rgba(255,255,255,0.15)"
-                  strokeWidth={STROKE_W}
-                  strokeLinejoin="round"
-                  filter={filter}
-                />
-              ))}
-              {/* Value badge (heatmap mode) */}
-              {values?.[muscle] !== undefined && BODY_MAP_CENTROIDS[muscle][0] && (
-                <g pointerEvents="none">
-                  <circle
-                    cx={BODY_MAP_CENTROIDS[muscle][0].cx}
-                    cy={BODY_MAP_CENTROIDS[muscle][0].cy}
-                    r={11}
-                    fill="rgba(0,0,0,0.45)"
+                aria-pressed={isInteractive ? active : undefined}
+                className={[isInteractive ? 'bm-region' : '', tint && !active ? 'bm-heat' : '']
+                  .filter(Boolean).join(' ') || undefined}
+                style={style}
+              >
+                {paths.map((d, i) => (
+                  <path
+                    key={i}
+                    d={d}
+                    fill={fill}
+                    fillOpacity={fillOpacity}
+                    stroke={active ? 'rgba(212,175,55,0.55)' : 'rgba(255,255,255,0.10)'}
+                    strokeWidth={active ? 0.9 : STROKE_W}
+                    strokeLinejoin="round"
+                    filter={filter}
                   />
-                  <text
-                    x={BODY_MAP_CENTROIDS[muscle][0].cx}
-                    y={BODY_MAP_CENTROIDS[muscle][0].cy + 4}
-                    textAnchor="middle"
-                    fontSize="11"
-                    fontFamily="DM Mono, monospace"
-                    fontWeight={700}
-                    fill="#ffffff"
-                    opacity={0.95}
-                  >
-                    {values[muscle]}
-                  </text>
-                </g>
-              )}
-            </g>
-          );
-        })}
+                ))}
+                {/* Value badges (heatmap mode) — one per figure the muscle spans.
+                    Auto-width pills so long labels (e.g. "today") never overflow. */}
+                {values?.[muscle] !== undefined &&
+                  BODY_MAP_CENTROIDS[muscle].map((c, ci) => {
+                    const label = String(values[muscle]);
+                    const w = Math.max(17, label.length * 5.4 + 7);
+                    return (
+                      <g pointerEvents="none" key={ci}>
+                        <rect
+                          x={c.cx - w / 2}
+                          y={c.cy - 6.5}
+                          width={w}
+                          height={13}
+                          rx={6.5}
+                          fill="rgba(2,3,5,0.6)"
+                          stroke="rgba(255,255,255,0.18)"
+                          strokeWidth={0.5}
+                        />
+                        <text
+                          x={c.cx}
+                          y={c.cy + 3.2}
+                          textAnchor="middle"
+                          fontSize="9"
+                          fontFamily="DM Mono, monospace"
+                          fontWeight={700}
+                          fill="#ffffff"
+                          opacity={0.95}
+                        >
+                          {label}
+                        </text>
+                      </g>
+                    );
+                  })}
+              </g>
+            );
+          })}
+        </g>
 
         {/* Front / Back labels */}
         <g pointerEvents="none">
@@ -208,18 +231,19 @@ export function BodyMap({
       <style>{`
         .bm-region:not([aria-pressed="true"]):hover path {
           fill: #3ecf8e !important;
-          fill-opacity: 0.85 !important;
+          fill-opacity: 0.7 !important;
         }
         .bm-region[aria-pressed="true"]:hover path {
           opacity: 0.88;
         }
+        .bm-region:active { transform: scale(0.985); transform-box: fill-box; transform-origin: center; }
         .bm-region:focus-visible { outline: none; }
         .bm-region:focus-visible path {
           stroke: #58d68d !important;
           stroke-width: ${STROKE_W * 3};
         }
         @keyframes bm-pulse { 0%, 100% { fill-opacity: 0.78; } 50% { fill-opacity: 1; } }
-        .bm-heat path { animation: bm-pulse 2.8s ease-in-out infinite; }
+        .bm-heat path { animation: bm-pulse 2.8s ease-in-out infinite; animation-delay: var(--bm-delay, 0s); }
         @media (prefers-reduced-motion: reduce) { .bm-heat path { animation: none; } }
       `}</style>
 
@@ -231,11 +255,11 @@ export function BodyMap({
 
       {showLegend && (
         <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] font-condensed text-forge-muted">
-          <LegendDot color="#EF4444" labelKey="bodyMap.legendSore" />
-          <LegendDot color="#2ecc71" labelKey="bodyMap.legendWorked" />
-          <LegendDot color="#8BC34A" labelKey="bodyMap.legendRecovering" />
-          <LegendDot color="#F59E0B" labelKey="bodyMap.legendReady" />
-          <LegendDot color="#4B5563" labelKey="bodyMap.legendOverdue" />
+          <LegendDot color={FRESHNESS_COLORS.sore}       labelKey="bodyMap.legendSore" />
+          <LegendDot color={FRESHNESS_COLORS.worked}     labelKey="bodyMap.legendWorked" />
+          <LegendDot color={FRESHNESS_COLORS.recovering} labelKey="bodyMap.legendRecovering" />
+          <LegendDot color={FRESHNESS_COLORS.ready}      labelKey="bodyMap.legendReady" />
+          <LegendDot color={FRESHNESS_COLORS.overdue}    labelKey="bodyMap.legendOverdue" />
         </div>
       )}
     </div>

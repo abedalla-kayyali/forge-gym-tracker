@@ -58,9 +58,14 @@ export function BottomNav() {
                       strokeWidth={isActive ? 2.4 : 1.8}
                       className={isActive ? 'drop-shadow-[0_0_8px_rgba(46,204,113,0.7)]' : ''}
                     />
-                    {isActive && (
-                      <span className="mt-0.5 block w-1 h-1 rounded-full bg-forge-green glow-dot" />
-                    )}
+                    <span
+                      className={[
+                        'mt-0.5 block text-[9px] font-condensed uppercase tracking-wider leading-none',
+                        isActive ? 'text-forge-green' : 'text-forge-muted',
+                      ].join(' ')}
+                    >
+                      {label}
+                    </span>
                   </>
                 )}
               </NavLink>

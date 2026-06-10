@@ -4,8 +4,9 @@ import { useWorkoutStore } from '../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../stores/useBwWorkoutStore';
 import { useCardioStore } from '../stores/useCardioStore';
 import { useFX } from '../hooks/useFX';
-import { Clock, Dumbbell, Scaling, HeartPulse, ArrowUpDown, Trophy, ChevronDown, Flame, Route, Heart } from 'lucide-react';
+import { Clock, Dumbbell, Scaling, HeartPulse, Trophy, ChevronDown, Flame, Route, Heart } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
+import { TabPills } from '../components/ui/TabPills';
 import type { Workout, BwWorkout, CardioEntry } from '../types/workout';
 
 type SortMode = 'newest' | 'oldest' | 'volume';
@@ -73,11 +74,6 @@ export function HistoryPage() {
       return next;
     });
   }, [play]);
-
-  const cycleSort = () => {
-    play('tap');
-    setSort((s) => (s === 'newest' ? 'oldest' : s === 'oldest' ? 'volume' : 'newest'));
-  };
 
   // PR maps:
   //   weighted:    exerciseName → max weight ever (kg)
@@ -161,14 +157,16 @@ export function HistoryPage() {
           <h2 className="text-forge-green font-display text-2xl tracking-wide">{t('history.title')}</h2>
           <Badge variant="success" dot>{filtered.length}</Badge>
         </div>
-        <button
-          onClick={cycleSort}
-          className="inline-flex items-center gap-1.5 card-elevated border border-forge-border-light rounded-full px-3 py-1.5 text-xs font-medium text-forge-text cursor-pointer press-scale hover:bg-white/5 transition-all duration-200"
-        >
-          <ArrowUpDown size={12} className="text-forge-green" />
-          {t(SORT_LABEL_KEYS[sort])}
-        </button>
       </div>
+
+      {/* Explicit sort control — newest / oldest / volume */}
+      <TabPills
+        size="sm"
+        tabs={(['newest', 'oldest', 'volume'] as SortMode[]).map((m) => ({ id: m, label: t(SORT_LABEL_KEYS[m]) }))}
+        value={sort}
+        onChange={setSort}
+        ariaLabel={t('history.sortAria')}
+      />
 
       {/* KPI strip */}
       {totals.totalSessions > 0 && (
@@ -257,14 +255,18 @@ export function HistoryPage() {
               <div
                 key={entry.id}
                 className={[
-                  'card-elevated rounded-2xl overflow-hidden cursor-pointer',
+                  'card-elevated rounded-2xl overflow-hidden',
                   'transition-all duration-300',
                   isExpanded ? 'card-luxury-border' : '',
                 ].join(' ')}
-                onClick={() => toggleExpand(entry.id)}
               >
-                {/* Collapsed row */}
-                <div className="flex items-center gap-3 p-3">
+                {/* Collapsed row — real button so screen readers get expand state */}
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(entry.id)}
+                  aria-expanded={isExpanded}
+                  className="w-full flex items-center gap-3 p-3 text-start cursor-pointer"
+                >
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-forge-green/20 to-forge-green/5 flex items-center justify-center border border-forge-green/15 shrink-0">
                     <Icon size={19} className="text-forge-green" />
                   </div>
@@ -330,7 +332,7 @@ export function HistoryPage() {
                       className={`text-forge-dim transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                     />
                   </div>
-                </div>
+                </button>
 
                 {/* Weighted expansion */}
                 {isExpanded && entry.kind === 'weighted' && (
