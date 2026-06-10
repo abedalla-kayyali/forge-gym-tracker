@@ -30,3 +30,15 @@ export function formatDate(value: string | number | Date, opts?: Intl.DateTimeFo
   if (Number.isNaN(d.getTime())) return '—';
   return new Intl.DateTimeFormat(dateLocale(), opts ?? { month: 'short', day: 'numeric' }).format(d);
 }
+
+/**
+ * YYYY-MM-DD key from a Date's LOCAL components (not UTC).
+ * toISOString() would shift a local date at e.g. UTC+3 onto the previous UTC
+ * day and mark the wrong calendar day. Always bucket local days with this.
+ */
+export function localYMD(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}

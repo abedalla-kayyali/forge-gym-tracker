@@ -4,7 +4,7 @@
     "tagline": "Your personal gym operating system"
   },
   "auth": {
-    "signIn": "Sign in with Google",
+    "signIn": "Sign in",
     "guest": "Continue as guest",
     "signOut": "Sign out"
   },
@@ -369,7 +369,7 @@
       "label": "Next PR",
       "empty": "Log a weighted lift to unlock PR targets",
       "targetLabel": "Next PR Target",
-      "current": "Current {{weight}}kg × {{reps}}r → Target",
+      "current": "Current {{weight}}kg × {{reps}}r →",
       "target": "Target",
       "almostThere": "🔥 attempt it next session",
       "triedSince_one": "Tried {{count}}× since last PR",
@@ -987,6 +987,7 @@
     "overdue_few": "{{muscle}} hasn't been trained in {{count}} days",
     "overdue_many": "{{muscle}} hasn't been trained in {{count}} days",
     "overdue_other": "{{muscle}} hasn't been trained in {{count}} days",
+    "neverTrained": "You haven't trained {{muscle}} yet — give it a go this week",
     "highVolume_zero": "{{muscle}}: {{count}} sets this week — consider a deload",
     "highVolume_one": "{{muscle}}: {{count}} set this week — consider a deload",
     "highVolume_two": "{{muscle}}: {{count}} sets this week — consider a deload",

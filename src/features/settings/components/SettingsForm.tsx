@@ -117,7 +117,7 @@ function ToggleRow({ label, checked, onToggle }: { label: string; checked: boole
       >
         <div
           className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
-            checked ? 'translate-x-6' : 'translate-x-1'
+            checked ? 'translate-x-6 rtl:-translate-x-6' : 'translate-x-1 rtl:-translate-x-1'
           }`}
         />
       </button>

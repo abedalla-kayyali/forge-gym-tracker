@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCoachState } from './useCoachState';
+import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import type { CoachTrigger } from '../../../types/coach';
 
 export function useCoachTriggers(): CoachTrigger[] {
@@ -8,6 +9,7 @@ export function useCoachTriggers(): CoachTrigger[] {
   // in the active language — the hook re-runs whenever i18n language changes.
   const { t } = useTranslation();
   const state = useCoachState();
+  const hasWorkouts = useWorkoutStore((s) => s.workouts.length > 0);
 
   return useMemo(() => {
     const triggers: CoachTrigger[] = [];
@@ -17,6 +19,19 @@ export function useCoachTriggers(): CoachTrigger[] {
     // Overdue muscles
     for (const m of state.muscleRecovery) {
       if (m.status === 'overdue') {
+        if (m.daysSince >= 999) {
+          // Never-trained sentinel: stay quiet for brand-new users (zero
+          // workouts) instead of flooding them with "999 days" warnings.
+          if (!hasWorkouts) continue;
+          triggers.push({
+            type: 'recovery',
+            muscle: m.muscle,
+            message: t('coachTriggers.neverTrained', { muscle: muscleName(m.muscle) }),
+            severity: 'info',
+            timestamp: now,
+          });
+          continue;
+        }
         triggers.push({
           type: 'recovery',
           muscle: m.muscle,
@@ -73,5 +88,5 @@ export function useCoachTriggers(): CoachTrigger[] {
     }
 
     return triggers;
-  }, [state, t]);
+  }, [state, t, hasWorkouts]);
 }

@@ -152,6 +152,9 @@
     -webkit-tap-highlight-color: transparent;
     line-height: 1.55;
     overscroll-behavior-y: none;
+    /* Native controls (range sliders, checkboxes) pick up the brand green
+       instead of the browser default blue. */
+    accent-color: var(--color-forge-green);
   }
 
   body {

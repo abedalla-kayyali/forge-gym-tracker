@@ -21,6 +21,7 @@ import { Button } from '../components/ui/Button';
 import { TabPills } from '../components/ui/TabPills';
 import { BodyMap } from '../components/body/BodyMap';
 import { detectPlateaus, calcTrainingScore, suggestNextWeight } from '../lib/trainingScience';
+import { localYMD } from '../lib/format';
 import { useFX } from '../hooks/useFX';
 import type { MuscleGroup } from '../types/workout';
 
@@ -74,7 +75,7 @@ const SEVERITY_BADGE: Record<string, 'success' | 'warning' | 'default' | 'danger
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localYMD(new Date());
 }
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
@@ -306,6 +307,7 @@ function InsightsTab() {
   const freshnessTints = useMemo(() => {
     const tints: Partial<Record<MuscleGroup, string>> = {};
     muscleRecovery.forEach((m) => {
+      if (m.daysSince >= 999) return; // never trained → neutral, not all-red heat
       const tier = RECOVERY_TIER[m.status];
       if (tier) tints[m.muscle as MuscleGroup] = tier.dot;
     });
@@ -606,7 +608,7 @@ function PlanTab() {
     for (let i = 0; i < 7; i++) {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const dateStr = d.toISOString().slice(0, 10);
+      const dateStr = localYMD(d);
       const isToday = dateStr === todayKey();
       const daySessions = [...workouts, ...bwWorkouts].filter((w) => w.date.startsWith(dateStr));
       const muscles = [...new Set(daySessions.flatMap((s) => s.exercises.map((e) => e.muscle)))];

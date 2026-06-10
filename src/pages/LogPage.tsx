@@ -117,7 +117,13 @@ function SessionStrip({
 
   return (
     <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30">
-      <div className="card-elevated border border-forge-border-light rounded-full px-4 py-2 flex items-center gap-2 bg-forge-bg-deep/85 backdrop-blur-xl">
+      {/* Fade scrim so content scrolling underneath dissolves instead of
+          showing in slices around the floating pill (same trick as BottomNav) */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 -top-3 -bottom-3 bg-gradient-to-b from-forge-bg via-forge-bg/85 to-transparent pointer-events-none"
+      />
+      <div className="relative card-elevated border border-forge-border-light rounded-full px-4 py-2 flex items-center gap-2 bg-forge-bg-deep/85 backdrop-blur-xl">
         <Clock size={12} className="text-forge-green shrink-0" />
         <span className="text-forge-green text-[11px] font-mono font-semibold tracking-wider">{elapsed}</span>
         <span aria-hidden className="text-forge-dim text-[11px]">·</span>

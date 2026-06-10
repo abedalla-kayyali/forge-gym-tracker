@@ -178,51 +178,57 @@ export function AccountCard() {
         ariaLabel={t('account.authModeAria')}
       />
 
-      <div className="space-y-2.5">
-        {mode === 'signup' && (
-          <Input
-            label={t('account.displayNameLabel')}
-            placeholder={t('account.displayNamePlaceholder')}
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            leftIcon={<UserIcon size={14} />}
-            autoComplete="name"
-          />
-        )}
-        <Input
-          label={t('account.emailLabel')}
-          type="email"
-          placeholder={t('account.emailPlaceholder')}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          leftIcon={<Mail size={14} />}
-          autoComplete="email"
-          inputMode="email"
-        />
-        <Input
-          label={t('account.passwordLabel')}
-          type="password"
-          placeholder={mode === 'signup' ? t('account.passwordHintSignup') : '••••••••'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          leftIcon={<Lock size={14} />}
-          autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-        />
-      </div>
-
-      <div className="flex gap-2">
-        <Button
-          variant="primary"
-          size="md"
-          fullWidth
-          onClick={handleEmailSubmit}
-          loading={busy}
-        >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : (
-            mode === 'signin' ? <><LogIn size={14} /> {t('auth.signIn')}</> : <><CheckCircle2 size={14} /> {t('account.createAccount')}</>
+      {/* Real form so password managers/autofill recognize the credential fields */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleEmailSubmit(); }}
+        className="space-y-4"
+      >
+        <div className="space-y-2.5">
+          {mode === 'signup' && (
+            <Input
+              label={t('account.displayNameLabel')}
+              placeholder={t('account.displayNamePlaceholder')}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              leftIcon={<UserIcon size={14} />}
+              autoComplete="name"
+            />
           )}
-        </Button>
-      </div>
+          <Input
+            label={t('account.emailLabel')}
+            type="email"
+            placeholder={t('account.emailPlaceholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            leftIcon={<Mail size={14} />}
+            autoComplete="email"
+            inputMode="email"
+          />
+          <Input
+            label={t('account.passwordLabel')}
+            type="password"
+            placeholder={mode === 'signup' ? t('account.passwordHintSignup') : '••••••••'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            leftIcon={<Lock size={14} />}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            type="submit"
+            variant="primary"
+            size="md"
+            fullWidth
+            loading={busy}
+          >
+            {busy ? <Loader2 size={14} className="animate-spin" /> : (
+              mode === 'signin' ? <><LogIn size={14} /> {t('auth.signIn')}</> : <><CheckCircle2 size={14} /> {t('account.createAccount')}</>
+            )}
+          </Button>
+        </div>
+      </form>
 
       {mode === 'signin' && (
         <button
