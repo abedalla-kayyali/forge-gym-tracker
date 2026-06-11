@@ -73,7 +73,7 @@ export function CoachPanel() {
 
       {/* Triggers/Alerts */}
       {triggers.length > 0 && (
-        <div className="space-y-2">
+        <div className="stagger-grid space-y-2">
           <h3 className="text-forge-muted text-xs font-condensed uppercase">{t('coachPanel.insights')}</h3>
           {triggers.map((trigger, i) => (
             <div key={i} className={`border rounded-lg px-3 py-2 ${severityStyles[trigger.severity]}`}>

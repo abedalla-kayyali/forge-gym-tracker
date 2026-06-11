@@ -297,7 +297,7 @@ export function GoalDashboard() {
       {/* LEADING — behaviors */}
       <div className="space-y-1.5">
         <span className="label-cap text-[9px] text-forge-green/80 block">{t('goals.leading')}</span>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="stagger-grid grid grid-cols-3 gap-1.5">
           <KpiCell
             label={t('goals.kpi.sessions')}
             hint={t('goals.kpi.sessionsHint')}
@@ -341,7 +341,7 @@ export function GoalDashboard() {
       {/* LAGGING — outcomes */}
       <div className="space-y-1.5">
         <span className="label-cap text-[9px] text-forge-gold/80 block">{t('goals.lagging')}</span>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="stagger-grid grid grid-cols-3 gap-1.5">
           <KpiCell
             label={t('goals.kpi.weight')}
             value={m.latest ? m.latest.weight_kg : 0}

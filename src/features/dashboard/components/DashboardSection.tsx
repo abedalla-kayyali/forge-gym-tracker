@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useFX } from '../../../hooks/useFX';
 
 interface Props {
   title: string;
@@ -8,12 +9,14 @@ interface Props {
 
 export function DashboardSection({ title, children, defaultOpen = true }: Props) {
   const [open, setOpen] = useState(defaultOpen);
+  const { play } = useFX();
 
   return (
     <div className="space-y-2">
       <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center justify-between w-full"
+        onClick={() => { play('tap'); setOpen(!open); }}
+        className="flex items-center justify-between w-full cursor-pointer"
+        aria-expanded={open}
       >
         <h3 className="text-forge-muted text-xs font-condensed font-semibold tracking-wider uppercase">
           {title}

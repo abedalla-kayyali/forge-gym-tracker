@@ -475,18 +475,83 @@
   /* ── Utility tap target minimum ── */
   .tap { min-width: 44px; min-height: 44px; }
 
-  /* ── Scroll-hint: subtle right-edge gradient on overflow containers ── */
-  /* Hides the native scrollbar and fades the right edge to hint at more content. */
+  /* ── Scroll-hint: subtle trailing-edge gradient on overflow containers ── */
+  /* Hides the native scrollbar and fades the trailing edge to hint at more
+     content. mask-image has no logical directions, so RTL gets an override. */
   .scroll-hint {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, black 0, black calc(100% - 36px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 0, black calc(100% - 36px), transparent 100%);
+  }
+  [dir='rtl'] .scroll-hint {
+    mask-image: linear-gradient(to left, black 0, black calc(100% - 36px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to left, black 0, black calc(100% - 36px), transparent 100%);
   }
   .scroll-hint::-webkit-scrollbar { display: none; }
 
   /* ── Body-map helper: soft pulse for the "freshest" regions ── */
   .bm-pulse {
     animation: breathe 3s ease-in-out infinite;
+  }
+
+  /* ── Entrance stagger: children cascade in (KPI grids, insight lists).
+     `backwards` keeps each child hidden until its delay starts; the global
+     reduced-motion rule collapses it all to instant. ── */
+  .stagger-grid > * {
+    animation: slide-up 0.35s var(--ease-out-quart) backwards;
+  }
+  .stagger-grid > *:nth-child(1) { animation-delay: 0.03s; }
+  .stagger-grid > *:nth-child(2) { animation-delay: 0.07s; }
+  .stagger-grid > *:nth-child(3) { animation-delay: 0.11s; }
+  .stagger-grid > *:nth-child(4) { animation-delay: 0.15s; }
+  .stagger-grid > *:nth-child(5) { animation-delay: 0.19s; }
+  .stagger-grid > *:nth-child(6) { animation-delay: 0.23s; }
+  .stagger-grid > *:nth-child(7) { animation-delay: 0.27s; }
+  .stagger-grid > *:nth-child(8) { animation-delay: 0.31s; }
+  .stagger-grid > *:nth-child(9) { animation-delay: 0.35s; }
+  .stagger-grid > *:nth-child(n + 10) { animation-delay: 0.39s; }
+
+  /* ── Forge range slider: themed thumb + direction-aware fill ──
+     Drive per-instance state with CSS vars: --range-color, --range-fill. */
+  .forge-range {
+    background: linear-gradient(
+      to right,
+      var(--range-color, #2ecc71) var(--range-fill, 50%),
+      rgba(255, 255, 255, 0.06) var(--range-fill, 50%)
+    );
+  }
+  [dir='rtl'] .forge-range {
+    background: linear-gradient(
+      to left,
+      var(--range-color, #2ecc71) var(--range-fill, 50%),
+      rgba(255, 255, 255, 0.06) var(--range-fill, 50%)
+    );
+  }
+  .forge-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: var(--range-color, #2ecc71);
+    border: 2px solid #0a0d0b;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.45);
+    transition: transform 0.15s var(--ease-out-quart);
+  }
+  .forge-range::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+  }
+  .forge-range::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: var(--range-color, #2ecc71);
+    border: 2px solid #0a0d0b;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.45);
+    transition: transform 0.15s var(--ease-out-quart);
+  }
+  .forge-range::-moz-range-thumb:active {
+    transform: scale(1.2);
   }
 }

@@ -22,7 +22,7 @@ import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
 import { useFX } from '../hooks/useFX';
 import { searchExercises } from '../lib/exercises-db';
-import { formatDate } from '../lib/format';
+import { formatDate, formatNumber } from '../lib/format';
 import type { WorkoutSet, WorkoutExercise, MuscleGroup } from '../types/workout';
 
 function CircleRing({ size = 200 }: { size?: number }) {
@@ -43,13 +43,14 @@ function CircleRing({ size = 200 }: { size?: number }) {
 
 function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number }) {
   const { t } = useTranslation();
+  const { play } = useFX();
   const [open, setOpen] = useState(false);
   const totalVol = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
 
   return (
     <div className="card-elevated rounded-2xl overflow-hidden">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { play('tap'); setOpen((v) => !v); }}
         className="w-full flex items-center justify-between px-4 py-3.5 cursor-pointer"
         aria-expanded={open}
       >
@@ -60,7 +61,7 @@ function LoggedExerciseCard({ ex, index }: { ex: WorkoutExercise; index: number 
           <div className="text-start">
             <div className="text-forge-text text-sm font-body font-medium">{ex.name}</div>
             <div className="text-forge-muted text-[11px] font-mono">
-              {t('logPage.exerciseSummary', { count: ex.sets.length, vol: totalVol.toLocaleString() })}
+              {t('logPage.exerciseSummary', { count: ex.sets.length, vol: formatNumber(totalVol) })}
             </div>
           </div>
         </div>

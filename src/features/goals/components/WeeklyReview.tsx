@@ -7,6 +7,7 @@ import { useCardioStore } from '../../../stores/useCardioStore';
 import { useNutritionStore } from '../../../stores/useNutritionStore';
 import { useGoalsStore } from '../../../stores/useGoalsStore';
 import { formatNumber } from '../../../lib/format';
+import { CountUp } from '../../../components/ui/CountUp';
 
 const GREEN = '#2ecc71';
 const RED = '#EF4444';
@@ -171,13 +172,13 @@ export function WeeklyReview() {
       </div>
 
       {/* This week vs last week */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="stagger-grid grid grid-cols-3 gap-1.5">
         <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] px-2.5 py-2">
           <div className="flex items-center justify-between gap-1">
             <span className="label-cap text-[8px] text-forge-muted">{t('goals.review.sessions')}</span>
             <DeltaPill delta={r.sessionsDelta} />
           </div>
-          <div className="kpi-md text-forge-green leading-none mt-1">{formatNumber(r.cur.sessions)}</div>
+          <div className="kpi-md text-forge-green leading-none mt-1"><CountUp value={r.cur.sessions} /></div>
           <div className="text-[9px] text-forge-dim font-mono mt-0.5">
             {t('goals.review.lastWeekValue', { value: formatNumber(r.prev.sessions) })}
           </div>
@@ -188,7 +189,7 @@ export function WeeklyReview() {
             <DeltaPill delta={r.volumeDelta} format={(v) => `${fmtVol(v)} ${t('log.kgUnit')}`} />
           </div>
           <div className="kpi-md text-forge-green leading-none mt-1">
-            {fmtVol(r.cur.volume)}
+            <CountUp value={r.cur.volume} format={fmtVol} />
             <span className="text-[9px] text-forge-muted ms-0.5">{t('log.kgUnit')}</span>
           </div>
           <div className="text-[9px] text-forge-dim font-mono mt-0.5">
@@ -200,7 +201,7 @@ export function WeeklyReview() {
             <span className="label-cap text-[8px] text-forge-muted">{t('goals.review.prs')}</span>
             <DeltaPill delta={r.prsDelta} />
           </div>
-          <div className="kpi-md text-forge-gold leading-none mt-1">{formatNumber(r.cur.prs)}</div>
+          <div className="kpi-md text-forge-gold leading-none mt-1"><CountUp value={r.cur.prs} /></div>
           <div className="text-[9px] text-forge-dim font-mono mt-0.5">
             {t('goals.review.lastWeekValue', { value: formatNumber(r.prev.prs) })}
           </div>

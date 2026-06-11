@@ -236,10 +236,11 @@ function TodayTab() {
                         setCheckIn((prev) => ({ ...prev, [key]: Number(e.target.value) }));
                         play('tap');
                       }}
-                      className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                      className="forge-range w-full h-2 rounded-full appearance-none cursor-pointer"
                       style={{
-                        background: `linear-gradient(to right, ${color} ${(val - 1) * 25}%, rgba(255,255,255,0.06) ${(val - 1) * 25}%)`,
-                      }}
+                        '--range-color': color,
+                        '--range-fill': `${(val - 1) * 25}%`,
+                      } as React.CSSProperties}
                       aria-label={label}
                     />
                   </div>

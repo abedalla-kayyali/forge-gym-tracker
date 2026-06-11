@@ -96,11 +96,11 @@ function StrengthRow({ trend }: { trend: StrengthTrend }) {
     <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.05] px-3 py-2.5">
       <div className="flex-1 min-w-0">
         <div className="text-forge-text text-[13px] font-condensed font-semibold truncate capitalize">{trend.name}</div>
-        <div className="text-forge-muted text-[10px] font-mono">{t('journey.strength.best')} {trend.best} kg</div>
+        <div className="text-forge-muted text-[10px] font-mono">{t('journey.strength.best')} {trend.best} {t('log.kgUnit')}</div>
       </div>
       <Sparkline points={trend.points} color={up ? GREEN : '#EF4444'} />
       <div className="text-end shrink-0 w-[58px]">
-        <div className="kpi-md text-forge-green leading-none">{trend.current}<span className="text-[9px] text-forge-muted ms-0.5">kg</span></div>
+        <div className="kpi-md text-forge-green leading-none"><CountUp value={trend.current} /><span className="text-[9px] text-forge-muted ms-0.5">{t('log.kgUnit')}</span></div>
         <div className="mt-1 flex justify-end"><DeltaPill pct={trend.deltaPct} /></div>
       </div>
     </div>
@@ -255,7 +255,7 @@ export function JourneyTab() {
       </div>
 
       {/* Lifetime totals */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="stagger-grid grid grid-cols-3 gap-2">
         <StatCell icon={<Flame size={13} />} label={t('journey.totals.sessions')} value={totals.sessions} />
         <StatCell icon={<Dumbbell size={13} />} label={t('journey.totals.volume')} value={totals.totalVolumeKg} unit="kg" format={formatKg} accent="gold" />
         <StatCell icon={<CalendarDays size={13} />} label={t('journey.totals.trainingDays')} value={totals.trainingDays} />
@@ -307,7 +307,7 @@ export function JourneyTab() {
           <span className="label-cap-strong text-forge-text flex-1">{t('journey.milestones.title')}</span>
           <span className="text-[10px] font-mono text-forge-gold">{t('journey.milestones.unlocked', { count: unlocked, total: milestones.length })}</span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="stagger-grid grid grid-cols-3 gap-2">
           {milestones.map((m) => <MilestoneBadge key={m.key} m={m} />)}
         </div>
       </div>

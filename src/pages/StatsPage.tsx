@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   TrendingUp, Target, Activity as MuscleIcon, Scaling, BarChart3,
@@ -9,6 +9,8 @@ import { TabPills } from '../components/ui/TabPills';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import { Confetti } from '../components/ui/Confetti';
+import { CountUp } from '../components/ui/CountUp';
 import { useFX } from '../hooks/useFX';
 import {
   WorkoutHistory,
@@ -148,8 +150,27 @@ function MomentumHeadline() {
   const goalPct = Math.min(100, Math.round((thisSessions / goal) * 100));
   const goalMet = thisSessions >= goal;
 
+  // Celebrate hitting the weekly goal — once per week (local week key, not
+  // toISOString: UTC shift would bucket Sunday-night users into last week).
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => {
+    if (!goalMet) return;
+    const ws = startOfWeek(new Date());
+    const weekKey = `${ws.getFullYear()}-${String(ws.getMonth() + 1).padStart(2, '0')}-${String(ws.getDate()).padStart(2, '0')}`;
+    const KEY = 'forge_week_goal_celebrated';
+    if (localStorage.getItem(KEY) === weekKey) return;
+    // Deferred so the card settles before confetti (and setState stays async).
+    const id = window.setTimeout(() => {
+      localStorage.setItem(KEY, weekKey);
+      setCelebrate(true);
+      play('success');
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [goalMet, play]);
+
   return (
-    <div className="card-elevated card-luxury-border rounded-2xl p-4 space-y-3">
+    <div className="card-elevated card-luxury-border rounded-2xl p-4 space-y-3 relative">
+      <Confetti active={celebrate} onDone={() => setCelebrate(false)} />
       <div className="flex items-center gap-3">
         <div className="w-7 h-7 rounded-lg bg-forge-green/15 border border-forge-green/25 flex items-center justify-center shrink-0">
           <Target size={13} className={goalMet ? 'text-forge-gold' : 'text-forge-green'} aria-hidden />
@@ -328,7 +349,7 @@ function ActivityRingsHero() {
             </div>
           </div>
           <div className="kpi-md text-forge-gold leading-none shrink-0">
-            {formatNumber(data.latestPR.weight)}
+            <CountUp value={data.latestPR.weight} format={(n) => formatNumber(n)} />
             <span className="text-[10px] text-forge-muted ms-0.5">{t('stats.unitKgReps', { reps: data.latestPR.reps })}</span>
           </div>
         </div>
@@ -1227,7 +1248,6 @@ export function StatsPage() {
   const { t } = useTranslation();
   const [tab, setTab]       = useState<StatsTab>('overview');
   const [period, setPeriod] = useState<PeriodKey>('1M');
-  const { play } = useFX();
 
   return (
     <div className="p-4 space-y-4 pb-28 page-enter">
@@ -1268,7 +1288,7 @@ export function StatsPage() {
           <TabPills
             tabs={PERIODS.map((p) => ({ id: p, label: p }))}
             value={period}
-            onChange={(p) => { play('tap'); setPeriod(p as PeriodKey); }}
+            onChange={(p) => setPeriod(p as PeriodKey)}
             size="sm"
             ariaLabel={t('stats.periodAria')}
           />
