@@ -24,8 +24,8 @@ export function CountUp({ value, durationMs = 900, decimals = 0, format, classNa
     const to = value;
     const from = fromRef.current;
     if (prefersReducedMotion() || from === to) {
-      setDisplay(to);
       fromRef.current = to;
+      rafRef.current = requestAnimationFrame(() => setDisplay(to));
       return;
     }
     const factor = 10 ** Math.max(0, decimals);

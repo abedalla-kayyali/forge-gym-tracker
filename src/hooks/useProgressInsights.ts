@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNow } from './useNow';
 import { useWorkoutStore } from '../stores/useWorkoutStore';
 import { useBwWorkoutStore } from '../stores/useBwWorkoutStore';
 import { useCardioStore } from '../stores/useCardioStore';
@@ -26,7 +27,7 @@ export interface ProgressInsights {
   /** Weekly goal ring data. */
   weekGoal: {
     target: number;                  // user-set or default 4
-    current: number;                 // sessions this week
+    done: number;                    // sessions this week
     percentage: number;              // 0-100
     remaining: number;               // sessions left to hit goal
     pace: 'ahead' | 'ontrack' | 'behind' | 'hit';
@@ -76,6 +77,7 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
   const cardio = useCardioStore((s) => s.entries);
   const getLevel = useGamificationStore((s) => s.getLevel);
   const experience = useGamificationStore((s) => s.experience);
+  const nowTs = useNow();
 
   return useMemo(() => {
     const now = new Date();
@@ -142,7 +144,7 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
     }
     const endOfToday = new Date(now);
     endOfToday.setHours(23, 59, 59, 999);
-    const hoursUntilMidnight = Math.floor((endOfToday.getTime() - Date.now()) / 3600000);
+    const hoursUntilMidnight = Math.floor((endOfToday.getTime() - nowTs) / 3600000);
 
     // ── Next PR target (closest-to-beat weighted lift) ─────────────────────
     const prMap = new Map<string, { weight: number; reps: number; date: string }>();
@@ -188,7 +190,7 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       const last = allSessions[0];
       recoveryDays[m] = last
-        ? Math.floor((Date.now() - new Date(last.date).getTime()) / 86400000)
+        ? Math.floor((nowTs - new Date(last.date).getTime()) / 86400000)
         : null;
     }
     // Rank: never-trained muscles are "overdue" (push to train), then 4+ days rest
@@ -221,7 +223,7 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
 
     return {
       weekGoal: {
-        target: weeklyGoal, current, percentage, remaining, pace, daysLeftInWeek,
+        target: weeklyGoal, done: current, percentage, remaining, pace, daysLeftInWeek,
       },
       nextPR,
       recommendedMuscle,
@@ -240,5 +242,5 @@ export function useProgressInsights(weeklyGoal: number = 4): ProgressInsights {
         anyLoggedToday: todayLogged,
       },
     };
-  }, [workouts, bwWorkouts, cardio, weeklyGoal, getLevel, experience]);
+  }, [workouts, bwWorkouts, cardio, weeklyGoal, getLevel, experience, nowTs]);
 }

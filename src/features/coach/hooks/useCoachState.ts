@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
+import { useNow } from '../../../hooks/useNow';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
-import { useProfileStore } from '../../../stores/useProfileStore';
 
 interface MuscleRecovery {
   muscle: string;
@@ -23,10 +23,9 @@ const TRACKED = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'core', 'leg
 
 export function useCoachState(): CoachState {
   const workouts = useWorkoutStore((s) => s.workouts);
-  const profile = useProfileStore((s) => s.profile);
 
+  const now = useNow();
   return useMemo(() => {
-    const now = Date.now();
     const sevenDays = 7 * 24 * 60 * 60 * 1000;
     const thirtyDays = 30 * 24 * 60 * 60 * 1000;
 
@@ -89,5 +88,5 @@ export function useCoachState(): CoachState {
       topMuscle,
       neglectedMuscles: neglected,
     };
-  }, [workouts, profile]);
+  }, [workouts, now]);
 }

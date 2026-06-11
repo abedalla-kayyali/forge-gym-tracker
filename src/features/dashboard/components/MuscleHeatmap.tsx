@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNow } from '../../../hooks/useNow';
 import { useTranslation } from 'react-i18next';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 import { BodyMap, MUSCLE_ORDER } from '../../../components/body/BodyMap';
@@ -11,8 +12,8 @@ function useMuscleFreshness() {
   const workouts = useWorkoutStore((s) => s.workouts);
   const { t } = useTranslation();
 
+  const now = useNow();
   return useMemo(() => {
-    const now = Date.now();
     const daysMap: Partial<Record<MuscleGroup, number | null>> = {};
     const tints: Partial<Record<MuscleGroup, string>> = {};
     const values: Partial<Record<MuscleGroup, string>> = {};
@@ -37,7 +38,7 @@ function useMuscleFreshness() {
       }
     }
     return { daysMap, tints, values };
-  }, [workouts, t]);
+  }, [workouts, t, now]);
 }
 
 export function MuscleHeatmap() {

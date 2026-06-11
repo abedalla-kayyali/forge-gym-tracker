@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNow } from '../../../hooks/useNow';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { Brain, Trophy, AlertTriangle, ArrowRight, Sparkles, Flame } from 'lucide-react';
@@ -48,6 +49,7 @@ export function CoachThread() {
 
   const latestWeight = bodyWeight.length ? bodyWeight[bodyWeight.length - 1]!.weight_kg : profile.weight_kg;
 
+  const nowTs = useNow();
   const messages = useMemo(() => {
     // Most-recent session date across all stores.
     const dates = [
@@ -58,7 +60,7 @@ export function CoachThread() {
     const lastIso = dates[dates.length - 1];
     let daysSinceLast: number | null = null;
     if (lastIso) {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const today = new Date(nowTs); today.setHours(0, 0, 0, 0);
       const last = new Date(lastIso); last.setHours(0, 0, 0, 0);
       daysSinceLast = Math.round((today.getTime() - last.getTime()) / 86400000);
     }
@@ -74,12 +76,12 @@ export function CoachThread() {
 
     return buildCoachThread({
       name: profile.name?.split(' ')[0] || t('coach.athlete'),
-      hour: new Date().getHours(),
+      hour: new Date(nowTs).getHours(),
       hasGoal: !!profile.goal,
       streak: insights.streak.days,
       loggedToday: insights.today.anyLoggedToday,
       daysSinceLast,
-      weeklyCurrent: insights.weekGoal.current,
+      weeklyCurrent: insights.weekGoal.done,
       weeklyGoal: insights.weekGoal.target,
       recentPRs,
       recommendedMuscle: insights.recommendedMuscle?.muscle ?? null,
@@ -88,7 +90,7 @@ export function CoachThread() {
       hasWeight: !!latestWeight && latestWeight > 0,
       totalWorkouts: workouts.length + bw.length + cardio.length,
     });
-  }, [workouts, bw, cardio, profile.name, profile.goal, insights, latestWeight, t]);
+  }, [workouts, bw, cardio, profile, insights, latestWeight, t, nowTs]);
 
   const runAction = (a: CoachAction) => {
     switch (a.kind) {

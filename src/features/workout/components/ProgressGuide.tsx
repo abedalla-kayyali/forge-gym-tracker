@@ -111,7 +111,7 @@ function WeeklyGoalRing({
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-forge-green font-display text-[18px] leading-none">
-              {data.current}<span className="text-forge-muted text-[10px] font-mono">/{data.target}</span>
+              {data.done}<span className="text-forge-muted text-[10px] font-mono">/{data.target}</span>
             </span>
           </div>
         </div>

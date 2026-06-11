@@ -36,20 +36,12 @@ export function OfflineBanner() {
 
   // Brief "✓ Synced" flash when the queue empties while online
   useEffect(() => {
-    if (online && !offlineEmail && queueSize === 0 && flashSynced === false) {
-      // No-op on initial mount when nothing has been pending
-      return;
-    }
-  }, [online, offlineEmail, queueSize, flashSynced]);
-
-  useEffect(() => {
-    let timer: number | null = null;
-    if (online && !offlineEmail && queueSize === 0) {
-      // We may have just drained — surface a brief OK flash
-      setFlashSynced(true);
-      timer = window.setTimeout(() => setFlashSynced(false), 1800);
-    }
-    return () => { if (timer != null) window.clearTimeout(timer); };
+    if (!(online && !offlineEmail && queueSize === 0)) return;
+    // We may have just drained — surface a brief OK flash (deferred a tick so
+    // the effect itself never sets state synchronously).
+    const onId = window.setTimeout(() => setFlashSynced(true), 0);
+    const offId = window.setTimeout(() => setFlashSynced(false), 1800);
+    return () => { window.clearTimeout(onId); window.clearTimeout(offId); };
   }, [queueSize, online, offlineEmail]);
 
   let text: string | null = null;

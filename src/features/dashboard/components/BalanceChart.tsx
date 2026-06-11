@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNow } from '../../../hooks/useNow';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
 
@@ -7,8 +8,9 @@ const TRACKED_MUSCLES = ['chest', 'back', 'shoulders', 'biceps', 'triceps', 'cor
 export function BalanceChart() {
   const workouts = useWorkoutStore((s) => s.workouts);
 
+  const now = useNow();
   const data = useMemo(() => {
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
     const recent = workouts.filter((w) => new Date(w.date).getTime() >= thirtyDaysAgo);
 
     const volumeByMuscle: Record<string, number> = {};
@@ -26,7 +28,7 @@ export function BalanceChart() {
       muscle: m.charAt(0).toUpperCase() + m.slice(1),
       volume: Math.round(((volumeByMuscle[m] ?? 0) / maxVol) * 100),
     }));
-  }, [workouts]);
+  }, [workouts, now]);
 
   const hasData = data.some((d) => d.volume > 0);
 

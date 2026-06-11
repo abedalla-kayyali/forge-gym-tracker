@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
@@ -17,6 +17,11 @@ import { useFX } from '../../../hooks/useFX';
 import { flagPRs } from '../../../lib/trainingScience';
 import type { Workout, BwWorkout, CardioEntry, MuscleGroup } from '../../../types/workout';
 import { Share2, Flame, Trophy, Zap, Clock, ChevronDown, ChevronUp, Award } from 'lucide-react';
+
+// Module scope: id/timestamp generation stays outside render-analyzed code
+// (only ever called from the save handler).
+const freshId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const nowIso = () => new Date().toISOString();
 
 interface Props {
   open: boolean;
@@ -45,9 +50,10 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
   const [levelUp, setLevelUp] = useState<{ level: number; name: string } | null>(null);
   const [prCount, setPrCount] = useState(0);
   const [earnedXP, setEarnedXP] = useState(0);
-  const savedWorkoutRef = useRef<Workout | null>(null);
+  // Captured at save time. State, not refs — both are read during render.
+  const [savedWorkout, setSavedWorkout] = useState<Workout | null>(null);
   // Frozen snapshot of summary taken BEFORE session.reset() so post-save stats render correctly
-  const savedSummaryRef = useRef<ReturnType<typeof buildSummary> | null>(null);
+  const [savedSummary, setSavedSummary] = useState<ReturnType<typeof buildSummary> | null>(null);
 
   const liveSummary = useMemo(
     () =>
@@ -61,12 +67,12 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
   );
 
   // When showing post-save screen, prefer the frozen summary; else the live one
-  const summary = saved && savedSummaryRef.current ? savedSummaryRef.current : liveSummary;
+  const summary = saved && savedSummary ? savedSummary : liveSummary;
   const hasWeighted = saved
-    ? (savedSummaryRef.current?.hasWeighted ?? false)
+    ? (savedSummary?.hasWeighted ?? false)
     : session.exercises.length > 0;
   const hasCardioOnly = saved
-    ? (savedSummaryRef.current?.hasCardioOnly ?? false)
+    ? (savedSummary?.hasCardioOnly ?? false)
     : session.cardioEntries.length > 0 && session.exercises.length === 0;
 
   const handleSave = () => {
@@ -75,40 +81,42 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
       return;
     }
     // Freeze the summary before session.reset() wipes it
-    savedSummaryRef.current = liveSummary;
+    setSavedSummary(liveSummary);
 
     let xpGained = 0;
     let prTotal = 0;
+    // Accumulated locally during the save, committed to state once at the end.
+    let savedW: Workout | null = null;
 
     // Save weighted workout — flag any new personal records first.
     if (session.exercises.length > 0) {
       const { exercises: flaggedExercises, prCount: weightedPRs } = flagPRs(session.exercises, workoutHistory);
       prTotal += weightedPRs;
       const workout: Workout = {
-        id: `w_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        date: new Date().toISOString(),
+        id: freshId('w'),
+        date: nowIso(),
         name: summary.muscleNames.join(' + ') || t('saveWorkout.defaultWorkoutName'),
         exercises: flaggedExercises,
         duration: summary.duration,
       };
       addWorkout(workout);
-      savedWorkoutRef.current = workout;
+      savedW = workout;
       xpGained += session.exercises.reduce((a, ex) => a + ex.sets.length * 5 + 10, 0);
     }
 
     // Save bodyweight workout
     if (session.bwExercises.length > 0) {
       const bw: BwWorkout = {
-        id: `bw_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        date: new Date().toISOString(),
+        id: freshId('bw'),
+        date: nowIso(),
         name: summary.muscleNames.join(' + ') || t('saveWorkout.defaultCalisthenicsName'),
         exercises: session.bwExercises,
         duration: summary.duration,
       };
       addBwWorkout(bw);
       // If no weighted workout for poster, fall back to a synthesized one
-      if (!savedWorkoutRef.current) {
-        savedWorkoutRef.current = {
+      if (!savedW) {
+        savedW = {
           id: bw.id,
           date: bw.date,
           name: bw.name,
@@ -127,16 +135,16 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     if (session.cardioEntries.length > 0) {
       session.cardioEntries.forEach((c) => {
         const entry: CardioEntry = {
-          id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          date: new Date().toISOString(),
+          id: freshId('c'),
+          date: nowIso(),
           ...c,
         };
         addCardioEntry(entry);
       });
-      if (!savedWorkoutRef.current) {
-        savedWorkoutRef.current = {
-          id: `c_${Date.now()}`,
-          date: new Date().toISOString(),
+      if (!savedW) {
+        savedW = {
+          id: freshId('c'),
+          date: nowIso(),
           name: session.cardioEntries.map((c) => c.type).join(' + '),
           duration: summary.duration,
           exercises: [],
@@ -154,6 +162,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
     setPrCount(prTotal);
     setEarnedXP(xpGained);
     toast(prTotal > 0 ? t('saveWorkout.prToast', { count: prTotal }) : t('saveWorkout.toastSaved'), 'success');
+    setSavedWorkout(savedW);
     session.reset();
     setSaved(true);
     setShowConfetti(true);
@@ -161,8 +170,8 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
 
   const handleDone = () => {
     setSaved(false);
-    savedWorkoutRef.current = null;
-    savedSummaryRef.current = null;
+    setSavedWorkout(null);
+    setSavedSummary(null);
     setExpandedEx(null);
     setLevelUp(null);
     setPrCount(0);
@@ -287,10 +296,10 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
             </div>
 
             {/* Exercise history list */}
-            {savedWorkoutRef.current && savedWorkoutRef.current.exercises.length > 0 && (
+            {savedWorkout && savedWorkout.exercises.length > 0 && (
               <div className="space-y-2">
                 <div className="label-cap-strong">{t('saveWorkout.sessionLog')}</div>
-                {savedWorkoutRef.current.exercises.map((ex, i) => {
+                {savedWorkout.exercises.map((ex, i) => {
                   const isOpen = expandedEx === i;
                   const volume = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
                   return (
@@ -344,7 +353,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
                 variant="primary"
                 size="md"
                 fullWidth
-                disabled={!savedWorkoutRef.current}
+                disabled={!savedWorkout}
               >
                 <Share2 size={15} /> {t('saveWorkout.sharePoster')}
               </Button>
@@ -360,7 +369,7 @@ export function SaveWorkoutModal({ open, onClose, onSaved }: Props) {
       </Modal>
 
       <SessionPoster
-        workout={savedWorkoutRef.current}
+        workout={savedWorkout}
         open={showPoster}
         onClose={() => setShowPoster(false)}
       />

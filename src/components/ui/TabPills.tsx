@@ -59,6 +59,7 @@ export function TabPills<T extends string>({
   // so value/tabs/size/label changes all keep the indicator in sync.
   useLayoutEffect(() => {
     valueRef.current = value;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM measurement must set state before paint (sanctioned useLayoutEffect pattern); the setter bails out when unchanged.
     measure();
   });
 

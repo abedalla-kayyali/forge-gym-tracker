@@ -215,9 +215,9 @@ export function SessionPoster({ workout, open, onClose }: Props) {
 
   useEffect(() => {
     if (open && workout) {
-      setDataUrl(null);
+      const clearId = window.setTimeout(() => setDataUrl(null), 0);
       const id = window.setTimeout(drawPoster, 40);
-      return () => window.clearTimeout(id);
+      return () => { window.clearTimeout(clearId); window.clearTimeout(id); };
     }
   }, [open, workout, drawPoster]);
 

@@ -10,6 +10,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { Confetti } from '../components/ui/Confetti';
+import { useNow } from '../hooks/useNow';
 import { CountUp } from '../components/ui/CountUp';
 import { useFX } from '../hooks/useFX';
 import {
@@ -492,8 +493,9 @@ function TopPRs() {
 function MuscleVolumeByGroup() {
   const workouts   = useWorkoutStore((s) => s.workouts);
   const muscleLabel = useMuscleLabel();
+  const now = useNow();
   const rows = useMemo(() => {
-    const cutoff = Date.now() - 30 * 86400000;
+    const cutoff = now - 30 * 86400000;
     const byMuscle: Record<string, number> = {};
 
     for (const w of workouts) {
@@ -516,7 +518,7 @@ function MuscleVolumeByGroup() {
       label: vol >= 1000 ? `${formatNumber(vol / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(Math.round(vol)),
       unit: vol >= 1000 ? '' : ' kg',
     }));
-  }, [workouts]);
+  }, [workouts, now]);
 
   if (rows.length === 0) return null;
 
@@ -548,8 +550,9 @@ function MuscleFreshnessList() {
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
   const muscleLabel = useMuscleLabel();
 
+  const nowTs = useNow();
   const rows = useMemo(() => {
-    const now = Date.now();
+    const now = nowTs;
     const MUSCLE_GROUPS = ['chest','back','shoulders','biceps','triceps','forearms','core','legs','glutes','calves'] as const;
     return MUSCLE_GROUPS.map((m) => {
       const allSessions = [...workouts, ...bwWorkouts]
@@ -564,7 +567,7 @@ function MuscleFreshnessList() {
       const sessions = allSessions.length;
       return { muscle: m, days, labelKey, color, dateStr, sessions };
     });
-  }, [workouts, bwWorkouts]);
+  }, [workouts, bwWorkouts, nowTs]);
 
   return (
     <div className="space-y-1.5">
@@ -1030,6 +1033,7 @@ function CaliDashboard() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function PeriodSummary({ period }: { period: PeriodKey }) {
+  const nowTs = useNow();
   const { t } = useTranslation();
   const workouts   = useWorkoutStore((s) => s.workouts);
   const bwWorkouts = useBwWorkoutStore((s) => s.bwWorkouts);
@@ -1042,7 +1046,7 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
       period === '3M'  ? 90 * 86400000 :
       period === '6M'  ? 180 * 86400000 : null;
 
-    const now        = Date.now();
+    const now        = nowTs;
     const cutoff     = durMs ? now - durMs : 0;
     const prevCutoff = durMs ? cutoff - durMs : 0;
 
@@ -1060,7 +1064,7 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
     const current = calc(cutoff, now);
     const prev    = durMs ? calc(prevCutoff, cutoff) : null;
     return { current, prev };
-  }, [period, workouts, bwWorkouts, cardio]);
+  }, [period, workouts, bwWorkouts, cardio, nowTs]);
 
   const mkDelta = (cur: number, p: number, unit?: string) =>
     p != null ? { value: cur - p, unit } : null;
@@ -1084,6 +1088,7 @@ function PeriodSummary({ period }: { period: PeriodKey }) {
 }
 
 function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
+  const nowTs = useNow();
   const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
 
@@ -1094,7 +1099,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
       period === '3M'  ? 90 * 86400000 :
       period === '6M'  ? 180 * 86400000 : null;
 
-    const now    = Date.now();
+    const now    = nowTs;
     const cutoff = durMs ? now - durMs : now - 26 * 7 * 86400000;
 
     const byWeek: Record<string, number> = {};
@@ -1117,7 +1122,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
       pct: (vol / max) * 100,
       opacity: 0.45 + (i / Math.max(entries.length - 1, 1)) * 0.55,
     }));
-  }, [period, workouts]);
+  }, [period, workouts, nowTs]);
 
   if (weeks.length === 0) return null;
 
@@ -1151,6 +1156,7 @@ function WeeklyVolumeBars({ period }: { period: PeriodKey }) {
 }
 
 function ProgressiveOverload({ period }: { period: PeriodKey }) {
+  const nowTs = useNow();
   const { t } = useTranslation();
   const workouts = useWorkoutStore((s) => s.workouts);
 
@@ -1163,7 +1169,7 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
 
     if (!durMs) return [];
 
-    const now        = Date.now();
+    const now        = nowTs;
     const cutoff     = now - durMs;
     const prevCutoff = cutoff - durMs;
 
@@ -1201,7 +1207,7 @@ function ProgressiveOverload({ period }: { period: PeriodKey }) {
       const delta = prev > 0 ? cur - prev : 0;
       return { name, cur, delta, pct: cur > 0 ? Math.min(100, (cur / Math.max(cur, prev, 1)) * 100) : 0 };
     }).filter((r) => r.cur > 0);
-  }, [period, workouts]);
+  }, [period, workouts, nowTs]);
 
   if (rows.length === 0) return null;
 

@@ -16,18 +16,18 @@ interface TimerState {
 export function useTimer(): TimerState {
   const session = useSessionStore();
   const { play } = useFX();
-  const [tick, setTick] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
   // Tick every second when session is active or rest is running
   useEffect(() => {
     if (!session.active && !session.restTimerStart) return;
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, [session.active, session.restTimerStart]);
 
   // Session elapsed
   const sessionSeconds = session.active && session.startTime
-    ? Math.floor((Date.now() - session.startTime) / 1000)
+    ? Math.max(0, Math.floor((now - session.startTime) / 1000))
     : 0;
 
   const mins = Math.floor(sessionSeconds / 60).toString().padStart(2, '0');
@@ -36,7 +36,7 @@ export function useTimer(): TimerState {
 
   // Rest timer
   const restElapsed = session.restTimerStart
-    ? Math.floor((Date.now() - session.restTimerStart) / 1000)
+    ? Math.max(0, Math.floor((now - session.restTimerStart) / 1000))
     : 0;
   const restRemaining = Math.max(0, session.restTimerTarget - restElapsed);
   const restActive = session.restTimerStart !== null && restRemaining > 0;
@@ -73,9 +73,6 @@ export function useTimer(): TimerState {
   const setRestPreset = useCallback((seconds: number) => {
     session.setRestTimer(seconds);
   }, [session]);
-
-  // Force re-render to consume tick
-  void tick;
 
   return {
     sessionElapsed,

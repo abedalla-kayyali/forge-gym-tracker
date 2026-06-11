@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useBodyStore } from '../../../stores/useBodyStore';
 import { useToast } from '../../../components/ui/Toast';
 import { useFX } from '../../../hooks/useFX';
+import type { InBodyEntry } from '../../../types/body';
 
 const INBODY_FIELDS: { key: string; labelKey: string; unit: string }[] = [
   { key: 'muscle_mass', labelKey: 'inbody.fieldMuscleMass', unit: 'kg' },
@@ -43,7 +44,7 @@ export function InBodyLog() {
       toast(t('inbody.errorNoValue'), 'error');
       return;
     }
-    addInBody(entry as any);
+    addInBody(entry as unknown as InBodyEntry);
     play('save');
     toast(t('inbody.toastSaved'), 'success');
     setValues({});

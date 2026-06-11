@@ -75,6 +75,7 @@ export default [
         HTMLDivElement: 'readonly',
         HTMLButtonElement: 'readonly',
         HTMLCanvasElement: 'readonly',
+        CanvasRenderingContext2D: 'readonly',
         HTMLImageElement: 'readonly',
         KeyboardEvent: 'readonly',
         MouseEvent: 'readonly',

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNow } from '../../../hooks/useNow';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
@@ -20,8 +21,8 @@ export function VolumeChart({ days = FALLBACK_DAYS }: Props) {
   const isRTL = i18n.language?.startsWith('ar');
   const workouts = useWorkoutStore((s) => s.workouts);
 
+  const now = useNow();
   const { weeks, delta } = useMemo(() => {
-    const now = Date.now();
     const durMs = days != null ? days * 86400000 : null;
     const cutoff = durMs ? now - durMs : 0;
     const prevCutoff = durMs ? cutoff - durMs : 0;
@@ -64,7 +65,7 @@ export function VolumeChart({ days = FALLBACK_DAYS }: Props) {
       : null;
 
     return { weeks, delta };
-  }, [workouts, days]);
+  }, [workouts, days, now]);
 
   if (weeks.length === 0) {
     return (

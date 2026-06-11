@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNow } from '../../../hooks/useNow';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
@@ -17,9 +18,10 @@ export function FreqChart({ days = FALLBACK_DAYS }: Props) {
   const isRTL = i18n.language?.startsWith('ar');
   const workouts = useWorkoutStore((s) => s.workouts);
 
+  const now = useNow();
   const data = useMemo(() => {
     const durMs = days != null ? days * 86400000 : null;
-    const cutoff = durMs ? Date.now() - durMs : 0;
+    const cutoff = durMs ? now - durMs : 0;
     const recent = workouts.filter((w) => new Date(w.date).getTime() >= cutoff);
 
     const freq: Record<string, number> = {};
@@ -33,7 +35,7 @@ export function FreqChart({ days = FALLBACK_DAYS }: Props) {
       .map(([exercise, count]) => ({ exercise, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
-  }, [workouts, days]);
+  }, [workouts, days, now]);
 
   if (data.length === 0) {
     return (

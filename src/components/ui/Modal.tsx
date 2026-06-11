@@ -70,21 +70,20 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md' }:
   // Mount/unmount with exit animation (backdrop fade + sheet slide-down).
   useEffect(() => {
     if (open) {
-      setShown(true);
-      setClosing(false);
-      return;
+      const id = window.setTimeout(() => { setShown(true); setClosing(false); }, 0);
+      return () => window.clearTimeout(id);
     }
     if (!shown) return;
     if (prefersReducedMotion()) {
-      setShown(false);
-      return;
+      const id = window.setTimeout(() => setShown(false), 0);
+      return () => window.clearTimeout(id);
     }
-    setClosing(true);
+    const closeId = window.setTimeout(() => setClosing(true), 0);
     const timer = setTimeout(() => {
       setShown(false);
       setClosing(false);
     }, EXIT_MS);
-    return () => clearTimeout(timer);
+    return () => { window.clearTimeout(closeId); clearTimeout(timer); };
   }, [open, shown]);
 
   useEffect(() => {
