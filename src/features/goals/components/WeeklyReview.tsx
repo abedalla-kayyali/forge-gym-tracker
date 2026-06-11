@@ -26,16 +26,17 @@ function localDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function DeltaPill({ delta }: { delta: number }) {
+function DeltaPill({ delta, format }: { delta: number; format?: (n: number) => string }) {
   const Icon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
   const color = delta > 0 ? GREEN : delta < 0 ? RED : '#8a8a8a';
+  const fmt = format ?? ((n: number) => formatNumber(n));
   return (
     <span
-      className="inline-flex items-center gap-0.5 text-[9px] font-mono font-semibold px-1 py-0.5 rounded-full"
+      className="inline-flex items-center gap-0.5 text-[9px] font-mono font-semibold px-1 py-0.5 rounded-full whitespace-nowrap"
       style={{ color, background: `${color === '#8a8a8a' ? 'rgba(138,138,138,0.1)' : `${color}1f`}` }}
     >
       <Icon size={10} aria-hidden />
-      {delta !== 0 ? `${delta > 0 ? '+' : ''}${formatNumber(delta)}` : '—'}
+      {delta !== 0 ? `${delta > 0 ? '+' : ''}${fmt(delta)}` : '—'}
     </span>
   );
 }
@@ -90,8 +91,12 @@ export function WeeklyReview() {
       return { sessions, volume: Math.round(volume), prs };
     };
 
+    // Honest mid-week comparison: measure last week only through the same
+    // elapsed point (same weekday + time), so a Wednesday isn't compared
+    // against last week's full 7 days.
+    const elapsed = now.getTime() - thisStart;
     const cur = calc(thisStart, Infinity);
-    const prev = calc(lastStart, thisStart);
+    const prev = calc(lastStart, lastStart + elapsed);
 
     // ── WIN — biggest positive delta this week ───────────────────────────────
     const sessionsDelta = cur.sessions - prev.sessions;
@@ -149,8 +154,11 @@ export function WeeklyReview() {
     return { cur, prev, sessionsDelta, volumeDelta, prsDelta, win, fix, perMonth };
   }, [workouts, bwWorkouts, cardio, meals, macroProtein, proteinTargetG, weeklySessions, t]);
 
-  const fmtVol = (v: number) =>
-    v >= 1000 ? `${formatNumber(v / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(v);
+  const fmtVol = (v: number) => {
+    const a = Math.abs(v);
+    const s = a >= 1000 ? `${formatNumber(a / 1000, { maximumFractionDigits: 1 })}k` : formatNumber(a);
+    return v < 0 ? `-${s}` : s;
+  };
 
   return (
     <section className="card-elevated card-luxury-border rounded-2xl p-4 space-y-3" aria-label={t('goals.review.title')}>
@@ -177,7 +185,7 @@ export function WeeklyReview() {
         <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] px-2.5 py-2">
           <div className="flex items-center justify-between gap-1">
             <span className="label-cap text-[8px] text-forge-muted">{t('goals.review.volume')}</span>
-            <DeltaPill delta={r.volumeDelta} />
+            <DeltaPill delta={r.volumeDelta} format={(v) => `${fmtVol(v)} ${t('log.kgUnit')}`} />
           </div>
           <div className="kpi-md text-forge-green leading-none mt-1">
             {fmtVol(r.cur.volume)}

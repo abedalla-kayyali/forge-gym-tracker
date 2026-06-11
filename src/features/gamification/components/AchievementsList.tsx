@@ -1,13 +1,16 @@
 import { Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useGamificationStore } from '../../../stores/useGamificationStore';
+import { formatDate } from '../../../lib/format';
 
 export function AchievementsList() {
+  const { t } = useTranslation();
   const achievements = useGamificationStore((s) => s.achievements);
 
   if (achievements.length === 0) {
     return (
       <div className="text-center py-6 text-forge-muted text-sm font-condensed">
-        No achievements unlocked yet. Keep training!
+        {t('more.noAchievements')}
       </div>
     );
   }
@@ -24,7 +27,7 @@ export function AchievementsList() {
             {a.description && <div className="text-forge-muted text-xs">{a.description}</div>}
             {a.unlocked_date && (
               <div className="text-forge-dim text-[10px] font-mono mt-0.5">
-                {new Date(a.unlocked_date).toLocaleDateString()}
+                {formatDate(a.unlocked_date)}
               </div>
             )}
           </div>

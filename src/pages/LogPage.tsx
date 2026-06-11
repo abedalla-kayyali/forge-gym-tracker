@@ -303,7 +303,7 @@ export function LogPage() {
           <CoachThread />
         </div>
 
-        {/* Streak + last session */}
+        {/* Last session summary (streak renders once, in ProgressGuide below) */}
         <div className="w-full px-2 mb-3">
           <SessionStreakCard />
         </div>

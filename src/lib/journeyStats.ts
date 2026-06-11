@@ -43,9 +43,12 @@ export interface ConsistencyDay {
 
 export type MilestoneTier = 'bronze' | 'silver' | 'gold';
 
+export type MilestoneMetric = 'sessions' | 'volume' | 'streak' | 'trainingDays';
+
 export interface Milestone {
   key: string;               // i18n suffix under journey.milestones.*
   tier: MilestoneTier;
+  metric: MilestoneMetric;   // drives the unlock-criteria copy
   target: number;
   current: number;
   achieved: boolean;
@@ -81,7 +84,7 @@ function mondayKeyUTC(key: string): string {
   return utcKey(ts - offset * DAY);
 }
 
-const MILESTONE_DEFS: { key: string; metric: 'sessions' | 'volume' | 'streak' | 'trainingDays'; target: number; tier: MilestoneTier }[] = [
+const MILESTONE_DEFS: { key: string; metric: MilestoneMetric; target: number; tier: MilestoneTier }[] = [
   { key: 'firstStep', metric: 'sessions',     target: 1,       tier: 'bronze' },
   { key: 'committed', metric: 'sessions',     target: 25,      tier: 'bronze' },
   { key: 'dedicated', metric: 'sessions',     target: 100,     tier: 'silver' },
@@ -233,6 +236,7 @@ export function computeJourney(input: JourneyInput): Journey {
     return {
       key: d.key,
       tier: d.tier,
+      metric: d.metric,
       target: d.target,
       current: Math.round(current),
       achieved: current >= d.target,

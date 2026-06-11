@@ -120,13 +120,15 @@ function WeeklyGoalRing({
             <Target size={11} className="text-forge-green" />
             <span className="label-cap">{t('progressGuide.weekGoal.label')}</span>
           </div>
-          <div className={`font-condensed font-semibold text-[13px] truncate ${copyColor}`}>
+          <div className={`font-condensed font-semibold text-[13px] leading-tight ${copyColor}`}>
             {copy}
           </div>
-          <div className="text-forge-muted text-[10px] font-mono mt-0.5">
-            {t('progressGuide.weekGoal.daysLeft', { count: data.daysLeftInWeek })} · {todayLogged ? t('progressGuide.weekGoal.todayDone') : t('progressGuide.weekGoal.todayPending')}
-          </div>
         </div>
+      </div>
+      {/* Full-width meta row — too narrow next to the ring, it would clip */}
+      <div className="text-forge-muted text-[10px] font-mono mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+        <span className="whitespace-nowrap">{t('progressGuide.weekGoal.daysLeft', { count: data.daysLeftInWeek })}</span>
+        <span className="whitespace-nowrap">{todayLogged ? t('progressGuide.weekGoal.todayDone') : t('progressGuide.weekGoal.todayPending')}</span>
       </div>
     </div>
   );

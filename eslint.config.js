@@ -7,7 +7,25 @@ import prettier from 'eslint-config-prettier';
 
 export default [
   {
-    ignores: ['dist', 'js/', 'css/', 'sw.js'],
+    // Lint only the React app sources: everything else is either build output,
+    // the legacy vanilla app, agent worktrees, generated artifacts, or configs
+    // with their own toolchains (Deno for supabase functions).
+    ignores: [
+      'dist',
+      'js/',
+      'css/',
+      'sw.js',
+      '*.js',
+      '*.ts',
+      '*.d.ts',
+      'scripts/',
+      'supabase/',
+      'OpenViking/',
+      '.worktrees/',
+      '.claude/',
+      '.superpowers/',
+      '.anatomy-candidates/',
+    ],
   },
   js.configs.recommended,
   {
@@ -51,6 +69,29 @@ export default [
         indexedDB: 'readonly',
         IDBRequest: 'readonly',
         IDBTransaction: 'readonly',
+        // TS type-position identifiers + DOM/Web APIs used across src
+        React: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLDivElement: 'readonly',
+        HTMLButtonElement: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        HTMLImageElement: 'readonly',
+        KeyboardEvent: 'readonly',
+        MouseEvent: 'readonly',
+        EventListener: 'readonly',
+        AudioContext: 'readonly',
+        AudioNode: 'readonly',
+        OscillatorType: 'readonly',
+        Image: 'readonly',
+        File: 'readonly',
+        FileReader: 'readonly',
+        Blob: 'readonly',
+        BufferSource: 'readonly',
+        TextEncoder: 'readonly',
+        ClipboardItem: 'readonly',
+        DOMException: 'readonly',
+        atob: 'readonly',
+        btoa: 'readonly',
       },
     },
     plugins: {

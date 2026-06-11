@@ -168,10 +168,15 @@ function MilestoneBadge({ m }: { m: Milestone }) {
   const { t } = useTranslation();
   const color = TIER_COLOR[m.tier];
   const name = t(`journey.milestones.${m.key}`);
+  // Plain-language unlock criteria so locked badges aren't just a % mystery.
+  const criteria =
+    m.metric === 'volume'
+      ? t('journey.milestones.criteria.volume', { amount: formatKg(m.target) })
+      : t(`journey.milestones.criteria.${m.metric}`, { count: m.target });
   const stateLabel = m.achieved ? t('journey.a11y.achieved') : t('journey.a11y.locked');
   const ariaLabel = m.achieved
     ? `${name} — ${stateLabel}`
-    : `${name} — ${stateLabel} (${Math.round(m.progress * 100)}%)`;
+    : `${name} — ${stateLabel} (${Math.round(m.progress * 100)}%) — ${criteria}`;
   return (
     <div
       role="img"
@@ -194,6 +199,7 @@ function MilestoneBadge({ m }: { m: Milestone }) {
       <span className={`text-[11px] font-condensed font-semibold leading-tight ${m.achieved ? 'text-forge-text' : 'text-forge-muted'}`}>
         {t(`journey.milestones.${m.key}`)}
       </span>
+      <span className="text-[9px] font-condensed text-forge-dim leading-tight">{criteria}</span>
       {!m.achieved && (
         <div className="w-full">
           <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">

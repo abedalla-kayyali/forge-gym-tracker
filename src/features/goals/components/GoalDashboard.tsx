@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pencil, TrendingUp, TrendingDown, Minus, Compass } from 'lucide-react';
+import { Pencil, TrendingUp, TrendingDown, Minus, Compass, Rocket } from 'lucide-react';
 import { ProgressRing } from '../../../components/ui/ProgressRing';
 import { CountUp } from '../../../components/ui/CountUp';
 import { useWorkoutStore } from '../../../stores/useWorkoutStore';
@@ -19,6 +19,7 @@ const GREEN = '#2ecc71';
 const AMBER = '#F59E0B';
 const RED = '#EF4444';
 const MUTED = '#4B5563';
+const SAPPHIRE = '#3b82f6';
 
 type Status = 'green' | 'amber' | 'red' | 'muted';
 type Trend = 'up' | 'down' | 'flat';
@@ -42,7 +43,7 @@ function TrendArrow({ trend }: { trend: Trend | null }) {
 
 /** One compact KPI cell — value (CountUp), label, trend arrow + status dot. */
 function KpiCell({
-  label, value, decimals = 0, suffix, trend, status, sub, children,
+  label, value, decimals = 0, suffix, trend, status, sub, hint, children,
 }: {
   label: string;
   value: number;
@@ -51,6 +52,8 @@ function KpiCell({
   trend: Trend | null;
   status: Status;
   sub?: string;
+  /** Plain-language one-liner under the label (jargon explainer). */
+  hint?: string;
   children?: ReactNode;
 }) {
   return (
@@ -61,9 +64,10 @@ function KpiCell({
           style={{ background: STATUS_COLOR[status], boxShadow: `0 0 6px ${STATUS_COLOR[status]}88` }}
           aria-hidden
         />
-        <span className="label-cap text-[8px] text-forge-muted truncate flex-1">{label}</span>
+        <span className="label-cap text-[8px] text-forge-muted flex-1 leading-tight">{label}</span>
         <TrendArrow trend={trend} />
       </div>
+      {hint && <div className="text-[8px] text-forge-dim font-condensed leading-tight mt-0.5">{hint}</div>}
       <div className="flex items-baseline gap-0.5 mt-1">
         <CountUp value={value} decimals={decimals} format={(n) => formatNumber(n, { maximumFractionDigits: decimals })} className="kpi-md text-forge-text leading-none" />
         {suffix && <span className="text-[9px] font-condensed text-forge-muted">{suffix}</span>}
@@ -191,13 +195,23 @@ export function GoalDashboard() {
     return { sessionsThisWeek, weekDots, daysLeftInWeek, overloadPct, proteinPct, latest, weightDelta14 };
   }, [workouts, bwWorkouts, cardio, bodyWeight, meals, macroProtein, proteinTargetG]);
 
+  // New-user / early-days framing: never show panic-red to someone who has
+  // zero workouts or under two weeks of history — encourage instead.
+  const isNew = journey.totals.sessions === 0;
+  const isEarly = !isNew && journey.totals.firstDate !== null &&
+    Date.now() - Date.parse(journey.totals.firstDate) < 14 * 86400000;
+
   const tier: Status = score.score >= 70 ? 'green' : score.score >= 40 ? 'amber' : 'red';
+  const softened = isEarly && tier !== 'green';
+  const headlineColor = softened ? SAPPHIRE : STATUS_COLOR[tier];
   const statusWord =
+    softened ? t('goals.status.earlyDays') :
     tier === 'green' ? t('goals.status.onTrack') :
     tier === 'amber' ? t('goals.status.needsAttention') :
                        t('goals.status.offTrack');
 
   const sessionsStatus: Status =
+    isNew ? 'muted' :
     m.sessionsThisWeek >= weeklySessions ? 'green' :
     weeklySessions - m.sessionsThisWeek <= m.daysLeftInWeek ? 'amber' : 'red';
   const overloadStatus: Status =
@@ -210,6 +224,7 @@ export function GoalDashboard() {
     !bestLift || bestLift.deltaPct === null ? 'muted' :
     bestLift.deltaPct > 0 ? 'green' : bestLift.deltaPct === 0 ? 'amber' : 'red';
   const streakStatus: Status =
+    isNew ? 'muted' :
     journey.currentStreak >= 3 ? 'green' : journey.currentStreak >= 1 ? 'amber' : 'red';
 
   const weightStatus = weightDeltaStatus(m.weightDelta14, weightDirection);
@@ -234,30 +249,50 @@ export function GoalDashboard() {
         </button>
       </div>
 
-      {/* Headline — Training Score ring + status word */}
-      <div className="flex items-center gap-4">
-        <ProgressRing
-          value={score.score / 100}
-          size={72}
-          stroke={7}
-          color={STATUS_COLOR[tier]}
-          ariaLabel={t('goals.trainingScoreAria', { score: score.score })}
-        >
-          <div className="text-center">
-            <CountUp value={score.score} className="kpi-md text-forge-text leading-none block" />
-            <span className="text-[8px] text-forge-dim uppercase tracking-wider">/100</span>
+      {/* Headline — neutral "getting started" for brand-new users, otherwise
+          the Training Score ring + status word */}
+      {isNew ? (
+        <div className="flex items-center gap-4">
+          <div className="w-[72px] h-[72px] rounded-full bg-forge-sapphire/10 border border-forge-sapphire/25 flex items-center justify-center shrink-0">
+            <Rocket size={26} className="text-forge-sapphire" />
           </div>
-        </ProgressRing>
-        <div className="flex-1 min-w-0">
-          <div className="font-condensed font-bold text-[17px] leading-tight" style={{ color: STATUS_COLOR[tier] }}>
-            {statusWord}
-          </div>
-          <div className="text-forge-muted text-[11px] font-condensed mt-0.5">{t('goals.trainingScore')}</div>
-          <div className="text-forge-dim text-[10px] font-mono mt-0.5">
-            {t('goals.scoreMeta', { trend: score.volumeTrend, consistency: score.consistency })}
+          <div className="flex-1 min-w-0">
+            <div className="font-condensed font-bold text-[17px] leading-tight text-forge-sapphire">
+              {t('goals.status.gettingStarted')}
+            </div>
+            <div className="text-forge-muted text-[11px] font-condensed mt-0.5">
+              {t('goals.status.gettingStartedCta')}
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center gap-4">
+          <ProgressRing
+            value={score.score / 100}
+            size={72}
+            stroke={7}
+            color={headlineColor}
+            ariaLabel={t('goals.trainingScoreAria', { score: score.score })}
+          >
+            <div className="text-center">
+              <CountUp value={score.score} className="kpi-md text-forge-text leading-none block" />
+              <span className="text-[8px] text-forge-dim uppercase tracking-wider">/100</span>
+            </div>
+          </ProgressRing>
+          <div className="flex-1 min-w-0">
+            <div className="font-condensed font-bold text-[17px] leading-tight" style={{ color: headlineColor }}>
+              {statusWord}
+            </div>
+            <div className="text-forge-muted text-[11px] font-condensed mt-0.5">{t('goals.trainingScore')}</div>
+            <div className="text-forge-dim text-[10px] font-mono mt-0.5">
+              {t('goals.scoreMeta', { trend: score.volumeTrend, consistency: score.consistency })}
+            </div>
+            <div className="text-forge-dim text-[9px] font-condensed mt-0.5 leading-tight">
+              {t('goals.scoreMetaHint')}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LEADING — behaviors */}
       <div className="space-y-1.5">
@@ -265,6 +300,7 @@ export function GoalDashboard() {
         <div className="grid grid-cols-3 gap-1.5">
           <KpiCell
             label={t('goals.kpi.sessions')}
+            hint={t('goals.kpi.sessionsHint')}
             value={m.sessionsThisWeek}
             suffix={`/${formatNumber(weeklySessions)}`}
             trend={m.sessionsThisWeek >= weeklySessions ? 'up' : null}
@@ -282,6 +318,7 @@ export function GoalDashboard() {
           </KpiCell>
           <KpiCell
             label={t('goals.kpi.overload')}
+            hint={t('goals.kpi.overloadHint')}
             value={m.overloadPct ?? 0}
             suffix="%"
             trend={m.overloadPct === null ? null : m.overloadPct >= 50 ? 'up' : 'down'}
@@ -326,6 +363,7 @@ export function GoalDashboard() {
           />
           <KpiCell
             label={t('goals.kpi.bestLift')}
+            hint={t('goals.kpi.bestLiftHint')}
             value={bestLift ? bestLift.current : 0}
             suffix={t('log.kgUnit')}
             trend={

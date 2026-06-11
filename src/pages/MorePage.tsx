@@ -149,7 +149,7 @@ function NutritionSection() {
               <span className="text-[10px] text-forge-dim font-condensed">{t('more.servings')}</span>
             </div>
             <button onClick={handleAddMeal}
-              className="w-full bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg py-2.5 rounded-xl font-condensed font-semibold text-sm cursor-pointer press-scale min-h-[44px] shadow-[0_4px_16px_rgba(46,204,113,0.25)]">
+              className="w-full bg-gradient-to-br from-forge-green to-forge-green-dark text-forge-bg py-2.5 rounded-xl font-condensed font-semibold text-sm uppercase tracking-wider cursor-pointer press-scale min-h-[44px] shadow-[0_4px_16px_rgba(46,204,113,0.25)]">
               {t('more.logMeal')}
             </button>
           </Card>
